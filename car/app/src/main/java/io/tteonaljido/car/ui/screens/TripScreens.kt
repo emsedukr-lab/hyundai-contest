@@ -182,7 +182,7 @@ private fun GuideDialogs(vm: TripsViewModel, g: Guide) {
             "내비가 고른 곳은 '${g.found.name}'이에요. 계획한 '${g.wanted}'와 약 ${if (g.metres >= 1000) "%.1fkm".format(g.metres / 1000.0) else "${g.metres}m"} 떨어져 있어요.",
             "맞아요", vm::acceptPlace, cancel = "내비에서 다시 찾기", onCancel = vm::searchInNavi,
         )
-        is Guide.ConfirmHome -> PleosSystemPopup("내비의 '집'을 사용할까요?", "${g.home.address.ifBlank { g.home.name }} · 이 차량의 여행 출발·귀가에만 사용해요.", "사용", vm::acceptHome, cancel = "취소", onCancel = vm::dismissGuide)
+        is Guide.ConfirmHome -> PleosSystemPopup("내비의 '집'을 사용할까요?", "${g.home.address.ifBlank { g.home.name }.ifBlank { "내비 즐겨찾기 '집'" }} · 이 차량의 여행 출발·귀가에만 사용해요.", "사용", vm::acceptHome, cancel = "취소", onCancel = vm::dismissGuide)
         is Guide.Done -> PleosSystemPopup("완료", g.text, "확인", vm::dismissGuide)
         is Guide.Failed -> if (g.canSearch) PleosSystemPopup("안내를 확인하지 못했어요", g.text, "내비에서 찾기", vm::searchInNavi, cancel = "닫기", onCancel = vm::dismissGuide)
         else PleosSystemPopup("안내할 수 없어요", g.text, "확인", vm::dismissGuide)

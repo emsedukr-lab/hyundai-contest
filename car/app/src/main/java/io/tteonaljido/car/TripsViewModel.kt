@@ -40,7 +40,7 @@ class TripsViewModel(private val repo: () -> TripRepository, private val navi: N
     private val _guide = MutableStateFlow<Guide>(Guide.Idle)
     val guide: StateFlow<Guide> = _guide
 
-    private data class Pending(val localId: String, val placeRef: String?, val target: RouteTarget, val kind: Kind)
+    private data class Pending(val localId: String, val placeRef: String?, val target: RouteTarget, val kind: Kind, val previous: NaviBinding? = null)
     private enum class Kind { ROUTE, SEARCH, HOME }
     private var pending: Pending? = null
 
@@ -97,6 +97,7 @@ class TripsViewModel(private val repo: () -> TripRepository, private val navi: N
         viewModelScope.launch {
             _guide.value = Guide.Working("내비게이션 상태를 확인하는 중")
             val current = navi.currentDestination()
+            pending = pending?.copy(previous = current)
             if (current != null && PlaceMatch.classify(target.latE7, target.lonE7, target.poiId, current.latE7, current.lonE7, current.poiId) != Match.SAME) {
                 _guide.value = Guide.ConfirmReplace(current.name, target.name)
             } else route()
@@ -107,8 +108,8 @@ class TripsViewModel(private val repo: () -> TripRepository, private val navi: N
 
     private suspend fun route() {
         val p = pending ?: return
-        _guide.value = Guide.Working("${p.target.name}(으)로 안내를 요청하는 중")
-        _guide.value = when (val r = navi.route(p.target)) {
+        _guide.value = Guide.Working("${p.target.name}(으)로 안내를 요청했어요 · 내비 화면에서 경로를 확인해 주세요")
+        _guide.value = when (val r = navi.route(p.target, p.previous)) {
             is RouteOutcome.Confirmed -> { bind(p, r.binding); pending = null; Guide.Done("안내를 시작했어요 · ${r.binding.name}") }
             is RouteOutcome.Different -> Guide.ConfirmPlace(r.binding, p.target.name, metres(p.target.latE7, p.target.lonE7, r.binding.latE7, r.binding.lonE7).toInt())
             RouteOutcome.NoAnswer -> Guide.Failed("내비게이션이 목적지를 확인해 주지 않았어요", canSearch = p.placeRef != null)
@@ -173,6 +174,6 @@ class TripsViewModel(private val repo: () -> TripRepository, private val navi: N
         val g = _guide.value as? Guide.ConfirmHome ?: return
         update(p.localId) { it.copy(overlay = it.overlay.copy(home = g.home)) }
         pending = null
-        _guide.value = Guide.Done("집을 연결했어요 · ${g.home.address.ifBlank { g.home.name }}")
+        _guide.value = Guide.Done("집을 연결했어요 · ${g.home.address.ifBlank { g.home.name }.ifBlank { "내비 즐겨찾기 '집'" }}")
     }
 }
