@@ -1,0 +1,2 @@
+/* The neutral theme's default font comes from Google Fonts. This app uses the system font instead:
+   it covers Hangul, works offline and keeps the CSP to 'self'. Aliased in vite.config.ts. */

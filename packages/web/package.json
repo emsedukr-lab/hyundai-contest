@@ -8,7 +8,7 @@
     "build": "tsc --noEmit && vite build",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "astryx": "node node_modules/@astryxdesign/cli/clients/cli/bin/astryx.mjs"
+    "astryx": "node ../../node_modules/@astryxdesign/cli/clients/cli/bin/astryx.mjs"
   },
   "dependencies": {
     "@tteonaljido/shared": "*",
