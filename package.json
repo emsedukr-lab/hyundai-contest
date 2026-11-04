@@ -13,13 +13,17 @@
     "dev": "npm run build -w @tteonaljido/web && npm run dev -w @tteonaljido/worker",
     "schema": "npm run schema -w @tteonaljido/shared",
     "e2e": "tsx tools/e2e-mobile.mts",
-    "smoke": "tsx tools/pairing-smoke.mts"
+    "smoke": "tsx tools/pairing-smoke.mts",
+    "e2e:car": "tsx tools/e2e-car.mts"
   },
   "engines": {
     "node": ">=22.13"
   },
   "devDependencies": {
     "playwright-core": "1.56.1",
-    "tsx": "4.23.15"
+    "tsx": "4.23.15",
+    "jsqr": "1.4.0",
+    "pngjs": "7.0.0",
+    "@types/pngjs": "6.0.5"
   }
 }

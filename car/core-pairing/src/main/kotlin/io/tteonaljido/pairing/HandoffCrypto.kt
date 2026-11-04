@@ -58,6 +58,9 @@ object HandoffCrypto {
         return KeyFactory.getInstance("EC").generatePublic(ECPublicKeySpec(ECPoint(x, y), P256))
     }
 
+    /** 32-byte private scalar, for encrypted persistence of the session key across an app restart. */
+    fun privateScalar(key: PrivateKey): ByteArray = fixed32((key as java.security.interfaces.ECPrivateKey).s)
+
     fun privateFromScalar(d: ByteArray): PrivateKey = KeyFactory.getInstance("EC").generatePrivate(ECPrivateKeySpec(BigInteger(1, d), P256))
 
     /** First 16 bytes of SHA-256(publicRaw), printed in the QR so the phone can verify the car's key. */
@@ -77,6 +80,9 @@ object HandoffCrypto {
     }
 
     fun formatConfirmCode(code: String) = "${code.take(3)} ${code.drop(3)}"
+
+    /** QR link: secrets live in the fragment, which browsers never send to a server. */
+    fun qrUrl(origin: String, sid: String, scanSecret: String, fingerprint: String) = "${origin.trimEnd('/')}/c#v1.$sid.$scanSecret.$fingerprint"
 
     fun aad(sid: String, schemaVersion: Int) = "$AAD_PREFIX$sid|$schemaVersion".toByteArray()
 
