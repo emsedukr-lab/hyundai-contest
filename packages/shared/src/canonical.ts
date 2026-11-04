@@ -33,7 +33,7 @@ export function fromB64url(s: string): Uint8Array<ArrayBuffer> {
   return out;
 }
 
-export const utf8 = (s: string): Uint8Array<ArrayBuffer> => new TextEncoder().encode(s);
+export const utf8 = (s: string): Uint8Array<ArrayBuffer> => new Uint8Array(new TextEncoder().encode(s));
 
 export async function sha256(bytes: Uint8Array<ArrayBuffer>): Promise<Uint8Array<ArrayBuffer>> {
   return new Uint8Array(await crypto.subtle.digest('SHA-256', bytes));

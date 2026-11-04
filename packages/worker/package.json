@@ -7,9 +7,13 @@
     "dev": "wrangler dev --ip 0.0.0.0 --port 8787",
     "deploy": "wrangler deploy",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "pretest": "node scripts/ensure-assets.mjs",
+    "predev": "node scripts/ensure-assets.mjs"
   },
-  "dependencies": { "@tteonaljido/shared": "*" },
+  "dependencies": {
+    "@tteonaljido/shared": "*"
+  },
   "devDependencies": {
     "wrangler": "4.151.3",
     "@cloudflare/vitest-pool-workers": "0.23.0",

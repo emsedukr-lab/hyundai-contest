@@ -28,7 +28,7 @@ export async function generateKeyPair(extractable = false): Promise<CryptoKeyPai
 }
 
 export async function exportPublicRaw(key: CryptoKey): Promise<Bytes> {
-  return new Uint8Array(await crypto.subtle.exportKey('raw', key));
+  return new Uint8Array((await crypto.subtle.exportKey('raw', key)) as ArrayBuffer);
 }
 
 export async function importPublicRaw(raw: Bytes): Promise<CryptoKey> {
@@ -42,7 +42,9 @@ export async function fingerprint(pubRaw: Bytes): Promise<string> {
 }
 
 export async function sharedSecret(privateKey: CryptoKey, peerPublic: CryptoKey): Promise<Bytes> {
-  return new Uint8Array(await crypto.subtle.deriveBits({ name: 'ECDH', public: peerPublic }, privateKey, 256));
+  // `public` is the WebCrypto member name; some type packages spell it differently.
+  const params = { name: 'ECDH', public: peerPublic } as unknown as Parameters<typeof crypto.subtle.deriveBits>[0];
+  return new Uint8Array(await crypto.subtle.deriveBits(params, privateKey, 256));
 }
 
 async function hkdf(z: Bytes, salt: Bytes, info: Bytes, bytes: number): Promise<Bytes> {
