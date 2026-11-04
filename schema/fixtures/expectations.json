@@ -1,0 +1,78 @@
+{
+  "valid/sample.json": {
+    "valid": true
+  },
+  "valid/unicode.json": {
+    "valid": true
+  },
+  "valid/with-home.json": {
+    "valid": true
+  },
+  "valid/day-trip.json": {
+    "valid": true
+  },
+  "invalid/unknown-field.json": {
+    "valid": false,
+    "code": "SCHEMA"
+  },
+  "invalid/secret-field.json": {
+    "valid": false,
+    "code": "SCHEMA"
+  },
+  "invalid/float-coordinate.json": {
+    "valid": false,
+    "code": "SCHEMA"
+  },
+  "invalid/bad-calendar-date.json": {
+    "valid": false,
+    "code": "SCHEMA"
+  },
+  "invalid/bad-time.json": {
+    "valid": false,
+    "code": "SCHEMA"
+  },
+  "invalid/unsupported-version.json": {
+    "valid": false,
+    "code": "UNSUPPORTED_VERSION"
+  },
+  "invalid/date-range.json": {
+    "valid": false,
+    "code": "DATE_RANGE"
+  },
+  "invalid/day-count.json": {
+    "valid": false,
+    "code": "DAY_COUNT_MISMATCH"
+  },
+  "invalid/day-sequence.json": {
+    "valid": false,
+    "code": "DAY_SEQUENCE"
+  },
+  "invalid/duplicate-place.json": {
+    "valid": false,
+    "code": "DUPLICATE_REF"
+  },
+  "invalid/unknown-place.json": {
+    "valid": false,
+    "code": "UNKNOWN_PLACE_REF"
+  },
+  "invalid/unknown-visit.json": {
+    "valid": false,
+    "code": "UNKNOWN_VISIT_REF"
+  },
+  "invalid/double-assignment.json": {
+    "valid": false,
+    "code": "DUPLICATE_ASSIGNMENT"
+  },
+  "invalid/legs-length.json": {
+    "valid": false,
+    "code": "LEGS_LENGTH"
+  },
+  "invalid/unassigned-reason.json": {
+    "valid": false,
+    "code": "UNASSIGNED_REASON_MISMATCH"
+  },
+  "invalid/hash-mismatch.json": {
+    "valid": false,
+    "code": "HASH_MISMATCH"
+  }
+}

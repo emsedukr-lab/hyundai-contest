@@ -1,0 +1,50 @@
+{
+  "protocol": "handoff",
+  "version": 1,
+  "states": ["CREATED", "CLAIMED", "MOBILE_APPROVED", "CAR_APPLYING", "APPLIED", "REJECTED", "CANCELLED", "EXPIRED"],
+  "terminalStates": ["APPLIED", "REJECTED", "CANCELLED", "EXPIRED"],
+  "ttlSeconds": {
+    "qr": 300,
+    "upload": 600,
+    "result": 600,
+    "applyingExtension": 300,
+    "tombstone": 600
+  },
+  "limits": {
+    "maxClaimAttempts": 5,
+    "maxPayloadBytes": 98304,
+    "maxPlaintextBytes": 98304
+  },
+  "resultCodes": ["IMPORTED_NEW", "UPDATED", "SAVED_AS_COPY", "ALREADY_IMPORTED", "USER_DECLINED", "INVALID_PAYLOAD", "UNSUPPORTED_VERSION", "DECRYPT_FAILED", "STORAGE_ERROR"],
+  "cancelReasons": ["CAR", "MOBILE", "SECURITY", "REISSUED"],
+  "expireReasons": ["QR", "UPLOAD", "RESULT", "UNCONFIRMED"],
+  "errors": {
+    "BAD_REQUEST": 400,
+    "UNAUTHORIZED": 401,
+    "NOT_FOUND": 404,
+    "ALREADY_CLAIMED": 409,
+    "PAYLOAD_CONFLICT": 409,
+    "INVALID_STATE": 409,
+    "APPLYING": 409,
+    "EXPIRED": 410,
+    "PAYLOAD_TOO_LARGE": 413,
+    "UNSUPPORTED_VERSION": 422,
+    "RATE_LIMITED": 429
+  },
+  "crypto": {
+    "curve": "P-256",
+    "kdf": "HKDF-SHA256",
+    "aead": "AES-256-GCM",
+    "saltPrefix": "handoff/v1|",
+    "aadPrefix": "handoff/v1|",
+    "infoKey": "key",
+    "infoConfirm": "confirm",
+    "ivBytes": 12,
+    "idBytes": 16,
+    "fingerprintBytes": 16
+  },
+  "qr": {
+    "path": "/c",
+    "fragmentVersion": "v1"
+  }
+}

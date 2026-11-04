@@ -1,0 +1,74 @@
+{
+  "schema": "trip-transfer",
+  "schemaVersion": 1,
+  "exportedAt": "2026-11-05T09:30:00+09:00",
+  "contentHash": "HEQkAgHolb1L7a42hFTr3w8cf_TUPBCH1IcCLwhIO7k",
+  "trip": {
+    "tripId": "0b6f8a52-1d3e-4f6a-8b9c-2d4e6f8a0b1c",
+    "revision": 1,
+    "updatedAt": "2026-11-05T09:00:00+09:00",
+    "name": "강릉 3박 4일",
+    "timezone": "Asia/Seoul",
+    "startDate": "2026-11-20",
+    "endDate": "2026-11-20",
+    "firstDay": {
+      "basis": "DEPART_ORIGIN",
+      "departTime": "08:00"
+    },
+    "origin": {
+      "kind": "HOME"
+    },
+    "finalDestination": {
+      "kind": "HOME"
+    },
+    "home": null,
+    "places": [
+      {
+        "placeRef": "cheolttuk",
+        "name": "철뚝소머리집",
+        "address": "강릉시 주문진읍 철둑길 42",
+        "latE7": 378920000,
+        "lonE7": 1288260000,
+        "category": "FOOD",
+        "source": {
+          "provider": "MANUAL",
+          "externalId": null
+        },
+        "naviPoi": null,
+        "hours": {
+          "status": "UNKNOWN"
+        }
+      }
+    ],
+    "visits": [
+      {
+        "visitId": "v1",
+        "placeRef": "cheolttuk",
+        "stayMinutes": 60,
+        "prepMinutes": 10,
+        "importance": "NORMAL",
+        "desiredTime": "10:30",
+        "fixed": null,
+        "dateFlexible": true,
+        "timeFlexible": true,
+        "unassignedReason": null
+      }
+    ],
+    "days": [
+      {
+        "dayIndex": 1,
+        "date": "2026-11-20",
+        "departTime": null,
+        "endBy": "20:00",
+        "visitOrder": [
+          "v1"
+        ],
+        "legs": [
+          null,
+          null
+        ],
+        "lodgingPlaceRef": null
+      }
+    ]
+  }
+}

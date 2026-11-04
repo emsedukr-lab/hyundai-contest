@@ -1,0 +1,629 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "trip-transfer"
+    },
+    "schemaVersion": {
+      "type": "number",
+      "const": 1
+    },
+    "exportedAt": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+    },
+    "contentHash": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{43}$"
+    },
+    "trip": {
+      "type": "object",
+      "properties": {
+        "tripId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "timezone": {
+          "type": "string",
+          "maxLength": 40,
+          "pattern": "^[A-Za-z_]+(\\/[A-Za-z0-9_+-]+){0,2}$"
+        },
+        "startDate": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        },
+        "endDate": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        },
+        "firstDay": {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "basis": {
+                  "type": "string",
+                  "const": "DEPART_ORIGIN"
+                },
+                "departTime": {
+                  "type": "string",
+                  "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
+                }
+              },
+              "required": [
+                "basis",
+                "departTime"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "basis": {
+                  "type": "string",
+                  "const": "ARRIVE_FIRST_STOP"
+                },
+                "arriveTime": {
+                  "type": "string",
+                  "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
+                },
+                "prepMinutes": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 240
+                }
+              },
+              "required": [
+                "basis",
+                "arriveTime",
+                "prepMinutes"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "origin": {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "const": "HOME"
+                }
+              },
+              "required": [
+                "kind"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "const": "PLACE"
+                },
+                "placeRef": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9_-]{1,40}$"
+                }
+              },
+              "required": [
+                "kind",
+                "placeRef"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "finalDestination": {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "const": "HOME"
+                }
+              },
+              "required": [
+                "kind"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "const": "PLACE"
+                },
+                "placeRef": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9_-]{1,40}$"
+                }
+              },
+              "required": [
+                "kind",
+                "placeRef"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "home": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "address": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 120
+                },
+                "latE7": {
+                  "type": "integer",
+                  "minimum": -900000000,
+                  "maximum": 900000000
+                },
+                "lonE7": {
+                  "type": "integer",
+                  "minimum": -1800000000,
+                  "maximum": 1800000000
+                }
+              },
+              "required": [
+                "address",
+                "latE7",
+                "lonE7"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "places": {
+          "maxItems": 100,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "placeRef": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_-]{1,40}$"
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 60
+              },
+              "address": {
+                "type": "string",
+                "maxLength": 120
+              },
+              "latE7": {
+                "type": "integer",
+                "minimum": -900000000,
+                "maximum": 900000000
+              },
+              "lonE7": {
+                "type": "integer",
+                "minimum": -1800000000,
+                "maximum": 1800000000
+              },
+              "category": {
+                "type": "string",
+                "enum": [
+                  "SIGHT",
+                  "FOOD",
+                  "CAFE",
+                  "LODGING",
+                  "OTHER"
+                ]
+              },
+              "source": {
+                "type": "object",
+                "properties": {
+                  "provider": {
+                    "type": "string",
+                    "enum": [
+                      "KAKAO",
+                      "MANUAL"
+                    ]
+                  },
+                  "externalId": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 40
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "provider",
+                  "externalId"
+                ],
+                "additionalProperties": false
+              },
+              "naviPoi": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "poiId": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 40
+                      },
+                      "poiSubId": {
+                        "type": "string",
+                        "maxLength": 40
+                      },
+                      "poiProvider": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 40
+                      }
+                    },
+                    "required": [
+                      "poiId",
+                      "poiSubId",
+                      "poiProvider"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "hours": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "status": {
+                        "type": "string",
+                        "const": "UNKNOWN"
+                      }
+                    },
+                    "required": [
+                      "status"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "status": {
+                        "type": "string",
+                        "const": "USER_ENTERED"
+                      },
+                      "weekly": {
+                        "maxItems": 21,
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "weekday": {
+                              "type": "integer",
+                              "minimum": 1,
+                              "maximum": 7
+                            },
+                            "open": {
+                              "type": "string",
+                              "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
+                            },
+                            "close": {
+                              "type": "string",
+                              "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
+                            }
+                          },
+                          "required": [
+                            "weekday",
+                            "open",
+                            "close"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "closedDates": {
+                        "maxItems": 31,
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                        }
+                      }
+                    },
+                    "required": [
+                      "status",
+                      "weekly",
+                      "closedDates"
+                    ],
+                    "additionalProperties": false
+                  }
+                ]
+              }
+            },
+            "required": [
+              "placeRef",
+              "name",
+              "address",
+              "latE7",
+              "lonE7",
+              "category",
+              "source",
+              "naviPoi",
+              "hours"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "visits": {
+          "maxItems": 100,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "visitId": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_-]{1,40}$"
+              },
+              "placeRef": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_-]{1,40}$"
+              },
+              "stayMinutes": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 720
+              },
+              "prepMinutes": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 120
+              },
+              "importance": {
+                "type": "string",
+                "enum": [
+                  "MUST",
+                  "NORMAL",
+                  "OPTIONAL"
+                ]
+              },
+              "desiredTime": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "fixed": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "time": {
+                        "type": "string",
+                        "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
+                      },
+                      "kind": {
+                        "type": "string",
+                        "enum": [
+                          "RESERVATION",
+                          "USER"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "time",
+                      "kind"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "dateFlexible": {
+                "type": "boolean"
+              },
+              "timeFlexible": {
+                "type": "boolean"
+              },
+              "unassignedReason": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "enum": [
+                      "NOT_SCHEDULED_YET",
+                      "NO_TIME",
+                      "OUTSIDE_PERIOD",
+                      "CLOSED",
+                      "USER_EXCLUDED"
+                    ]
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "visitId",
+              "placeRef",
+              "stayMinutes",
+              "prepMinutes",
+              "importance",
+              "desiredTime",
+              "fixed",
+              "dateFlexible",
+              "timeFlexible",
+              "unassignedReason"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "days": {
+          "minItems": 1,
+          "maxItems": 14,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "dayIndex": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 14
+              },
+              "date": {
+                "type": "string",
+                "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+              },
+              "departTime": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "endBy": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "visitOrder": {
+                "maxItems": 20,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9_-]{1,40}$"
+                }
+              },
+              "legs": {
+                "maxItems": 21,
+                "type": "array",
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "minutes": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 1440
+                        },
+                        "source": {
+                          "type": "string",
+                          "enum": [
+                            "USER_ESTIMATE"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "minutes",
+                        "source"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "lodgingPlaceRef": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9_-]{1,40}$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "dayIndex",
+              "date",
+              "departTime",
+              "endBy",
+              "visitOrder",
+              "legs",
+              "lodgingPlaceRef"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "tripId",
+        "revision",
+        "updatedAt",
+        "name",
+        "timezone",
+        "startDate",
+        "endDate",
+        "firstDay",
+        "origin",
+        "finalDestination",
+        "home",
+        "places",
+        "visits",
+        "days"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "schema",
+    "schemaVersion",
+    "exportedAt",
+    "contentHash",
+    "trip"
+  ],
+  "additionalProperties": false
+}
