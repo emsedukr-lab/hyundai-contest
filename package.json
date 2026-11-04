@@ -1,0 +1,13 @@
+{
+  "name": "tteonaljido",
+  "private": true,
+  "workspaces": ["packages/shared", "packages/worker", "packages/web"],
+  "scripts": {
+    "test": "npm test --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "build": "npm run build -w @tteonaljido/web",
+    "dev": "npm run build -w @tteonaljido/web && npm run dev -w @tteonaljido/worker",
+    "schema": "npm run schema -w @tteonaljido/shared"
+  },
+  "engines": { "node": ">=22.13" }
+}

@@ -87,7 +87,7 @@ def type_styles(tokens_dir, res):
         style = "TextAppearance.Pleos." + re.sub(r"[^A-Za-z0-9]+", ".", name).strip(".")
         size = int(s["size"])
         lh = float(s["lineHeight"]) if s["lineHeight"] and not s["lineHeight"].endswith("%") else None
-        out.append(f'    <style name="{style}">\n')
+        out.append(f'    <style name="{style}" parent="">\n')  # dotted names must not imply a parent style
         out.append('        <item name="android:fontFamily">@font/asta_sans</item>\n')
         out.append(f'        <item name="android:textSize">{size}sp</item>\n')
         out.append(f'        <item name="android:textFontWeight">{WEIGHTS.get(s["weight"], 400)}</item>\n')

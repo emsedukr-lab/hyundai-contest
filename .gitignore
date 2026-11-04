@@ -7,3 +7,18 @@ design/extracted/
 design/images/
 design/tools/.venv/
 __pycache__/
+# Android / Gradle
+car/**/build/
+car/.gradle/
+car/.kotlin/
+car/local.properties
+.secrets/
+*.jks
+# Node / Cloudflare
+packages/*/dist/
+.wrangler/
+.dev.vars
+*.tsbuildinfo
+playwright-report/
+test-results/
+.work/
