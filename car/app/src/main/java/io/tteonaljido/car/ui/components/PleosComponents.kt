@@ -143,6 +143,7 @@ fun toneColor(t: Tone) = colorResource(
     when (t) { Tone.INFO -> R.color.pleos_text_dark_secondary; Tone.POSITIVE -> R.color.pleos_informative_active; Tone.WARNING -> R.color.pleos_regulation_orange; Tone.NEGATIVE -> R.color.pleos_informative_negative },
 )
 
+/** The colored bar is only a cue; meaning is always in words (Pleos 4.5:1 rule, and no color-only signals). */
 @Composable
 fun StatusLine(text: String, tone: Tone = Tone.INFO) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {

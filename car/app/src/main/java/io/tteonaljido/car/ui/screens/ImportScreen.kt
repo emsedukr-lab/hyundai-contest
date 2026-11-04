@@ -193,7 +193,7 @@ private fun ReviewCard(r: ReviewData, code: String, vm: ImportViewModel) {
             PleosText("다시 확인한 결과", Pleos.type.titleSmall)
             PleosText("충돌 ${r.report.conflicts}건 · 확인 필요 ${r.report.uncertain}건 · 원래 계획은 바꾸지 않아요", Pleos.type.bodyMedium)
             r.report.issues.filter { it.severity != Severity.INFO }.take(4).forEach {
-                StatusLine(it.text, if (it.severity == Severity.CONFLICT) Tone.NEGATIVE else Tone.WARNING)
+                StatusLine("${if (it.severity == Severity.CONFLICT) "충돌" else "확인 필요"} · ${it.text}", if (it.severity == Severity.CONFLICT) Tone.NEGATIVE else Tone.WARNING)
             }
         }
         PleosCard {

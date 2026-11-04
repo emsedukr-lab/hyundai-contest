@@ -103,7 +103,7 @@ fun TripDetailScreen(vm: TripsViewModel, localId: String, drive: DriveState, onB
                         PleosText("확인할 점", Pleos.type.titleSmall)
                         val shown = (report.forDay(day) + report.issues.filter { it.dayIndex == null }).filter { it.severity != Severity.INFO }.take(5)
                         if (shown.isEmpty()) PleosText("이 날은 확인할 점이 없어요", Pleos.type.bodyMedium, secondary)
-                        shown.forEach { StatusLine(it.text, if (it.severity == Severity.CONFLICT) Tone.NEGATIVE else Tone.WARNING) }
+                        shown.forEach { StatusLine("${if (it.severity == Severity.CONFLICT) "충돌" else "확인 필요"} · ${it.text}", if (it.severity == Severity.CONFLICT) Tone.NEGATIVE else Tone.WARNING) }
                         if (t.plan.home == null && t.overlay.home == null && (t.plan.origin is Endpoint.Home || t.plan.finalDestination is Endpoint.Home)) {
                             PleosButton("내비 '집' 불러오기", { vm.loadNaviHome(localId) }, type = ButtonType.SECONDARY, enabled = drive.parked, tag = "naviHome")
                         }
