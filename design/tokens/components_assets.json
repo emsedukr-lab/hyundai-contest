@@ -1,0 +1,1303 @@
+[
+ {
+  "name": "ic_annotation",
+  "page": "Internal Only Canvas",
+  "variants": 6,
+  "size": "408x68",
+  "props": {
+   "Type": [
+    "alert",
+    "alert_line",
+    "alert_tri",
+    "app_info",
+    "info",
+    "info_line"
+   ]
+  }
+ },
+ {
+  "name": "ic_arrow",
+  "page": "Internal Only Canvas",
+  "variants": 4,
+  "size": "272x68",
+  "props": {
+   "Direction": [
+    "down",
+    "left",
+    "right",
+    "up"
+   ]
+  }
+ },
+ {
+  "name": "ic_arrow",
+  "page": "Internal Only Canvas",
+  "variants": 4,
+  "size": "272x68",
+  "props": {
+   "Direction": [
+    "down",
+    "left",
+    "right",
+    "up"
+   ]
+  }
+ },
+ {
+  "name": "ic_beam",
+  "page": "Internal Only Canvas",
+  "variants": 4,
+  "size": "272x68",
+  "props": {
+   "type": [
+    "Auto High Beam",
+    "foglight",
+    "low beam",
+    "tailight"
+   ]
+  }
+ },
+ {
+  "name": "ic_bluetooth",
+  "page": "Internal Only Canvas",
+  "variants": 2,
+  "size": "136x68",
+  "props": {
+   "Connected": [
+    "False",
+    "True"
+   ]
+  }
+ },
+ {
+  "name": "ic_call",
+  "page": "Internal Only Canvas",
+  "variants": 7,
+  "size": "476x68",
+  "props": {
+   "State": [
+    "Absence",
+    "Accept",
+    "Decline",
+    "Outgoing",
+    "Receipt"
+   ],
+   "Disable": [
+    "false",
+    "true"
+   ]
+  }
+ },
+ {
+  "name": "ic_check",
+  "page": "Internal Only Canvas",
+  "variants": 4,
+  "size": "272x68",
+  "props": {
+   "Type": [
+    "Fill",
+    "Round",
+    "basic",
+    "basic_bold"
+   ]
+  }
+ },
+ {
+  "name": "ic_close",
+  "page": "Internal Only Canvas",
+  "variants": 3,
+  "size": "204x68",
+  "props": {
+   "Type": [
+    "Basic",
+    "Circle",
+    "Delete"
+   ]
+  }
+ },
+ {
+  "name": "ic_dropdown",
+  "page": "Internal Only Canvas",
+  "variants": 2,
+  "size": "136x68",
+  "props": {
+   "Direction": [
+    "Down",
+    "Up"
+   ]
+  }
+ },
+ {
+  "name": "ic_eye",
+  "page": "Internal Only Canvas",
+  "variants": 2,
+  "size": "156x88",
+  "props": {
+   "On": [
+    "false",
+    "true"
+   ]
+  }
+ },
+ {
+  "name": "ic_grid",
+  "page": "Internal Only Canvas",
+  "variants": 3,
+  "size": "284x140",
+  "props": {
+   "Property 1": [
+    "100",
+    "44",
+    "64"
+   ]
+  }
+ },
+ {
+  "name": "ic_image",
+  "page": "Internal Only Canvas",
+  "variants": 2,
+  "size": "136x68",
+  "props": {
+   "Type": [
+    "Photo",
+    "Thumbnail"
+   ]
+  }
+ },
+ {
+  "name": "ic_keyboard",
+  "page": "Internal Only Canvas",
+  "variants": 5,
+  "size": "340x68",
+  "props": {
+   "Type": [
+    "Delete",
+    "Enter",
+    "Hidden",
+    "Shift",
+    "Shift-Active"
+   ]
+  }
+ },
+ {
+  "name": "ic_menu",
+  "page": "Internal Only Canvas",
+  "variants": 2,
+  "size": "136x68",
+  "props": {
+   "Type": [
+    "2",
+    "3"
+   ]
+  }
+ },
+ {
+  "name": "ic_mic",
+  "page": "Internal Only Canvas",
+  "variants": 2,
+  "size": "136x68",
+  "props": {
+   "On": [
+    "off",
+    "on"
+   ]
+  }
+ },
+ {
+  "name": "ic_more",
+  "page": "Internal Only Canvas",
+  "variants": 2,
+  "size": "156x88",
+  "props": {
+   "Type": [
+    "Horizontal",
+    "Vertical"
+   ]
+  }
+ },
+ {
+  "name": "ic_profile",
+  "page": "Internal Only Canvas",
+  "variants": 2,
+  "size": "156x88",
+  "props": {
+   "Type": [
+    "Line",
+    "Solid"
+   ]
+  }
+ },
+ {
+  "name": "ic_seat_heat_3",
+  "page": "Internal Only Canvas",
+  "variants": 8,
+  "size": "544x68",
+  "props": {
+   "Position": [
+    "Driver",
+    "Passenger"
+   ],
+   "State": [
+    "Normal",
+    "Step1",
+    "Step2",
+    "Step3"
+   ]
+  }
+ },
+ {
+  "name": "ic_sound",
+  "page": "Internal Only Canvas",
+  "variants": 7,
+  "size": "476x68",
+  "props": {
+   "volume": [
+    "down",
+    "high",
+    "low",
+    "mid",
+    "mute",
+    "up",
+    "warning"
+   ]
+  }
+ },
+ {
+  "name": "ic_steering",
+  "page": "Internal Only Canvas",
+  "variants": 3,
+  "size": "168x64",
+  "props": {
+   "Type": [
+    "A",
+    "B",
+    "C"
+   ]
+  }
+ },
+ {
+  "name": "ic_telltale",
+  "page": "Internal Only Canvas",
+  "variants": 41,
+  "size": "800x456",
+  "props": {
+   "type": [
+    "ABS 고장",
+    "AUTO HOLD",
+    "Auto High Beam",
+    "Autohold",
+    "ENGINE OVERHEATED",
+    "ESC",
+    "ESC OFF",
+    "Front Fog Light",
+    "Handle",
+    "High Beam",
+    "Info",
+    "Low Beam",
+    "Rear Fog Light",
+    "Takeover",
+    "afs",
+    "doortrunkopen",
+    "dpfgpf",
+    "ecall",
+    "engine",
+    "engineoilpressure",
+    "epb",
+    "evsystemfail",
+    "h2leak",
+    "h2sensor",
+    "immobilizer",
+    "ledheadlight",
+    "masterwarnig",
+    "mdps",
+    "preheat",
+    "동승석 전면 에어백 작동 정지 장치",
+    "미등",
+    "안전 벨트 경고",
+    "에어백 경고",
+    "저전납 배터리 경고",
+    "제동 장치 고장",
+    "주차 브레이크 고장",
+    "주차 브레이크 체결",
+    "차량 출력 제한 경고",
+    "타이어 공기압",
+    "통합 경고등",
+    "회생 제동 고장"
+   ]
+  }
+ },
+ {
+  "name": "imagery_image",
+  "page": "Internal Only Canvas",
+  "variants": 2,
+  "size": "220x120",
+  "props": {
+   "Type": [
+    "Fill",
+    "Image"
+   ]
+  }
+ },
+ {
+  "name": "imagery_profile",
+  "page": "Internal Only Canvas",
+  "variants": 4,
+  "size": "420x120",
+  "props": {
+   "Fill": [
+    "false",
+    "true"
+   ],
+   "New": [
+    "false",
+    "true"
+   ]
+  }
+ },
+ {
+  "name": "img_app_market",
+  "page": "Internal Only Canvas",
+  "variants": 16,
+  "size": "740x728",
+  "props": {
+   "Name": [
+    "Delivery",
+    "Dummy",
+    "Eats",
+    "Flo",
+    "Kakao",
+    "Mycle",
+    "Naver",
+    "Netflex",
+    "Reminder",
+    "Spotify",
+    "Starbucks",
+    "Tmap",
+    "Vibe",
+    "YT_Music",
+    "Youtube",
+    "charge"
+   ]
+  }
+ },
+ {
+  "name": "img_apps",
+  "page": "Internal Only Canvas",
+  "variants": 16,
+  "size": "740x728",
+  "props": {
+   "Name": [
+    "Android_Auto",
+    "Bluetooth",
+    "Call",
+    "Carplay",
+    "Gleo AI",
+    "Message",
+    "Mirroring",
+    "Music",
+    "Navigation",
+    "Radio",
+    "app market",
+    "blackbox",
+    "camera",
+    "driving",
+    "energy",
+    "vehicle"
+   ]
+  }
+ },
+ {
+  "name": "ivi_app_bar",
+  "page": "Internal Only Canvas",
+  "variants": 3,
+  "size": "360x300",
+  "props": {
+   "State": [
+    "Disabled",
+    "Enabled",
+    "Pressed"
+   ]
+  }
+ },
+ {
+  "name": "ivi_basic_button",
+  "page": "Internal Only Canvas",
+  "variants": 18,
+  "size": "1680x320",
+  "props": {
+   "Type": [
+    "Primary",
+    "Secondary"
+   ],
+   "Size": [
+    "Large",
+    "Medium",
+    "Small"
+   ],
+   "State": [
+    "Disabled",
+    "Enabled",
+    "Pressed"
+   ]
+  }
+ },
+ {
+  "name": "ivi_icon_button",
+  "page": "Internal Only Canvas",
+  "variants": 18,
+  "size": "572x320",
+  "props": {
+   "Type": [
+    "Basic",
+    "Circle",
+    "Plain"
+   ],
+   "State": [
+    "Diabled",
+    "Enabled",
+    "Pressed"
+   ],
+   "Size": [
+    "Medium",
+    "Small"
+   ]
+  }
+ },
+ {
+  "name": "ivi_scroll_bar",
+  "page": "Internal Only Canvas",
+  "variants": 3,
+  "size": "603x487",
+  "props": {
+   "State": [
+    "Enabled",
+    "Pressed",
+    "scroll"
+   ],
+   "Controllable": [
+    "No",
+    "Yes"
+   ]
+  }
+ },
+ {
+  "name": "ivi_segmented_control/line",
+  "page": "Internal Only Canvas",
+  "variants": 2,
+  "size": "1147x288",
+  "props": {
+   "Bottom line": [
+    "False",
+    "True"
+   ]
+  }
+ },
+ {
+  "name": "ivi_spinner",
+  "page": "Internal Only Canvas",
+  "variants": 4,
+  "size": "1140x792",
+  "props": {
+   "Type": [
+    "Date",
+    "Time"
+   ],
+   "Size": [
+    "Large",
+    "Medium"
+   ]
+  }
+ },
+ {
+  "name": "ivi_switch",
+  "page": "Internal Only Canvas",
+  "variants": 12,
+  "size": "320x276",
+  "props": {
+   "Active": [
+    "false",
+    "true"
+   ],
+   "Size": [
+    "Medium",
+    "Small"
+   ],
+   "State": [
+    "Disabled",
+    "Enabled",
+    "Pressed"
+   ]
+  }
+ },
+ {
+  "name": "ivi_text_field",
+  "page": "Internal Only Canvas",
+  "variants": 12,
+  "size": "1607x930",
+  "props": {
+   "Size": [
+    "Medium",
+    "Small"
+   ],
+   "State": [
+    "Enabled",
+    "Entered",
+    "Error",
+    "Focused",
+    "Read Only",
+    "Typing"
+   ]
+  }
+ },
+ {
+  "name": "segmented_controls/line_button",
+  "page": "Internal Only Canvas",
+  "variants": 8,
+  "size": "878x288",
+  "props": {
+   "State": [
+    "Disabled",
+    "Enabled",
+    "Pressed",
+    "Selected"
+   ],
+   "Margin": [
+    "Large(Page Nav Only))",
+    "Medium"
+   ]
+  }
+ },
+ {
+  "name": "spinner_wheels",
+  "page": "Internal Only Canvas",
+  "variants": 3,
+  "size": "1184x888",
+  "props": {
+   "Type": [
+    "Date",
+    "Date+Time",
+    "Time"
+   ]
+  }
+ },
+ {
+  "name": "table",
+  "page": "Internal Only Canvas",
+  "variants": 2,
+  "size": "1240x332",
+  "props": {
+   "Contents": [
+    "Body",
+    "Title"
+   ]
+  }
+ },
+ {
+  "name": "vehicle_setting_popup_content/List",
+  "page": "Internal Only Canvas",
+  "variants": 3,
+  "size": "720x1632",
+  "props": {
+   "Type": [
+    "Fixed",
+    "Hug",
+    "Scroll"
+   ]
+  }
+ },
+ {
+  "name": "vehicle_setting_popup_content/List/item",
+  "page": "Internal Only Canvas",
+  "variants": 3,
+  "size": "720x416",
+  "props": {
+   "State": [
+    "Enabled",
+    "Pressed",
+    "Selected"
+   ]
+  }
+ },
+ {
+  "name": "⇄  Table / Row",
+  "page": "Internal Only Canvas",
+  "variants": 2,
+  "size": "1064x168",
+  "props": {
+   "☰ Type": [
+    "Primary",
+    "Secondary"
+   ]
+  }
+ },
+ {
+  "name": "⇄ Table / Col",
+  "page": "Internal Only Canvas",
+  "variants": 2,
+  "size": "240x168",
+  "props": {
+   "☰ Type": [
+    "Primary",
+    "Secondary"
+   ]
+  }
+ },
+ {
+  "name": "img_apps",
+  "page": "✦ Foundation",
+  "variants": 16,
+  "size": "740x728",
+  "props": {
+   "Name": [
+    "Android_Auto",
+    "Bluetooth",
+    "Call",
+    "Carplay",
+    "Gleo AI",
+    "Message",
+    "Mirroring",
+    "Music",
+    "Navigation",
+    "Radio",
+    "app market",
+    "blackbox",
+    "camera",
+    "driving",
+    "energy",
+    "vehicle"
+   ]
+  }
+ },
+ {
+  "name": "dropdown_button",
+  "page": "❖ Components",
+  "variants": 6,
+  "size": "680x820",
+  "props": {
+   "Size": [
+    "Medium",
+    "Small"
+   ],
+   "State": [
+    "Disabled",
+    "Enabled",
+    "Pressed"
+   ]
+  }
+ },
+ {
+  "name": "dropdown_item",
+  "page": "❖ Components",
+  "variants": 8,
+  "size": "608x898",
+  "props": {
+   "Size": [
+    "Medium",
+    "Small"
+   ],
+   "State": [
+    "Disabled",
+    "Enabled",
+    "Footer",
+    "Selected"
+   ]
+  }
+ },
+ {
+  "name": "ivi_basic_button",
+  "page": "❖ Components",
+  "variants": 18,
+  "size": "1680x320",
+  "props": {
+   "Type": [
+    "Primary",
+    "Secondary"
+   ],
+   "Size": [
+    "Large",
+    "Medium",
+    "Small"
+   ],
+   "State": [
+    "Disabled",
+    "Enabled",
+    "Pressed"
+   ]
+  }
+ },
+ {
+  "name": "ivi_checkbox",
+  "page": "❖ Components",
+  "variants": 9,
+  "size": "272x272",
+  "props": {
+   "Active": [
+    "False",
+    "Indeterminate",
+    "True"
+   ],
+   "State": [
+    "Disabled",
+    "Enabled",
+    "Pressed"
+   ]
+  }
+ },
+ {
+  "name": "ivi_dropdown",
+  "page": "❖ Components",
+  "variants": 2,
+  "size": "1320x180",
+  "props": {
+   "Size": [
+    "Medium",
+    "Small"
+   ]
+  }
+ },
+ {
+  "name": "ivi_dropdown_menus",
+  "page": "❖ Components",
+  "variants": 2,
+  "size": "1320x444",
+  "props": {
+   "Size": [
+    "Medium",
+    "Small"
+   ]
+  }
+ },
+ {
+  "name": "ivi_header",
+  "page": "❖ Components",
+  "variants": 6,
+  "size": "1435x1520",
+  "props": {
+   "Type": [
+    "Music",
+    "Music_background",
+    "Phone",
+    "Phone_Segmented_control",
+    "Radio",
+    "Radio_Segmented_control"
+   ]
+  }
+ },
+ {
+  "name": "ivi_icon_button",
+  "page": "❖ Components",
+  "variants": 18,
+  "size": "572x320",
+  "props": {
+   "Type": [
+    "Basic",
+    "Circle",
+    "Plain"
+   ],
+   "State": [
+    "Diabled",
+    "Enabled",
+    "Pressed"
+   ],
+   "Size": [
+    "Medium",
+    "Small"
+   ]
+  }
+ },
+ {
+  "name": "ivi_keypad_normal",
+  "page": "❖ Components",
+  "variants": 18,
+  "size": "966x400",
+  "props": {
+   "Type": [
+    "Delete",
+    "Enter",
+    "Hyphen",
+    "Mic",
+    "Primary",
+    "Secondary",
+    "Shift",
+    "Space"
+   ],
+   "State": [
+    "Enabled",
+    "Pressed"
+   ],
+   "On": [
+    "False",
+    "True"
+   ]
+  }
+ },
+ {
+  "name": "ivi_keypad_static",
+  "page": "❖ Components",
+  "variants": 18,
+  "size": "966x400",
+  "props": {
+   "Type": [
+    "Delete",
+    "Enter",
+    "Hyphen",
+    "Mic",
+    "Primary",
+    "Secondary",
+    "Shift",
+    "Space"
+   ],
+   "State": [
+    "Enabled",
+    "Pressed"
+   ],
+   "On": [
+    "False",
+    "True"
+   ]
+  }
+ },
+ {
+  "name": "ivi_notification_system",
+  "page": "❖ Components",
+  "variants": 3,
+  "size": "2929x676",
+  "props": {
+   "Type": [
+    "Call",
+    "Image+Text",
+    "Only Text"
+   ]
+  }
+ },
+ {
+  "name": "ivi_number_field",
+  "page": "❖ Components",
+  "variants": 8,
+  "size": "910x554",
+  "props": {
+   "Size": [
+    "Large",
+    "Medium"
+   ],
+   "State": [
+    "Enabled",
+    "Entered",
+    "Error",
+    "Focused"
+   ]
+  }
+ },
+ {
+  "name": "ivi_numeric_keypad",
+  "page": "❖ Components",
+  "variants": 8,
+  "size": "779x499",
+  "props": {
+   "Type": [
+    "Clear",
+    "Delete",
+    "Number"
+   ],
+   "State": [
+    "Disabled",
+    "Enabled",
+    "Pressed"
+   ]
+  }
+ },
+ {
+  "name": "ivi_radio_button",
+  "page": "❖ Components",
+  "variants": 6,
+  "size": "272x188",
+  "props": {
+   "Active": [
+    "false",
+    "true"
+   ],
+   "State": [
+    "Disabled",
+    "Enabled",
+    "Pressed"
+   ]
+  }
+ },
+ {
+  "name": "ivi_segmented_control/line",
+  "page": "❖ Components",
+  "variants": 2,
+  "size": "1147x288",
+  "props": {
+   "Bottom line": [
+    "False",
+    "True"
+   ]
+  }
+ },
+ {
+  "name": "ivi_segmented_control/solid",
+  "page": "❖ Components",
+  "variants": 9,
+  "size": "1216x1020",
+  "props": {
+   "Size": [
+    "Large",
+    "Medium"
+   ],
+   "Segments": [
+    "2",
+    "3",
+    "4",
+    "5",
+    "6"
+   ]
+  }
+ },
+ {
+  "name": "ivi_slider_centered",
+  "page": "❖ Components",
+  "variants": 6,
+  "size": "572x740",
+  "props": {
+   "Type": [
+    "Basic",
+    "Button",
+    "Number"
+   ],
+   "OFF": [
+    "False",
+    "True"
+   ]
+  }
+ },
+ {
+  "name": "ivi_slider_continuous",
+  "page": "❖ Components",
+  "variants": 4,
+  "size": "888x560",
+  "props": {
+   "Size": [
+    "Large",
+    "Medium"
+   ],
+   "Type": [
+    "Basic",
+    "Floating"
+   ]
+  }
+ },
+ {
+  "name": "ivi_spinner",
+  "page": "❖ Components",
+  "variants": 4,
+  "size": "1140x792",
+  "props": {
+   "Type": [
+    "Date",
+    "Time"
+   ],
+   "Size": [
+    "Large",
+    "Medium"
+   ]
+  }
+ },
+ {
+  "name": "ivi_switch",
+  "page": "❖ Components",
+  "variants": 12,
+  "size": "320x276",
+  "props": {
+   "Active": [
+    "false",
+    "true"
+   ],
+   "Size": [
+    "Medium",
+    "Small"
+   ],
+   "State": [
+    "Disabled",
+    "Enabled",
+    "Pressed"
+   ]
+  }
+ },
+ {
+  "name": "ivi_system_popup",
+  "page": "❖ Components",
+  "variants": 4,
+  "size": "3128x914",
+  "props": {
+   "Size": [
+    "Large",
+    "Medium"
+   ],
+   "Extended": [
+    "False",
+    "True"
+   ]
+  }
+ },
+ {
+  "name": "ivi_text_button",
+  "page": "❖ Components",
+  "variants": 6,
+  "size": "660x78",
+  "props": {
+   "Size": [
+    "Medium",
+    "Small"
+   ],
+   "State": [
+    "Disabled",
+    "Enabled",
+    "Pressed"
+   ]
+  }
+ },
+ {
+  "name": "ivi_text_field",
+  "page": "❖ Components",
+  "variants": 12,
+  "size": "1607x930",
+  "props": {
+   "Size": [
+    "Medium",
+    "Small"
+   ],
+   "State": [
+    "Enabled",
+    "Entered",
+    "Error",
+    "Focused",
+    "Read Only",
+    "Typing"
+   ]
+  }
+ },
+ {
+  "name": "ivi_title",
+  "page": "❖ Components",
+  "variants": 3,
+  "size": "1068x500",
+  "props": {
+   "Type": [
+    "Depth",
+    "Main",
+    "Search"
+   ]
+  }
+ },
+ {
+  "name": "ivi_toast_popup",
+  "page": "❖ Components",
+  "variants": 2,
+  "size": "3128x146",
+  "props": {
+   "Margin(Default)": [
+    "off",
+    "on"
+   ]
+  }
+ },
+ {
+  "name": "ivi_toggle_button",
+  "page": "❖ Components",
+  "variants": 18,
+  "size": "1680x320",
+  "props": {
+   "Size": [
+    "Large",
+    "Medium",
+    "Small"
+   ],
+   "State": [
+    "Disabled",
+    "Enabled",
+    "Pressed"
+   ],
+   "On active": [
+    "false",
+    "true"
+   ]
+  }
+ },
+ {
+  "name": "segmented_controls/goast_button",
+  "page": "❖ Components",
+  "variants": 10,
+  "size": "1120x208",
+  "props": {
+   "Size": [
+    "Large",
+    "Medium"
+   ],
+   "State": [
+    "Disabled",
+    "Enabled",
+    "Pressed"
+   ],
+   "Focused": [
+    "false",
+    "true"
+   ]
+  }
+ },
+ {
+  "name": "segmented_controls/line_button",
+  "page": "❖ Components",
+  "variants": 8,
+  "size": "878x288",
+  "props": {
+   "State": [
+    "Disabled",
+    "Enabled",
+    "Pressed",
+    "Selected"
+   ],
+   "Margin": [
+    "Large(Page Nav Only))",
+    "Medium"
+   ]
+  }
+ },
+ {
+  "name": "slider_button",
+  "page": "❖ Components",
+  "variants": 12,
+  "size": "620x212",
+  "props": {
+   "Size": [
+    "Medium",
+    "Small"
+   ],
+   "State": [
+    "Disabled",
+    "Enabled",
+    "Pressed"
+   ],
+   "Direction": [
+    "down",
+    "up"
+   ]
+  }
+ },
+ {
+  "name": "slider_knob",
+  "page": "❖ Components",
+  "variants": 2,
+  "size": "164x96",
+  "props": {
+   "State": [
+    "Enabled",
+    "Pressed"
+   ]
+  }
+ },
+ {
+  "name": "slider_track",
+  "page": "❖ Components",
+  "variants": 6,
+  "size": "360x498",
+  "props": {
+   "State": [
+    "Max",
+    "Mid",
+    "Min"
+   ],
+   "OFF": [
+    "False",
+    "True"
+   ]
+  }
+ },
+ {
+  "name": "slider_track",
+  "page": "❖ Components",
+  "variants": 20,
+  "size": "1045x1060",
+  "props": {
+   "Size": [
+    "Medium",
+    "Small"
+   ],
+   "State": [
+    "Enabled",
+    "Pressed"
+   ],
+   "Level": [
+    "High",
+    "Low",
+    "Max",
+    "Mid",
+    "Min"
+   ]
+  }
+ },
+ {
+  "name": "spinner_wheels",
+  "page": "❖ Components",
+  "variants": 3,
+  "size": "1184x888",
+  "props": {
+   "Type": [
+    "Date",
+    "Date+Time",
+    "Time"
+   ]
+  }
+ },
+ {
+  "name": "system_notification/button",
+  "page": "❖ Components",
+  "variants": 4,
+  "size": "1444x678",
+  "props": {
+   "Type": [
+    "Call",
+    "Horizontal",
+    "Single",
+    "Vertical"
+   ]
+  }
+ },
+ {
+  "name": "system_notification/images",
+  "page": "❖ Components",
+  "variants": 3,
+  "size": "1444x260",
+  "props": {
+   "Type": [
+    "App",
+    "Image",
+    "Profile"
+   ]
+  }
+ },
+ {
+  "name": "system_popup/buttons",
+  "page": "❖ Components",
+  "variants": 2,
+  "size": "840x564",
+  "props": {
+   "Type": [
+    "Horizontal",
+    "Vertical"
+   ]
+  }
+ },
+ {
+  "name": "system_popup/header",
+  "page": "❖ Components",
+  "variants": 2,
+  "size": "840x708",
+  "props": {
+   "Size": [
+    "Large",
+    "Medium"
+   ]
+  }
+ }
+]

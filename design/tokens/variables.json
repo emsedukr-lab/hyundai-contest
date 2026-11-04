@@ -1,0 +1,7302 @@
+{
+ "Color (COLOR)": {
+  "Brand/Teritary/Black": {
+   "Light": "#000000",
+   "Dark": "#000000"
+  },
+  "Brand/Teritary/White": {
+   "Light": "#FFFFFF",
+   "Dark": "#FFFFFF"
+  },
+  "Button/Call/accept-normal": {
+   "Light": "#32B957",
+   "Dark": "#3BD665"
+  },
+  "Button/Call/accept-pressed": {
+   "Light": "#279E47",
+   "Dark": "#2DB752"
+  },
+  "Button/Call/end-normal": {
+   "Light": "#FE3D16",
+   "Dark": "#FF4C28"
+  },
+  "Button/Call/end-pressed": {
+   "Light": "#E73612",
+   "Dark": "#DF4323"
+  },
+  "Common/Empty/Content": {
+   "Light": "#C8C8C8",
+   "Dark": "#626675"
+  },
+  "Content/Default/Inverse/Normal": {
+   "Light": "#FFFFFF",
+   "Dark": "#0F172A"
+  },
+  "Content/Default/Normal": {
+   "Light": "#0F172A",
+   "Dark": "#FFFFFF",
+   "Pleos": "#0F172A"
+  },
+  "Core/Desaturate/Neutral20": {
+   "Light": "#DDE1EB",
+   "Dark": "#DDE1EB",
+   "Pleos": "#DDE1EB"
+  },
+  "Core/Desaturate/Neutral50": {
+   "Light": "#8793AD",
+   "Dark": "#8793AD",
+   "Pleos": "#8793AD"
+  },
+  "Core/Desaturate/Neutral60": {
+   "Light": "#606D8A",
+   "Dark": "#606D8A",
+   "Pleos": "#606D8A"
+  },
+  "Core/Desaturate/Neutral75": {
+   "Light": "#2F3B57",
+   "Dark": "#2F3B57",
+   "Pleos": "#2F3B57"
+  },
+  "Core/Desaturate/Neutral90": {
+   "Light": "#0F172A",
+   "Dark": "#0F172A"
+  },
+  "Core/White": {
+   "Light": "#FFFFFF",
+   "Dark": "#FFFFFF"
+  },
+  "Feature/Media/music-primary": {
+   "Light": "#4781FF",
+   "Dark": "#4781FF"
+  },
+  "Feature/Media/radio-primary": {
+   "Light": "#C911E7",
+   "Dark": "#C911E7"
+  },
+  "Gray/00": {
+   "Light": "#FFFFFF",
+   "Dark": "#131417"
+  },
+  "Gray/400": {
+   "Light": "#A4A8AE",
+   "Dark": "#A4A8AE"
+  },
+  "Gray/50": {
+   "Light": "#F7F8FA",
+   "Dark": "#1D1E21"
+  },
+  "Gray/900": {
+   "Light": "#131417",
+   "Dark": "#FFFFFF"
+  },
+  "GrayAlpha/100": {
+   "Light": "#1A131417",
+   "Dark": "#1AFFFFFF"
+  },
+  "GrayAlpha/200": {
+   "Light": "#33131417",
+   "Dark": "#33FFFFFF"
+  },
+  "Icon/gray-primary": {
+   "Light": "#131417",
+   "Dark": "#FFFFFF"
+  },
+  "Icon/gray-quaternary": {
+   "Light": "#52131417",
+   "Dark": "#52FFFFFF"
+  },
+  "Icon/gray-tertiary": {
+   "Light": "#A3131417",
+   "Dark": "#A3FFFFFF"
+  },
+  "Icon/white-primary": {
+   "Light": "#FFFFFF",
+   "Dark": "#131417"
+  },
+  "Informative/active": {
+   "Light": "#02C265",
+   "Dark": "#00E074"
+  },
+  "Informative/autonomous driving": {
+   "Light": "#5A46FA",
+   "Dark": "#6A57FF"
+  },
+  "Line/Divider/Regular": {
+   "Light": "#DDE1EB",
+   "Dark": "#2F3B57",
+   "Pleos": "#DDE1EB"
+  },
+  "Miscellaneous/Charging/deep": {
+   "Light": "#00B975",
+   "Dark": "#00B975"
+  },
+  "Miscellaneous/Charging/normal": {
+   "Light": "#00DB25",
+   "Dark": "#00DB25"
+  },
+  "Miscellaneous/Switch/background-on": {
+   "Light": "#02C265",
+   "Dark": "#00E074"
+  },
+  "Miscellaneous/Switch/button-disabled": {
+   "Light": "#FFFFFF",
+   "Dark": "#33FFFFFF"
+  },
+  "Miscellaneous/Switch/button-off": {
+   "Light": "#FFFFFF",
+   "Dark": "#A4A8AE"
+  },
+  "Miscellaneous/Switch/button-on": {
+   "Light": "#FFFFFF",
+   "Dark": "#FFFFFF"
+  },
+  "Miscellaneous/Textfields/background": {
+   "Light": "#FFFFFF",
+   "Dark": "#131417"
+  },
+  "Regulation/blue": {
+   "Light": "#0064FF",
+   "Dark": "#0082FF"
+  },
+  "Regulation/green": {
+   "Light": "#00BA13",
+   "Dark": "#55F165"
+  },
+  "Regulation/orange": {
+   "Light": "#FF8A00",
+   "Dark": "#FF8A00"
+  },
+  "Regulation/red": {
+   "Light": "#F62E24",
+   "Dark": "#FF4339"
+  },
+  "Static/white-primary": {
+   "Light": "#FFFFFF",
+   "Dark": "#FFFFFF"
+  },
+  "Surface/Status/Accent/Idle": {
+   "Light": "#606D8A",
+   "Dark": "#8793AD",
+   "Pleos": "#606D8A"
+  },
+  "Surface/container": {
+   "Light": "#FFFFFF",
+   "Dark": "#1D1E21"
+  },
+  "System/Grayscale/Opaque/Black": {
+   "Light": "#000000",
+   "Dark": "#000000"
+  },
+  "System/Grayscale/Opaque/White": {
+   "Light": "#FFFFFF",
+   "Dark": "#FFFFFF"
+  },
+  "White": {
+   "Light": "#FFFFFF",
+   "Dark": "#FFFFFF"
+  },
+  "_Feature/Driving/Normal/Alert": {
+   "Light": "#FF8A00",
+   "Dark": "#FF8A00"
+  },
+  "_Feature/Driving/Normal/Danger": {
+   "Light": "#FF2E00",
+   "Dark": "#FF2E00"
+  },
+  "_Feature/Driving/Normal/Information": {
+   "Light": "#2E5CFF",
+   "Dark": "#2E5CFF"
+  },
+  "_Feature/Driving/Normal/Positive": {
+   "Light": "#00BA13",
+   "Dark": "#00BA13"
+  },
+  "_Feature/Driving/Normal/Warning": {
+   "Light": "#FFA133",
+   "Dark": "#FFA133"
+  },
+  "_Legacy/Scale/Black/400": {
+   "Light": "#38151515",
+   "Dark": "#38FFFFFF"
+  },
+  "_Legacy/Scale/Black/Black": {
+   "Light": "#000000",
+   "Dark": "#FFFFFF"
+  },
+  "_Legacy/Scale/White/300": {
+   "Light": "#29FFFFFF",
+   "Dark": "#1F151515"
+  },
+  "_Legacy/Scale/White/White": {
+   "Light": "#FFFFFF",
+   "Dark": "#000000"
+  },
+  "_Legacy/Solid/Cool/500": {
+   "Light": "#626675",
+   "Dark": "#626675"
+  },
+  "_Legacy/Solid/Cool/900": {
+   "Light": "#1B1D21",
+   "Dark": "#F0F1F5"
+  },
+  "_Legacy/Solid/Warm/300": {
+   "Light": "#C8C8C8",
+   "Dark": "#353535"
+  },
+  "_System/Brand/Primary/Normal": {
+   "Light": "#5A46FA",
+   "Dark": "#6A57FF"
+  },
+  "alpha/dark/100": {
+   "Light": "#1A131417",
+   "Dark": "#1AFFFFFF"
+  },
+  "alpha/dark/200": {
+   "Light": "#33131417",
+   "Dark": "#33FFFFFF"
+  },
+  "alpha/dark/300": {
+   "Light": "#4D131417",
+   "Dark": "#4DFFFFFF"
+  },
+  "alpha/dark/400": {
+   "Light": "#66131417",
+   "Dark": "#66FFFFFF"
+  },
+  "alpha/dark/50": {
+   "Light": "#0D131417",
+   "Dark": "#0DFFFFFF"
+  },
+  "alpha/dark/500": {
+   "Light": "#80131417",
+   "Dark": "#80FFFFFF"
+  },
+  "alpha/light/100": {
+   "Light": "#1AFFFFFF",
+   "Dark": "#1A131417"
+  },
+  "alpha/light/200": {
+   "Light": "#33FFFFFF",
+   "Dark": "#33131417"
+  },
+  "alpha/light/300": {
+   "Light": "#4DFFFFFF",
+   "Dark": "#4D131417"
+  },
+  "alpha/light/400": {
+   "Light": "#66FFFFFF",
+   "Dark": "#66131417"
+  },
+  "alpha/light/50": {
+   "Light": "#0DFFFFFF",
+   "Dark": "#0D131417"
+  },
+  "alpha/light/500": {
+   "Light": "#80FFFFFF",
+   "Dark": "#80131417"
+  },
+  "background/popup": {
+   "Light": "#FFFFFF",
+   "Dark": "#313236"
+  },
+  "background/primary": {
+   "Light": "#F7F8FA",
+   "Dark": "#1D1E21"
+  },
+  "background/secondary": {
+   "Light": "#FFFFFF",
+   "Dark": "#131417"
+  },
+  "basic/00": {
+   "Light": "#FFFFFF",
+   "Dark": "#131417"
+  },
+  "basic/100": {
+   "Light": "#EDEEF2",
+   "Dark": "#313236"
+  },
+  "basic/200": {
+   "Light": "#E0E1E6",
+   "Dark": "#44464E"
+  },
+  "basic/300": {
+   "Light": "#C7C9CE",
+   "Dark": "#686A72"
+  },
+  "basic/400": {
+   "Light": "#A4A8AE",
+   "Dark": "#A4A8AE"
+  },
+  "basic/50": {
+   "Light": "#F7F8FA",
+   "Dark": "#1D1E21"
+  },
+  "basic/500": {
+   "Light": "#686A72",
+   "Dark": "#C7C9CE"
+  },
+  "basic/600": {
+   "Light": "#44464E",
+   "Dark": "#E0E1E6"
+  },
+  "basic/700": {
+   "Light": "#313236",
+   "Dark": "#EDEEF2"
+  },
+  "basic/800": {
+   "Light": "#1D1E21",
+   "Dark": "#F7F8FA"
+  },
+  "basic/900": {
+   "Light": "#131417",
+   "Dark": "#FFFFFF"
+  },
+  "button/basic/disabled": {
+   "Light": "#33FFFFFF",
+   "Dark": "#33131417"
+  },
+  "button/basic/enabled": {
+   "Light": "#0D131417",
+   "Dark": "#0DFFFFFF"
+  },
+  "button/basic/pressed": {
+   "Light": "#1A131417",
+   "Dark": "#1AFFFFFF"
+  },
+  "button/filled/disabled": {
+   "Light": "#0D131417",
+   "Dark": "#0DFFFFFF"
+  },
+  "button/filled/enabled": {
+   "Light": "#44464E",
+   "Dark": "#E0E1E6"
+  },
+  "button/filled/pressed": {
+   "Light": "#313236",
+   "Dark": "#C7C9CE"
+  },
+  "button/switch/disabled": {
+   "Light": "#4DFFFFFF",
+   "Dark": "#4D131417"
+  },
+  "button/switch/enabled": {
+   "Light": "#FFFFFF",
+   "Dark": "#33FFFFFF"
+  },
+  "button/switch/pressed": {
+   "Light": "#80FFFFFF",
+   "Dark": "#1AFFFFFF"
+  },
+  "climate/button_border_enabled": {
+   "Light": "#33131417",
+   "Dark": "#1AFFFFFF"
+  },
+  "climate/slider_background": {
+   "Light": "#FFFFFF",
+   "Dark": "#313236"
+  },
+  "color/alpha/dark/300": {
+   "Light": "#4D131417",
+   "Dark": "#4DFFFFFF"
+  },
+  "color/alpha/dark/400": {
+   "Light": "#66131417",
+   "Dark": "#66FFFFFF"
+  },
+  "color/alpha/light/100": {
+   "Light": "#1AFFFFFF",
+   "Dark": "#1A131417"
+  },
+  "color/alpha/light/200": {
+   "Light": "#33FFFFFF",
+   "Dark": "#33131417"
+  },
+  "color/alpha/light/500": {
+   "Light": "#80FFFFFF",
+   "Dark": "#80131417"
+  },
+  "color/background/popup": {
+   "Light": "#FFFFFF",
+   "Dark": "#313236"
+  },
+  "color/basic/00": {
+   "Light": "#FFFFFF",
+   "Dark": "#131417"
+  },
+  "color/basic/100": {
+   "Light": "#EDEEF2",
+   "Dark": "#313236"
+  },
+  "color/basic/50": {
+   "Light": "#F7F8FA",
+   "Dark": "#1D1E21"
+  },
+  "color/basic/500": {
+   "Light": "#686A72",
+   "Dark": "#C7C9CE"
+  },
+  "color/basic/600": {
+   "Light": "#44464E",
+   "Dark": "#E0E1E6"
+  },
+  "color/basic/700": {
+   "Light": "#313236",
+   "Dark": "#EDEEF2"
+  },
+  "color/basic/900": {
+   "Light": "#131417",
+   "Dark": "#FFFFFF"
+  },
+  "color/button/basic/disabled": {
+   "Light": "#33FFFFFF",
+   "Dark": "#33131417"
+  },
+  "color/button/basic/enabled": {
+   "Light": "#0D131417",
+   "Dark": "#0DFFFFFF"
+  },
+  "color/button/basic/pressed": {
+   "Light": "#1A131417",
+   "Dark": "#1AFFFFFF"
+  },
+  "color/button/filled/disabled": {
+   "Light": "#0D131417",
+   "Dark": "#0DFFFFFF"
+  },
+  "color/button/filled/enabled": {
+   "Light": "#44464E",
+   "Dark": "#E0E1E6"
+  },
+  "color/button/filled/pressed": {
+   "Light": "#313236",
+   "Dark": "#C7C9CE"
+  },
+  "color/dim/dark/primary": {
+   "Light": "#0D131417",
+   "Dark": "#0DFFFFFF"
+  },
+  "color/dim/light/primary": {
+   "Light": "#80FFFFFF",
+   "Dark": "#80131417"
+  },
+  "color/divider/primary": {
+   "Light": "#0D131417",
+   "Dark": "#0DFFFFFF"
+  },
+  "color/divider/secondary": {
+   "Light": "#1A131417",
+   "Dark": "#1AFFFFFF"
+  },
+  "color/driving_view/charging_primary": {
+   "Light": "#00DB25",
+   "Dark": "#00DB25"
+  },
+  "color/driving_view/gradient_end": {
+   "Light": "#FFFFFF",
+   "Dark": "#131417"
+  },
+  "color/driving_view/gradient_start-updated": {
+   "Light": "#00FFFFFF",
+   "Dark": "#00131417"
+  },
+  "color/feature/driving_view/mask/filled_secondary": {
+   "Light": "#00F7F8FA",
+   "Dark": "#001D1E21"
+  },
+  "color/feature/driving_view/mask/subtle_secondary": {
+   "Light": "#F7F8FA",
+   "Dark": "#1D1E21"
+  },
+  "color/icon/dark/quaternary": {
+   "Light": "#52131417",
+   "Dark": "#52FFFFFF"
+  },
+  "color/icon/dark/secondary": {
+   "Light": "#D6131417",
+   "Dark": "#D6FFFFFF"
+  },
+  "color/informative/autonomous_driving": {
+   "Light": "#5A46FA",
+   "Dark": "#6A57FF"
+  },
+  "color/regulation/blue": {
+   "Light": "#0064FF",
+   "Dark": "#0082FF"
+  },
+  "color/regulation/green": {
+   "Light": "#00BA13",
+   "Dark": "#55F165"
+  },
+  "color/regulation/orange": {
+   "Light": "#FF8A00",
+   "Dark": "#FF8A00"
+  },
+  "color/regulation/red": {
+   "Light": "#F62E24",
+   "Dark": "#FF4339"
+  },
+  "color/regulation/yellow": {
+   "Light": "#FFC224",
+   "Dark": "#FFC224"
+  },
+  "color/static/light/200": {
+   "Light": "#D6FFFFFF",
+   "Dark": "#D6FFFFFF"
+  },
+  "color/surface/basic": {
+   "Light": "#FFFFFF",
+   "Dark": "#1D1E21"
+  },
+  "color/switch/knob_on": {
+   "Light": "#FFFFFF",
+   "Dark": "#FFFFFF"
+  },
+  "color/switch/off": {
+   "Light": "#4D131417",
+   "Dark": "#1AFFFFFF"
+  },
+  "color/switch/on": {
+   "Light": "#02C265",
+   "Dark": "#00E074"
+  },
+  "color/text/dark/secondary": {
+   "Light": "#D6131417",
+   "Dark": "#D6FFFFFF"
+  },
+  "color/text/light/primary": {
+   "Light": "#FFFFFF",
+   "Dark": "#131417"
+  },
+  "color/text/light/secondary": {
+   "Light": "#D6FFFFFF",
+   "Dark": "#D6131417"
+  },
+  "color/text/light/tertiary": {
+   "Light": "#A3FFFFFF",
+   "Dark": "#A3131417"
+  },
+  "controller/slider/knop": {
+   "Light": "#FFFFFF",
+   "Dark": "#4DFFFFFF"
+  },
+  "controller/slider/normal": {
+   "Light": "#33131417",
+   "Dark": "#1AFFFFFF"
+  },
+  "controller/slider/pressed": {
+   "Light": "#4D131417",
+   "Dark": "#33FFFFFF"
+  },
+  "controller/stepper_background": {
+   "Light": "#FFFFFF",
+   "Dark": "#1AFFFFFF"
+  },
+  "controller/tab_background": {
+   "Light": "#0D131417",
+   "Dark": "#0DFFFFFF"
+  },
+  "dim/dark/primary": {
+   "Light": "#0D131417",
+   "Dark": "#0DFFFFFF"
+  },
+  "dim/dark/secondary": {
+   "Light": "#1A131417",
+   "Dark": "#1AFFFFFF"
+  },
+  "dim/dark/tertiary": {
+   "Light": "#33131417",
+   "Dark": "#33FFFFFF"
+  },
+  "dim/light/primary": {
+   "Light": "#80FFFFFF",
+   "Dark": "#80131417"
+  },
+  "dim/light/secondary": {
+   "Light": "#66FFFFFF",
+   "Dark": "#66131417"
+  },
+  "dim/light/tertiary": {
+   "Light": "#4DFFFFFF",
+   "Dark": "#4D131417"
+  },
+  "divider/primary": {
+   "Light": "#0D131417",
+   "Dark": "#0DFFFFFF"
+  },
+  "divider/secondary": {
+   "Light": "#1A131417",
+   "Dark": "#1AFFFFFF"
+  },
+  "divider/tertiary": {
+   "Light": "#33131417",
+   "Dark": "#33FFFFFF"
+  },
+  "driving_view/gradient_start": {
+   "Light": "#00FFFFFF",
+   "Dark": "#00131417"
+  },
+  "dropdown/normal": {
+   "Light": "#FFFFFF",
+   "Dark": "#1AFFFFFF"
+  },
+  "dropdown/pressed": {
+   "Light": "#EDEEF2",
+   "Dark": "#4DFFFFFF"
+  },
+  "field/background": {
+   "Light": "#FFFFFF",
+   "Dark": "#131417"
+  },
+  "field/focused": {
+   "Light": "#313236",
+   "Dark": "#EDEEF2"
+  },
+  "fixed/dark/400": {
+   "Light": "#52131417",
+   "Dark": "#52131417"
+  },
+  "fixed/light/400": {
+   "Light": "#52FFFFFF",
+   "Dark": "#52FFFFFF"
+  },
+  "gleo/Olf/surface_primary": {
+   "Light": "#FFFFFF",
+   "Dark": "#44464E"
+  },
+  "icon/dark/primary": {
+   "Light": "#131417",
+   "Dark": "#FFFFFF"
+  },
+  "icon/dark/quaternary": {
+   "Light": "#52131417",
+   "Dark": "#52FFFFFF"
+  },
+  "icon/dark/secondary": {
+   "Light": "#D6131417",
+   "Dark": "#D6FFFFFF"
+  },
+  "icon/dark/tertiary": {
+   "Light": "#A3131417",
+   "Dark": "#A3FFFFFF"
+  },
+  "icon/light/primary": {
+   "Light": "#FFFFFF",
+   "Dark": "#131417"
+  },
+  "icon/light/quaternary": {
+   "Light": "#52FFFFFF",
+   "Dark": "#52131417"
+  },
+  "icon/light/secondary": {
+   "Light": "#D6FFFFFF",
+   "Dark": "#D6131417"
+  },
+  "icon/light/tertiary": {
+   "Light": "#A3FFFFFF",
+   "Dark": "#A3131417"
+  },
+  "informative/active": {
+   "Light": "#02C265",
+   "Dark": "#00E074"
+  },
+  "informative/autonomous_driving": {
+   "Light": "#5A46FA",
+   "Dark": "#6A57FF"
+  },
+  "informative/negative": {
+   "Light": "#FE3D16",
+   "Dark": "#FF4C28"
+  },
+  "informative/positive": {
+   "Light": "#0064FF",
+   "Dark": "#0082FF"
+  },
+  "keyboard/normal/accents_normal": {
+   "Light": "#44464E",
+   "Dark": "#C7C9CE"
+  },
+  "keyboard/normal/accents_pressed": {
+   "Light": "#313236",
+   "Dark": "#A4A8AE"
+  },
+  "keyboard/normal/active_normal": {
+   "Light": "#44464E",
+   "Dark": "#686A72"
+  },
+  "keyboard/normal/active_pressed": {
+   "Light": "#313236",
+   "Dark": "#44464E"
+  },
+  "keyboard/normal/background": {
+   "Light": "#E0E1E6",
+   "Dark": "#313236"
+  },
+  "keyboard/normal/primary_normal": {
+   "Light": "#FFFFFF",
+   "Dark": "#686A72"
+  },
+  "keyboard/normal/primary_pressed": {
+   "Light": "#EDEEF2",
+   "Dark": "#44464E"
+  },
+  "keyboard/normal/secondary_normal": {
+   "Light": "#C7C9CE",
+   "Dark": "#44464E"
+  },
+  "keyboard/normal/secondary_pressed": {
+   "Light": "#A4A8AE",
+   "Dark": "#686A72"
+  },
+  "keyboard/static/accents_normal": {
+   "Light": "#C7C9CE",
+   "Dark": "#C7C9CE"
+  },
+  "keyboard/static/accents_pressed": {
+   "Light": "#A4A8AE",
+   "Dark": "#A4A8AE"
+  },
+  "keyboard/static/active_normal": {
+   "Light": "#686A72",
+   "Dark": "#686A72"
+  },
+  "keyboard/static/active_pressed": {
+   "Light": "#313236",
+   "Dark": "#44464E"
+  },
+  "keyboard/static/background": {
+   "Light": "#131417",
+   "Dark": "#131417"
+  },
+  "keyboard/static/icon_dark": {
+   "Light": "#131417",
+   "Dark": "#131417"
+  },
+  "keyboard/static/icon_disabled": {
+   "Light": "#1AFFFFFF",
+   "Dark": "#1AFFFFFF"
+  },
+  "keyboard/static/icon_light": {
+   "Light": "#FFFFFF",
+   "Dark": "#FFFFFF"
+  },
+  "keyboard/static/primary_normal": {
+   "Light": "#686A72",
+   "Dark": "#686A72"
+  },
+  "keyboard/static/primary_pressed": {
+   "Light": "#44464E",
+   "Dark": "#44464E"
+  },
+  "keyboard/static/secondary_normal": {
+   "Light": "#44464E",
+   "Dark": "#44464E"
+  },
+  "keyboard/static/secondary_pressed": {
+   "Light": "#686A72",
+   "Dark": "#686A72"
+  },
+  "keyboard/static/text": {
+   "Light": "#FFFFFF",
+   "Dark": "#FFFFFF"
+  },
+  "media/radio_gradient_end": {
+   "Light": "#FFFFFF",
+   "Dark": "#1D1E21"
+  },
+  "media/radio_gradient_start": {
+   "Light": "#00FFFFFF",
+   "Dark": "#001D1E21"
+  },
+  "overlay/default": {
+   "Light": "#33131417",
+   "Dark": "#80131417"
+  },
+  "phone/accept_normal": {
+   "Light": "#32B957",
+   "Dark": "#3BD665"
+  },
+  "phone/accept_pressed": {
+   "Light": "#279E47",
+   "Dark": "#2DB752"
+  },
+  "phone/end_normal": {
+   "Light": "#FE3D16",
+   "Dark": "#FF4C28"
+  },
+  "phone/end_pressed": {
+   "Light": "#E73612",
+   "Dark": "#DF4323"
+  },
+  "regulation/blue": {
+   "Light": "#0064FF",
+   "Dark": "#0082FF"
+  },
+  "regulation/orange": {
+   "Light": "#FF8A00",
+   "Dark": "#FF8A00"
+  },
+  "regulation/red": {
+   "Light": "#F62E24",
+   "Dark": "#FF4339"
+  },
+  "static/dark/100": {
+   "Light": "#131417",
+   "Dark": "#131417"
+  },
+  "static/dark/200": {
+   "Light": "#D6131417",
+   "Dark": "#D6131417"
+  },
+  "static/dark/300": {
+   "Light": "#A3131417",
+   "Dark": "#A3131417"
+  },
+  "static/dark/400": {
+   "Light": "#52131417",
+   "Dark": "#52131417"
+  },
+  "static/light/100": {
+   "Light": "#FFFFFF",
+   "Dark": "#FFFFFF"
+  },
+  "static/light/200": {
+   "Light": "#D6FFFFFF",
+   "Dark": "#D6FFFFFF"
+  },
+  "static/light/300": {
+   "Light": "#A3FFFFFF",
+   "Dark": "#A3FFFFFF"
+  },
+  "static/light/400": {
+   "Light": "#52FFFFFF",
+   "Dark": "#52FFFFFF"
+  },
+  "surface/accent": {
+   "Light": "#E0E1E6",
+   "Dark": "#44464E"
+  },
+  "surface/basic": {
+   "Light": "#FFFFFF",
+   "Dark": "#1D1E21"
+  },
+  "surface/high": {
+   "Light": "#EDEEF2",
+   "Dark": "#313236"
+  },
+  "switch/disabled": {
+   "Light": "#1A131417",
+   "Dark": "#1AFFFFFF"
+  },
+  "switch/knob_disabled": {
+   "Light": "#FFFFFF",
+   "Dark": "#33FFFFFF"
+  },
+  "switch/knob_off": {
+   "Light": "#FFFFFF",
+   "Dark": "#A4A8AE"
+  },
+  "switch/knob_on": {
+   "Light": "#FFFFFF",
+   "Dark": "#FFFFFF"
+  },
+  "switch/off": {
+   "Light": "#4D131417",
+   "Dark": "#1AFFFFFF"
+  },
+  "switch/on": {
+   "Light": "#02C265",
+   "Dark": "#00E074"
+  },
+  "system/divider/divider_tertiary-added": {
+   "Light": "#33FFFFFF",
+   "Dark": "#33131417"
+  },
+  "system/label/gray_primary": {
+   "Light": "#131417",
+   "Dark": "#FFFFFF"
+  },
+  "text/dark/primary": {
+   "Light": "#131417",
+   "Dark": "#FFFFFF"
+  },
+  "text/dark/quaternary": {
+   "Light": "#52131417",
+   "Dark": "#52FFFFFF"
+  },
+  "text/dark/secondary": {
+   "Light": "#D6131417",
+   "Dark": "#D6FFFFFF"
+  },
+  "text/dark/tertiary": {
+   "Light": "#A3131417",
+   "Dark": "#A3FFFFFF"
+  },
+  "text/light/primary": {
+   "Light": "#FFFFFF",
+   "Dark": "#131417"
+  },
+  "text/light/quaternary": {
+   "Light": "#52FFFFFF",
+   "Dark": "#52131417"
+  },
+  "text/light/secondary": {
+   "Light": "#D6FFFFFF",
+   "Dark": "#D6131417"
+  },
+  "text/light/tertiary": {
+   "Light": "#A3FFFFFF",
+   "Dark": "#A3131417"
+  }
+ },
+ "Color0 (COLOR)": {
+  "Icon/gray-tertiary": {
+   "Light0": "#A3131417",
+   "Dark0": "#A3FFFFFF"
+  }
+ },
+ "Global (COLOR)": {
+  "Color/Neutral/60": {
+   "Mode 1": "#737373"
+  }
+ },
+ "Number (FLOAT)": {
+  "Common/12": {
+   "Mode 1": 12
+  },
+  "Common/16": {
+   "Mode 1": 16
+  },
+  "Common/20": {
+   "Mode 1": 20
+  },
+  "Common/24": {
+   "Mode 1": 24
+  },
+  "Common/32": {
+   "Mode 1": 32
+  },
+  "Common/4": {
+   "Mode 1": 4
+  },
+  "Common/40": {
+   "Mode 1": 40
+  },
+  "Common/48": {
+   "Mode 1": 48
+  },
+  "Common/8": {
+   "Mode 1": 8
+  },
+  "Radius/circle": {
+   "Mode 1": 999
+  },
+  "Radius/l": {
+   "Mode 1": 24
+  },
+  "Radius/m": {
+   "Mode 1": 16
+  },
+  "Radius/xs": {
+   "Mode 1": 0
+  },
+  "Spacing/0": {
+   "Mode 1": 0
+  }
+ },
+ "Primitives (COLOR)": {
+  "Color/Base/Black": {
+   "Value": "#000000"
+  },
+  "Color/Base/White": {
+   "Value": "#FFFFFF"
+  },
+  "Color/Cool Gray/100": {
+   "Value": "#E2E5EB"
+  },
+  "Color/Cool Gray/200": {
+   "Value": "#C3C9D1"
+  },
+  "Color/Cool Gray/300": {
+   "Value": "#A2ABB8"
+  },
+  "Color/Cool Gray/500": {
+   "Value": "#626D7C"
+  },
+  "Color/Cool Gray/700": {
+   "Value": "#343B45"
+  },
+  "Color/Cool Gray/800": {
+   "Value": "#22262E"
+  }
+ },
+ "Primitives (FLOAT)": {
+  "Spacing/spacing-03": {
+   "Value": 8
+  },
+  "Spacing/spacing-04": {
+   "Value": 12
+  },
+  "Spacing/spacing-05": {
+   "Value": 16
+  },
+  "Spacing/spacing-07": {
+   "Value": 32
+  }
+ },
+ "Typo (FLOAT)": {
+  "font/line_height_sp/level1": {
+   "connect": 24,
+   "32259:1": 21,
+   "33219:2": 20,
+   "33235:1": 26
+  },
+  "font/line_height_sp/level10": {
+   "connect": 44,
+   "32259:1": 39,
+   "33219:2": 37,
+   "33235:1": 47
+  },
+  "font/line_height_sp/level11": {
+   "connect": 48,
+   "32259:1": 42,
+   "33219:2": 40,
+   "33235:1": 51
+  },
+  "font/line_height_sp/level14": {
+   "connect": 60,
+   "32259:1": 46,
+   "33219:2": 50,
+   "33235:1": 64
+  },
+  "font/line_height_sp/level20": {
+   "connect": 134,
+   "32259:1": 118,
+   "33219:2": 120,
+   "33235:1": 142
+  },
+  "font/line_height_sp/level3": {
+   "connect": 28,
+   "32259:1": 25,
+   "33219:2": 23,
+   "33235:1": 29
+  },
+  "font/line_height_sp/level6": {
+   "connect": 34,
+   "32259:1": 28,
+   "33219:2": 28,
+   "33235:1": 36
+  },
+  "font/line_height_sp/level7": {
+   "connect": 36,
+   "32259:1": 32,
+   "33219:2": 30,
+   "33235:1": 38
+  },
+  "font/line_height_sp/level8": {
+   "connect": 38,
+   "32259:1": 33,
+   "33219:2": 32,
+   "33235:1": 41
+  },
+  "font/line_height_sp/level9": {
+   "connect": 40,
+   "32259:1": 35,
+   "33219:2": 33,
+   "33235:1": 42
+  },
+  "font/size_sp/level11": {
+   "connect": 36,
+   "32259:1": 32,
+   "33219:2": 30,
+   "33235:1": 38
+  },
+  "font/size_sp/level13": {
+   "connect": 40,
+   "32259:1": 35,
+   "33219:2": 33,
+   "33235:1": 42
+  },
+  "font/size_sp/level14": {
+   "connect": 44,
+   "32259:1": 39,
+   "33219:2": 37,
+   "33235:1": 47
+  },
+  "font/size_sp/level15": {
+   "connect": 48,
+   "32259:1": 42,
+   "33219:2": 40,
+   "33235:1": 51
+  },
+  "font/size_sp/level16": {
+   "connect": 52,
+   "32259:1": 46,
+   "33219:2": 43,
+   "33235:1": 55
+  },
+  "font/size_sp/level18": {
+   "connect": 60,
+   "32259:1": 53,
+   "33219:2": 50,
+   "33235:1": 64
+  },
+  "font/size_sp/level19": {
+   "connect": 64,
+   "32259:1": 56,
+   "33219:2": 53,
+   "33235:1": 68
+  },
+  "font/size_sp/level2": {
+   "connect": 18,
+   "32259:1": 16,
+   "33219:2": 15,
+   "33235:1": 19
+  },
+  "font/size_sp/level20": {
+   "connect": 112,
+   "32259:1": 99,
+   "33219:2": 93,
+   "33235:1": 119
+  },
+  "font/size_sp/level5": {
+   "connect": 24,
+   "32259:1": 21,
+   "33219:2": 20,
+   "33235:1": 26
+  },
+  "font/size_sp/level6": {
+   "connect": 26,
+   "32259:1": 23,
+   "33219:2": 22,
+   "33235:1": 28
+  },
+  "font/size_sp/level7": {
+   "connect": 28,
+   "32259:1": 25,
+   "33219:2": 23,
+   "33235:1": 29
+  },
+  "font/size_sp/level8": {
+   "connect": 30,
+   "32259:1": 26,
+   "33219:2": 25,
+   "33235:1": 34
+  },
+  "font/size_sp/level9": {
+   "connect": 32,
+   "32259:1": 28,
+   "33219:2": 27,
+   "33235:1": 35
+  },
+  "line/level1": {
+   "connect": 1,
+   "32259:1": 1,
+   "33219:2": 1,
+   "33235:1": 1
+  },
+  "line/level2": {
+   "connect": 2,
+   "32259:1": 2,
+   "33219:2": 2,
+   "33235:1": 3
+  },
+  "line/level3": {
+   "connect": 3,
+   "32259:1": 3,
+   "33219:2": 3,
+   "33235:1": 3
+  },
+  "line/level4": {
+   "connect": 4,
+   "32259:1": 4,
+   "33219:2": 3,
+   "33235:1": 4
+  },
+  "line/level5": {
+   "connect": 6,
+   "32259:1": 5,
+   "33219:2": 5,
+   "33235:1": 5
+  },
+  "radius/bottom_left/level2": {
+   "connect": 4,
+   "32259:1": 4,
+   "33219:2": 4,
+   "33235:1": 4
+  },
+  "radius/bottom_left/level3": {
+   "connect": 8,
+   "32259:1": 7,
+   "33219:2": 7,
+   "33235:1": 9
+  },
+  "radius/bottom_left/level5": {
+   "connect": 16,
+   "32259:1": 14,
+   "33219:2": 13,
+   "33235:1": 17
+  },
+  "radius/bottom_left/level6": {
+   "connect": 20,
+   "32259:1": 17,
+   "33219:2": 17,
+   "33235:1": 22
+  },
+  "radius/bottom_left/level7": {
+   "connect": 24,
+   "32259:1": 21,
+   "33219:2": 20,
+   "33235:1": 26
+  },
+  "radius/bottom_left/level9": {
+   "connect": 32,
+   "32259:1": 28,
+   "33219:2": 27,
+   "33235:1": 35
+  },
+  "radius/bottom_left/max": {
+   "connect": 999,
+   "32259:1": 999,
+   "33219:2": 999,
+   "33235:1": 999
+  },
+  "radius/bottom_right/level2": {
+   "connect": 4,
+   "32259:1": 4,
+   "33219:2": 4,
+   "33235:1": 4
+  },
+  "radius/bottom_right/level3": {
+   "connect": 8,
+   "32259:1": 7,
+   "33219:2": 7,
+   "33235:1": 9
+  },
+  "radius/bottom_right/level5": {
+   "connect": 16,
+   "32259:1": 14,
+   "33219:2": 13,
+   "33235:1": 17
+  },
+  "radius/bottom_right/level6": {
+   "connect": 20,
+   "32259:1": 17,
+   "33219:2": 17,
+   "33235:1": 22
+  },
+  "radius/bottom_right/level7": {
+   "connect": 24,
+   "32259:1": 21,
+   "33219:2": 20,
+   "33235:1": 26
+  },
+  "radius/bottom_right/level9": {
+   "connect": 32,
+   "32259:1": 28,
+   "33219:2": 27,
+   "33235:1": 35
+  },
+  "radius/bottom_right/max": {
+   "connect": 999,
+   "32259:1": 999,
+   "33219:2": 999,
+   "33235:1": 999
+  },
+  "radius/top_left/level2": {
+   "connect": 4,
+   "32259:1": 4,
+   "33219:2": 4,
+   "33235:1": 4
+  },
+  "radius/top_left/level3": {
+   "connect": 8,
+   "32259:1": 7,
+   "33219:2": 7,
+   "33235:1": 9
+  },
+  "radius/top_left/level5": {
+   "connect": 16,
+   "32259:1": 14,
+   "33219:2": 13,
+   "33235:1": 17
+  },
+  "radius/top_left/level6": {
+   "connect": 20,
+   "32259:1": 18,
+   "33219:2": 17,
+   "33235:1": 22
+  },
+  "radius/top_left/level7": {
+   "connect": 24,
+   "32259:1": 21,
+   "33219:2": 20,
+   "33235:1": 26
+  },
+  "radius/top_left/level9": {
+   "connect": 32,
+   "32259:1": 28,
+   "33219:2": 27,
+   "33235:1": 35
+  },
+  "radius/top_left/max": {
+   "connect": 999,
+   "32259:1": 999,
+   "33219:2": 999,
+   "33235:1": 999
+  },
+  "radius/top_right/level2": {
+   "connect": 4,
+   "32259:1": 4,
+   "33219:2": 4,
+   "33235:1": 4
+  },
+  "radius/top_right/level3": {
+   "connect": 8,
+   "32259:1": 7,
+   "33219:2": 7,
+   "33235:1": 9
+  },
+  "radius/top_right/level5": {
+   "connect": 16,
+   "32259:1": 14,
+   "33219:2": 13,
+   "33235:1": 17
+  },
+  "radius/top_right/level6": {
+   "connect": 20,
+   "32259:1": 17,
+   "33219:2": 17,
+   "33235:1": 22
+  },
+  "radius/top_right/level7": {
+   "connect": 24,
+   "32259:1": 21,
+   "33219:2": 20,
+   "33235:1": 26
+  },
+  "radius/top_right/level9": {
+   "connect": 32,
+   "32259:1": 28,
+   "33219:2": 27,
+   "33235:1": 35
+  },
+  "radius/top_right/max": {
+   "connect": 999,
+   "32259:1": 999,
+   "33219:2": 999,
+   "33235:1": 999
+  },
+  "square/level11": {
+   "connect": 52,
+   "32259:1": 46,
+   "33219:2": 43,
+   "33235:1": 55
+  },
+  "square/level12": {
+   "connect": 56,
+   "32259:1": 49,
+   "33219:2": 46,
+   "33235:1": 59
+  },
+  "square/level13": {
+   "connect": 60,
+   "32259:1": 53,
+   "33219:2": 50,
+   "33235:1": 64
+  },
+  "square/level16": {
+   "connect": 72,
+   "32259:1": 63,
+   "33219:2": 60,
+   "33235:1": 77
+  },
+  "square/level18": {
+   "connect": 80,
+   "32259:1": 70,
+   "33219:2": 66,
+   "33235:1": 84
+  },
+  "square/level22": {
+   "connect": 100,
+   "32259:1": 88,
+   "33219:2": 83,
+   "33235:1": 106
+  },
+  "square/level6": {
+   "connect": 32,
+   "32259:1": 28,
+   "33219:2": 27,
+   "33235:1": 35
+  },
+  "square/level7": {
+   "connect": 36,
+   "32259:1": 28,
+   "33219:2": 30,
+   "33235:1": 41
+  },
+  "square/level8": {
+   "connect": 40,
+   "32259:1": 35,
+   "33219:2": 33,
+   "33235:1": 42
+  },
+  "square/level9": {
+   "connect": 44,
+   "32259:1": 39,
+   "33219:2": 37,
+   "33235:1": 49
+  },
+  "system/line_height/level10": {
+   "connect": 68
+  },
+  "system/size/level13": {
+   "connect": 48
+  }
+ },
+ "[Theme] ◑ Color (COLOR)": {
+  "Border/border-primary": {
+   "Light": "#C3C9D1",
+   "Dark": "#343B45"
+  },
+  "Border/border-primary-muted": {
+   "Light": "#E2E5EB",
+   "Dark": "#22262E"
+  },
+  "Icon/icon-primary": {
+   "Light": "#000000",
+   "Dark": "#FFFFFF"
+  },
+  "Icon/icon-secondary": {
+   "Light": "#626D7C",
+   "Dark": "#626D7C"
+  },
+  "Text/text-primary": {
+   "Light": "#000000",
+   "Dark": "#FFFFFF"
+  },
+  "Text/text-primary-muted": {
+   "Light": "#A2ABB8",
+   "Dark": "#343B45"
+  },
+  "Text/text-secondary": {
+   "Light": "#626D7C",
+   "Dark": "#626D7C"
+  }
+ },
+ "brand (STRING)": {
+  "ivi_font/text": {
+   "hyundai": "HyundaiSansUI_JP_KR_Latin",
+   "kia": "KiaSignatureUI_JP_KR_Latin",
+   "genesis": "GenesisSansUI_JP_KR_Latin"
+  }
+ },
+ "form_factor (FLOAT)": {
+  "HMG_expansion/focus_border": {
+   "connect-s": 6,
+   "connect-l": 6,
+   "connect-w": 6,
+   "connect-waterfall": 6,
+   "connect-s-14": 6,
+   "92233:0": 4
+  },
+  "_driving_view/3dview/autoparking_trajectory_line": {
+   "connect": 40,
+   "32257:0": 35,
+   "33219:0": 40,
+   "33235:0": 0
+  },
+  "_driving_view/3dview/mask_bottom_gradient_height": {
+   "connect": 100,
+   "32257:0": 88,
+   "33219:0": 83,
+   "33235:0": 0
+  },
+  "_driving_view/3dview/mask_bottom_solid_height": {
+   "connect": 40,
+   "32257:0": 35,
+   "33219:0": 53,
+   "33235:0": 0
+  },
+  "_driving_view/3dview/mask_left_gradient_width": {
+   "connect": 100,
+   "32257:0": 88,
+   "33219:0": 83,
+   "33235:0": 0
+  },
+  "_driving_view/3dview/mask_right_gradient_width": {
+   "connect": 100,
+   "32257:0": 88,
+   "33219:0": 83,
+   "33235:0": 0
+  },
+  "_driving_view/3dview/mask_right_solid_width": {
+   "connect": 0,
+   "32257:0": 0,
+   "33219:0": 100,
+   "33235:0": 0
+  },
+  "_driving_view/3dview/mask_top_gradient_height": {
+   "connect": 200,
+   "32257:0": 176,
+   "33219:0": 166,
+   "33235:0": 0
+  },
+  "_driving_view/3dview/mask_top_solid_dynamic_height": {
+   "connect": 66,
+   "32257:0": 58,
+   "33219:0": 55,
+   "33235:0": 0
+  },
+  "_driving_view/3dview/mask_top_solid_height": {
+   "connect": 78,
+   "32257:0": 137,
+   "33219:0": 79,
+   "33235:0": 0
+  },
+  "_driving_view/3dview/parked_ring_line": {
+   "connect": 6,
+   "32257:0": 5,
+   "33219:0": 8,
+   "33235:0": 6
+  },
+  "_driving_view/3dview/parking_icon_square": {
+   "connect": 80,
+   "32257:0": 80,
+   "33219:0": 80,
+   "33235:0": 80
+  },
+  "_driving_view/3dview/turning_point_line": {
+   "connect": 6,
+   "32257:0": 6,
+   "33219:0": 6,
+   "33235:0": 0
+  },
+  "_driving_view/3dview/vehicle_control_\bring_height": {
+   "connect": 204,
+   "32257:0": 152,
+   "33219:0": 252,
+   "33235:0": 0
+  },
+  "_driving_view/3dview/vehicle_control_\bring_padding_top": {
+   "connect": 296,
+   "32257:0": 222,
+   "33219:0": 368,
+   "33235:0": 0
+  },
+  "_driving_view/3dview/vehicle_control_\bring_width": {
+   "connect": 640,
+   "32257:0": 478,
+   "33219:0": 792,
+   "33235:0": 0
+  },
+  "_driving_view/3dview/vehicle_control_frontquater_charging_port_padding_left": {
+   "connect": 384,
+   "32257:0": 286,
+   "33219:0": 500,
+   "33235:0": 0
+  },
+  "_driving_view/3dview/vehicle_control_frontquater_charging_port_padding_top": {
+   "connect": 160,
+   "32257:0": 116,
+   "33219:0": 220,
+   "33235:0": 0
+  },
+  "_driving_view/3dview/vehicle_control_frontquater_frunk_padding_left": {
+   "connect": 180,
+   "32257:0": 132,
+   "33219:0": 224,
+   "33235:0": 0
+  },
+  "_driving_view/3dview/vehicle_control_frontquater_frunk_padding_top": {
+   "connect": 264,
+   "32257:0": 196,
+   "33219:0": 352,
+   "33235:0": 0
+  },
+  "_driving_view/3dview/vehicle_control_frontquater_sidemirror_padding_left": {
+   "connect": 420,
+   "32257:0": 314,
+   "33219:0": 530,
+   "33235:0": 0
+  },
+  "_driving_view/3dview/vehicle_control_frontquater_sidemirror_padding_top": {
+   "connect": 456,
+   "32257:0": 330,
+   "33219:0": 540,
+   "33235:0": 0
+  },
+  "_driving_view/3dview/vehicle_control_frontquater_trunk_padding_left": {
+   "connect": 648,
+   "32257:0": 480,
+   "33219:0": 796,
+   "33235:0": 0
+  },
+  "_driving_view/3dview/vehicle_control_frontquater_trunk_padding_top": {
+   "connect": 224,
+   "32257:0": 164,
+   "33219:0": 296,
+   "33235:0": 0
+  },
+  "_driving_view/3dview/vehicle_control_gap_horizontal": {
+   "connect": 16,
+   "32257:0": 14,
+   "33219:0": 13,
+   "33235:0": 0
+  },
+  "_driving_view/3dview/vehicle_control_height": {
+   "connect": 600,
+   "32257:0": 449,
+   "33219:0": 743,
+   "33235:0": 0
+  },
+  "_driving_view/3dview/vehicle_control_icon_square": {
+   "connect": 36,
+   "32257:0": 36,
+   "33219:0": 36,
+   "33235:0": 36
+  },
+  "_driving_view/3dview/vehicle_control_padding_vertical_top": {
+   "connect": 434,
+   "32257:0": 352,
+   "33219:0": 100,
+   "33235:0": 0
+  },
+  "_driving_view/3dview/vehicle_control_rearquater_charging_port_padding_left": {
+   "connect": 342,
+   "32257:0": 254,
+   "33219:0": 436,
+   "33235:0": 0
+  },
+  "_driving_view/3dview/vehicle_control_rearquater_charging_port_padding_top": {
+   "connect": 456,
+   "32257:0": 342,
+   "33219:0": 572,
+   "33235:0": 0
+  },
+  "_driving_view/3dview/vehicle_control_rearquater_frunk_padding_left": {
+   "connect": 648,
+   "32257:0": 480,
+   "33219:0": 796,
+   "33235:0": 0
+  },
+  "_driving_view/3dview/vehicle_control_rearquater_frunk_padding_top": {
+   "connect": 240,
+   "32257:0": 180,
+   "33219:0": 314,
+   "33235:0": 0
+  },
+  "_driving_view/3dview/vehicle_control_rearquater_sidemirror_padding_top": {
+   "connect": 160,
+   "32257:0": 116,
+   "33219:0": 220,
+   "33235:0": 0
+  },
+  "_driving_view/3dview/vehicle_control_rearquater_trunk_padding_left": {
+   "connect": 180,
+   "32257:0": 132,
+   "33219:0": 224,
+   "33235:0": 0
+  },
+  "_driving_view/3dview/vehicle_control_rearquater_trunk_padding_top": {
+   "connect": 264,
+   "32257:0": 196,
+   "33219:0": 352,
+   "33235:0": 0
+  },
+  "_driving_view/3dview/vehicle_control_width": {
+   "connect": 840,
+   "32257:0": 628,
+   "33219:0": 1040,
+   "33235:0": 0
+  },
+  "_driving_view/3dview/vehicle_controlr_rearquater_sidemirror_padding_left": {
+   "connect": 420,
+   "32257:0": 314,
+   "33219:0": 530,
+   "33235:0": 0
+  },
+  "_driving_view/bottom/driving_mode_padding_horizontal": {
+   "connect": 8,
+   "32257:0": 7,
+   "33219:0": 7,
+   "33235:0": 0
+  },
+  "_driving_view/bottom/driving_mode_radius_bottom_left": {
+   "connect": 8,
+   "32257:0": 7,
+   "33219:0": 8,
+   "33235:0": 8
+  },
+  "_driving_view/bottom/driving_mode_radius_bottom_right": {
+   "connect": 8,
+   "32257:0": 7,
+   "33219:0": 8,
+   "33235:0": 8
+  },
+  "_driving_view/bottom/driving_mode_radius_top_left": {
+   "connect": 8,
+   "32257:0": 7,
+   "33219:0": 8,
+   "33235:0": 8
+  },
+  "_driving_view/bottom/driving_mode_radius_top_right": {
+   "connect": 8,
+   "32257:0": 7,
+   "33219:0": 8,
+   "33235:0": 8
+  },
+  "_driving_view/bottom/driving_mode_text_max_width": {
+   "connect": 220,
+   "32257:0": 194,
+   "33219:0": 183,
+   "33235:0": 0
+  },
+  "_driving_view/bottom/ipedal_padding_horizontal": {
+   "connect": 8,
+   "32257:0": 7,
+   "33219:0": 7,
+   "33235:0": 0
+  },
+  "_driving_view/bottom/ipedal_radius_bottom_left": {
+   "connect": 8,
+   "32257:0": 8,
+   "33219:0": 8,
+   "33235:0": 8
+  },
+  "_driving_view/bottom/ipedal_radius_top_left": {
+   "connect": 8,
+   "32257:0": 8,
+   "33219:0": 8,
+   "33235:0": 8
+  },
+  "_driving_view/bottom/ipedal_radius_top_right": {
+   "connect": 8,
+   "32257:0": 8,
+   "33219:0": 8,
+   "33235:0": 8
+  },
+  "_driving_view/bottom/left_gap_vertical": {
+   "connect": 12,
+   "32257:0": 11,
+   "33219:0": 10,
+   "33235:0": 0
+  },
+  "_driving_view/bottom/padding_horizontal": {
+   "connect": 20,
+   "32257:0": 18,
+   "33219:0": 20,
+   "33235:0": 0
+  },
+  "_driving_view/bottom/padding_vertical_bottom": {
+   "connect": 0,
+   "32257:0": 0,
+   "33219:0": 20,
+   "33235:0": 0
+  },
+  "_driving_view/bottom/regen_braking_height": {
+   "connect": 44,
+   "32257:0": 39,
+   "33219:0": 37,
+   "33235:0": 0
+  },
+  "_driving_view/bottom/regen_braking_width": {
+   "connect": 92,
+   "32257:0": 81,
+   "33219:0": 76,
+   "33235:0": 0
+  },
+  "_driving_view/left/group1/gap_vertical": {
+   "connect": -4,
+   "32257:0": -8,
+   "33219:0": -8,
+   "33235:0": 0
+  },
+  "_driving_view/left/group1/mph_gap_horizontal": {
+   "connect": 4,
+   "32257:0": 4,
+   "33219:0": 3,
+   "33235:0": 0
+  },
+  "_driving_view/left/group1/mph_padding_vertical_top": {
+   "connect": 22,
+   "32257:0": 20,
+   "33219:0": 18,
+   "33235:0": 0
+  },
+  "_driving_view/left/group1/padding_horizontal_left": {
+   "connect": 20,
+   "32257:0": 18,
+   "33219:0": 20,
+   "33235:0": 0
+  },
+  "_driving_view/left/group1/padding_vertical_top": {
+   "connect": 4,
+   "32257:0": 4,
+   "33219:0": 3,
+   "33235:0": 0
+  },
+  "_driving_view/left/group1/padding_vertical_top_systemcheck": {
+   "connect": 8,
+   "32257:0": 8,
+   "33219:0": 12,
+   "33235:0": 0
+  },
+  "_driving_view/left/group1/rpm_padding_vertical_top": {
+   "connect": 22,
+   "32257:0": 19,
+   "33219:0": 25,
+   "33235:0": 0
+  },
+  "_driving_view/left/group1/speedgroup_gap_vertical": {
+   "connect": -14,
+   "32257:0": -12,
+   "33219:0": -12,
+   "33235:0": 0
+  },
+  "_driving_view/left/group1/speedometer_gap_vertical": {
+   "connect": -16,
+   "32257:0": -14,
+   "33219:0": -13,
+   "33235:0": 0
+  },
+  "_driving_view/left/group1/speedometer_number_padding_left": {
+   "connect": 8,
+   "32257:0": 7,
+   "33219:0": 7,
+   "33235:0": 0
+  },
+  "_driving_view/left/group1/speedometer_number_width": {
+   "connect": 200,
+   "32257:0": 177,
+   "33219:0": 166,
+   "33235:0": 0
+  },
+  "_driving_view/left/group2/ad_indicator_auto_radius_bottom_left": {
+   "connect": 4,
+   "32257:0": 4,
+   "33219:0": 4,
+   "33235:0": 4
+  },
+  "_driving_view/left/group2/ad_indicator_auto_radius_bottom_right": {
+   "connect": 4,
+   "32257:0": 4,
+   "33219:0": 4,
+   "33235:0": 4
+  },
+  "_driving_view/left/group2/ad_indicator_auto_radius_top_left": {
+   "connect": 4,
+   "32257:0": 4,
+   "33219:0": 4,
+   "33235:0": 4
+  },
+  "_driving_view/left/group2/ad_indicator_auto_radius_top_right": {
+   "connect": 4,
+   "32257:0": 4,
+   "33219:0": 4,
+   "33235:0": 4
+  },
+  "_driving_view/left/group2/ad_indicator_auto_square": {
+   "connect": 24,
+   "32257:0": 21,
+   "33219:0": 20,
+   "33235:0": 0
+  },
+  "_driving_view/left/group2/ad_indicator_autopark_p_padding_horizontal_left": {
+   "connect": 28,
+   "32257:0": 25,
+   "33219:0": 23,
+   "33235:0": 0
+  },
+  "_driving_view/left/group2/ad_indicator_autopark_p_padding_vertical_top": {
+   "connect": 23,
+   "32257:0": 20,
+   "33219:0": 19,
+   "33235:0": 0
+  },
+  "_driving_view/left/group2/ad_indicator_autopark_p_square": {
+   "connect": 32,
+   "32257:0": 32,
+   "33219:0": 32,
+   "33235:0": 0
+  },
+  "_driving_view/left/group2/ad_indicator_gap_horizontal": {
+   "connect": 4,
+   "32257:0": 3,
+   "33219:0": 3,
+   "33235:0": 0
+  },
+  "_driving_view/left/group2/ad_indicator_gap_vertical": {
+   "connect": -10,
+   "32257:0": -9,
+   "33219:0": -8,
+   "33235:0": 0
+  },
+  "_driving_view/left/group2/ad_indicator_icon_square": {
+   "connect": 60,
+   "32257:0": 60,
+   "33219:0": 60,
+   "33235:0": 60
+  },
+  "_driving_view/left/group2/ad_indicator_ready_height": {
+   "connect": 60,
+   "32257:0": 46,
+   "33219:0": 50,
+   "33235:0": 0
+  },
+  "_driving_view/left/group2/ad_indicator_ready_width": {
+   "connect": 46,
+   "32257:0": 40,
+   "33219:0": 38,
+   "33235:0": 0
+  },
+  "_driving_view/left/group2/ad_indicator_square": {
+   "connect": 100,
+   "32257:0": 100,
+   "33219:0": 100,
+   "33235:0": 100
+  },
+  "_driving_view/left/group2/doorlock_switch_container_height": {
+   "connect": 80,
+   "32257:0": 70,
+   "33219:0": 66,
+   "33235:0": 0
+  },
+  "_driving_view/left/group2/doorlock_switch_height": {
+   "connect": 64,
+   "32257:0": 56,
+   "33219:0": 53,
+   "33235:0": 0
+  },
+  "_driving_view/left/group2/doorlock_switch_icon_square": {
+   "connect": 32,
+   "32257:0": 32,
+   "33219:0": 32,
+   "33235:0": 32
+  },
+  "_driving_view/left/group2/doorlock_switch_knob_height": {
+   "connect": 48,
+   "32257:0": 42,
+   "33219:0": 40,
+   "33235:0": 0
+  },
+  "_driving_view/left/group2/doorlock_switch_knob_radius_bottom_left": {
+   "connect": 999,
+   "32257:0": 999,
+   "33219:0": 999,
+   "33235:0": 999
+  },
+  "_driving_view/left/group2/doorlock_switch_knob_radius_bottom_right": {
+   "connect": 999,
+   "32257:0": 999,
+   "33219:0": 999,
+   "33235:0": 999
+  },
+  "_driving_view/left/group2/doorlock_switch_knob_radius_top_left": {
+   "connect": 999,
+   "32257:0": 999,
+   "33219:0": 999,
+   "33235:0": 999
+  },
+  "_driving_view/left/group2/doorlock_switch_knob_radius_top_right": {
+   "connect": 999,
+   "32257:0": 999,
+   "33219:0": 999,
+   "33235:0": 999
+  },
+  "_driving_view/left/group2/doorlock_switch_knob_width": {
+   "connect": 56,
+   "32257:0": 49,
+   "33219:0": 46,
+   "33235:0": 0
+  },
+  "_driving_view/left/group2/doorlock_switch_padding_horizontal": {
+   "connect": 8,
+   "32257:0": 7,
+   "33219:0": 7,
+   "33235:0": 0
+  },
+  "_driving_view/left/group2/doorlock_switch_padding_vertical": {
+   "connect": 8,
+   "32257:0": 7,
+   "33219:0": 7,
+   "33235:0": 0
+  },
+  "_driving_view/left/group2/doorlock_switch_radius_bottom_left": {
+   "connect": 999,
+   "32257:0": 999,
+   "33219:0": 999,
+   "33235:0": 999
+  },
+  "_driving_view/left/group2/doorlock_switch_radius_top_left": {
+   "connect": 999,
+   "32257:0": 999,
+   "33219:0": 999,
+   "33235:0": 999
+  },
+  "_driving_view/left/group2/doorlock_switch_radius_top_right": {
+   "connect": 999,
+   "32257:0": 999,
+   "33219:0": 999,
+   "33235:0": 999
+  },
+  "_driving_view/left/group2/doorlock_switch_width": {
+   "connect": 112,
+   "32257:0": 99,
+   "33219:0": 93,
+   "33235:0": 0
+  },
+  "_driving_view/left/group2/indicator_group_gap_vertical": {
+   "connect": 16,
+   "32257:0": 14,
+   "33219:0": 13,
+   "33235:0": 0
+  },
+  "_driving_view/left/group2/padding_horizontal_left": {
+   "connect": 16,
+   "32257:0": 14,
+   "33219:0": 16,
+   "33235:0": 0
+  },
+  "_driving_view/left/group2/padding_vertical_top": {
+   "connect": 24,
+   "32257:0": 21,
+   "33219:0": 12,
+   "33235:0": 0
+  },
+  "_driving_view/left/group2/sign1_group_vertical_gap": {
+   "connect": -24,
+   "32257:0": -21,
+   "33219:0": -20,
+   "33235:0": 0
+  },
+  "_driving_view/left/group2/sign1_mask_height": {
+   "connect": 40,
+   "32257:0": 35,
+   "33219:0": 33,
+   "33235:0": 0
+  },
+  "_driving_view/left/group2/sign_current_camera_height": {
+   "connect": 24,
+   "32257:0": 21,
+   "33219:0": 20,
+   "33235:0": 0
+  },
+  "_driving_view/left/group2/sign_current_camera_width": {
+   "connect": 48,
+   "32257:0": 42,
+   "33219:0": 40,
+   "33235:0": 0
+  },
+  "_driving_view/left/group2/sign_current_distance_average_speed_padding_horizontal": {
+   "connect": 4,
+   "32257:0": 3,
+   "33219:0": 3,
+   "33235:0": 0
+  },
+  "_driving_view/left/group2/sign_current_distance_average_speed_padding_vertical": {
+   "connect": 12,
+   "32257:0": 11,
+   "33219:0": 10,
+   "33235:0": 0
+  },
+  "_driving_view/left/group2/sign_current_distance_height": {
+   "connect": 52,
+   "32257:0": 46,
+   "33219:0": 43,
+   "33235:0": 0
+  },
+  "_driving_view/left/group2/sign_current_distance_padding_vertical": {
+   "connect": 7,
+   "32257:0": 6,
+   "33219:0": 5,
+   "33235:0": 0
+  },
+  "_driving_view/left/group2/sign_current_distance_radius_bottom_left": {
+   "connect": 8,
+   "32257:0": 8,
+   "33219:0": 8,
+   "33235:0": 0
+  },
+  "_driving_view/left/group2/sign_current_distance_radius_bottom_right": {
+   "connect": 8,
+   "32257:0": 8,
+   "33219:0": 8,
+   "33235:0": 0
+  },
+  "_driving_view/left/group2/sign_current_distance_radius_top_left": {
+   "connect": 8,
+   "32257:0": 8,
+   "33219:0": 8,
+   "33235:0": 0
+  },
+  "_driving_view/left/group2/sign_current_distance_radius_top_right": {
+   "connect": 8,
+   "32257:0": 8,
+   "33219:0": 8,
+   "33235:0": 0
+  },
+  "_driving_view/left/group2/sign_current_distance_width": {
+   "connect": 108,
+   "32257:0": 95,
+   "33219:0": 90,
+   "33235:0": 0
+  },
+  "_driving_view/left/group2/sign_current_gap_vertical": {
+   "connect": -10,
+   "32257:0": -9,
+   "33219:0": -8,
+   "33235:0": 0
+  },
+  "_driving_view/left/group2/sign_current_number_only_padding_top": {
+   "connect": 26,
+   "32257:0": 23,
+   "33219:0": 22,
+   "33235:0": 0
+  },
+  "_driving_view/left/group2/sign_current_number_with_sub_padding_top": {
+   "connect": 33,
+   "32257:0": 29,
+   "33219:0": 26,
+   "33235:0": 0
+  },
+  "_driving_view/left/group2/sign_current_square": {
+   "connect": 100,
+   "32257:0": 88,
+   "33219:0": 83,
+   "33235:0": 0
+  },
+  "_driving_view/left/group2/sign_next_square": {
+   "connect": 72,
+   "32257:0": 72,
+   "33219:0": 72,
+   "33235:0": 72
+  },
+  "_driving_view/top/group1/gap_horizontal": {
+   "connect": 8,
+   "32257:0": 0,
+   "33219:0": 8,
+   "33235:0": 0
+  },
+  "_driving_view/top/group1/gap_vertical": {
+   "connect": 10,
+   "32257:0": 9,
+   "33219:0": 8,
+   "33235:0": 0
+  },
+  "_driving_view/top/group1/guage_height": {
+   "connect": 8,
+   "32257:0": 7,
+   "33219:0": 7,
+   "33235:0": 0
+  },
+  "_driving_view/top/group1/padding_horizontal": {
+   "connect": 20,
+   "32257:0": 18,
+   "33219:0": 28,
+   "33235:0": 0
+  },
+  "_driving_view/top/group1/power_guage_ev_gap_horizontal": {
+   "connect": 2,
+   "32257:0": 2,
+   "33219:0": 2,
+   "33235:0": 0
+  },
+  "_driving_view/top/group1/power_guage_height": {
+   "connect": 36,
+   "32257:0": 32,
+   "33219:0": 36,
+   "33235:0": 0
+  },
+  "_driving_view/top/group1/power_guage_radius_bottom_left": {
+   "connect": 8,
+   "32257:0": 8,
+   "33219:0": 8,
+   "33235:0": 0
+  },
+  "_driving_view/top/group1/power_guage_radius_bottom_right": {
+   "connect": 8,
+   "32257:0": 8,
+   "33219:0": 8,
+   "33235:0": 0
+  },
+  "_driving_view/top/group1/power_guage_radius_top_left": {
+   "connect": 8,
+   "32257:0": 8,
+   "33219:0": 8,
+   "33235:0": 0
+  },
+  "_driving_view/top/group1/power_guage_radius_top_right": {
+   "connect": 8,
+   "32257:0": 8,
+   "33219:0": 8,
+   "33235:0": 0
+  },
+  "_driving_view/top/group1/power_guage_state_icon_square": {
+   "connect": 32,
+   "32257:0": 28,
+   "33219:0": 32,
+   "33235:0": 0
+  },
+  "_driving_view/top/group1/power_guage_width": {
+   "connect": 68,
+   "32257:0": 60,
+   "33219:0": 68,
+   "33235:0": 0
+  },
+  "_driving_view/top/group1/powertrain_height": {
+   "connect": 60,
+   "32257:0": 53,
+   "33219:0": 64,
+   "33235:0": 0
+  },
+  "_driving_view/top/group1/powertrain_icon_square": {
+   "connect": 48,
+   "32257:0": 42,
+   "33219:0": 48,
+   "33235:0": 0
+  },
+  "_driving_view/top/group1/prnd_gap_horizontal": {
+   "connect": 4,
+   "32257:0": 3,
+   "33219:0": 4,
+   "33235:0": 0
+  },
+  "_driving_view/top/group1/prnd_unit_selected_square": {
+   "connect": 48,
+   "32257:0": 42,
+   "33219:0": 48,
+   "33235:0": 0
+  },
+  "_driving_view/top/group1/prnd_unit_selected_square_radius_bottom_left": {
+   "connect": 8,
+   "32257:0": 7,
+   "33219:0": 8,
+   "33235:0": 0
+  },
+  "_driving_view/top/group1/prnd_unit_selected_square_radius_bottom_right": {
+   "connect": 8,
+   "32257:0": 7,
+   "33219:0": 8,
+   "33235:0": 0
+  },
+  "_driving_view/top/group1/prnd_unit_selected_square_radius_top_left": {
+   "connect": 8,
+   "32257:0": 7,
+   "33219:0": 8,
+   "33235:0": 0
+  },
+  "_driving_view/top/group1/prnd_unit_selected_square_radius_top_right": {
+   "connect": 8,
+   "32257:0": 7,
+   "33219:0": 8,
+   "33235:0": 0
+  },
+  "_driving_view/top/group1/prnd_unit_width": {
+   "connect": 30,
+   "32257:0": 26,
+   "33219:0": 30,
+   "33235:0": 0
+  },
+  "_driving_view/top/group2/gap_horizontal": {
+   "connect": 6,
+   "32257:0": 5,
+   "33219:0": 4,
+   "33235:0": 0
+  },
+  "_driving_view/top/group2/gap_vertical": {
+   "connect": 6,
+   "32257:0": 5,
+   "33219:0": 4,
+   "33235:0": 0
+  },
+  "_driving_view/top/group2/max_height": {
+   "connect": 258,
+   "32257:0": 227,
+   "33219:0": 105,
+   "33235:0": 0
+  },
+  "_driving_view/top/group2/min_height": {
+   "connect": 0,
+   "32257:0": 0,
+   "33219:0": 50,
+   "33235:0": 0
+  },
+  "_driving_view/top/group2/padding_horizontal_left": {
+   "connect": 232,
+   "32257:0": 151,
+   "33219:0": 193,
+   "33235:0": 0
+  },
+  "_driving_view/top/group2/padding_horizontal_right": {
+   "connect": 20,
+   "32257:0": 18,
+   "33219:0": 28,
+   "33235:0": 0
+  },
+  "_driving_view/top/group2/padding_vertical_top": {
+   "connect": 18,
+   "32257:0": 15,
+   "33219:0": 5,
+   "33235:0": 8
+  },
+  "_driving_view/top/group2/telltale_safety_height": {
+   "connect": 222,
+   "32257:0": 253,
+   "33219:0": 134,
+   "33235:0": 0
+  },
+  "_driving_view/top/group2/telltale_square": {
+   "connect": 60,
+   "32257:0": 53,
+   "33219:0": 50,
+   "33235:0": 0
+  },
+  "_driving_view/top/group3/gap_vertical": {
+   "connect": 8,
+   "32257:0": 7,
+   "33219:0": 7,
+   "33235:0": 0
+  },
+  "_driving_view/top/group3/minitbt_\bgap_horizontal": {
+   "connect": 16,
+   "32257:0": 14,
+   "33219:0": 13,
+   "33235:0": 0
+  },
+  "_driving_view/top/group3/minitbt_icon_square": {
+   "connect": 80,
+   "32257:0": 70,
+   "33219:0": 66,
+   "33235:0": 0
+  },
+  "_driving_view/top/group3/minitbt_padding_horizontal_left": {
+   "connect": 8,
+   "32257:0": 7,
+   "33219:0": 7,
+   "33235:0": 0
+  },
+  "_driving_view/top/group3/minitbt_padding_horizontal_right": {
+   "connect": 20,
+   "32257:0": 18,
+   "33219:0": 17,
+   "33235:0": 0
+  },
+  "_driving_view/top/group3/minitbt_padding_vertical": {
+   "connect": 12,
+   "32257:0": 11,
+   "33219:0": 10,
+   "33235:0": 0
+  },
+  "_driving_view/top/group3/minitbt_radius_bottom_left": {
+   "connect": 24,
+   "32257:0": 24,
+   "33219:0": 24,
+   "33235:0": 24
+  },
+  "_driving_view/top/group3/minitbt_radius_bottom_right": {
+   "connect": 24,
+   "32257:0": 24,
+   "33219:0": 24,
+   "33235:0": 24
+  },
+  "_driving_view/top/group3/minitbt_radius_top_left": {
+   "connect": 24,
+   "32257:0": 24,
+   "33219:0": 24,
+   "33235:0": 24
+  },
+  "_driving_view/top/group3/minitbt_radius_top_right": {
+   "connect": 24,
+   "32257:0": 24,
+   "33219:0": 24,
+   "33235:0": 24
+  },
+  "_driving_view/top/group3/minitbt_text_gap_vertical": {
+   "connect": -4,
+   "32257:0": -3,
+   "33219:0": -3,
+   "33235:0": 0
+  },
+  "_driving_view/top/group3/minitbt_text_max_width": {
+   "connect": 416,
+   "32257:0": 366,
+   "33219:0": 345,
+   "33235:0": 0
+  },
+  "_driving_view/top/group3/minitbt_text_min_width": {
+   "connect": 200,
+   "32257:0": 176,
+   "33219:0": 166,
+   "33235:0": 0
+  },
+  "_driving_view/top/group3/padding_horizontal_left": {
+   "connect": 20,
+   "32257:0": 135,
+   "33219:0": 17,
+   "33235:0": 0
+  },
+  "_driving_view/top/group3/padding_horizontal_right": {
+   "connect": 20,
+   "32257:0": 18,
+   "33219:0": 17,
+   "33235:0": 0
+  },
+  "_driving_view/top/group3/padding_vertical_top": {
+   "connect": 24,
+   "32257:0": 21,
+   "33219:0": 20,
+   "33235:0": 0
+  },
+  "_driving_view/top/mask_gradient_height": {
+   "connect": 80,
+   "32257:0": 70,
+   "33219:0": 66,
+   "33235:0": 0
+  },
+  "app_market/app_item/app_icon_border": {
+   "connect-s": 1,
+   "connect-l": 1,
+   "connect-w": 1,
+   "connect-waterfall": 1,
+   "connect-s-14": 1,
+   "92233:0": 1
+  },
+  "app_market/header/title/height": {
+   "connect-s": 80,
+   "connect-l": 70,
+   "connect-w": 66,
+   "\bconnect-waterfall": 85
+  },
+  "bars/app_control/container_height": {
+   "connect-s": 60,
+   "connect-l": 53,
+   "connect-w": 100,
+   "\bconnect-waterfall": 128
+  },
+  "bars/app_control/container_width": {
+   "connect-s": 320,
+   "connect-l": 282,
+   "connect-w": 266,
+   "\bconnect-waterfall": 340
+  },
+  "bars/app_control/handle_height": {
+   "connect-s": 8,
+   "connect-l": 7,
+   "connect-w": 8,
+   "\bconnect-waterfall": 9
+  },
+  "bars/app_control/handle_width_normal": {
+   "connect-s": 140,
+   "connect-l": 123,
+   "connect-w": 116,
+   "\bconnect-waterfall": 148
+  },
+  "bars/app_control/padding_top": {
+   "connect-s": 16,
+   "connect-l": 14,
+   "connect-w": 14,
+   "\bconnect-waterfall": 17
+  },
+  "bars/fullscreen_control/icon_button_radius_top_left": {
+   "connect-s": 28,
+   "connect-l": 25,
+   "connect-w": 23,
+   "\bconnect-waterfall": 29
+  },
+  "bars/fullscreen_control/icon_padding_bottom": {
+   "connect-s": 14,
+   "connect-l": 12,
+   "connect-w": 12,
+   "\bconnect-waterfall": 15
+  },
+  "bars/fullscreen_control/icon_padding_horizontal": {
+   "connect-s": 14,
+   "connect-l": 12,
+   "connect-w": 12,
+   "\bconnect-waterfall": 15
+  },
+  "bars/fullscreen_control/icon_padding_top": {
+   "connect-s": 14,
+   "connect-l": 12,
+   "connect-w": 12,
+   "\bconnect-waterfall": 15
+  },
+  "bars/fullscreen_control/magnify_icon_square": {
+   "connect-s": 56,
+   "connect-l": 49,
+   "connect-w": 46,
+   "\bconnect-waterfall": 59
+  },
+  "bars/fullscreen_control/padding_horizontal": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "bars/fullscreen_control/padding_top": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "bars/page_scroll/min_height": {
+   "connect-s": 48,
+   "connect-l": 42,
+   "connect-w": 40,
+   "\bconnect-waterfall": 51
+  },
+  "bars/page_scroll/width": {
+   "connect-s": 6,
+   "connect-l": 5,
+   "connect-w": 6,
+   "\bconnect-waterfall": 6
+  },
+  "bars/radius_bottom_left": {
+   "connect-s": 999,
+   "connect-l": 999,
+   "connect-w": 999,
+   "connect-waterfall": 999,
+   "connect-s-14": 999,
+   "92233:0": 999
+  },
+  "bars/radius_bottom_right": {
+   "connect-s": 999,
+   "connect-l": 999,
+   "connect-w": 999,
+   "connect-waterfall": 999,
+   "connect-s-14": 999,
+   "92233:0": 999
+  },
+  "bars/radius_top_left": {
+   "connect-s": 999,
+   "connect-l": 999,
+   "connect-w": 999,
+   "connect-waterfall": 999,
+   "connect-s-14": 999,
+   "92233:0": 999
+  },
+  "bars/radius_top_right": {
+   "connect-s": 999,
+   "connect-l": 999,
+   "connect-w": 999,
+   "connect-waterfall": 999,
+   "connect-s-14": 999,
+   "92233:0": 999
+  },
+  "bars/window_control/container_height": {
+   "connect-s": 200,
+   "connect-l": 176,
+   "connect-w": 240,
+   "connect-waterfall": 192,
+   "connect-s-14": 200,
+   "92233:0": 192
+  },
+  "bars/window_control/container_width": {
+   "connect-s": 20,
+   "connect-l": 18,
+   "connect-w": 30,
+   "connect-waterfall": 24,
+   "connect-s-14": 16,
+   "92233:0": 30
+  },
+  "bars/window_control/handle_height": {
+   "connect-s": 160,
+   "connect-l": 141,
+   "connect-w": 132,
+   "connect-waterfall": 128,
+   "connect-s-14": 160,
+   "92233:0": 128
+  },
+  "bars/window_control/handle_height_pressed": {
+   "connect-s": 80,
+   "connect-l": 70,
+   "connect-w": 66,
+   "connect-waterfall": 66,
+   "connect-s-14": 80,
+   "92233:0": 66
+  },
+  "bars/window_control/handle_width": {
+   "connect-s": 4,
+   "connect-l": 4,
+   "connect-w": 8,
+   "connect-waterfall": 6,
+   "connect-s-14": 4,
+   "92233:0": 6
+  },
+  "bars/window_control/padding_horizontal": {
+   "connect-s": 8,
+   "connect-l": 7,
+   "connect-w": 16,
+   "connect-waterfall": 8,
+   "connect-s-14": 8,
+   "92233:0": 8
+  },
+  "buttons/basic/disabled_border": {
+   "connect": 2,
+   "32257:0": 2,
+   "33219:0": 2,
+   "33235:0": 2
+  },
+  "buttons/basic/large/gap_horizontal": {
+   "connect": 16,
+   "32257:0": 14,
+   "33219:0": 14,
+   "33235:0": 17
+  },
+  "buttons/basic/large/height": {
+   "connect": 100,
+   "32257:0": 88,
+   "33219:0": 84,
+   "33235:0": 106
+  },
+  "buttons/basic/large/icon_sqaure": {
+   "connect": 52,
+   "32257:0": 52,
+   "33219:0": 52,
+   "33235:0": 52
+  },
+  "buttons/basic/large/min_width": {
+   "connect": 140,
+   "32257:0": 123,
+   "33219:0": 116,
+   "33235:0": 148
+  },
+  "buttons/basic/large/padding_horizontal": {
+   "connect": 40,
+   "32257:0": 35,
+   "33219:0": 34,
+   "33235:0": 42
+  },
+  "buttons/basic/large/padding_vertical": {
+   "connect": 16,
+   "32257:0": 14,
+   "33219:0": 14,
+   "33235:0": 17
+  },
+  "buttons/basic/large/radius_top_left": {
+   "connect": 32,
+   "32257:0": 32,
+   "33219:0": 32,
+   "33235:0": 32
+  },
+  "buttons/basic/medium/gap_horizontal": {
+   "connect": 14,
+   "32257:0": 12,
+   "33219:0": 12,
+   "33235:0": 15
+  },
+  "buttons/basic/medium/height": {
+   "connect": 80,
+   "32257:0": 70,
+   "33219:0": 66,
+   "33235:0": 84
+  },
+  "buttons/basic/medium/icon_sqaure": {
+   "connect": 40,
+   "32257:0": 40,
+   "33219:0": 40,
+   "33235:0": 40
+  },
+  "buttons/basic/medium/min_width": {
+   "connect": 120,
+   "32257:0": 106,
+   "33219:0": 100,
+   "33235:0": 128
+  },
+  "buttons/basic/medium/padding_horizontal": {
+   "connect": 32,
+   "32257:0": 28,
+   "33219:0": 27,
+   "33235:0": 35
+  },
+  "buttons/basic/medium/padding_vertical": {
+   "connect": 16,
+   "32257:0": 14,
+   "33219:0": 14,
+   "33235:0": 17
+  },
+  "buttons/basic/medium/radius_bottom_left_medium": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "buttons/basic/medium/radius_bottom_right_medium": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "buttons/basic/medium/radius_top_left_medium": {
+   "connect": 24,
+   "32257:0": 24,
+   "33219:0": 24,
+   "33235:0": 24
+  },
+  "buttons/basic/medium/radius_top_right_medium": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "buttons/basic/small/gap_horizontal": {
+   "connect": 12,
+   "32257:0": 11,
+   "33219:0": 10,
+   "33235:0": 13
+  },
+  "buttons/basic/small/height": {
+   "connect": 64,
+   "32257:0": 56,
+   "33219:0": 54,
+   "33235:0": 68
+  },
+  "buttons/basic/small/icon_sqaure": {
+   "connect": 32,
+   "32257:0": 32,
+   "33219:0": 32,
+   "33235:0": 32
+  },
+  "buttons/basic/small/min_width": {
+   "connect": 100,
+   "32257:0": 88,
+   "33219:0": 84,
+   "33235:0": 106
+  },
+  "buttons/basic/small/padding_horizontal": {
+   "connect": 24,
+   "32257:0": 21,
+   "33219:0": 20,
+   "33235:0": 26
+  },
+  "buttons/basic/small/padding_vertical": {
+   "connect": 8,
+   "32257:0": 7,
+   "33219:0": 8,
+   "33235:0": 10
+  },
+  "buttons/basic/small/radius_bottom_right": {
+   "connect": 16,
+   "32257:0": 16,
+   "33219:0": 16,
+   "33235:0": 16
+  },
+  "buttons/circle/container_normal": {
+   "connect": 80
+  },
+  "buttons/circle/container_overlap": {
+   "connect": 50
+  },
+  "buttons/circle/icon_normal": {
+   "connect": 44
+  },
+  "buttons/icon/circle_radius_bottom_left": {
+   "connect": 999
+  },
+  "buttons/icon/circle_radius_bottom_right": {
+   "connect": 999
+  },
+  "buttons/icon/circle_radius_top_left": {
+   "connect": 999
+  },
+  "buttons/icon/circle_radius_top_right": {
+   "connect": 999
+  },
+  "buttons/icon/medium/content": {
+   "connect": 56,
+   "32257:0": 56,
+   "33219:0": 56,
+   "33235:0": 56
+  },
+  "buttons/icon/medium/height": {
+   "connect-s": 80,
+   "connect-l": 70,
+   "connect-w": 66,
+   "\bconnect-waterfall": 84
+  },
+  "buttons/icon/medium/rounded_radius_bottom_left": {
+   "connect": 20,
+   "32257:0": 20,
+   "33219:0": 20,
+   "33235:0": 20
+  },
+  "buttons/icon/medium/rounded_radius_bottom_right": {
+   "connect": 20,
+   "32257:0": 20,
+   "33219:0": 20,
+   "33235:0": 20
+  },
+  "buttons/icon/medium/rounded_radius_top_left": {
+   "connect": 20,
+   "32257:0": 20,
+   "33219:0": 20,
+   "33235:0": 20
+  },
+  "buttons/icon/medium/rounded_radius_top_right": {
+   "connect": 20,
+   "32257:0": 20,
+   "33219:0": 20,
+   "33235:0": 20
+  },
+  "buttons/icon/medium/width": {
+   "connect": 80,
+   "32257:0": 70,
+   "33219:0": 66,
+   "33235:0": 84
+  },
+  "buttons/icon/small/content": {
+   "connect": 44,
+   "32257:0": 44,
+   "33219:0": 44,
+   "33235:0": 44
+  },
+  "buttons/icon/small/height": {
+   "connect-s": 64,
+   "connect-l": 56,
+   "connect-w": 54,
+   "\bconnect-waterfall": 68
+  },
+  "buttons/icon/small/rounded_radius_bottom_left": {
+   "connect": 16,
+   "32257:0": 16,
+   "33219:0": 16,
+   "33235:0": 16
+  },
+  "buttons/icon/small/rounded_radius_bottom_right": {
+   "connect": 16,
+   "32257:0": 16,
+   "33219:0": 16,
+   "33235:0": 16
+  },
+  "buttons/icon/small/rounded_radius_top_left": {
+   "connect": 16,
+   "32257:0": 16,
+   "33219:0": 16,
+   "33235:0": 16
+  },
+  "buttons/icon/small/rounded_radius_top_right": {
+   "connect": 16,
+   "32257:0": 16,
+   "33219:0": 16,
+   "33235:0": 16
+  },
+  "buttons/icon/small/width": {
+   "connect": 64,
+   "32257:0": 56,
+   "33219:0": 54,
+   "33235:0": 68
+  },
+  "buttons/keypad/border": {
+   "connect-s": 4,
+   "connect-l": 4,
+   "connect-w": 3,
+   "\bconnect-waterfall": 4
+  },
+  "buttons/keypad/height": {
+   "connect-s": 108,
+   "connect-l": 95,
+   "connect-w": 80,
+   "\bconnect-waterfall": 116
+  },
+  "buttons/keypad/icon": {
+   "connect-s": 48,
+   "connect-l": 42,
+   "connect-w": 40,
+   "\bconnect-waterfall": 51
+  },
+  "buttons/keypad/min_width": {
+   "connect-s": 200,
+   "connect-l": 176,
+   "connect-w": 166,
+   "\bconnect-waterfall": 212
+  },
+  "buttons/keypad/radius_bottom_left": {
+   "connect-s": 32,
+   "connect-l": 28,
+   "connect-w": 27,
+   "\bconnect-waterfall": 35
+  },
+  "buttons/keypad/radius_bottom_right": {
+   "connect-s": 32,
+   "connect-l": 28,
+   "connect-w": 27,
+   "\bconnect-waterfall": 35
+  },
+  "buttons/keypad/radius_top_left": {
+   "connect-s": 32,
+   "connect-l": 28,
+   "connect-w": 27,
+   "\bconnect-waterfall": 35
+  },
+  "buttons/keypad/radius_top_right": {
+   "connect-s": 32,
+   "connect-l": 28,
+   "connect-w": 27,
+   "\bconnect-waterfall": 35
+  },
+  "buttons/text/medium/gap": {
+   "connect-s": 8,
+   "connect-l": 7,
+   "connect-w": 8,
+   "\bconnect-waterfall": 9
+  },
+  "buttons/text/medium/icon": {
+   "connect-s": 32,
+   "connect-l": 28,
+   "connect-w": 27,
+   "\bconnect-waterfall": 35
+  },
+  "buttons/text/small/gap": {
+   "connect-s": 4,
+   "connect-l": 4,
+   "connect-w": 4,
+   "\bconnect-waterfall": 4
+  },
+  "buttons/text/small/icon": {
+   "connect-s": 28,
+   "connect-l": 25,
+   "connect-w": 23,
+   "\bconnect-waterfall": 29
+  },
+  "buttons/toggle/disabled_border": {
+   "connect-s": 2,
+   "connect-l": 2,
+   "connect-w": 2,
+   "\bconnect-waterfall": 3
+  },
+  "buttons/toggle/large/gap_horizontal": {
+   "connect-s": 16,
+   "connect-l": 14,
+   "connect-w": 14,
+   "\bconnect-waterfall": 17
+  },
+  "buttons/toggle/large/height": {
+   "connect-s": 100,
+   "connect-l": 88,
+   "connect-w": 84,
+   "\bconnect-waterfall": 106
+  },
+  "buttons/toggle/large/icon_sqaure": {
+   "connect-s": 52,
+   "connect-l": 46,
+   "connect-w": 43,
+   "\bconnect-waterfall": 55
+  },
+  "buttons/toggle/large/min_width": {
+   "connect-s": 140,
+   "connect-l": 123,
+   "connect-w": 116,
+   "\bconnect-waterfall": 148
+  },
+  "buttons/toggle/large/padding_horizontal": {
+   "connect-s": 40,
+   "connect-l": 35,
+   "connect-w": 34,
+   "\bconnect-waterfall": 42
+  },
+  "buttons/toggle/large/padding_vertical": {
+   "connect-s": 16,
+   "connect-l": 14,
+   "connect-w": 14,
+   "\bconnect-waterfall": 17
+  },
+  "buttons/toggle/large/radius_bottom_left": {
+   "connect-s": 32,
+   "connect-l": 28,
+   "connect-w": 27,
+   "\bconnect-waterfall": 35
+  },
+  "buttons/toggle/large/radius_bottom_right": {
+   "connect-s": 32,
+   "connect-l": 28,
+   "connect-w": 27,
+   "\bconnect-waterfall": 35
+  },
+  "buttons/toggle/large/radius_top_left": {
+   "connect-s": 32,
+   "connect-l": 28,
+   "connect-w": 27,
+   "\bconnect-waterfall": 35
+  },
+  "buttons/toggle/large/radius_top_right": {
+   "connect-s": 32,
+   "connect-l": 28,
+   "connect-w": 27,
+   "\bconnect-waterfall": 35
+  },
+  "buttons/toggle/medium/gap_horizontal": {
+   "connect-s": 14,
+   "connect-l": 12,
+   "connect-w": 12,
+   "\bconnect-waterfall": 15
+  },
+  "buttons/toggle/medium/height": {
+   "connect-s": 80,
+   "connect-l": 70,
+   "connect-w": 66,
+   "\bconnect-waterfall": 84
+  },
+  "buttons/toggle/medium/icon_square": {
+   "connect-s": 40,
+   "connect-l": 35,
+   "connect-w": 33,
+   "\bconnect-waterfall": 42
+  },
+  "buttons/toggle/medium/min_width": {
+   "connect-s": 120,
+   "connect-l": 106,
+   "connect-w": 100,
+   "\bconnect-waterfall": 128
+  },
+  "buttons/toggle/medium/padding_horizontal": {
+   "connect-s": 32,
+   "connect-l": 28,
+   "connect-w": 28,
+   "\bconnect-waterfall": 35
+  },
+  "buttons/toggle/medium/padding_vertical": {
+   "connect-s": 16,
+   "connect-l": 14,
+   "connect-w": 14,
+   "\bconnect-waterfall": 16
+  },
+  "buttons/toggle/medium/radius_bottom_left": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "buttons/toggle/medium/radius_bottom_right": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "buttons/toggle/medium/radius_top_left": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "buttons/toggle/medium/radius_top_right": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "buttons/toggle/small/gap_horizontal": {
+   "connect-s": 12,
+   "connect-l": 11,
+   "connect-w": 10,
+   "\bconnect-waterfall": 12
+  },
+  "buttons/toggle/small/height": {
+   "connect-s": 64,
+   "connect-l": 56,
+   "connect-w": 54,
+   "\bconnect-waterfall": 68
+  },
+  "buttons/toggle/small/icon_sqaure": {
+   "connect-s": 32,
+   "connect-l": 28,
+   "connect-w": 27,
+   "\bconnect-waterfall": 35
+  },
+  "buttons/toggle/small/min_width": {
+   "connect-s": 100,
+   "connect-l": 88,
+   "connect-w": 84,
+   "\bconnect-waterfall": 106
+  },
+  "buttons/toggle/small/padding_horizontal": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "buttons/toggle/small/padding_vertical": {
+   "connect-s": 8,
+   "connect-l": 7,
+   "connect-w": 8,
+   "\bconnect-waterfall": 10
+  },
+  "buttons/toggle/small/radius_bottom_left": {
+   "connect-s": 16,
+   "connect-l": 14,
+   "connect-w": 13,
+   "\bconnect-waterfall": 17
+  },
+  "buttons/toggle/small/radius_bottom_right": {
+   "connect-s": 16,
+   "connect-l": 14,
+   "connect-w": 13,
+   "\bconnect-waterfall": 17
+  },
+  "buttons/toggle/small/radius_top_left": {
+   "connect-s": 16,
+   "connect-l": 14,
+   "connect-w": 13,
+   "\bconnect-waterfall": 17
+  },
+  "buttons/toggle/small/radius_top_right": {
+   "connect-s": 16,
+   "connect-l": 14,
+   "connect-w": 13,
+   "\bconnect-waterfall": 17
+  },
+  "controller/slider/border_large": {
+   "connect-s": 4,
+   "connect-l": 4,
+   "connect-w": 3,
+   "\bconnect-waterfall": 4
+  },
+  "controller/slider/border_medium": {
+   "connect-s": 3,
+   "connect-l": 3,
+   "connect-w": 3,
+   "\bconnect-waterfall": 3
+  },
+  "controller/slider/border_small": {
+   "connect-s": 2,
+   "connect-l": 2,
+   "connect-w": 2,
+   "\bconnect-waterfall": 3
+  },
+  "controller/slider/centered/knob/enabled_circle": {
+   "connect-s": 48,
+   "connect-l": 42,
+   "connect-w": 40,
+   "\bconnect-waterfall": 51
+  },
+  "controller/slider/centered/knob/pressed_circle": {
+   "connect-s": 56,
+   "connect-l": 49,
+   "connect-w": 46,
+   "\bconnect-waterfall": 59
+  },
+  "controller/slider/centered/temporature/text_height": {
+   "connect-s": 62,
+   "connect-l": 55,
+   "connect-w": 52,
+   "\bconnect-waterfall": 64
+  },
+  "controller/slider/centered/track/height": {
+   "connect-s": 8,
+   "connect-l": 7,
+   "connect-w": 8,
+   "\bconnect-waterfall": 9
+  },
+  "controller/slider/centered/track/min_width": {
+   "connect-s": 320,
+   "connect-l": 282,
+   "connect-w": 266,
+   "\bconnect-waterfall": 340
+  },
+  "controller/slider/centered/track/radius_bottom_left": {
+   "connect-s": 999,
+   "connect-l": 999,
+   "connect-w": 999,
+   "\bconnect-waterfall": 999
+  },
+  "controller/slider/centered/track/radius_bottom_right": {
+   "connect-s": 999,
+   "connect-l": 999,
+   "connect-w": 999,
+   "\bconnect-waterfall": 999
+  },
+  "controller/slider/centered/track/radius_top_left": {
+   "connect-s": 999,
+   "connect-l": 999,
+   "connect-w": 999,
+   "\bconnect-waterfall": 999
+  },
+  "controller/slider/centered/track/radius_top_right": {
+   "connect-s": 999,
+   "connect-l": 999,
+   "connect-w": 999,
+   "\bconnect-waterfall": 999
+  },
+  "controller/slider/continuous/medium/button_medium": {
+   "connect-s": 80,
+   "connect-l": 70,
+   "connect-w": 66,
+   "\bconnect-waterfall": 84
+  },
+  "controller/slider/continuous/medium/icon_medium": {
+   "connect-s": 56,
+   "connect-l": 49,
+   "connect-w": 46,
+   "\bconnect-waterfall": 59
+  },
+  "controller/slider/continuous/medium/knob/radius_bottom_left": {
+   "connect-s": 20,
+   "connect-l": 20,
+   "connect-w": 17,
+   "\bconnect-waterfall": 22
+  },
+  "controller/slider/continuous/medium/knob/radius_bottom_right": {
+   "connect-s": 20,
+   "connect-l": 20,
+   "connect-w": 17,
+   "\bconnect-waterfall": 22
+  },
+  "controller/slider/continuous/medium/knob/radius_top_left": {
+   "connect-s": 20,
+   "connect-l": 18,
+   "connect-w": 17,
+   "\bconnect-waterfall": 22
+  },
+  "controller/slider/continuous/medium/knob/radius_top_right": {
+   "connect-s": 20,
+   "connect-l": 20,
+   "connect-w": 17,
+   "\bconnect-waterfall": 22
+  },
+  "controller/slider/continuous/medium/label_width": {
+   "connect-s": 180,
+   "connect-l": 158,
+   "connect-w": 180,
+   "\bconnect-waterfall": 180
+  },
+  "controller/slider/continuous/medium/radius_bottom_left": {
+   "connect-s": 32,
+   "connect-l": 28,
+   "connect-w": 27,
+   "\bconnect-waterfall": 35
+  },
+  "controller/slider/continuous/medium/radius_bottom_right": {
+   "connect-s": 32,
+   "connect-l": 28,
+   "connect-w": 27,
+   "\bconnect-waterfall": 35
+  },
+  "controller/slider/continuous/medium/radius_top_left": {
+   "connect-s": 32,
+   "connect-l": 28,
+   "connect-w": 27,
+   "\bconnect-waterfall": 35
+  },
+  "controller/slider/continuous/medium/radius_top_right": {
+   "connect-s": 32,
+   "connect-l": 28,
+   "connect-w": 27,
+   "\bconnect-waterfall": 35
+  },
+  "controller/slider/continuous/small/button_small": {
+   "connect-s": 72,
+   "connect-l": 63,
+   "connect-w": 60,
+   "\bconnect-waterfall": 77
+  },
+  "controller/slider/continuous/small/icon_small": {
+   "connect-s": 48,
+   "connect-l": 42,
+   "connect-w": 40,
+   "\bconnect-waterfall": 51
+  },
+  "controller/slider/continuous/small/knob/radius_bottom_left": {
+   "connect-s": 16,
+   "connect-l": 14,
+   "connect-w": 13,
+   "\bconnect-waterfall": 17
+  },
+  "controller/slider/continuous/small/knob/radius_bottom_right": {
+   "connect-s": 16,
+   "connect-l": 14,
+   "connect-w": 13,
+   "\bconnect-waterfall": 17
+  },
+  "controller/slider/continuous/small/knob/radius_top_left": {
+   "connect-s": 16,
+   "connect-l": 14,
+   "connect-w": 13,
+   "\bconnect-waterfall": 17
+  },
+  "controller/slider/continuous/small/knob/radius_top_right": {
+   "connect-s": 16,
+   "connect-l": 14,
+   "connect-w": 13,
+   "\bconnect-waterfall": 17
+  },
+  "controller/slider/continuous/small/radius_bottom_left": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "controller/slider/continuous/small/radius_bottom_right": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "controller/slider/continuous/small/radius_top_left": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "controller/slider/continuous/small/radius_top_right": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "controller/slider/continuous/track/medium/icon": {
+   "connect-s": 48,
+   "connect-l": 42,
+   "connect-w": 40,
+   "\bconnect-waterfall": 51
+  },
+  "controller/slider/continuous/track/medium/item_padding": {
+   "connect-s": 4,
+   "connect-l": 4,
+   "connect-w": 4,
+   "\bconnect-waterfall": 4
+  },
+  "controller/slider/continuous/track/medium/radius_bottom_left": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "controller/slider/continuous/track/medium/radius_bottom_right": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "controller/slider/continuous/track/medium/radius_top_left": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "controller/slider/continuous/track/medium/radius_top_right": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "controller/slider/continuous/track/small/icon": {
+   "connect-s": 40,
+   "connect-l": 35,
+   "connect-w": 33,
+   "\bconnect-waterfall": 42
+  },
+  "controller/slider/continuous/track/small/item_padding": {
+   "connect-s": 4,
+   "connect-l": 4,
+   "connect-w": 4,
+   "\bconnect-waterfall": 4
+  },
+  "controller/slider/continuous/track/small/radius_bottom_left": {
+   "connect-s": 20,
+   "connect-l": 18,
+   "connect-w": 17,
+   "\bconnect-waterfall": 22
+  },
+  "controller/slider/continuous/track/small/radius_bottom_right": {
+   "connect-s": 20,
+   "connect-l": 18,
+   "connect-w": 17,
+   "\bconnect-waterfall": 22
+  },
+  "controller/slider/continuous/track/small/radius_top_left": {
+   "connect-s": 20,
+   "connect-l": 18,
+   "connect-w": 17,
+   "\bconnect-waterfall": 22
+  },
+  "controller/slider/continuous/track/small/radius_top_right": {
+   "connect-s": 20,
+   "connect-l": 18,
+   "connect-w": 17,
+   "\bconnect-waterfall": 22
+  },
+  "controller/slider/gap_horizontal_large": {
+   "connect-s": 16,
+   "connect-l": 14,
+   "connect-w": 14,
+   "\bconnect-waterfall": 17
+  },
+  "controller/slider/gap_horizontal_small": {
+   "connect-s": 12,
+   "connect-l": 11,
+   "connect-w": 10,
+   "\bconnect-waterfall": 13
+  },
+  "controller/slider/height_large": {
+   "connect-s": 100,
+   "connect-l": 88,
+   "connect-w": 84,
+   "\bconnect-waterfall": 106
+  },
+  "controller/slider/height_medium": {
+   "connect-s": 80,
+   "connect-l": 70,
+   "connect-w": 66,
+   "\bconnect-waterfall": 84
+  },
+  "controller/slider/height_small": {
+   "connect-s": 72,
+   "connect-l": 67,
+   "connect-w": 64,
+   "\bconnect-waterfall": 81
+  },
+  "controller/slider/padding_horizontal_large": {
+   "connect-s": 40,
+   "connect-l": 35,
+   "connect-w": 34,
+   "\bconnect-waterfall": 42
+  },
+  "controller/slider/padding_horizontal_medium": {
+   "connect-s": 20,
+   "connect-l": 18,
+   "connect-w": 18,
+   "\bconnect-waterfall": 22
+  },
+  "controller/slider/padding_horizontal_small": {
+   "connect-s": 10,
+   "connect-l": 9,
+   "connect-w": 8,
+   "\bconnect-waterfall": 10
+  },
+  "controller/slider/padding_vertical_large": {
+   "connect-s": 12,
+   "connect-l": 11,
+   "connect-w": 10,
+   "\bconnect-waterfall": 13
+  },
+  "controller/slider/padding_vertical_medium": {
+   "connect-s": 10,
+   "connect-l": 9,
+   "connect-w": 8,
+   "\bconnect-waterfall": 10
+  },
+  "controller/slider/padding_vertical_small": {
+   "connect-s": 8,
+   "connect-l": 7,
+   "connect-w": 8,
+   "\bconnect-waterfall": 9
+  },
+  "controller/slider/radius_bottom_left": {
+   "connect-s": 32,
+   "connect-l": 28,
+   "connect-w": 27,
+   "\bconnect-waterfall": 35
+  },
+  "controller/slider/radius_bottom_right": {
+   "connect-s": 32,
+   "connect-l": 28,
+   "connect-w": 27,
+   "\bconnect-waterfall": 35
+  },
+  "controller/slider/radius_top_left": {
+   "connect-s": 32,
+   "connect-l": 28,
+   "connect-w": 27,
+   "\bconnect-waterfall": 35
+  },
+  "controller/slider/radius_top_right": {
+   "connect-s": 32,
+   "connect-l": 28,
+   "connect-w": 27,
+   "\bconnect-waterfall": 35
+  },
+  "controller/stepper/border": {
+   "connect-s": 2,
+   "connect-l": 2,
+   "connect-w": 2,
+   "\bconnect-waterfall": 3
+  },
+  "controller/stepper/divider": {
+   "connect-s": 2,
+   "connect-l": 2,
+   "connect-w": 2,
+   "\bconnect-waterfall": 3
+  },
+  "controller/stepper/gap_horizontal": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "controller/stepper/height": {
+   "connect-s": 100,
+   "connect-l": 88,
+   "connect-w": 84,
+   "\bconnect-waterfall": 106
+  },
+  "controller/stepper/padding_horizontal": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "controller/stepper/padding_vertical": {
+   "connect-s": 18,
+   "connect-l": 16,
+   "connect-w": 15,
+   "\bconnect-waterfall": 19
+  },
+  "controller/stepper/radius_bottom_left": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "controller/stepper/radius_bottom_right": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "controller/stepper/radius_top_left": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "controller/stepper/radius_top_right": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "controller/stepper/width": {
+   "connect-s": 420,
+   "connect-l": 352,
+   "connect-w": 340,
+   "\bconnect-waterfall": 426
+  },
+  "driving_view(wip)/group1/indicator_padding_horizontal": {
+   "connect-s": 20,
+   "connect-l": 18,
+   "connect-w": 20,
+   "\bconnect-waterfall": 20
+  },
+  "driving_view/left/group1/padding_horizontal_left": {
+   "connect-s": 20,
+   "connect-l": 18,
+   "connect-w": 20,
+   "\bconnect-waterfall": 21
+  },
+  "driving_view/top/group1/prnd_unit_width": {
+   "connect-s": 30,
+   "connect-l": 26,
+   "connect-w": 30,
+   "\bconnect-waterfall": 32
+  },
+  "dropdown/border": {
+   "connect-s": 2,
+   "connect-l": 2,
+   "connect-w": 2,
+   "\bconnect-waterfall": 3
+  },
+  "dropdown/container/prefix_app_icon_border": {
+   "connect-s": 1,
+   "connect-l": 1,
+   "connect-w": 1,
+   "\bconnect-waterfall": 1
+  },
+  "dropdown/gap_vertical_medium": {
+   "connect-s": 16,
+   "connect-l": 14,
+   "connect-w": 14,
+   "\bconnect-waterfall": 17
+  },
+  "dropdown/gap_vertical_small": {
+   "connect-s": 8,
+   "connect-l": 7,
+   "connect-w": 8,
+   "\bconnect-waterfall": 9
+  },
+  "dropdown/medium/height": {
+   "connect-s": 100,
+   "connect-l": 88,
+   "connect-w": 84,
+   "\bconnect-waterfall": 106
+  },
+  "dropdown/medium/prefix/icon_square": {
+   "connect-s": 40,
+   "connect-l": 35,
+   "connect-w": 33,
+   "\bconnect-waterfall": 40
+  },
+  "dropdown/medium/prefix/padding_horizontal": {
+   "connect-s": 4,
+   "connect-l": 4,
+   "connect-w": 4,
+   "\bconnect-waterfall": 4
+  },
+  "dropdown/medium/prefix/padding_vertical": {
+   "connect-s": 4,
+   "connect-l": 4,
+   "connect-w": 4,
+   "\bconnect-waterfall": 4
+  },
+  "dropdown/medium/radius_bottom_left": {
+   "connect-s": 32,
+   "connect-l": 28,
+   "connect-w": 27,
+   "\bconnect-waterfall": 35
+  },
+  "dropdown/medium/radius_bottom_right": {
+   "connect-s": 32,
+   "connect-l": 28,
+   "connect-w": 27,
+   "\bconnect-waterfall": 35
+  },
+  "dropdown/medium/radius_top_left": {
+   "connect-s": 32,
+   "connect-l": 28,
+   "connect-w": 27,
+   "\bconnect-waterfall": 35
+  },
+  "dropdown/medium/radius_top_right": {
+   "connect-s": 32,
+   "connect-l": 28,
+   "connect-w": 27,
+   "\bconnect-waterfall": 35
+  },
+  "dropdown/padding_large": {
+   "connect-s": 20,
+   "connect-l": 18,
+   "connect-w": 18,
+   "\bconnect-waterfall": 22
+  },
+  "dropdown/padding_medium": {
+   "connect-s": 16,
+   "connect-l": 14,
+   "connect-w": 14,
+   "\bconnect-waterfall": 17
+  },
+  "dropdown/padding_small": {
+   "connect-s": 12,
+   "connect-l": 11,
+   "connect-w": 10,
+   "\bconnect-waterfall": 13
+  },
+  "dropdown/prefix/app_radius_bottom_left": {
+   "connect-s": 16,
+   "connect-l": 14,
+   "connect-w": 13,
+   "\bconnect-waterfall": 17
+  },
+  "dropdown/prefix/app_radius_bottom_right": {
+   "connect-s": 16,
+   "connect-l": 14,
+   "connect-w": 13,
+   "\bconnect-waterfall": 17
+  },
+  "dropdown/prefix/app_radius_top_left": {
+   "connect-s": 16,
+   "connect-l": 14,
+   "connect-w": 13,
+   "\bconnect-waterfall": 17
+  },
+  "dropdown/prefix/app_radius_top_right": {
+   "connect-s": 16,
+   "connect-l": 14,
+   "connect-w": 13,
+   "\bconnect-waterfall": 17
+  },
+  "dropdown/prefix/container_square": {
+   "connect-s": 56,
+   "connect-l": 49,
+   "connect-w": 46,
+   "\bconnect-waterfall": 59
+  },
+  "dropdown/prefix/medium/app_icon_radius_bottom_left": {
+   "connect-s": 12,
+   "connect-l": 11,
+   "connect-w": 10,
+   "\bconnect-waterfall": 12
+  },
+  "dropdown/prefix/medium/app_icon_radius_bottom_right": {
+   "connect-s": 12,
+   "connect-l": 11,
+   "connect-w": 10,
+   "\bconnect-waterfall": 12
+  },
+  "dropdown/prefix/medium/app_icon_radius_top_left": {
+   "connect-s": 12,
+   "connect-l": 11,
+   "connect-w": 10,
+   "\bconnect-waterfall": 12
+  },
+  "dropdown/prefix/medium/app_icon_radius_top_right": {
+   "connect-s": 12,
+   "connect-l": 11,
+   "connect-w": 10,
+   "\bconnect-waterfall": 12
+  },
+  "dropdown/small/height": {
+   "connect-s": 80,
+   "connect-l": 70,
+   "connect-w": 66,
+   "\bconnect-waterfall": 84
+  },
+  "dropdown/small/radius_bottom_left": {
+   "connect-s": 28,
+   "connect-l": 25,
+   "connect-w": 23,
+   "\bconnect-waterfall": 29
+  },
+  "dropdown/small/radius_bottom_right": {
+   "connect-s": 28,
+   "connect-l": 25,
+   "connect-w": 23,
+   "\bconnect-waterfall": 29
+  },
+  "dropdown/small/radius_top_left": {
+   "connect-s": 28,
+   "connect-l": 25,
+   "connect-w": 23,
+   "\bconnect-waterfall": 29
+  },
+  "dropdown/small/radius_top_right": {
+   "connect-s": 28,
+   "connect-l": 25,
+   "connect-w": 23,
+   "\bconnect-waterfall": 29
+  },
+  "dropdown/suffix/dot_icon_square": {
+   "connect-s": 16,
+   "connect-l": 14,
+   "connect-w": 13,
+   "\bconnect-waterfall": 17
+  },
+  "dropdown/suffix/icon_square": {
+   "connect-s": 48,
+   "connect-l": 42,
+   "connect-w": 40,
+   "\bconnect-waterfall": 51
+  },
+  "fields/number/border": {
+   "connect-s": 4,
+   "connect-l": 4,
+   "connect-w": 3,
+   "\bconnect-waterfall": 4
+  },
+  "fields/number/cursor_height": {
+   "connect-s": 48,
+   "connect-l": 42,
+   "connect-w": 40,
+   "\bconnect-waterfall": 51
+  },
+  "fields/number/cursor_width": {
+   "connect-s": 4,
+   "connect-l": 4,
+   "connect-w": 4,
+   "\bconnect-waterfall": 4
+  },
+  "fields/number/input_radius_bottom_left": {
+   "connect-s": 32,
+   "connect-l": 28,
+   "connect-w": 20,
+   "\bconnect-waterfall": 35
+  },
+  "fields/number/input_radius_bottom_right": {
+   "connect-s": 32,
+   "connect-l": 28,
+   "connect-w": 20,
+   "\bconnect-waterfall": 35
+  },
+  "fields/number/input_radius_top_left": {
+   "connect-s": 32,
+   "connect-l": 28,
+   "connect-w": 20,
+   "\bconnect-waterfall": 35
+  },
+  "fields/number/input_radius_top_right": {
+   "connect-s": 32,
+   "connect-l": 28,
+   "connect-w": 20,
+   "\bconnect-waterfall": 35
+  },
+  "fields/number/large_height": {
+   "connect-s": 180,
+   "connect-l": 158,
+   "connect-w": 150,
+   "\bconnect-waterfall": 190
+  },
+  "fields/number/large_width": {
+   "connect-s": 140,
+   "connect-l": 123,
+   "connect-w": 116,
+   "\bconnect-waterfall": 148
+  },
+  "fields/number/medium_square": {
+   "connect-s": 128,
+   "connect-l": 113,
+   "connect-w": 80,
+   "\bconnect-waterfall": 136
+  },
+  "fields/text/medium/border": {
+   "connect-s": 3,
+   "connect-l": 3,
+   "connect-w": 3,
+   "\bconnect-waterfall": 3
+  },
+  "fields/text/medium/gap_horizontal": {
+   "connect-s": 16,
+   "connect-l": 14,
+   "connect-w": 14,
+   "\bconnect-waterfall": 17
+  },
+  "fields/text/medium/height": {
+   "connect-s": 100,
+   "connect-l": 88,
+   "connect-w": 84,
+   "\bconnect-waterfall": 106
+  },
+  "fields/text/medium/help_text_gap_vertical": {
+   "connect-s": 16,
+   "connect-l": 14,
+   "connect-w": 14,
+   "\bconnect-waterfall": 17
+  },
+  "fields/text/medium/padding_horizontal": {
+   "connect-s": 32,
+   "connect-l": 28,
+   "connect-w": 28,
+   "\bconnect-waterfall": 35
+  },
+  "fields/text/medium/radius_bottom_left": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "fields/text/medium/radius_bottom_right": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "fields/text/medium/radius_top_left": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "fields/text/medium/radius_top_right": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "fields/text/medium/suffix_icon_square": {
+   "connect-s": 48,
+   "connect-l": 42,
+   "connect-w": 40,
+   "\bconnect-waterfall": 51
+  },
+  "fields/text/small/border": {
+   "connect-s": 2,
+   "connect-l": 2,
+   "connect-w": 2,
+   "\bconnect-waterfall": 3
+  },
+  "fields/text/small/gap_horizontal": {
+   "connect-s": 12,
+   "connect-l": 11,
+   "connect-w": 10,
+   "\bconnect-waterfall": 13
+  },
+  "fields/text/small/height": {
+   "connect-s": 80,
+   "connect-l": 70,
+   "connect-w": 66,
+   "\bconnect-waterfall": 84
+  },
+  "fields/text/small/help_text_gap_vertical": {
+   "connect-s": 12,
+   "connect-l": 11,
+   "connect-w": 10,
+   "\bconnect-waterfall": 13
+  },
+  "fields/text/small/padding_horizontal": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "fields/text/small/suffix_icon_square": {
+   "connect-s": 40,
+   "connect-l": 35,
+   "connect-w": 33,
+   "\bconnect-waterfall": 42
+  },
+  "gnb/application/app_activate_height": {
+   "connect-s": 8,
+   "connect-l": 7,
+   "connect-w": 8,
+   "connect-waterfall": 8,
+   "connect-s-14": 8,
+   "92233:0": 8
+  },
+  "gnb/application/app_activate_width": {
+   "connect-s": 8,
+   "connect-l": 7,
+   "connect-w": 8,
+   "connect-waterfall": 8,
+   "connect-s-14": 8,
+   "92233:0": 8
+  },
+  "gnb/application/app_square": {
+   "connect-s": 84,
+   "connect-l": 74,
+   "connect-w": 70,
+   "connect-waterfall": 70,
+   "connect-s-14": 74
+  },
+  "gnb/application/radius_bottom_left": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "gnb/application/radius_bottom_right": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "gnb/application/radius_top_left": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "gnb/application/radius_top_right": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "gnb/controller/arrow_height": {
+   "connect-s": 0,
+   "connect-l": 0,
+   "connect-w": 100,
+   "connect-waterfall": 80,
+   "connect-s-14": 0
+  },
+  "gnb/controller/arrow_icon_sqaure": {
+   "connect-s": 64,
+   "connect-l": 56,
+   "connect-w": 53,
+   "connect-waterfall": 53,
+   "connect-s-14": 52,
+   "92233:0": 53
+  },
+  "gnb/controller/arrow_width": {
+   "connect-s": 80,
+   "connect-l": 70,
+   "connect-w": 108,
+   "connect-waterfall": 108,
+   "connect-s-14": 64
+  },
+  "gnb/controller/divider": {
+   "connect-s": 4,
+   "connect-l": 4,
+   "connect-w": 3,
+   "\bconnect-waterfall": 4
+  },
+  "gnb/controller/divider_pressed_square": {
+   "connect-s": 64,
+   "connect-l": 56,
+   "connect-w": 52,
+   "\bconnect-waterfall": 67
+  },
+  "gnb/controller/icon_square": {
+   "connect-s": 72,
+   "connect-l": 63,
+   "connect-w": 60,
+   "\bconnect-waterfall": 77
+  },
+  "gnb/controller/pressed_square": {
+   "connect-s": 100,
+   "connect-l": 88,
+   "connect-w": 96,
+   "connect-waterfall": 96,
+   "connect-s-14": 88,
+   "92233:0": 84
+  },
+  "gnb/controller/width": {
+   "connect-s": 720,
+   "connect-l": 548,
+   "connect-w": 0,
+   "\bconnect-waterfall": 0
+  },
+  "gnb/gap_large": {
+   "connect-s": 12,
+   "connect-l": 11,
+   "connect-w": 10,
+   "\bconnect-waterfall": 12
+  },
+  "gnb/gap_medium": {
+   "connect-s": 8,
+   "connect-l": 8,
+   "connect-w": 8,
+   "\bconnect-waterfall": 10
+  },
+  "gnb/gap_small": {
+   "connect-s": 4,
+   "connect-l": 4,
+   "connect-w": 4,
+   "connect-waterfall": 4,
+   "connect-s-14": 4,
+   "92233:0": 4
+  },
+  "gnb/height": {
+   "connect-s": 160,
+   "connect-l": 141,
+   "connect-w": 0,
+   "\bconnect-waterfall": 0
+  },
+  "gnb/menu/HMG_app_icon_radius": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "connect-waterfall": 18,
+   "connect-s-14": 20,
+   "92233:0": 18
+  },
+  "gnb/menu/container_square": {
+   "connect-s": 124,
+   "connect-l": 109,
+   "connect-w": 108,
+   "connect-waterfall": 94,
+   "connect-s-14": 96
+  },
+  "gnb/menu/radius_bottom_left": {
+   "connect-s": 30,
+   "connect-l": 25,
+   "connect-w": 30,
+   "connect-waterfall": 24,
+   "connect-s-14": 30
+  },
+  "gnb/menu/radius_bottom_right": {
+   "connect-s": 30,
+   "connect-l": 25,
+   "connect-w": 30,
+   "connect-waterfall": 24,
+   "connect-s-14": 30
+  },
+  "gnb/menu/radius_top_left": {
+   "connect-s": 30,
+   "connect-l": 25,
+   "connect-w": 30,
+   "connect-waterfall": 24,
+   "connect-s-14": 30
+  },
+  "gnb/menu/radius_top_right": {
+   "connect-s": 30,
+   "connect-l": 25,
+   "connect-w": 30,
+   "connect-waterfall": 24,
+   "connect-s-14": 30
+  },
+  "gnb/padding_horizontal": {
+   "connect-s": 60,
+   "connect-l": 20,
+   "connect-w": 0,
+   "\bconnect-waterfall": 0
+  },
+  "gnb/remove_button/background_square": {
+   "connect-s": 40,
+   "connect-l": 35,
+   "connect-w": 36,
+   "connect-waterfall": 36,
+   "connect-s-14": 40,
+   "92233:0": 36
+  },
+  "gnb/remove_button/container_square": {
+   "connect-s": 44,
+   "connect-l": 39,
+   "connect-w": 40,
+   "connect-waterfall": 40,
+   "connect-s-14": 44,
+   "92233:0": 40
+  },
+  "gnb/remove_button/icon_height": {
+   "connect-s": 3,
+   "connect-l": 3,
+   "connect-w": 4,
+   "connect-waterfall": 4,
+   "connect-s-14": 3,
+   "92233:0": 4
+  },
+  "gnb/remove_button/icon_width": {
+   "connect-s": 16,
+   "connect-l": 14,
+   "connect-w": 16,
+   "connect-waterfall": 16,
+   "connect-s-14": 16,
+   "92233:0": 16
+  },
+  "gnb/temperature/container_width": {
+   "connect-s": 164,
+   "connect-l": 116,
+   "connect-w": 108,
+   "connect-waterfall": 108,
+   "connect-s-14": 132
+  },
+  "gnb/temperature/decimal_places_padding_top": {
+   "connect-s": 12,
+   "connect-l": 11,
+   "connect-w": 14,
+   "connect-waterfall": 0,
+   "connect-s-14": 6,
+   "92233:0": 0
+  },
+  "gnb/temperature/decimal_places_witdh": {
+   "connect-s": 38,
+   "connect-l": 33,
+   "connect-w": 32,
+   "connect-waterfall": 32,
+   "connect-s-14": 36,
+   "92233:0": 32
+  },
+  "gnb/temperature/gap_horizontal": {
+   "connect-s": -2,
+   "connect-l": -2,
+   "connect-w": -4,
+   "connect-waterfall": -6,
+   "connect-s-14": -2,
+   "92233:0": -6
+  },
+  "gnb/temperature/gap_vertical": {
+   "connect-s": -4,
+   "connect-l": -4,
+   "connect-w": 0,
+   "\bconnect-waterfall": -4
+  },
+  "gnb/temperature/icon_group_height": {
+   "connect-s": 40,
+   "connect-l": 35,
+   "connect-w": 30,
+   "\bconnect-waterfall": 42
+  },
+  "gnb/temperature/icon_square": {
+   "connect-s": 36,
+   "connect-l": 28,
+   "connect-w": 27,
+   "\bconnect-waterfall": 35
+  },
+  "gnb/temperature/number_width": {
+   "connect-s": 75,
+   "connect-l": 69,
+   "connect-w": 58,
+   "connect-waterfall": 58,
+   "connect-s-14": 60,
+   "92233:0": 58
+  },
+  "gnb/temperature/off_gap_horizontal": {
+   "connect-s": 4,
+   "connect-l": 4,
+   "connect-w": 4,
+   "\bconnect-waterfall": 3
+  },
+  "gnb/temperature/wind_icon_square": {
+   "connect-s": 48,
+   "connect-l": 40,
+   "connect-w": 27,
+   "connect-waterfall": 27,
+   "connect-s-14": 40
+  },
+  "gnb/width": {
+   "connect-s": 0,
+   "connect-l": 0,
+   "connect-w": 140,
+   "connect-waterfall": 112,
+   "connect-s-14": 0,
+   "92233:0": 112
+  },
+  "imagery/cover/border": {
+   "connect-s": 2,
+   "connect-l": 2,
+   "connect-w": 2,
+   "connect-waterfall": 2,
+   "connect-s-14": 2,
+   "92233:0": 2
+  },
+  "imagery/cover/radius_bottom_left": {
+   "connect": 20,
+   "32257:0": 20,
+   "33219:0": 20,
+   "33235:0": 20
+  },
+  "imagery/cover/radius_bottom_right": {
+   "connect": 20,
+   "32257:0": 20,
+   "33219:0": 20,
+   "33235:0": 20
+  },
+  "imagery/cover/radius_top_left": {
+   "connect": 20,
+   "32257:0": 20,
+   "33219:0": 20,
+   "33235:0": 20
+  },
+  "imagery/cover/radius_top_right": {
+   "connect": 20,
+   "32257:0": 20,
+   "33219:0": 20,
+   "33235:0": 20
+  },
+  "imagery/profile/circle": {
+   "connect-s": 80,
+   "connect-l": 70.4,
+   "connect-w": 66,
+   "\bconnect-waterfall": 80
+  },
+  "imagery/profile/radius_bottom_left": {
+   "connect-s": 999,
+   "connect-l": 999,
+   "connect-w": 999,
+   "connect-waterfall": 999,
+   "connect-s-14": 999,
+   "92233:0": 999
+  },
+  "imagery/profile/radius_bottom_right": {
+   "connect-s": 999,
+   "connect-l": 999,
+   "connect-w": 999,
+   "connect-waterfall": 999,
+   "connect-s-14": 999,
+   "92233:0": 999
+  },
+  "imagery/profile/radius_top_left": {
+   "connect-s": 999,
+   "connect-l": 999,
+   "connect-w": 999,
+   "connect-waterfall": 999,
+   "connect-s-14": 999,
+   "92233:0": 999
+  },
+  "imagery/profile/radius_top_right": {
+   "connect-s": 999,
+   "connect-l": 999,
+   "connect-w": 999,
+   "connect-waterfall": 999,
+   "connect-s-14": 999,
+   "92233:0": 999
+  },
+  "keyboard/keyword/enter_width": {
+   "connect-s": 200,
+   "connect-l": 176,
+   "connect-w": 166,
+   "\bconnect-waterfall": 212
+  },
+  "keyboard/keyword/height": {
+   "connect-s": 80,
+   "connect-l": 70,
+   "connect-w": 90,
+   "\bconnect-waterfall": 102
+  },
+  "keyboard/keyword/icon_square": {
+   "connect-s": 44,
+   "connect-l": 39,
+   "connect-w": 37,
+   "\bconnect-waterfall": 49
+  },
+  "keyboard/keyword/normal_width": {
+   "connect-s": 100,
+   "connect-l": 88,
+   "connect-w": 96,
+   "\bconnect-waterfall": 106
+  },
+  "keyboard/keyword/radius_bottom_left": {
+   "connect-s": 20,
+   "connect-l": 18,
+   "connect-w": 17,
+   "\bconnect-waterfall": 22
+  },
+  "keyboard/keyword/radius_bottom_right": {
+   "connect-s": 20,
+   "connect-l": 18,
+   "connect-w": 17,
+   "\bconnect-waterfall": 22
+  },
+  "keyboard/keyword/radius_top_left": {
+   "connect-s": 20,
+   "connect-l": 18,
+   "connect-w": 17,
+   "\bconnect-waterfall": 22
+  },
+  "keyboard/keyword/radius_top_right": {
+   "connect-s": 20,
+   "connect-l": 18,
+   "connect-w": 17,
+   "\bconnect-waterfall": 22
+  },
+  "keyboard/keyword/shift_width": {
+   "connect-s": 165,
+   "connect-l": 145,
+   "connect-w": 136,
+   "\bconnect-waterfall": 174
+  },
+  "keyboard/keyword/special_width": {
+   "connect-s": 120,
+   "connect-l": 106,
+   "connect-w": 100,
+   "\bconnect-waterfall": 128
+  },
+  "notification/border": {
+   "connect": 1,
+   "32257:0": 1,
+   "33219:0": 1,
+   "33235:0": 1
+  },
+  "notification/gap_large": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "notification/gap_medium": {
+   "connect": 16,
+   "32257:0": 14,
+   "33219:0": 14,
+   "33235:0": 17
+  },
+  "notification/padding_large": {
+   "connect-s": 32,
+   "connect-l": 28,
+   "connect-w": 28,
+   "\bconnect-waterfall": 35
+  },
+  "notification/padding_medium": {
+   "connect": 24,
+   "32257:0": 21,
+   "33219:0": 20,
+   "33235:0": 26
+  },
+  "notification/padding_small": {
+   "connect": 16,
+   "32257:0": 14,
+   "33219:0": 14,
+   "33235:0": 16
+  },
+  "notification/system/imagary_square": {
+   "connect-s": 100,
+   "connect-l": 88,
+   "connect-w": 83,
+   "\bconnect-waterfall": 106
+  },
+  "notification/system/images/radius_bottom_left": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "notification/system/images/radius_bottom_right": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "notification/system/images/radius_top_left": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "notification/system/images/radius_top_right": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "notification/system/profile/app_radius_bottom_left": {
+   "connect-s": 16,
+   "connect-l": 14,
+   "connect-w": 13,
+   "\bconnect-waterfall": 17
+  },
+  "notification/system/profile/app_radius_bottom_right": {
+   "connect-s": 16,
+   "connect-l": 14,
+   "connect-w": 13,
+   "\bconnect-waterfall": 17
+  },
+  "notification/system/profile/app_radius_top_left": {
+   "connect-s": 16,
+   "connect-l": 14,
+   "connect-w": 13,
+   "\bconnect-waterfall": 17
+  },
+  "notification/system/profile/app_radius_top_right": {
+   "connect-s": 16,
+   "connect-l": 14,
+   "connect-w": 13,
+   "\bconnect-waterfall": 17
+  },
+  "notification/system/profile/app_square": {
+   "connect-s": 48,
+   "connect-l": 42,
+   "connect-w": 40,
+   "\bconnect-waterfall": 51
+  },
+  "notification/system/profile/radius_bottom_left": {
+   "connect-s": 999,
+   "connect-l": 999,
+   "connect-w": 999,
+   "\bconnect-waterfall": 999
+  },
+  "notification/system/profile/radius_bottom_right": {
+   "connect-s": 999,
+   "connect-l": 999,
+   "connect-w": 999,
+   "\bconnect-waterfall": 999
+  },
+  "notification/system/profile/radius_top_left": {
+   "connect-s": 999,
+   "connect-l": 999,
+   "connect-w": 999,
+   "\bconnect-waterfall": 999
+  },
+  "notification/system/profile/radius_top_right": {
+   "connect-s": 999,
+   "connect-l": 999,
+   "connect-w": 999,
+   "\bconnect-waterfall": 999
+  },
+  "notification/system/radius_bottom_left": {
+   "connect-s": 48,
+   "connect-l": 42,
+   "connect-w": 40,
+   "\bconnect-waterfall": 51
+  },
+  "notification/system/radius_bottom_right": {
+   "connect-s": 48,
+   "connect-l": 42,
+   "connect-w": 40,
+   "\bconnect-waterfall": 51
+  },
+  "notification/system/radius_top_left": {
+   "connect-s": 48,
+   "connect-l": 42,
+   "connect-w": 40,
+   "\bconnect-waterfall": 51
+  },
+  "notification/system/radius_top_right": {
+   "connect-s": 48,
+   "connect-l": 42,
+   "connect-w": 40,
+   "\bconnect-waterfall": 51
+  },
+  "notification/system/text_gap_vertical": {
+   "connect-s": 12,
+   "connect-l": 11,
+   "connect-w": 10,
+   "\bconnect-waterfall": 13
+  },
+  "notification/system/text_padding_horizontal": {
+   "connect-s": 8,
+   "connect-l": 7,
+   "connect-w": 8,
+   "\bconnect-waterfall": 10
+  },
+  "notification/system/text_padding_top": {
+   "connect-s": 4,
+   "connect-l": 3,
+   "connect-w": 4,
+   "\bconnect-waterfall": 5
+  },
+  "notification/system/width": {
+   "connect-s": 700,
+   "connect-l": 616,
+   "connect-w": 582,
+   "\bconnect-waterfall": 745
+  },
+  "notification/vehicle/gap_horizontal": {
+   "connect": 16,
+   "32257:0": 14,
+   "33219:0": 14,
+   "33235:0": 18
+  },
+  "notification/vehicle/image_side_padding_vertical": {
+   "connect": 16,
+   "32257:0": 14,
+   "33219:0": 14,
+   "33235:0": 18
+  },
+  "notification/vehicle/images/large_width": {
+   "connect": 160,
+   "32257:0": 141,
+   "33219:0": 134,
+   "33235:0": 172
+  },
+  "notification/vehicle/images/medium_square": {
+   "connect": 128,
+   "32257:0": 113,
+   "33219:0": 106,
+   "33235:0": 136
+  },
+  "notification/vehicle/images/small_square": {
+   "connect": 64,
+   "32257:0": 56,
+   "33219:0": 54,
+   "33235:0": 69
+  },
+  "notification/vehicle/max_height": {
+   "connect": 176,
+   "32257:0": 155,
+   "33219:0": 146,
+   "33235:0": 187
+  },
+  "notification/vehicle/max_width": {
+   "connect": 540,
+   "32257:0": 475,
+   "33219:0": 448,
+   "33235:0": 573
+  },
+  "notification/vehicle/padding_vertical": {
+   "connect": 16,
+   "32257:0": 14,
+   "33219:0": 14,
+   "33235:0": 18
+  },
+  "notification/vehicle/radius_bottom_left": {
+   "connect": 24,
+   "32257:0": 24,
+   "33219:0": 24,
+   "33235:0": 24
+  },
+  "notification/vehicle/radius_bottom_right": {
+   "connect": 24,
+   "32257:0": 24,
+   "33219:0": 24,
+   "33235:0": 24
+  },
+  "notification/vehicle/radius_top_left": {
+   "connect": 24,
+   "32257:0": 24,
+   "33219:0": 24,
+   "33235:0": 24
+  },
+  "notification/vehicle/radius_top_right": {
+   "connect": 24,
+   "32257:0": 24,
+   "33219:0": 24,
+   "33235:0": 24
+  },
+  "notification/vehicle/text_max_height": {
+   "connect": 144,
+   "32257:0": 127,
+   "33219:0": 120,
+   "33235:0": 154
+  },
+  "notification/vehicle/text_min_width": {
+   "connect": 200,
+   "32257:0": 176,
+   "33219:0": 166,
+   "33235:0": 212
+  },
+  "notification/vehicle/text_only_max_width": {
+   "connect": 500,
+   "32257:0": 440,
+   "33219:0": 412,
+   "33235:0": 532
+  },
+  "notification/vehicle/text_side_padding_vertical": {
+   "connect": 20,
+   "32257:0": 18,
+   "33219:0": 18,
+   "33235:0": 23
+  },
+  "notification/vehicle/text_with_icon_image_max_width": {
+   "connect": 284,
+   "32257:0": 250,
+   "33219:0": 232,
+   "33235:0": 302
+  },
+  "notification/vehicle/text_with_icon_max_width": {
+   "connect": 428,
+   "32257:0": 377,
+   "33219:0": 348,
+   "33235:0": 454
+  },
+  "os_notification/container/width": {
+   "connect-s": 700,
+   "connect-l": 700,
+   "connect-w": 700,
+   "\bconnect-waterfall": 700
+  },
+  "os_notification/contents/image_square": {
+   "connect-s": 100,
+   "connect-l": 88,
+   "connect-w": 83,
+   "\bconnect-waterfall": 100
+  },
+  "os_notification/contents/image_thumb_radius": {
+   "connect-s": 16,
+   "connect-l": 14,
+   "connect-w": 13,
+   "\bconnect-waterfall": 16
+  },
+  "osd/border": {
+   "connect-s": 1,
+   "connect-l": 1,
+   "connect-w": 1,
+   "\bconnect-waterfall": 1
+  },
+  "osd/control/radius_bottom_left": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 24
+  },
+  "osd/control/radius_bottom_right": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 24
+  },
+  "osd/control/radius_top_left": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 24
+  },
+  "osd/control/radius_top_right": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 24
+  },
+  "osd/distance/image_gap_horizontal": {
+   "connect-s": 16,
+   "connect-l": 14,
+   "connect-w": 14,
+   "\bconnect-waterfall": 18
+  },
+  "osd/distance/image_width": {
+   "connect-s": 128,
+   "connect-l": 113,
+   "connect-w": 108,
+   "\bconnect-waterfall": 140
+  },
+  "osd/distance/level 1": {
+   "connect-s": 80,
+   "connect-l": 70,
+   "connect-w": 66,
+   "\bconnect-waterfall": 84
+  },
+  "osd/distance/level 2": {
+   "connect-s": 124,
+   "connect-l": 109,
+   "connect-w": 103,
+   "\bconnect-waterfall": 132
+  },
+  "osd/distance/level 3": {
+   "connect-s": 186,
+   "connect-l": 164,
+   "connect-w": 154,
+   "\bconnect-waterfall": 197
+  },
+  "osd/distance/level 4": {
+   "connect-s": 320,
+   "connect-l": 282,
+   "connect-w": 266,
+   "\bconnect-waterfall": 340
+  },
+  "osd/distance/text_container_square": {
+   "connect-s": 40,
+   "connect-l": 35,
+   "connect-w": 32,
+   "\bconnect-waterfall": 42
+  },
+  "osd/gap_horizontal_large": {
+   "connect-s": 20,
+   "connect-l": 14,
+   "connect-w": 16,
+   "\bconnect-waterfall": 22
+  },
+  "osd/gap_horizontal_medium": {
+   "connect-s": 16,
+   "connect-l": 14,
+   "connect-w": 14,
+   "\bconnect-waterfall": 18
+  },
+  "osd/gap_horizontal_small": {
+   "connect-s": 8,
+   "connect-l": 7,
+   "connect-w": 8,
+   "\bconnect-waterfall": 9
+  },
+  "osd/height": {
+   "connect-s": 120,
+   "connect-l": 106,
+   "connect-w": 120,
+   "\bconnect-waterfall": 120
+  },
+  "osd/icon_button_square": {
+   "connect-s": 80,
+   "connect-l": 70,
+   "connect-w": 66,
+   "\bconnect-waterfall": 80
+  },
+  "osd/lights/button_width": {
+   "connect-s": 120,
+   "connect-l": 120,
+   "connect-w": 120,
+   "\bconnect-waterfall": 120
+  },
+  "osd/lights/title_prefix_icon_square": {
+   "connect-s": 48,
+   "connect-l": 42,
+   "connect-w": 40,
+   "\bconnect-waterfall": 48
+  },
+  "osd/music/album_cover/radius_bottom_left": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "osd/music/album_cover/radius_bottom_right": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "osd/music/album_cover/radius_top_left": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "osd/music/album_cover/radius_top_right": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "osd/music/artist_name_min_width": {
+   "connect-s": 160,
+   "connect-l": 141,
+   "connect-w": 160,
+   "\bconnect-waterfall": 160
+  },
+  "osd/music/title_max_width": {
+   "connect-s": 328,
+   "connect-l": 289,
+   "connect-w": 328,
+   "\bconnect-waterfall": 328
+  },
+  "osd/padding_medium": {
+   "connect-s": 24,
+   "connect-l": 18,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "osd/padding_small": {
+   "connect-s": 16,
+   "connect-l": 14,
+   "connect-w": 14,
+   "\bconnect-waterfall": 18
+  },
+  "osd/radius_bottom_left": {
+   "connect-s": 32,
+   "connect-l": 28,
+   "connect-w": 27,
+   "\bconnect-waterfall": 35
+  },
+  "osd/radius_bottom_right": {
+   "connect-s": 32,
+   "connect-l": 28,
+   "connect-w": 27,
+   "\bconnect-waterfall": 35
+  },
+  "osd/radius_top_left": {
+   "connect-s": 32,
+   "connect-l": 28,
+   "connect-w": 27,
+   "\bconnect-waterfall": 35
+  },
+  "osd/radius_top_right": {
+   "connect-s": 32,
+   "connect-l": 28,
+   "connect-w": 27,
+   "\bconnect-waterfall": 35
+  },
+  "osd/seat_position/title_prefix_icon_square": {
+   "connect-s": 48,
+   "connect-l": 42,
+   "connect-w": 40,
+   "\bconnect-waterfall": 48
+  },
+  "osd/title/icon_square": {
+   "connect-s": 52,
+   "connect-l": 46,
+   "connect-w": 44,
+   "\bconnect-waterfall": 56
+  },
+  "osd/title/prefix_gap_horizontal": {
+   "connect-s": 12,
+   "connect-l": 11,
+   "connect-w": 10,
+   "\bconnect-waterfall": 13
+  },
+  "osd/title/prefix_icon_square": {
+   "connect-s": 48,
+   "connect-l": 42,
+   "connect-w": 40,
+   "\bconnect-waterfall": 51
+  },
+  "osd/title/width": {
+   "connect-s": 180,
+   "connect-l": 160,
+   "connect-w": 148,
+   "\bconnect-waterfall": 190
+  },
+  "osd/width": {
+   "connect-s": 880,
+   "connect-l": 774,
+   "connect-w": 730,
+   "\bconnect-waterfall": 934
+  },
+  "page_navigation/border_bottom": {
+   "connect-s": 1,
+   "connect-l": 1,
+   "connect-w": 1,
+   "\bconnect-waterfall": 1
+  },
+  "page_navigation/container_height": {
+   "connect-s": 80,
+   "connect-l": 70,
+   "connect-w": 66,
+   "\bconnect-waterfall": 84
+  },
+  "page_navigation/divider_height": {
+   "connect-s": 32,
+   "connect-l": 28,
+   "connect-w": 28,
+   "\bconnect-waterfall": 35
+  },
+  "page_navigation/divider_width": {
+   "connect-s": 2,
+   "connect-l": 2,
+   "connect-w": 2,
+   "\bconnect-waterfall": 3
+  },
+  "page_navigation/gap_extrasmall": {
+   "connect-s": 8,
+   "connect-l": 7,
+   "connect-w": 8,
+   "\bconnect-waterfall": 9
+  },
+  "page_navigation/gap_large": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "page_navigation/gap_medium": {
+   "connect-s": 16,
+   "connect-l": 14,
+   "connect-w": 14,
+   "\bconnect-waterfall": 17
+  },
+  "page_navigation/gap_samll": {
+   "connect-s": 12,
+   "connect-l": 11,
+   "connect-w": 10,
+   "\bconnect-waterfall": 13
+  },
+  "page_navigation/padding_extralarge": {
+   "connect-s": 40,
+   "connect-l": 35,
+   "connect-w": 32,
+   "\bconnect-waterfall": 42
+  },
+  "page_navigation/padding_large": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 22,
+   "\bconnect-waterfall": 20
+  },
+  "page_navigation/padding_medium": {
+   "connect-s": 16,
+   "connect-l": 14,
+   "connect-w": 14,
+   "\bconnect-waterfall": 17
+  },
+  "page_navigation/padding_small": {
+   "connect-s": 8,
+   "connect-l": 7,
+   "connect-w": 8,
+   "\bconnect-waterfall": 9
+  },
+  "page_navigation/sub_title_gap_vertical": {
+   "connect-s": 4,
+   "connect-l": 4,
+   "connect-w": 4,
+   "\bconnect-waterfall": 4
+  },
+  "page_navigation/title/app_icon/container_square": {
+   "connect-s": 80,
+   "connect-l": 70,
+   "connect-w": 66,
+   "\bconnect-waterfall": 84
+  },
+  "page_navigation/title/app_icon/radius_botttom_left": {
+   "connect-s": 20,
+   "connect-l": 18,
+   "connect-w": 17,
+   "\bconnect-waterfall": 22
+  },
+  "page_navigation/title/app_icon/radius_botttom_right": {
+   "connect-s": 20,
+   "connect-l": 18,
+   "connect-w": 17,
+   "\bconnect-waterfall": 22
+  },
+  "page_navigation/title/app_icon/radius_top_left": {
+   "connect-s": 20,
+   "connect-l": 18,
+   "connect-w": 17,
+   "\bconnect-waterfall": 22
+  },
+  "page_navigation/title/app_icon/radius_top_right": {
+   "connect-s": 20,
+   "connect-l": 18,
+   "connect-w": 17,
+   "\bconnect-waterfall": 22
+  },
+  "page_navigation/title/depth_gap_horizontal": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "page_navigation/title/depth_icon_square": {
+   "connect-s": 56,
+   "connect-l": 49,
+   "connect-w": 46,
+   "\bconnect-waterfall": 59
+  },
+  "page_navigation/title/dropdown_icon_square": {
+   "connect-s": 28,
+   "connect-l": 25,
+   "connect-w": 23,
+   "\bconnect-waterfall": 29
+  },
+  "page_navigation/title/dropdown_menu_pressed/radius_botttom_left": {
+   "connect-s": 16,
+   "connect-l": 14,
+   "connect-w": 13,
+   "\bconnect-waterfall": 17
+  },
+  "page_navigation/title/dropdown_menu_pressed/radius_botttom_right": {
+   "connect-s": 16,
+   "connect-l": 14,
+   "connect-w": 13,
+   "\bconnect-waterfall": 17
+  },
+  "page_navigation/title/dropdown_menu_pressed/radius_top_left": {
+   "connect-s": 16,
+   "connect-l": 14,
+   "connect-w": 13,
+   "\bconnect-waterfall": 17
+  },
+  "page_navigation/title/dropdown_menu_pressed/radius_top_right": {
+   "connect-s": 16,
+   "connect-l": 14,
+   "connect-w": 13,
+   "\bconnect-waterfall": 17
+  },
+  "page_navigation/title/group_gap_horizontal": {
+   "connect-s": 48,
+   "connect-l": 42,
+   "connect-w": 32,
+   "\bconnect-waterfall": 51
+  },
+  "popup/system/border": {
+   "connect-s": 2,
+   "connect-l": 2,
+   "connect-w": 2,
+   "\bconnect-waterfall": 3
+  },
+  "popup/system/close_icon_square": {
+   "connect-s": 48,
+   "connect-l": 42,
+   "connect-w": 40,
+   "\bconnect-waterfall": 51
+  },
+  "popup/system/gap_extralarge": {
+   "connect-s": 40,
+   "connect-l": 35,
+   "connect-w": 33,
+   "\bconnect-waterfall": 42
+  },
+  "popup/system/gap_extrasmall": {
+   "connect-s": 4,
+   "connect-l": 4,
+   "connect-w": 3,
+   "\bconnect-waterfall": 4
+  },
+  "popup/system/gap_large": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 24,
+   "\bconnect-waterfall": 24
+  },
+  "popup/system/header_padding_horizontal": {
+   "connect-s": 32,
+   "connect-l": 28,
+   "connect-w": 27,
+   "\bconnect-waterfall": 35
+  },
+  "popup/system/icon_square": {
+   "connect-s": 80,
+   "connect-l": 70,
+   "connect-w": 66,
+   "\bconnect-waterfall": 84
+  },
+  "popup/system/large_width": {
+   "connect-s": 1200,
+   "connect-l": 1056,
+   "connect-w": 1000,
+   "\bconnect-waterfall": 1275
+  },
+  "popup/system/list/item/icon_square": {
+   "connect-s": 80,
+   "connect-l": 70,
+   "connect-w": 66,
+   "\bconnect-waterfall": 80
+  },
+  "popup/system/max_height": {
+   "connect-s": 1152,
+   "connect-l": 827,
+   "connect-w": 770,
+   "\bconnect-waterfall": 810
+  },
+  "popup/system/max_height_extended": {
+   "connect-s": 0,
+   "connect-l": 0,
+   "connect-w": 1240,
+   "\bconnect-waterfall": 1240
+  },
+  "popup/system/medium_width": {
+   "connect-s": 808,
+   "connect-l": 614,
+   "connect-w": 720,
+   "\bconnect-waterfall": 860
+  },
+  "popup/system/padding_large": {
+   "connect-s": 48,
+   "connect-l": 35,
+   "connect-w": 40,
+   "\bconnect-waterfall": 40
+  },
+  "popup/system/padding_small": {
+   "connect-s": 16,
+   "connect-l": 14,
+   "connect-w": 12,
+   "\bconnect-waterfall": 12
+  },
+  "popup/system/radius_bottom_left": {
+   "connect-s": 48,
+   "connect-l": 42,
+   "connect-w": 40,
+   "\bconnect-waterfall": 51
+  },
+  "popup/system/radius_bottom_right": {
+   "connect-s": 48,
+   "connect-l": 42,
+   "connect-w": 40,
+   "\bconnect-waterfall": 51
+  },
+  "popup/system/radius_top_left": {
+   "connect-s": 48,
+   "connect-l": 42,
+   "connect-w": 40,
+   "\bconnect-waterfall": 51
+  },
+  "popup/system/radius_top_right": {
+   "connect-s": 48,
+   "connect-l": 42,
+   "connect-w": 40,
+   "\bconnect-waterfall": 51
+  },
+  "popup/toast/icon": {
+   "connect-s": 48,
+   "connect-l": 42,
+   "connect-w": 40,
+   "\bconnect-waterfall": 51
+  },
+  "popup/toast/margin_bottom": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "popup/toast/margin_horizontal": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "popup/toast/max_width": {
+   "connect-s": 792,
+   "connect-l": 696,
+   "connect-w": 760,
+   "\bconnect-waterfall": 840
+  },
+  "popup/toast/padding_horizontal": {
+   "connect-s": 40,
+   "connect-l": 35,
+   "connect-w": 34,
+   "\bconnect-waterfall": 42
+  },
+  "popup/toast/padding_vertical": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "popup/toast/radius_bottom_left": {
+   "connect-s": 16,
+   "connect-l": 14,
+   "connect-w": 13,
+   "\bconnect-waterfall": 17
+  },
+  "popup/toast/radius_bottom_right": {
+   "connect-s": 16,
+   "connect-l": 14,
+   "connect-w": 13,
+   "\bconnect-waterfall": 17
+  },
+  "popup/toast/radius_top_left": {
+   "connect-s": 16,
+   "connect-l": 14,
+   "connect-w": 13,
+   "\bconnect-waterfall": 17
+  },
+  "popup/toast/radius_top_right": {
+   "connect-s": 16,
+   "connect-l": 14,
+   "connect-w": 13,
+   "\bconnect-waterfall": 17
+  },
+  "scroll/gap": {
+   "connect-s": 16,
+   "connect-l": 14,
+   "connect-w": 13,
+   "\bconnect-waterfall": 17
+  },
+  "scroll/padding_left": {
+   "connect-s": 12,
+   "connect-l": 11,
+   "connect-w": 10,
+   "\bconnect-waterfall": 13
+  },
+  "scroll/padding_right": {
+   "connect-s": 20,
+   "connect-l": 18,
+   "connect-w": 17,
+   "\bconnect-waterfall": 22
+  },
+  "scroll/padding_vertical": {
+   "connect-s": 16,
+   "connect-l": 14,
+   "connect-w": 13,
+   "\bconnect-waterfall": 17
+  },
+  "selections/border_large": {
+   "connect-s": 12,
+   "connect-l": 11,
+   "connect-w": 10,
+   "\bconnect-waterfall": 13
+  },
+  "selections/border_small": {
+   "connect-s": 4,
+   "connect-l": 4,
+   "connect-w": 3,
+   "\bconnect-waterfall": 4
+  },
+  "selections/checkbox/normal_button_border": {
+   "connect-s": 4,
+   "connect-l": 4,
+   "connect-w": 3,
+   "\bconnect-waterfall": 4
+  },
+  "selections/checkbox/radius_bottom_left": {
+   "connect-s": 12,
+   "connect-l": 11,
+   "connect-w": 10,
+   "\bconnect-waterfall": 13
+  },
+  "selections/checkbox/radius_bottom_right": {
+   "connect-s": 12,
+   "connect-l": 11,
+   "connect-w": 10,
+   "\bconnect-waterfall": 13
+  },
+  "selections/checkbox/radius_top_left": {
+   "connect-s": 12,
+   "connect-l": 11,
+   "connect-w": 10,
+   "\bconnect-waterfall": 13
+  },
+  "selections/checkbox/radius_top_right": {
+   "connect-s": 12,
+   "connect-l": 11,
+   "connect-w": 10,
+   "\bconnect-waterfall": 13
+  },
+  "selections/container_large": {
+   "connect-s": 64,
+   "connect-l": 56,
+   "connect-w": 54,
+   "\bconnect-waterfall": 68
+  },
+  "selections/container_medium": {
+   "connect-s": 48,
+   "connect-l": 42,
+   "connect-w": 40,
+   "\bconnect-waterfall": 51
+  },
+  "selections/switch/medium/knob_radius_bottom_left": {
+   "connect-s": 8,
+   "connect-l": 7,
+   "connect-w": 7,
+   "\bconnect-waterfall": 9
+  },
+  "selections/switch/medium/knob_radius_bottom_right": {
+   "connect-s": 8,
+   "connect-l": 7,
+   "connect-w": 7,
+   "\bconnect-waterfall": 9
+  },
+  "selections/switch/medium/knob_radius_top_left": {
+   "connect-s": 8,
+   "connect-l": 7,
+   "connect-w": 7,
+   "\bconnect-waterfall": 9
+  },
+  "selections/switch/medium/knob_radius_top_right": {
+   "connect-s": 8,
+   "connect-l": 7,
+   "connect-w": 7,
+   "\bconnect-waterfall": 9
+  },
+  "selections/switch/medium/knob_square": {
+   "connect-s": 32,
+   "connect-l": 28,
+   "connect-w": 27,
+   "\bconnect-waterfall": 35
+  },
+  "selections/switch/medium/padding": {
+   "connect-s": 8,
+   "connect-l": 7,
+   "connect-w": 8,
+   "\bconnect-waterfall": 9
+  },
+  "selections/switch/medium/radius_bottom_left": {
+   "connect-s": 16,
+   "connect-l": 14,
+   "connect-w": 13,
+   "\bconnect-waterfall": 17
+  },
+  "selections/switch/medium/radius_bottom_right": {
+   "connect-s": 16,
+   "connect-l": 14,
+   "connect-w": 13,
+   "\bconnect-waterfall": 17
+  },
+  "selections/switch/medium/radius_top_left": {
+   "connect-s": 16,
+   "connect-l": 14,
+   "connect-w": 13,
+   "\bconnect-waterfall": 17
+  },
+  "selections/switch/medium/radius_top_right": {
+   "connect-s": 16,
+   "connect-l": 14,
+   "connect-w": 13,
+   "\bconnect-waterfall": 17
+  },
+  "selections/switch/medium/width": {
+   "connect-s": 80,
+   "connect-l": 70,
+   "connect-w": 70,
+   "\bconnect-waterfall": 84
+  },
+  "selections/switch/small/knob_radius_bottom_left": {
+   "connect-s": 8,
+   "connect-l": 7,
+   "connect-w": 7,
+   "\bconnect-waterfall": 9
+  },
+  "selections/switch/small/knob_radius_bottom_right": {
+   "connect-s": 8,
+   "connect-l": 7,
+   "connect-w": 7,
+   "\bconnect-waterfall": 9
+  },
+  "selections/switch/small/knob_radius_top_left": {
+   "connect-s": 8,
+   "connect-l": 7,
+   "connect-w": 7,
+   "\bconnect-waterfall": 9
+  },
+  "selections/switch/small/knob_radius_top_right": {
+   "connect-s": 8,
+   "connect-l": 7,
+   "connect-w": 7,
+   "\bconnect-waterfall": 9
+  },
+  "selections/switch/small/knob_square": {
+   "connect-s": 28,
+   "connect-l": 25,
+   "connect-w": 23,
+   "\bconnect-waterfall": 29
+  },
+  "selections/switch/small/padding": {
+   "connect-s": 6,
+   "connect-l": 5,
+   "connect-w": 6,
+   "\bconnect-waterfall": 6
+  },
+  "selections/switch/small/radius_bottom_left": {
+   "connect-s": 12,
+   "connect-l": 11,
+   "connect-w": 10,
+   "\bconnect-waterfall": 13
+  },
+  "selections/switch/small/radius_bottom_right": {
+   "connect-s": 12,
+   "connect-l": 11,
+   "connect-w": 10,
+   "\bconnect-waterfall": 13
+  },
+  "selections/switch/small/radius_top_left": {
+   "connect-s": 12,
+   "connect-l": 11,
+   "connect-w": 10,
+   "\bconnect-waterfall": 13
+  },
+  "selections/switch/small/radius_top_right": {
+   "connect-s": 12,
+   "connect-l": 11,
+   "connect-w": 10,
+   "\bconnect-waterfall": 13
+  },
+  "selections/switch/small/width": {
+   "connect-s": 64,
+   "connect-l": 56,
+   "connect-w": 56,
+   "\bconnect-waterfall": 68
+  },
+  "spinner/focus_radius_bottom_left": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "spinner/focus_radius_bottom_right": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "spinner/focus_radius_top_left": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "spinner/focus_radius_top_right": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "spinner/gap_large": {
+   "connect-s": 24,
+   "connect-l": 28,
+   "connect-w": 28,
+   "\bconnect-waterfall": 35
+  },
+  "spinner/gap_medium": {
+   "connect-s": 20,
+   "connect-l": 18,
+   "connect-w": 18,
+   "\bconnect-waterfall": 22
+  },
+  "spinner/gap_small": {
+   "connect-s": 16,
+   "connect-l": 14,
+   "connect-w": 14,
+   "\bconnect-waterfall": 17
+  },
+  "spinner/list_height": {
+   "connect-s": 88,
+   "connect-l": 77,
+   "connect-w": 74,
+   "\bconnect-waterfall": 93
+  },
+  "spinner/list_mask_height": {
+   "connect-s": 60,
+   "connect-l": 53,
+   "connect-w": 50,
+   "\bconnect-waterfall": 64
+  },
+  "spinner/list_medium_height": {
+   "connect-s": 96,
+   "connect-l": 84,
+   "connect-w": 80,
+   "\bconnect-waterfall": 102
+  },
+  "spinner/number_height": {
+   "connect-s": 88,
+   "connect-l": 77,
+   "connect-w": 74,
+   "\bconnect-waterfall": 93
+  },
+  "spinner/number_width_large": {
+   "connect-s": 200,
+   "connect-l": 176,
+   "connect-w": 166,
+   "\bconnect-waterfall": 212
+  },
+  "spinner/number_width_medium": {
+   "connect-s": 140,
+   "connect-l": 123,
+   "connect-w": 116,
+   "\bconnect-waterfall": 148
+  },
+  "spinner/number_width_small": {
+   "connect-s": 110,
+   "connect-l": 97,
+   "connect-w": 92,
+   "\bconnect-waterfall": 116
+  },
+  "spinner/panel/large_height": {
+   "connect-s": 384,
+   "connect-l": 327,
+   "connect-w": 322,
+   "\bconnect-waterfall": 407
+  },
+  "spinner/panel/medium_height": {
+   "connect-s": 288,
+   "connect-l": 245,
+   "connect-w": 234,
+   "\bconnect-waterfall": 297
+  },
+  "spinner/title_top_padding": {
+   "connect-s": 16,
+   "connect-l": 14,
+   "connect-w": 14,
+   "\bconnect-waterfall": 17
+  },
+  "spinner/wheel/date_min_width": {
+   "connect-s": 540,
+   "connect-l": 475,
+   "connect-w": 448,
+   "\bconnect-waterfall": 574
+  },
+  "spinner/wheel/padding_horizontal": {
+   "connect-s": 16,
+   "connect-l": 14,
+   "connect-w": 14,
+   "\bconnect-waterfall": 17
+  },
+  "spinner/wheel/radius_bottom_left": {
+   "connect-s": 32,
+   "connect-l": 28,
+   "connect-w": 27,
+   "\bconnect-waterfall": 35
+  },
+  "spinner/wheel/radius_bottom_right": {
+   "connect-s": 32,
+   "connect-l": 28,
+   "connect-w": 27,
+   "\bconnect-waterfall": 35
+  },
+  "spinner/wheel/radius_top_left": {
+   "connect-s": 32,
+   "connect-l": 28,
+   "connect-w": 27,
+   "\bconnect-waterfall": 35
+  },
+  "spinner/wheel/radius_top_right": {
+   "connect-s": 32,
+   "connect-l": 28,
+   "connect-w": 27,
+   "\bconnect-waterfall": 35
+  },
+  "spinner/wheel/time_min_width": {
+   "connect-s": 480,
+   "connect-l": 422,
+   "connect-w": 398,
+   "\bconnect-waterfall": 509
+  },
+  "statusbar/HMG_extended_height_2": {
+   "connect-s": 0,
+   "connect-l": 0,
+   "connect-w": 1440,
+   "connect-waterfall": 0,
+   "connect-s-14": 0
+  },
+  "statusbar/HMG_width_2": {
+   "connect-s": 0,
+   "connect-l": 0,
+   "connect-w": 100,
+   "connect-waterfall": 80,
+   "connect-s-14": 0
+  },
+  "statusbar/gap_large": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 16,
+   "\bconnect-waterfall": 20
+  },
+  "statusbar/gap_medium": {
+   "connect-s": 16,
+   "connect-l": 14,
+   "connect-w": 12,
+   "\bconnect-waterfall": 15
+  },
+  "statusbar/gap_small": {
+   "connect": 8
+  },
+  "statusbar/height": {
+   "connect-s": 96,
+   "connect-l": 84,
+   "connect-w": 850,
+   "connect-waterfall": 680,
+   "connect-s-14": 76,
+   "92233:0": 0
+  },
+  "statusbar/height_medium": {
+   "connect": 80
+  },
+  "statusbar/menus/HMG_icon_call": {
+   "connect-s": 180,
+   "connect-l": 152,
+   "connect-w": 80,
+   "connect-waterfall": 72,
+   "connect-s-14": 144,
+   "92233:0": 68
+  },
+  "statusbar/menus/HMG_icon_voice": {
+   "connect-s": 100,
+   "connect-l": 86,
+   "connect-w": 80,
+   "connect-waterfall": 72,
+   "connect-s-14": 80,
+   "92233:0": 68
+  },
+  "statusbar/menus/container_radius_bottom_left": {
+   "connect-s": 20,
+   "connect-l": 18,
+   "connect-w": 17,
+   "connect-waterfall": 17,
+   "connect-s-14": 20,
+   "92233:0": 17
+  },
+  "statusbar/menus/container_radius_bottom_right": {
+   "connect-s": 20,
+   "connect-l": 18,
+   "connect-w": 17,
+   "connect-waterfall": 17,
+   "connect-s-14": 20,
+   "92233:0": 17
+  },
+  "statusbar/menus/container_radius_top_left": {
+   "connect-s": 20,
+   "connect-l": 18,
+   "connect-w": 17,
+   "connect-waterfall": 17,
+   "connect-s-14": 20,
+   "92233:0": 17
+  },
+  "statusbar/menus/container_radius_top_right": {
+   "connect-s": 20,
+   "connect-l": 18,
+   "connect-w": 17,
+   "connect-waterfall": 17,
+   "connect-s-14": 20,
+   "92233:0": 17
+  },
+  "statusbar/menus/container_square": {
+   "connect-s": 80,
+   "connect-l": 68,
+   "connect-w": 80,
+   "connect-waterfall": 80,
+   "connect-s-14": 64,
+   "92233:0": 66
+  },
+  "statusbar/menus/icon_square": {
+   "connect-s": 64,
+   "connect-l": 54,
+   "connect-w": 48,
+   "connect-waterfall": 48,
+   "connect-s-14": 52,
+   "92233:0": 46
+  },
+  "statusbar/menus/privacy/dot": {
+   "connect-s": 16,
+   "connect-l": 12,
+   "connect-w": 14,
+   "connect-waterfall": 12,
+   "connect-s-14": 12,
+   "92233:0": 8
+  },
+  "statusbar/menus/privacy/indicator_gap": {
+   "connect-s": 4,
+   "connect-l": 4,
+   "connect-w": 3,
+   "\bconnect-waterfall": 4
+  },
+  "statusbar/menus/privacy/indicator_height_large": {
+   "connect-s": 100,
+   "connect-l": 88,
+   "connect-w": 84,
+   "\bconnect-waterfall": 106
+  },
+  "statusbar/menus/privacy/indicator_height_small": {
+   "connect-s": 80,
+   "connect-l": 70,
+   "connect-w": 66,
+   "\bconnect-waterfall": 84
+  },
+  "statusbar/menus/privacy/indicator_icon_square": {
+   "connect-s": 32,
+   "connect-l": 28,
+   "connect-w": 26,
+   "\bconnect-waterfall": 35
+  },
+  "statusbar/menus/privacy/indicator_padding": {
+   "connect-s": 12,
+   "connect-l": 11,
+   "connect-w": 10,
+   "\bconnect-waterfall": 13
+  },
+  "statusbar/menus/privacy/indicator_width_large": {
+   "connect-s": 100,
+   "connect-l": 88,
+   "connect-w": 84,
+   "\bconnect-waterfall": 106
+  },
+  "statusbar/menus/privacy/indicator_width_small": {
+   "connect-s": 80,
+   "connect-l": 70,
+   "connect-w": 66,
+   "\bconnect-waterfall": 84
+  },
+  "statusbar/menus/privacy/padding": {
+   "connect-s": 8,
+   "connect-l": 6,
+   "connect-w": 10,
+   "connect-waterfall": 8,
+   "connect-s-14": 8,
+   "92233:0": 7
+  },
+  "statusbar/menus/profile_square": {
+   "connect-s": 80,
+   "connect-l": 60,
+   "connect-w": 70,
+   "connect-waterfall": 70,
+   "connect-s-14": 56,
+   "92233:0": 50
+  },
+  "statusbar/padding": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "statusbar/wide_time_padding_horizontal_right": {
+   "connect-s": 0,
+   "connect-l": 0,
+   "connect-w": 28,
+   "\bconnect-waterfall": 26
+  },
+  "statusbar/wide_time_padding_vertical_bottom": {
+   "connect-s": 0,
+   "connect-l": 0,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "statusbar/wide_time_padding_vertical_top": {
+   "connect-s": 0,
+   "connect-l": 0,
+   "connect-w": 8,
+   "\bconnect-waterfall": 26
+  },
+  "statusbar/width": {
+   "connect-s": 0,
+   "connect-l": 0,
+   "connect-w": 168,
+   "\bconnect-waterfall": 128
+  },
+  "tabs/line/border_bottom": {
+   "connect-s": 1,
+   "connect-l": 1,
+   "connect-w": 1,
+   "\bconnect-waterfall": 1
+  },
+  "tabs/line/button/gap_horizontal": {
+   "connect-s": 8,
+   "connect-l": 7,
+   "connect-w": 8,
+   "\bconnect-waterfall": 9
+  },
+  "tabs/line/button/padding_horizontal": {
+   "connect-s": 14,
+   "connect-l": 12,
+   "connect-w": 12,
+   "\bconnect-waterfall": 15
+  },
+  "tabs/line/button/padding_vertical": {
+   "connect-s": 18,
+   "connect-l": 16,
+   "connect-w": 16,
+   "\bconnect-waterfall": 19
+  },
+  "tabs/line/button/prefix_square": {
+   "connect-s": 40,
+   "connect-l": 35,
+   "connect-w": 33,
+   "\bconnect-waterfall": 42
+  },
+  "tabs/line/button/pressed_radius_bottom_left": {
+   "connect-s": 12,
+   "connect-l": 11,
+   "connect-w": 10,
+   "\bconnect-waterfall": 13
+  },
+  "tabs/line/button/pressed_radius_bottom_right": {
+   "connect-s": 12,
+   "connect-l": 11,
+   "connect-w": 10,
+   "\bconnect-waterfall": 13
+  },
+  "tabs/line/button/pressed_radius_top_left": {
+   "connect-s": 12,
+   "connect-l": 11,
+   "connect-w": 10,
+   "\bconnect-waterfall": 13
+  },
+  "tabs/line/button/pressed_radius_top_right": {
+   "connect-s": 12,
+   "connect-l": 11,
+   "connect-w": 10,
+   "\bconnect-waterfall": 13
+  },
+  "tabs/line/button/wrap_padding_vertical": {
+   "connect-s": 12,
+   "connect-l": 11,
+   "connect-w": 10,
+   "\bconnect-waterfall": 13
+  },
+  "tabs/line/button/wrap_padding_vertical_large": {
+   "connect-s": 26,
+   "connect-l": 22,
+   "connect-w": 22,
+   "\bconnect-waterfall": 22
+  },
+  "tabs/line/gap_horizontal": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 12,
+   "\bconnect-waterfall": 26
+  },
+  "tabs/line/padding_horizontal": {
+   "connect-s": 28,
+   "connect-l": 25,
+   "connect-w": 24,
+   "\bconnect-waterfall": 29
+  },
+  "tabs/line/selected_border_bottom": {
+   "connect-s": 4,
+   "connect-l": 4,
+   "connect-w": 3,
+   "\bconnect-waterfall": 4
+  },
+  "tabs/solid/large/button/gap_horizontal": {
+   "connect-s": 14,
+   "connect-l": 12,
+   "connect-w": 12,
+   "\bconnect-waterfall": 16
+  },
+  "tabs/solid/large/button/height": {
+   "connect-s": 84,
+   "connect-l": 74,
+   "connect-w": 70,
+   "\bconnect-waterfall": 90
+  },
+  "tabs/solid/large/button/padding_horizontal": {
+   "connect-s": 28,
+   "connect-l": 25,
+   "connect-w": 24,
+   "\bconnect-waterfall": 29
+  },
+  "tabs/solid/large/button/padding_vertical": {
+   "connect-s": 16,
+   "connect-l": 14,
+   "connect-w": 14,
+   "\bconnect-waterfall": 17
+  },
+  "tabs/solid/large/button/prefix_icon_square": {
+   "connect-s": 52,
+   "connect-l": 46,
+   "connect-w": 43,
+   "\bconnect-waterfall": 55
+  },
+  "tabs/solid/large/button/radius_bottom_left": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "tabs/solid/large/button/radius_bottom_right": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "tabs/solid/large/button/radius_top_left": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "tabs/solid/large/button/radius_top_right": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "tabs/solid/large/button/width": {
+   "connect-s": 200,
+   "connect-l": 176,
+   "connect-w": 166,
+   "\bconnect-waterfall": 212
+  },
+  "tabs/solid/large/height": {
+   "connect-s": 100,
+   "connect-l": 88,
+   "connect-w": 84,
+   "\bconnect-waterfall": 106
+  },
+  "tabs/solid/large/radius_bottom_left": {
+   "connect-s": 32,
+   "connect-l": 28,
+   "connect-w": 27,
+   "\bconnect-waterfall": 35
+  },
+  "tabs/solid/large/radius_bottom_right": {
+   "connect-s": 32,
+   "connect-l": 28,
+   "connect-w": 27,
+   "\bconnect-waterfall": 35
+  },
+  "tabs/solid/large/radius_top_left": {
+   "connect-s": 32,
+   "connect-l": 28,
+   "connect-w": 27,
+   "\bconnect-waterfall": 35
+  },
+  "tabs/solid/large/radius_top_right": {
+   "connect-s": 32,
+   "connect-l": 28,
+   "connect-w": 27,
+   "\bconnect-waterfall": 35
+  },
+  "tabs/solid/large/three_segments_width": {
+   "connect-s": 880,
+   "connect-l": 774,
+   "connect-w": 760,
+   "\bconnect-waterfall": 934
+  },
+  "tabs/solid/large/two_segments_width": {
+   "connect-s": 880,
+   "connect-l": 774,
+   "connect-w": 760,
+   "\bconnect-waterfall": 934
+  },
+  "tabs/solid/medium/button/gap_horizontal": {
+   "connect-s": 8,
+   "connect-l": 7,
+   "connect-w": 8,
+   "\bconnect-waterfall": 9
+  },
+  "tabs/solid/medium/button/height": {
+   "connect-s": 64,
+   "connect-l": 56,
+   "connect-w": 54,
+   "\bconnect-waterfall": 68
+  },
+  "tabs/solid/medium/button/padding_horizontal": {
+   "connect-s": 18,
+   "connect-l": 16,
+   "connect-w": 16,
+   "\bconnect-waterfall": 19
+  },
+  "tabs/solid/medium/button/padding_vertical": {
+   "connect-s": 12,
+   "connect-l": 11,
+   "connect-w": 10,
+   "\bconnect-waterfall": 13
+  },
+  "tabs/solid/medium/button/prefix_square": {
+   "connect-s": 40,
+   "connect-l": 35,
+   "connect-w": 33,
+   "\bconnect-waterfall": 42
+  },
+  "tabs/solid/medium/button/radius_bottom_left": {
+   "connect-s": 16,
+   "connect-l": 14,
+   "connect-w": 13,
+   "\bconnect-waterfall": 17
+  },
+  "tabs/solid/medium/button/radius_bottom_right": {
+   "connect-s": 16,
+   "connect-l": 14,
+   "connect-w": 13,
+   "\bconnect-waterfall": 17
+  },
+  "tabs/solid/medium/button/radius_top_left": {
+   "connect-s": 16,
+   "connect-l": 14,
+   "connect-w": 13,
+   "\bconnect-waterfall": 17
+  },
+  "tabs/solid/medium/button/radius_top_right": {
+   "connect-s": 16,
+   "connect-l": 14,
+   "connect-w": 13,
+   "\bconnect-waterfall": 17
+  },
+  "tabs/solid/medium/button/width": {
+   "connect-s": 160,
+   "connect-l": 141,
+   "connect-w": 134,
+   "\bconnect-waterfall": 170
+  },
+  "tabs/solid/medium/four_segments_width": {
+   "connect-s": 960,
+   "connect-l": 845,
+   "connect-w": 800,
+   "\bconnect-waterfall": 1020
+  },
+  "tabs/solid/medium/height": {
+   "connect-s": 80,
+   "connect-l": 70,
+   "connect-w": 66,
+   "\bconnect-waterfall": 84
+  },
+  "tabs/solid/medium/radius_bottom_left": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "tabs/solid/medium/radius_bottom_right": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "tabs/solid/medium/radius_top_left": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "tabs/solid/medium/radius_top_right": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "tabs/solid/medium/three_segments_width": {
+   "connect-s": 780,
+   "connect-l": 686,
+   "connect-w": 670,
+   "\bconnect-waterfall": 828
+  },
+  "tabs/solid/medium/two_segments_width": {
+   "connect-s": 780,
+   "connect-l": 686,
+   "connect-w": 670,
+   "\bconnect-waterfall": 828
+  },
+  "tabs/solid/padding": {
+   "connect-s": 8,
+   "connect-l": 7,
+   "connect-w": 8,
+   "\bconnect-waterfall": 9
+  },
+  "utility/border": {
+   "connect": 1,
+   "32257:0": 1,
+   "33219:0": 1,
+   "33235:0": 1
+  },
+  "utility/button_min_width": {
+   "connect": 160,
+   "32257:0": 141,
+   "33219:0": 133,
+   "33235:0": 0
+  },
+  "utility/handle/arrow_height": {
+   "connect": 16,
+   "32257:0": 14,
+   "33219:0": 13,
+   "33235:0": 0
+  },
+  "utility/handle/arrow_line": {
+   "connect": 6,
+   "32257:0": 6,
+   "33219:0": 6,
+   "33235:0": 6
+  },
+  "utility/handle/arrow_width": {
+   "connect": 56,
+   "32257:0": 49,
+   "33219:0": 46,
+   "33235:0": 0
+  },
+  "utility/handle/height": {
+   "connect": 40,
+   "32257:0": 35,
+   "33219:0": 33,
+   "33235:0": 0
+  },
+  "utility/handle/line_width": {
+   "connect": 80,
+   "32257:0": 70,
+   "33219:0": 66,
+   "33235:0": 0
+  },
+  "utility/handle/padding_vertical_top": {
+   "connect": 12,
+   "32257:0": 11,
+   "33219:0": 10,
+   "33235:0": 0
+  },
+  "utility/icon_square": {
+   "connect": 64,
+   "32257:0": 56,
+   "33219:0": 53,
+   "33235:0": 0
+  },
+  "utility/item_gap_large": {
+   "connect": 24,
+   "32257:0": 21,
+   "33219:0": 20,
+   "33235:0": 0
+  },
+  "utility/item_gap_medium": {
+   "connect": 16,
+   "32257:0": 14,
+   "33219:0": 13,
+   "33235:0": 0
+  },
+  "utility/item_height": {
+   "connect": 112,
+   "32257:0": 100,
+   "33219:0": 94,
+   "33235:0": 0
+  },
+  "utility/padding_bottom": {
+   "connect": 24,
+   "32257:0": 21,
+   "33219:0": 20,
+   "33235:0": 0
+  },
+  "utility/padding_horizontal": {
+   "connect": 24,
+   "32257:0": 21,
+   "33219:0": 20,
+   "33235:0": 0
+  },
+  "utility/page_indicator_dot_square": {
+   "connect": 8,
+   "32257:0": 7,
+   "33219:0": 7,
+   "33235:0": 0
+  },
+  "utility/page_indicator_gap_horizontal": {
+   "connect": 10,
+   "32257:0": 9,
+   "33219:0": 8,
+   "33235:0": 0
+  },
+  "utility/radius_bottom_left": {
+   "connect": 32,
+   "32257:0": 32,
+   "33219:0": 32,
+   "33235:0": 32
+  },
+  "utility/radius_bottom_right": {
+   "connect": 32,
+   "32257:0": 32,
+   "33219:0": 32,
+   "33235:0": 32
+  },
+  "utility/radius_top_left": {
+   "connect": 32,
+   "32257:0": 32,
+   "33219:0": 32,
+   "33235:0": 32
+  },
+  "utility/radius_top_right": {
+   "connect": 32,
+   "32257:0": 32,
+   "33219:0": 32,
+   "33235:0": 32
+  },
+  "utility/title_padding_horizontal": {
+   "connect": 16,
+   "32257:0": 14,
+   "33219:0": 13,
+   "33235:0": 0
+  },
+  "utility/title_width": {
+   "connect": 224,
+   "32257:0": 197,
+   "33219:0": 186,
+   "33235:0": 0
+  },
+  "utility/tpms/detail_error_container_radius_bottom_left": {
+   "connect": 16,
+   "32257:0": 16,
+   "33219:0": 16,
+   "33235:0": 0
+  },
+  "utility/tpms/detail_error_container_radius_bottom_right": {
+   "connect": 16,
+   "32257:0": 16,
+   "33219:0": 16,
+   "33235:0": 0
+  },
+  "utility/tpms/detail_error_container_radius_top_left": {
+   "connect": 16,
+   "32257:0": 16,
+   "33219:0": 16,
+   "33235:0": 0
+  },
+  "utility/tpms/detail_error_container_radius_top_right": {
+   "connect": 16,
+   "32257:0": 16,
+   "33219:0": 16,
+   "33235:0": 0
+  },
+  "utility/tpms/detail_error_gap_horizontal": {
+   "connect": 8,
+   "32257:0": 7,
+   "33219:0": 7,
+   "33235:0": 0
+  },
+  "utility/tpms/detail_error_gap_vertical": {
+   "connect": 8,
+   "32257:0": 7,
+   "33219:0": 7,
+   "33235:0": 0
+  },
+  "utility/tpms/detail_error_icon_square": {
+   "connect": 28,
+   "32257:0": 25,
+   "33219:0": 24,
+   "33235:0": 0
+  },
+  "utility/tpms/detail_padding_horizontal": {
+   "connect": 16,
+   "32257:0": 14,
+   "33219:0": 13,
+   "33235:0": 0
+  },
+  "utility/tpms/detail_psi_gap_vertical": {
+   "connect": 4,
+   "32257:0": 3,
+   "33219:0": 3,
+   "33235:0": 0
+  },
+  "utility/tpms/detail_psi_padding_vertical_bottom": {
+   "connect": 4,
+   "32257:0": 3,
+   "33219:0": 3,
+   "33235:0": 0
+  },
+  "utility/tpms/detail_psi_padding_vertical_top": {
+   "connect": 4,
+   "32257:0": 3,
+   "33219:0": 3,
+   "33235:0": 0
+  },
+  "utility/tpms/detail_vehicle_image_piece_square": {
+   "connect": 56,
+   "32257:0": 50,
+   "33219:0": 47,
+   "33235:0": 0
+  },
+  "utility/width": {
+   "connect": 800,
+   "32257:0": 592,
+   "33219:0": 660,
+   "33235:0": 0
+  },
+  "vehicle_settings/list/item/container/padding_horizontal": {
+   "connect-s": 20,
+   "connect-l": 18,
+   "connect-w": 17,
+   "\bconnect-waterfall": 22
+  },
+  "vehicle_settings/list/item/container/padding_vertical": {
+   "connect-s": 16,
+   "connect-l": 14,
+   "connect-w": 13,
+   "\bconnect-waterfall": 17
+  },
+  "vehicle_settings/list/item/container/radius_bottom_left": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "vehicle_settings/list/item/container/radius_bottom_right": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "vehicle_settings/list/item/container/radius_top_left": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "vehicle_settings/list/item/container/radius_top_right": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "\bconnect-waterfall": 26
+  },
+  "vehicle_settings/list/item/height": {
+   "connect-s": 112,
+   "connect-l": 99,
+   "connect-w": 93,
+   "\bconnect-waterfall": 119
+  },
+  "vehicle_settings/list/item/icon_container_square": {
+   "connect-s": 80,
+   "connect-l": 70,
+   "connect-w": 66,
+   "\bconnect-waterfall": 84
+  },
+  "vehicle_settings/list/padding_horizontal": {
+   "connect-s": 20,
+   "connect-l": 18,
+   "connect-w": 20,
+   "\bconnect-waterfall": 20
+  },
+  "vehicle_settings/list/padding_vertical": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 24,
+   "\bconnect-waterfall": 24
+  },
+  "vehicle_settings/list/radius_bottom_left": {
+   "connect-s": 32,
+   "connect-l": 28,
+   "connect-w": 27,
+   "\bconnect-waterfall": 35
+  },
+  "vehicle_settings/list/radius_bottom_right": {
+   "connect-s": 32,
+   "connect-l": 28,
+   "connect-w": 27,
+   "\bconnect-waterfall": 35
+  },
+  "vehicle_settings/list/radius_top_left": {
+   "connect-s": 32,
+   "connect-l": 28,
+   "connect-w": 27,
+   "\bconnect-waterfall": 35
+  },
+  "vehicle_settings/list/radius_top_right": {
+   "connect-s": 32,
+   "connect-l": 28,
+   "connect-w": 27,
+   "\bconnect-waterfall": 35
+  },
+  "vehicle_settings/list/scroll_type_max_height": {
+   "connect-s": 528,
+   "connect-l": 465,
+   "connect-w": 324,
+   "\bconnect-waterfall": 560
+  },
+  "window/apps/HMG_radius_app": {
+   "connect-s": 40,
+   "connect-l": 35,
+   "connect-w": 33,
+   "connect-waterfall": 33,
+   "connect-s-14": 32,
+   "92233:0": 33
+  },
+  "window/apps/application_height": {
+   "connect-s": 1184,
+   "connect-l": 855,
+   "connect-w": 810,
+   "connect-waterfall": 664,
+   "connect-s-14": 948,
+   "92233:0": 664
+  },
+  "window/apps/driving_view_height": {
+   "connect": 1280,
+   "32257:0": 939,
+   "33219:0": 850,
+   "33235:0": 850
+  },
+  "window/apps/driving_view_width": {
+   "connect": 840,
+   "32257:0": 628,
+   "33219:0": 1040,
+   "33235:0": 1280
+  },
+  "window/apps/landscape_width": {
+   "connect-s": 1700,
+   "connect-l": 1274,
+   "connect-w": 1640,
+   "connect-waterfall": 1256,
+   "connect-s-14": 1360,
+   "92233:0": 1740
+  },
+  "window/apps/padding": {
+   "connect-s": 20,
+   "connect-l": 18,
+   "connect-w": 20,
+   "\bconnect-waterfall": 24
+  },
+  "window/apps/portrait_width": {
+   "connect-s": 840,
+   "connect-l": 628,
+   "connect-w": 800,
+   "connect-waterfall": 648,
+   "connect-s-14": 672,
+   "92233:0": 870
+  },
+  "window/apps/radius_bottom_left": {
+   "connect-s": 40,
+   "connect-l": 35,
+   "connect-w": 33,
+   "\bconnect-waterfall": 42
+  },
+  "window/apps/radius_bottom_right": {
+   "connect-s": 40,
+   "connect-l": 35,
+   "connect-w": 33,
+   "\bconnect-waterfall": 42
+  },
+  "window/apps/radius_top_left": {
+   "connect-s": 40,
+   "connect-l": 35,
+   "connect-w": 33,
+   "\bconnect-waterfall": 42
+  },
+  "window/apps/radius_top_right": {
+   "connect-s": 40,
+   "connect-l": 35,
+   "connect-w": 33,
+   "\bconnect-waterfall": 42
+  },
+  "window/container_extended_height": {
+   "connect-s": 0,
+   "connect-l": 0,
+   "connect-w": 1440,
+   "connect-waterfall": 0,
+   "connect-s-14": 0,
+   "92233:0": 0
+  },
+  "window/container_height": {
+   "connect-s": 1440,
+   "connect-l": 1080,
+   "connect-w": 850,
+   "connect-waterfall": 680,
+   "connect-s-14": 1152,
+   "92233:0": 680
+  },
+  "window/container_width": {
+   "connect-s": 2560,
+   "connect-l": 1920,
+   "connect-w": 3840,
+   "connect-waterfall": 3072,
+   "connect-s-14": 2048,
+   "92233:0": 3072
+  },
+  "window/overlay_guide/app_radius_bottom_left": {
+   "connect-s": 28,
+   "connect-l": 25,
+   "connect-w": 23,
+   "\bconnect-waterfall": 29
+  },
+  "window/overlay_guide/app_radius_bottom_right": {
+   "connect-s": 28,
+   "connect-l": 25,
+   "connect-w": 23,
+   "\bconnect-waterfall": 29
+  },
+  "window/overlay_guide/app_radius_top_left": {
+   "connect-s": 28,
+   "connect-l": 25,
+   "connect-w": 23,
+   "\bconnect-waterfall": 29
+  },
+  "window/overlay_guide/app_radius_top_right": {
+   "connect-s": 28,
+   "connect-l": 25,
+   "connect-w": 23,
+   "\bconnect-waterfall": 29
+  },
+  "window/overlay_guide/app_square": {
+   "connect-s": 100,
+   "connect-l": 88,
+   "connect-w": 83,
+   "\bconnect-waterfall": 106
+  },
+  "window/overlay_guide/gap_vertical": {
+   "connect-s": 32,
+   "connect-l": 28,
+   "connect-w": 28,
+   "\bconnect-waterfall": 36
+  },
+  "window/overlay_guide/padding_horizontal": {
+   "connect-s": 60,
+   "connect-l": 53,
+   "connect-w": 50,
+   "\bconnect-waterfall": 64
+  },
+  "window/overlay_guide/padding_vertical": {
+   "connect-s": 60,
+   "connect-l": 53,
+   "connect-w": 50,
+   "\bconnect-waterfall": 64
+  }
+ },
+ "form_factor_common (FLOAT)": {
+  "font/line_height_dp/level11": {
+   "connect-s": 48,
+   "connect-l": 42,
+   "connect-w": 42,
+   "connect-waterfall": 42,
+   "connect-s-14": 42
+  },
+  "font/line_height_dp/level14": {
+   "connect-s": 60,
+   "connect-l": 46,
+   "connect-w": 50,
+   "connect-waterfall": 50,
+   "connect-s-14": 46
+  },
+  "font/line_height_dp/level5": {
+   "connect-s": 32,
+   "connect-l": 28,
+   "connect-w": 30,
+   "connect-waterfall": 30,
+   "connect-s-14": 28
+  },
+  "font/size_dp/level12": {
+   "connect-s": 38,
+   "connect-l": 33,
+   "connect-w": 34,
+   "connect-waterfall": 32,
+   "connect-s-14": 33
+  },
+  "font/size_dp/level15": {
+   "connect-s": 46,
+   "connect-l": 42,
+   "connect-w": 40,
+   "connect-waterfall": 40,
+   "connect-s-14": 42
+  },
+  "font/size_dp/level5": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 23,
+   "connect-waterfall": 23,
+   "connect-s-14": 21
+  },
+  "font/size_sp/level12": {
+   "connect-s": 38,
+   "connect-l": 33,
+   "connect-w": 34,
+   "connect-waterfall": 34,
+   "connect-s-14": 33
+  }
+ },
+ "gleo.sys.color (COLOR)": {
+  "gleo_blue": {
+   "Mode 1": "#596BFF"
+  }
+ },
+ "ivi (STRING)": {
+  "New group/ivi_radio": {
+   "Eng": "Radio",
+   "Kor": "라디오"
+  }
+ },
+ "language_units (STRING)": {
+  "KM/Speed 2": {
+   "Unit 1": "MPH",
+   "Unit 2": "KM/H"
+  }
+ },
+ "theme (COLOR)": {
+  "100": {
+   "Hyundai-Light": "#FFFFFF",
+   "Hyundai-Dark": "#FFFFFF",
+   "Kia-Light": "#FFFFFF",
+   "Kia-Dark": "#FFFFFF",
+   "Genesis-Light": "#FFFFFF",
+   "Genesis-Dark": "#FFFFFF"
+  },
+  "color/alpha/dark/100": {
+   "Hyundai-Light": "#1A131417",
+   "Hyundai-Dark": "#1AFFFFFF",
+   "Kia-Light": "#1A131417",
+   "Kia-Dark": "#1AFFFFFF",
+   "Genesis-Light": "#1A131417",
+   "Genesis-Dark": "#1AFFFFFF"
+  },
+  "color/alpha/dark/200": {
+   "Hyundai-Light": "#33131417",
+   "Hyundai-Dark": "#33FFFFFF",
+   "Kia-Light": "#33131417",
+   "Kia-Dark": "#33FFFFFF",
+   "Genesis-Light": "#33131417",
+   "Genesis-Dark": "#33FFFFFF"
+  },
+  "color/alpha/dark/300": {
+   "Hyundai-Light": "#4D131417",
+   "Hyundai-Dark": "#4DFFFFFF",
+   "Kia-Light": "#4D131417",
+   "Kia-Dark": "#4DFFFFFF",
+   "Genesis-Light": "#4D131417",
+   "Genesis-Dark": "#4DFFFFFF"
+  },
+  "color/alpha/dark/400": {
+   "Hyundai-Light": "#66131417",
+   "Hyundai-Dark": "#66FFFFFF",
+   "Kia-Light": "#66131417",
+   "Kia-Dark": "#66FFFFFF",
+   "Genesis-Light": "#66131417",
+   "Genesis-Dark": "#66FFFFFF"
+  },
+  "color/alpha/dark/500": {
+   "Hyundai-Light": "#80131417",
+   "Hyundai-Dark": "#80FFFFFF",
+   "Kia-Light": "#80131417",
+   "Kia-Dark": "#80FFFFFF",
+   "Genesis-Light": "#80131417",
+   "Genesis-Dark": "#80FFFFFF"
+  },
+  "color/background/primary": {
+   "Hyundai-Light": "#F7F8FA",
+   "Hyundai-Dark": "#1D1E21",
+   "Kia-Light": "#F7F8FA",
+   "Kia-Dark": "#1D1E21",
+   "Genesis-Light": "#F7F8FA",
+   "Genesis-Dark": "#1D1E21"
+  },
+  "color/background/wide_s2": {
+   "Hyundai-Light": "#F7F8FA",
+   "Hyundai-Dark": "#1D1E21",
+   "Kia-Light": "#F7F8FA",
+   "Kia-Dark": "#1D1E21",
+   "Genesis-Light": "#EDEDF1",
+   "Genesis-Dark": "#151515"
+  },
+  "color/basic/00": {
+   "Hyundai-Light": "#FFFFFF",
+   "Hyundai-Dark": "#131417",
+   "Kia-Light": "#FFFFFF",
+   "Kia-Dark": "#131417",
+   "Genesis-Light": "#FFFFFF",
+   "Genesis-Dark": "#131417"
+  },
+  "color/basic/100": {
+   "Hyundai-Light": "#EDEEF2",
+   "Hyundai-Dark": "#313236",
+   "Kia-Light": "#EDEEF2",
+   "Kia-Dark": "#313236",
+   "Genesis-Light": "#EDEEF2",
+   "Genesis-Dark": "#313236"
+  },
+  "color/basic/300": {
+   "Hyundai-Light": "#C7C9CE",
+   "Hyundai-Dark": "#686A72",
+   "Kia-Light": "#C7C9CE",
+   "Kia-Dark": "#686A72",
+   "Genesis-Light": "#C7C9CE",
+   "Genesis-Dark": "#686A72"
+  },
+  "color/basic/50": {
+   "Hyundai-Light": "#F7F8FA",
+   "Hyundai-Dark": "#1D1E21",
+   "Kia-Light": "#F7F8FA",
+   "Kia-Dark": "#1D1E21",
+   "Genesis-Light": "#F7F8FA",
+   "Genesis-Dark": "#1D1E21"
+  },
+  "color/basic/500": {
+   "Hyundai-Light": "#686A72",
+   "Hyundai-Dark": "#C7C9CE",
+   "Kia-Light": "#686A72",
+   "Kia-Dark": "#C7C9CE",
+   "Genesis-Light": "#686A72",
+   "Genesis-Dark": "#C7C9CE"
+  },
+  "color/basic/700": {
+   "Hyundai-Light": "#313236",
+   "Hyundai-Dark": "#EDEEF2",
+   "Kia-Light": "#313236",
+   "Kia-Dark": "#EDEEF2",
+   "Genesis-Light": "#313236",
+   "Genesis-Dark": "#EDEEF2"
+  },
+  "color/button/basic/pressed": {
+   "Hyundai-Light": "#33131417",
+   "Hyundai-Dark": "#33FFFFFF",
+   "Kia-Light": "#33131417",
+   "Kia-Dark": "#33FFFFFF",
+   "Genesis-Light": "#33131417",
+   "Genesis-Dark": "#33FFFFFF"
+  },
+  "color/button/filled/pressed": {
+   "Hyundai-Light": "#313236",
+   "Hyundai-Dark": "#C7C9CE",
+   "Kia-Light": "#313236",
+   "Kia-Dark": "#C7C9CE",
+   "Genesis-Light": "#313236",
+   "Genesis-Dark": "#C7C9CE"
+  },
+  "color/divider/secondary": {
+   "Hyundai-Light": "#33131417",
+   "Hyundai-Dark": "#33FFFFFF",
+   "Kia-Light": "#33131417",
+   "Kia-Dark": "#33FFFFFF",
+   "Genesis-Light": "#33131417",
+   "Genesis-Dark": "#33FFFFFF"
+  },
+  "color/divider/tertiary": {
+   "Hyundai-Light": "#4D131417",
+   "Hyundai-Dark": "#4DFFFFFF",
+   "Kia-Light": "#4D131417",
+   "Kia-Dark": "#4DFFFFFF",
+   "Genesis-Light": "#4D131417",
+   "Genesis-Dark": "#4DFFFFFF"
+  },
+  "color/gnb/pressed": {
+   "Hyundai-Light": "#1A131417",
+   "Hyundai-Dark": "#1AFFFFFF",
+   "Kia-Light": "#1A131417",
+   "Kia-Dark": "#1AFFFFFF",
+   "Genesis-Light": "#1A131417",
+   "Genesis-Dark": "#1AFFFFFF"
+  },
+  "color/icon/dark/primary": {
+   "Hyundai-Light": "#131417",
+   "Hyundai-Dark": "#FFFFFF",
+   "Kia-Light": "#131417",
+   "Kia-Dark": "#FFFFFF",
+   "Genesis-Light": "#131417",
+   "Genesis-Dark": "#FFFFFF"
+  },
+  "color/icon/dark/quaternary": {
+   "Hyundai-Light": "#52131417",
+   "Hyundai-Dark": "#52FFFFFF",
+   "Kia-Light": "#52131417",
+   "Kia-Dark": "#52FFFFFF",
+   "Genesis-Light": "#52131417",
+   "Genesis-Dark": "#52FFFFFF"
+  },
+  "color/icon/dark/tertiary": {
+   "Hyundai-Light": "#A3131417",
+   "Hyundai-Dark": "#A3FFFFFF",
+   "Kia-Light": "#A3131417",
+   "Kia-Dark": "#A3FFFFFF",
+   "Genesis-Light": "#A3131417",
+   "Genesis-Dark": "#A3FFFFFF"
+  },
+  "color/informative/active": {
+   "Hyundai-Light": "#00BA13",
+   "Hyundai-Dark": "#0EE87E",
+   "Kia-Light": "#00BA13",
+   "Kia-Dark": "#0EE87E",
+   "Genesis-Light": "#00BA13",
+   "Genesis-Dark": "#0EE87E"
+  },
+  "color/informative/error": {
+   "Hyundai-Light": "#FFA202",
+   "Hyundai-Dark": "#FFA202",
+   "Kia-Light": "#FFA202",
+   "Kia-Dark": "#FFA202",
+   "Genesis-Light": "#FFA202",
+   "Genesis-Dark": "#FFA202"
+  },
+  "color/informative/negative": {
+   "Hyundai-Light": "#FE3D16",
+   "Hyundai-Dark": "#F24239",
+   "Kia-Light": "#FE3D16",
+   "Kia-Dark": "#F24239",
+   "Genesis-Light": "#FE3D16",
+   "Genesis-Dark": "#F24239"
+  },
+  "color/informative/positive": {
+   "Hyundai-Light": "#0064FF",
+   "Hyundai-Dark": "#297FFF",
+   "Kia-Light": "#0064FF",
+   "Kia-Dark": "#297FFF",
+   "Genesis-Light": "#0064FF",
+   "Genesis-Dark": "#297FFF"
+  },
+  "color/regulation/bluetooth": {
+   "Hyundai-Light": "#297FFF",
+   "Hyundai-Dark": "#297FFF",
+   "Kia-Light": "#297FFF",
+   "Kia-Dark": "#297FFF",
+   "Genesis-Light": "#297FFF",
+   "Genesis-Dark": "#297FFF"
+  },
+  "color/regulation/green": {
+   "Hyundai-Light": "#00BA13",
+   "Hyundai-Dark": "#00BA13",
+   "Kia-Light": "#00BA13",
+   "Kia-Dark": "#00BA13",
+   "Genesis-Light": "#00BA13",
+   "Genesis-Dark": "#00BA13"
+  },
+  "color/static/dark/100": {
+   "Hyundai-Light": "#131417",
+   "Hyundai-Dark": "#131417",
+   "Kia-Light": "#131417",
+   "Kia-Dark": "#131417",
+   "Genesis-Light": "#131417",
+   "Genesis-Dark": "#131417"
+  },
+  "color/static/dark/300": {
+   "Hyundai-Light": "#A3131417",
+   "Hyundai-Dark": "#A3131417",
+   "Kia-Light": "#A3131417",
+   "Kia-Dark": "#A3131417",
+   "Genesis-Light": "#A3131417",
+   "Genesis-Dark": "#A3131417"
+  },
+  "color/static/dark/400": {
+   "Hyundai-Light": "#52131417",
+   "Hyundai-Dark": "#52131417",
+   "Kia-Light": "#52131417",
+   "Kia-Dark": "#52131417",
+   "Genesis-Light": "#52131417",
+   "Genesis-Dark": "#52131417"
+  },
+  "color/static/light/100": {
+   "Hyundai-Light": "#FFFFFF",
+   "Hyundai-Dark": "#FFFFFF",
+   "Kia-Light": "#FFFFFF",
+   "Kia-Dark": "#FFFFFF",
+   "Genesis-Light": "#FFFFFF",
+   "Genesis-Dark": "#FFFFFF"
+  },
+  "color/static/light/200": {
+   "Hyundai-Light": "#D6FFFFFF",
+   "Hyundai-Dark": "#D6FFFFFF",
+   "Kia-Light": "#D6FFFFFF",
+   "Kia-Dark": "#D6FFFFFF",
+   "Genesis-Light": "#D6FFFFFF",
+   "Genesis-Dark": "#D6FFFFFF"
+  },
+  "color/static/light/300": {
+   "Hyundai-Light": "#A3FFFFFF",
+   "Hyundai-Dark": "#A3FFFFFF",
+   "Kia-Light": "#A3FFFFFF",
+   "Kia-Dark": "#A3FFFFFF",
+   "Genesis-Light": "#A3FFFFFF",
+   "Genesis-Dark": "#A3FFFFFF"
+  },
+  "color/static/light/400": {
+   "Hyundai-Light": "#52FFFFFF",
+   "Hyundai-Dark": "#52FFFFFF",
+   "Kia-Light": "#52FFFFFF",
+   "Kia-Dark": "#52FFFFFF",
+   "Genesis-Light": "#52FFFFFF",
+   "Genesis-Dark": "#52FFFFFF"
+  },
+  "color/text/dark/primary": {
+   "Hyundai-Light": "#131417",
+   "Hyundai-Dark": "#FFFFFF",
+   "Kia-Light": "#131417",
+   "Kia-Dark": "#FFFFFF",
+   "Genesis-Light": "#131417",
+   "Genesis-Dark": "#FFFFFF"
+  },
+  "color/text/dark/quaternary": {
+   "Hyundai-Light": "#52131417",
+   "Hyundai-Dark": "#52FFFFFF",
+   "Kia-Light": "#52131417",
+   "Kia-Dark": "#52FFFFFF",
+   "Genesis-Light": "#52131417",
+   "Genesis-Dark": "#52FFFFFF"
+  },
+  "color_hmc/container_positive/pressed": {
+   "Hyundai-Light": "#33131417",
+   "Hyundai-Dark": "#33FFFFFF",
+   "Kia-Light": "#33131417",
+   "Kia-Dark": "#33FFFFFF",
+   "Genesis-Light": "#33131417",
+   "Genesis-Dark": "#33FFFFFF"
+  },
+  "color_hmc/shadow/alpha_1": {
+   "Hyundai-Light": "#14000000",
+   "Hyundai-Dark": "#14000000",
+   "Kia-Light": "#14000000",
+   "Kia-Dark": "#14000000",
+   "Genesis-Light": "#14000000",
+   "Genesis-Dark": "#14000000"
+  },
+  "color_hmc/shadow/alpha_2": {
+   "Hyundai-Light": "#29000000",
+   "Hyundai-Dark": "#29000000",
+   "Kia-Light": "#29000000",
+   "Kia-Dark": "#29000000",
+   "Genesis-Light": "#29000000",
+   "Genesis-Dark": "#29000000"
+  },
+  "color_hmc/stroke/focused": {
+   "Hyundai-Light": "#6ABFFB",
+   "Hyundai-Dark": "#6ABFFB",
+   "Kia-Light": "#6ABFFB",
+   "Kia-Dark": "#6ABFFB",
+   "Genesis-Light": "#6ABFFB",
+   "Genesis-Dark": "#6ABFFB"
+  },
+  "color_hmc/stroke/focused_pressed": {
+   "Hyundai-Light": "#0794F8",
+   "Hyundai-Dark": "#0794F8",
+   "Kia-Light": "#0794F8",
+   "Kia-Dark": "#0794F8",
+   "Genesis-Light": "#0794F8",
+   "Genesis-Dark": "#0794F8"
+  },
+  "color_hmc/various/blue_1": {
+   "Hyundai-Light": "#0064FF",
+   "Hyundai-Dark": "#0064FF",
+   "Kia-Light": "#0064FF",
+   "Kia-Dark": "#0064FF",
+   "Genesis-Light": "#0064FF",
+   "Genesis-Dark": "#0064FF"
+  },
+  "color_hmc/various/blue_2": {
+   "Hyundai-Light": "#297FFF",
+   "Hyundai-Dark": "#297FFF",
+   "Kia-Light": "#297FFF",
+   "Kia-Dark": "#297FFF",
+   "Genesis-Light": "#297FFF",
+   "Genesis-Dark": "#297FFF"
+  },
+  "color_hmc/various/green_3": {
+   "Hyundai-Light": "#00BA13",
+   "Hyundai-Dark": "#00BA13",
+   "Kia-Light": "#00BA13",
+   "Kia-Dark": "#00BA13",
+   "Genesis-Light": "#00BA13",
+   "Genesis-Dark": "#00BA13"
+  },
+  "color_hmc/various/green_5": {
+   "Hyundai-Light": "#0EE87E",
+   "Hyundai-Dark": "#0EE87E",
+   "Kia-Light": "#0EE87E",
+   "Kia-Dark": "#0EE87E",
+   "Genesis-Light": "#0EE87E",
+   "Genesis-Dark": "#0EE87E"
+  },
+  "color_hmc/various/orange_3": {
+   "Hyundai-Light": "#FFA202",
+   "Hyundai-Dark": "#FFA202",
+   "Kia-Light": "#FFA202",
+   "Kia-Dark": "#FFA202",
+   "Genesis-Light": "#FFA202",
+   "Genesis-Dark": "#FFA202"
+  },
+  "color_hmc/various/red_1": {
+   "Hyundai-Light": "#FE3D16",
+   "Hyundai-Dark": "#FE3D16",
+   "Kia-Light": "#FE3D16",
+   "Kia-Dark": "#FE3D16",
+   "Genesis-Light": "#FE3D16",
+   "Genesis-Dark": "#FE3D16"
+  },
+  "color_hmc/various/red_5": {
+   "Hyundai-Light": "#F24239",
+   "Hyundai-Dark": "#F24239",
+   "Kia-Light": "#F24239",
+   "Kia-Dark": "#F24239",
+   "Genesis-Light": "#F24239",
+   "Genesis-Dark": "#F24239"
+  },
+  "driving_view/cid/background_wide": {
+   "Hyundai-Light": "#F7F8FA",
+   "Hyundai-Dark": "#1D1E21",
+   "Kia-Light": "#F7F8FA",
+   "Kia-Dark": "#1D1E21",
+   "Genesis-Light": "#F6F8FA",
+   "Genesis-Dark": "#000000"
+  }
+ },
+ "theme (STRING)": {
+  "color_hmc/theme": {
+   "Hyundai-Light": "Hyundai",
+   "Hyundai-Dark": "Hyundai",
+   "Kia-Light": "Kia",
+   "Kia-Dark": "Kia",
+   "Genesis-Light": "Genesis",
+   "Genesis-Dark": "Genesis"
+  }
+ },
+ "typo (FLOAT)": {
+  "line/level1": {
+   "connect-s": 1,
+   "connect-l": 1,
+   "connect-w": 1,
+   "connect-waterfall": 1
+  },
+  "line/level4": {
+   "connect-s": 4,
+   "connect-l": 4,
+   "connect-w": 3,
+   "connect-waterfall": 4
+  },
+  "line_height_sp/level1": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "connect-waterfall": 26
+  },
+  "line_height_sp/level11": {
+   "connect-s": 48,
+   "connect-l": 42,
+   "connect-w": 40,
+   "connect-waterfall": 51
+  },
+  "line_height_sp/level15": {
+   "connect-s": 64,
+   "connect-l": 55,
+   "connect-w": 53,
+   "connect-waterfall": 68
+  },
+  "line_height_sp/level16": {
+   "connect-s": 68,
+   "connect-l": 60,
+   "connect-w": 56,
+   "connect-waterfall": 72
+  },
+  "line_height_sp/level17": {
+   "connect-s": 72,
+   "connect-l": 65,
+   "connect-w": 60,
+   "connect-waterfall": 77
+  },
+  "line_height_sp/level19": {
+   "connect-s": 80,
+   "connect-l": 65,
+   "connect-w": 66,
+   "connect-waterfall": 84
+  },
+  "line_height_sp/level20": {
+   "connect-s": 134,
+   "connect-l": 118,
+   "connect-w": 156,
+   "connect-waterfall": 142
+  },
+  "line_height_sp/level3": {
+   "connect-s": 28,
+   "connect-l": 25,
+   "connect-w": 23,
+   "connect-waterfall": 29
+  },
+  "line_height_sp/level6": {
+   "connect-s": 34,
+   "connect-l": 28,
+   "connect-w": 28,
+   "connect-waterfall": 36
+  },
+  "line_height_sp/level7": {
+   "connect-s": 36,
+   "connect-l": 32,
+   "connect-w": 30,
+   "connect-waterfall": 38
+  },
+  "line_height_sp/level8": {
+   "connect-s": 38,
+   "connect-l": 33,
+   "connect-w": 32,
+   "connect-waterfall": 41
+  },
+  "line_height_sp/level9": {
+   "connect-s": 40,
+   "connect-l": 35,
+   "connect-w": 33,
+   "connect-waterfall": 42
+  },
+  "radius/bottom_left/level4": {
+   "connect-s": 12,
+   "connect-l": 11,
+   "connect-w": 10,
+   "connect-waterfall": 13
+  },
+  "radius/bottom_left/level5": {
+   "connect-s": 16,
+   "connect-l": 14,
+   "connect-w": 13,
+   "connect-waterfall": 17
+  },
+  "radius/bottom_left/level7": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "connect-waterfall": 26
+  },
+  "radius/bottom_right/level4": {
+   "connect-s": 12,
+   "connect-l": 11,
+   "connect-w": 10,
+   "connect-waterfall": 13
+  },
+  "radius/bottom_right/level5": {
+   "connect-s": 16,
+   "connect-l": 14,
+   "connect-w": 13,
+   "connect-waterfall": 17
+  },
+  "radius/bottom_right/level7": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "connect-waterfall": 26
+  },
+  "radius/top_left/level4": {
+   "connect-s": 12,
+   "connect-l": 11,
+   "connect-w": 10,
+   "connect-waterfall": 13
+  },
+  "radius/top_left/level5": {
+   "connect-s": 16,
+   "connect-l": 14,
+   "connect-w": 13,
+   "connect-waterfall": 17
+  },
+  "radius/top_left/level7": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "connect-waterfall": 26
+  },
+  "radius/top_right/level4": {
+   "connect-s": 12,
+   "connect-l": 11,
+   "connect-w": 10,
+   "connect-waterfall": 13
+  },
+  "radius/top_right/level5": {
+   "connect-s": 16,
+   "connect-l": 14,
+   "connect-w": 13,
+   "connect-waterfall": 17
+  },
+  "radius/top_right/level7": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "connect-waterfall": 26
+  },
+  "shadow/level1/blur": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "connect-waterfall": 26
+  },
+  "shadow/level1/y": {
+   "connect-s": 6,
+   "connect-l": 5,
+   "connect-w": 5,
+   "connect-waterfall": 6
+  },
+  "shadow/level2/blur1": {
+   "connect-s": 32,
+   "connect-l": 28,
+   "connect-w": 27,
+   "connect-waterfall": 32
+  },
+  "shadow/level2/blur2": {
+   "connect-s": 2,
+   "connect-l": 2,
+   "connect-w": 2,
+   "connect-waterfall": 3
+  },
+  "shadow/level2/y1": {
+   "connect-s": 8,
+   "connect-l": 7,
+   "connect-w": 7,
+   "connect-waterfall": 9
+  },
+  "shadow/level2/y2": {
+   "connect-s": 2,
+   "connect-l": 2,
+   "connect-w": 2,
+   "connect-waterfall": 3
+  },
+  "shadow/level3/blur1": {
+   "connect-s": 40,
+   "connect-l": 35,
+   "connect-w": 33,
+   "connect-waterfall": 42
+  },
+  "shadow/level3/blur2": {
+   "connect-s": 4,
+   "connect-l": 4,
+   "connect-w": 3,
+   "connect-waterfall": 4
+  },
+  "shadow/level3/y1": {
+   "connect-s": 20,
+   "connect-l": 18,
+   "connect-w": 17,
+   "connect-waterfall": 22
+  },
+  "shadow/level3/y2": {
+   "connect-s": 2,
+   "connect-l": 2,
+   "connect-w": 2,
+   "connect-waterfall": 3
+  },
+  "size_sp/level11": {
+   "connect-s": 36,
+   "connect-l": 32,
+   "connect-w": 30,
+   "connect-waterfall": 38
+  },
+  "size_sp/level13": {
+   "connect-s": 40,
+   "connect-l": 35,
+   "connect-w": 33,
+   "connect-waterfall": 42
+  },
+  "size_sp/level14": {
+   "connect-s": 44,
+   "connect-l": 39,
+   "connect-w": 37,
+   "connect-waterfall": 47
+  },
+  "size_sp/level15": {
+   "connect-s": 48,
+   "connect-l": 42,
+   "connect-w": 40,
+   "connect-waterfall": 51
+  },
+  "size_sp/level16": {
+   "connect-s": 52,
+   "connect-l": 46,
+   "connect-w": 43,
+   "connect-waterfall": 55
+  },
+  "size_sp/level17": {
+   "connect-s": 56,
+   "connect-l": 49,
+   "connect-w": 46,
+   "connect-waterfall": 59
+  },
+  "size_sp/level18": {
+   "connect-s": 60,
+   "connect-l": 53,
+   "connect-w": 50,
+   "connect-waterfall": 64
+  },
+  "size_sp/level19": {
+   "connect-s": 64,
+   "connect-l": 56,
+   "connect-w": 53,
+   "connect-waterfall": 68
+  },
+  "size_sp/level20": {
+   "connect-s": 112,
+   "connect-l": 99,
+   "connect-w": 130,
+   "connect-waterfall": 119
+  },
+  "size_sp/level3": {
+   "connect-s": 20,
+   "connect-l": 18,
+   "connect-w": 17,
+   "connect-waterfall": 22
+  },
+  "size_sp/level5": {
+   "connect-s": 24,
+   "connect-l": 21,
+   "connect-w": 20,
+   "connect-waterfall": 26
+  },
+  "size_sp/level6": {
+   "connect-s": 26,
+   "connect-l": 23,
+   "connect-w": 22,
+   "connect-waterfall": 28
+  },
+  "size_sp/level7": {
+   "connect-s": 28,
+   "connect-l": 25,
+   "connect-w": 23,
+   "connect-waterfall": 29
+  },
+  "size_sp/level8": {
+   "connect-s": 30,
+   "connect-l": 26,
+   "connect-w": 25,
+   "connect-waterfall": 34
+  },
+  "size_sp/level9": {
+   "connect-s": 32,
+   "connect-l": 28,
+   "connect-w": 27,
+   "connect-waterfall": 35
+  },
+  "square/level10": {
+   "connect-s": 48,
+   "connect-l": 42,
+   "connect-w": 40,
+   "connect-waterfall": 51
+  },
+  "square/level18": {
+   "connect-s": 80,
+   "connect-l": 70,
+   "connect-w": 66,
+   "connect-waterfall": 84
+  },
+  "square/level22": {
+   "connect-s": 100,
+   "connect-l": 88,
+   "connect-w": 83,
+   "connect-waterfall": 106
+  },
+  "square/level8": {
+   "connect-s": 40,
+   "connect-l": 35,
+   "connect-w": 33,
+   "connect-waterfall": 42
+  }
+ }
+}

@@ -1,0 +1,2449 @@
+[
+ {
+  "name": "Table",
+  "page": "Internal Only Canvas",
+  "variants": 3,
+  "size": "473x160",
+  "props": {
+   "Type": [
+    "td",
+    "th"
+   ],
+   "Fill": [
+    "Fill",
+    "Text"
+   ]
+  }
+ },
+ {
+  "name": "application",
+  "page": "Internal Only Canvas",
+  "variants": 4,
+  "size": "5600x1344",
+  "props": {
+   "Type": [
+    "Landscape",
+    "Portrait"
+   ],
+   "Mode": [
+    "Dark",
+    "Light"
+   ]
+  }
+ },
+ {
+  "name": "application",
+  "page": "Internal Only Canvas",
+  "variants": 8,
+  "size": "2700x5271",
+  "props": {
+   "Type": [
+    "Landscape",
+    "Portrait"
+   ],
+   "Mode": [
+    "Dark",
+    "Light"
+   ],
+   "State": [
+    "Enabled",
+    "Focused"
+   ]
+  }
+ },
+ {
+  "name": "background",
+  "page": "Internal Only Canvas",
+  "variants": 2,
+  "size": "5720x1840",
+  "props": {
+   "Mode": [
+    "dark",
+    "light"
+   ]
+  }
+ },
+ {
+  "name": "background",
+  "page": "Internal Only Canvas",
+  "variants": 3,
+  "size": "2600x6096",
+  "props": {
+   "Formfactor": [
+    "Connect-S",
+    "Connect-W",
+    "Connect-WF"
+   ]
+  }
+ },
+ {
+  "name": "driving_view",
+  "page": "Internal Only Canvas",
+  "variants": 6,
+  "size": "3562x2410",
+  "props": {
+   "type": [
+    "normal_driving",
+    "normal_parked",
+    "window"
+   ],
+   "wide": [
+    "false",
+    "true"
+   ]
+  }
+ },
+ {
+  "name": "gnb_button/standard",
+  "page": "Internal Only Canvas",
+  "variants": 23,
+  "size": "1113x640",
+  "props": {
+   "type": [
+    "application",
+    "control",
+    "frost/defrost",
+    "liabrary",
+    "temp_button",
+    "temp_control",
+    "temp_number",
+    "vehicle setting"
+   ],
+   "state": [
+    "disabled",
+    "edit",
+    "enabled",
+    "pressed",
+    "wide"
+   ]
+  }
+ },
+ {
+  "name": "gnb_button/wide",
+  "page": "Internal Only Canvas",
+  "variants": 30,
+  "size": "1319x1338",
+  "props": {
+   "Type": [
+    "Application",
+    "Control",
+    "Control_Letter",
+    "Library",
+    "Temp_Control",
+    "Temp_Number_2"
+   ],
+   "State": [
+    "disabled",
+    "enabled",
+    "focused",
+    "focused pressed",
+    "pressed"
+   ]
+  }
+ },
+ {
+  "name": "gnb_time",
+  "page": "Internal Only Canvas",
+  "variants": 10,
+  "size": "1229x361",
+  "props": {
+   "State": [
+    "Disabled",
+    "Enabled",
+    "Focused",
+    "Focused Pressed",
+    "Pressed"
+   ],
+   "Platform": [
+    "Connect-W",
+    "Connect-WF"
+   ]
+  }
+ },
+ {
+  "name": "ic_annotation",
+  "page": "Internal Only Canvas",
+  "variants": 5,
+  "size": "340x68",
+  "props": {
+   "Type": [
+    "alert",
+    "alert-fill",
+    "alert-tri",
+    "info",
+    "info-fill"
+   ]
+  }
+ },
+ {
+  "name": "ic_arrow",
+  "page": "Internal Only Canvas",
+  "variants": 4,
+  "size": "272x68",
+  "props": {
+   "Direction": [
+    "down",
+    "left",
+    "right",
+    "up"
+   ]
+  }
+ },
+ {
+  "name": "ic_arrow",
+  "page": "Internal Only Canvas",
+  "variants": 4,
+  "size": "272x68",
+  "props": {
+   "Direction": [
+    "down",
+    "left",
+    "right",
+    "up"
+   ]
+  }
+ },
+ {
+  "name": "ic_beam",
+  "page": "Internal Only Canvas",
+  "variants": 4,
+  "size": "272x68",
+  "props": {
+   "type": [
+    "Auto High Beam",
+    "foglight",
+    "low beam",
+    "tailight"
+   ]
+  }
+ },
+ {
+  "name": "ic_beam",
+  "page": "Internal Only Canvas",
+  "variants": 4,
+  "size": "272x68",
+  "props": {
+   "type": [
+    "Auto High Beam",
+    "foglight",
+    "low beam",
+    "tailight"
+   ]
+  }
+ },
+ {
+  "name": "ic_bluetooth",
+  "page": "Internal Only Canvas",
+  "variants": 2,
+  "size": "136x68",
+  "props": {
+   "Connected": [
+    "False",
+    "True"
+   ]
+  }
+ },
+ {
+  "name": "ic_call",
+  "page": "Internal Only Canvas",
+  "variants": 4,
+  "size": "292x88",
+  "props": {
+   "Type": [
+    "Dial",
+    "Merge",
+    "On Phone",
+    "Swap"
+   ]
+  }
+ },
+ {
+  "name": "ic_clock",
+  "page": "Internal Only Canvas",
+  "variants": 3,
+  "size": "224x88",
+  "props": {
+   "Type": [
+    "Line",
+    "Schedule",
+    "Solid"
+   ]
+  }
+ },
+ {
+  "name": "ic_defrost_front",
+  "page": "Internal Only Canvas",
+  "variants": 2,
+  "size": "136x68",
+  "props": {
+   "State": [
+    "Activated",
+    "Normal"
+   ]
+  }
+ },
+ {
+  "name": "ic_defrost_rear",
+  "page": "Internal Only Canvas",
+  "variants": 2,
+  "size": "136x68",
+  "props": {
+   "State": [
+    "Activated",
+    "Normal"
+   ]
+  }
+ },
+ {
+  "name": "ic_download",
+  "page": "Internal Only Canvas",
+  "variants": 2,
+  "size": "126x68",
+  "props": {
+   "Type": [
+    "Basic",
+    "Cloud"
+   ]
+  }
+ },
+ {
+  "name": "ic_equalizer",
+  "page": "Internal Only Canvas",
+  "variants": 5,
+  "size": "476x104",
+  "props": {
+   "Type": [
+    "1",
+    "2",
+    "3",
+    "4",
+    "6"
+   ]
+  }
+ },
+ {
+  "name": "ic_ev",
+  "page": "Internal Only Canvas",
+  "variants": 4,
+  "size": "272x68",
+  "props": {
+   "location": [
+    "front",
+    "left",
+    "none",
+    "right"
+   ]
+  }
+ },
+ {
+  "name": "ic_fuel",
+  "page": "Internal Only Canvas",
+  "variants": 3,
+  "size": "204x68",
+  "props": {
+   "location": [
+    "left",
+    "none",
+    "right"
+   ]
+  }
+ },
+ {
+  "name": "ic_fullscreen",
+  "page": "Internal Only Canvas",
+  "variants": 2,
+  "size": "136x68",
+  "props": {
+   "State": [
+    "fold",
+    "full"
+   ]
+  }
+ },
+ {
+  "name": "ic_grid",
+  "page": "Internal Only Canvas",
+  "variants": 3,
+  "size": "284x140",
+  "props": {
+   "Property 1": [
+    "100",
+    "44",
+    "64"
+   ]
+  }
+ },
+ {
+  "name": "ic_image",
+  "page": "Internal Only Canvas",
+  "variants": 2,
+  "size": "136x68",
+  "props": {
+   "Type": [
+    "Photo",
+    "Thumbnail"
+   ]
+  }
+ },
+ {
+  "name": "ic_lock",
+  "page": "Internal Only Canvas",
+  "variants": 2,
+  "size": "136x68",
+  "props": {
+   "type": [
+    "Locked",
+    "Unlocked"
+   ]
+  }
+ },
+ {
+  "name": "ic_lock",
+  "page": "Internal Only Canvas",
+  "variants": 2,
+  "size": "136x68",
+  "props": {
+   "type": [
+    "Locked",
+    "Unlocked"
+   ]
+  }
+ },
+ {
+  "name": "ic_media",
+  "page": "Internal Only Canvas",
+  "variants": 3,
+  "size": "224x88",
+  "props": {
+   "Type": [
+    "Music",
+    "Music_OFF",
+    "Radio"
+   ]
+  }
+ },
+ {
+  "name": "ic_mic",
+  "page": "Internal Only Canvas",
+  "variants": 2,
+  "size": "136x68",
+  "props": {
+   "On": [
+    "off",
+    "on"
+   ]
+  }
+ },
+ {
+  "name": "ic_mic",
+  "page": "Internal Only Canvas",
+  "variants": 2,
+  "size": "136x68",
+  "props": {
+   "On": [
+    "off",
+    "on"
+   ]
+  }
+ },
+ {
+  "name": "ic_more",
+  "page": "Internal Only Canvas",
+  "variants": 2,
+  "size": "156x88",
+  "props": {
+   "Type": [
+    "Horizontal",
+    "Vertical"
+   ]
+  }
+ },
+ {
+  "name": "ic_network",
+  "page": "Internal Only Canvas",
+  "variants": 11,
+  "size": "748x68",
+  "props": {
+   "type": [
+    "5g",
+    "disconnected",
+    "lte"
+   ],
+   "strength": [
+    "Default",
+    "level1",
+    "level2",
+    "level3",
+    "level4",
+    "level5"
+   ]
+  }
+ },
+ {
+  "name": "ic_phone",
+  "page": "Internal Only Canvas",
+  "variants": 7,
+  "size": "476x68",
+  "props": {
+   "State": [
+    "Absence",
+    "Accept",
+    "Decline",
+    "Outgoing",
+    "Receipt"
+   ],
+   "Disable": [
+    "false",
+    "true"
+   ]
+  }
+ },
+ {
+  "name": "ic_phone",
+  "page": "Internal Only Canvas",
+  "variants": 8,
+  "size": "544x68",
+  "props": {
+   "State": [
+    "Absence",
+    "Accept",
+    "Decline",
+    "Outgoing",
+    "Receipt",
+    "Waveform"
+   ],
+   "Disable": [
+    "false",
+    "true"
+   ]
+  }
+ },
+ {
+  "name": "ic_player",
+  "page": "Internal Only Canvas",
+  "variants": 13,
+  "size": "888x88",
+  "props": {
+   "Type": [
+    "Backward",
+    "Forward",
+    "Forward 15",
+    "Like",
+    "Like_fill",
+    "List",
+    "Pause",
+    "Play",
+    "Repeat",
+    "Repeat1",
+    "Replay 15",
+    "Shuffle",
+    "Stop"
+   ]
+  }
+ },
+ {
+  "name": "ic_player",
+  "page": "Internal Only Canvas",
+  "variants": 9,
+  "size": "632x88",
+  "props": {
+   "Type": [
+    "Backward",
+    "Forward",
+    "List",
+    "Pause",
+    "Play",
+    "Repeat",
+    "Repeat1",
+    "Shuffle",
+    "Stop"
+   ]
+  }
+ },
+ {
+  "name": "ic_player",
+  "page": "Internal Only Canvas",
+  "variants": 13,
+  "size": "888x88",
+  "props": {
+   "Type": [
+    "Backward",
+    "Forward",
+    "Forward 15",
+    "Like",
+    "Like_fill",
+    "List",
+    "Pause",
+    "Play",
+    "Repeat",
+    "Repeat1",
+    "Replay 15",
+    "Shuffle",
+    "Stop"
+   ]
+  }
+ },
+ {
+  "name": "ic_profile",
+  "page": "Internal Only Canvas",
+  "variants": 2,
+  "size": "156x88",
+  "props": {
+   "Type": [
+    "Line",
+    "Solid"
+   ]
+  }
+ },
+ {
+  "name": "ic_profile",
+  "page": "Internal Only Canvas",
+  "variants": 2,
+  "size": "156x88",
+  "props": {
+   "type": [
+    "line",
+    "solid"
+   ]
+  }
+ },
+ {
+  "name": "ic_reset",
+  "page": "Internal Only Canvas",
+  "variants": 2,
+  "size": "136x68",
+  "props": {
+   "Type": [
+    "dual",
+    "single"
+   ]
+  }
+ },
+ {
+  "name": "ic_seat",
+  "page": "Internal Only Canvas",
+  "variants": 5,
+  "size": "340x68",
+  "props": {
+   "Type": [
+    "Angle",
+    "Left",
+    "Move",
+    "Right",
+    "Top"
+   ]
+  }
+ },
+ {
+  "name": "ic_seat_air",
+  "page": "Internal Only Canvas",
+  "variants": 8,
+  "size": "544x68",
+  "props": {
+   "Position": [
+    "Driver",
+    "Passenger"
+   ],
+   "State": [
+    "Normal",
+    "Step1",
+    "Step2",
+    "Step3"
+   ]
+  }
+ },
+ {
+  "name": "ic_seat_heat_3",
+  "page": "Internal Only Canvas",
+  "variants": 8,
+  "size": "544x68",
+  "props": {
+   "Position": [
+    "Driver",
+    "Passenger"
+   ],
+   "State": [
+    "Normal",
+    "Step1",
+    "Step2",
+    "Step3"
+   ]
+  }
+ },
+ {
+  "name": "ic_sound",
+  "page": "Internal Only Canvas",
+  "variants": 7,
+  "size": "198x850",
+  "props": {
+   "size": [
+    "l"
+   ],
+   "type": [
+    "high",
+    "low",
+    "mid",
+    "minus",
+    "mute",
+    "plus",
+    "warning"
+   ]
+  }
+ },
+ {
+  "name": "ic_sound",
+  "page": "Internal Only Canvas",
+  "variants": 7,
+  "size": "476x68",
+  "props": {
+   "volume": [
+    "down",
+    "high",
+    "low",
+    "mid",
+    "mute",
+    "up",
+    "warning"
+   ]
+  }
+ },
+ {
+  "name": "ic_star",
+  "page": "Internal Only Canvas",
+  "variants": 2,
+  "size": "156x88",
+  "props": {
+   "Fill": [
+    "False",
+    "True"
+   ]
+  }
+ },
+ {
+  "name": "ic_step",
+  "page": "Internal Only Canvas",
+  "variants": 3,
+  "size": "204x68",
+  "props": {
+   "Step": [
+    "1",
+    "2",
+    "3"
+   ]
+  }
+ },
+ {
+  "name": "ic_telltale",
+  "page": "Internal Only Canvas",
+  "variants": 49,
+  "size": "800x536",
+  "props": {
+   "type": [
+    "ABS 고장",
+    "ABS고장_미국",
+    "AD_1",
+    "AD_2",
+    "AUTO HOLD",
+    "Auto High Beam",
+    "Autohold",
+    "Autopark",
+    "ENGINE OVERHEATED",
+    "ESC",
+    "ESC OFF",
+    "Front Fog Light",
+    "Fuel",
+    "High Beam",
+    "Info",
+    "Low Beam",
+    "Rear Fog Light",
+    "Takeover",
+    "_회생 제동 고장",
+    "afs",
+    "doortrunkopen",
+    "dpfgpf",
+    "ecall",
+    "engine",
+    "engineoilpressure",
+    "epb",
+    "evsystemfail",
+    "h2leak",
+    "h2sensor",
+    "immobilizer",
+    "ledheadlight",
+    "masterwarnig",
+    "mdps",
+    "preheat",
+    "turn_left",
+    "turn_right",
+    "동승석 전면 에어백 작동 정지 장치",
+    "미등",
+    "안전 벨트 경고",
+    "에어백 경고",
+    "저전납 배터리 경고",
+    "제동 장치 고장",
+    "제동 장치 고장 - 미국",
+    "주차 브레이크 고장",
+    "주차 브레이크 체결",
+    "차량 출력 제한 경고",
+    "타이어 공기압",
+    "통합 경고등",
+    "회생 제동 고장"
+   ]
+  }
+ },
+ {
+  "name": "ic_telltale",
+  "page": "Internal Only Canvas",
+  "variants": 49,
+  "size": "800x536",
+  "props": {
+   "type": [
+    "ABS 고장",
+    "ABS고장_미국",
+    "AD_1",
+    "AD_2",
+    "AUTO HOLD",
+    "Auto High Beam",
+    "Autohold",
+    "Autopark",
+    "ENGINE OVERHEATED",
+    "ESC",
+    "ESC OFF",
+    "Front Fog Light",
+    "Fuel",
+    "High Beam",
+    "Info",
+    "Low Beam",
+    "Rear Fog Light",
+    "Takeover",
+    "_회생 제동 고장",
+    "afs",
+    "doortrunkopen",
+    "dpfgpf",
+    "ecall",
+    "engine",
+    "engineoilpressure",
+    "epb",
+    "evsystemfail",
+    "h2leak",
+    "h2sensor",
+    "immobilizer",
+    "ledheadlight",
+    "masterwarnig",
+    "mdps",
+    "preheat",
+    "turn_left",
+    "turn_right",
+    "동승석 전면 에어백 작동 정지 장치",
+    "미등",
+    "안전 벨트 경고",
+    "에어백 경고",
+    "저전납 배터리 경고",
+    "제동 장치 고장",
+    "제동 장치 고장 - 미국",
+    "주차 브레이크 고장",
+    "주차 브레이크 체결",
+    "차량 출력 제한 경고",
+    "타이어 공기압",
+    "통합 경고등",
+    "회생 제동 고장"
+   ]
+  }
+ },
+ {
+  "name": "ic_temp",
+  "page": "Internal Only Canvas",
+  "variants": 6,
+  "size": "408x68",
+  "props": {
+   "Type": [
+    "Heat 2",
+    "Heat 3",
+    "cold"
+   ],
+   "Level": [
+    "-",
+    "1",
+    "2",
+    "3"
+   ]
+  }
+ },
+ {
+  "name": "ic_temp",
+  "page": "Internal Only Canvas",
+  "variants": 6,
+  "size": "408x68",
+  "props": {
+   "Type": [
+    "Heat 2",
+    "Heat 3",
+    "cold"
+   ],
+   "Level": [
+    "-",
+    "1",
+    "2",
+    "3"
+   ]
+  }
+ },
+ {
+  "name": "ic_video",
+  "page": "Internal Only Canvas",
+  "variants": 3,
+  "size": "204x68",
+  "props": {
+   "Type": [
+    "Security",
+    "Video"
+   ],
+   "On": [
+    "false",
+    "true"
+   ]
+  }
+ },
+ {
+  "name": "ic_wifi",
+  "page": "Internal Only Canvas",
+  "variants": 6,
+  "size": "408x68",
+  "props": {
+   "type": [
+    "disconnected",
+    "level1",
+    "level2",
+    "level3",
+    "level4",
+    "level5"
+   ]
+  }
+ },
+ {
+  "name": "ic_wind_3step",
+  "page": "Internal Only Canvas",
+  "variants": 7,
+  "size": "476x68",
+  "props": {
+   "State": [
+    "1",
+    "2",
+    "3",
+    "None"
+   ],
+   "Color": [
+    "False",
+    "True"
+   ]
+  }
+ },
+ {
+  "name": "ic_wind_4step",
+  "page": "Internal Only Canvas",
+  "variants": 2,
+  "size": "136x68",
+  "props": {
+   "Type": [
+    "Line",
+    "Solid"
+   ]
+  }
+ },
+ {
+  "name": "ic_wiper",
+  "page": "Internal Only Canvas",
+  "variants": 2,
+  "size": "136x68",
+  "props": {
+   "Type": [
+    "Washer",
+    "Wiper"
+   ]
+  }
+ },
+ {
+  "name": "imagery_cover",
+  "page": "Internal Only Canvas",
+  "variants": 8,
+  "size": "500x240",
+  "props": {
+   "Type": [
+    "Music",
+    "Radio"
+   ],
+   "Size": [
+    "Medium",
+    "Small"
+   ],
+   "Playing": [
+    "False",
+    "True"
+   ]
+  }
+ },
+ {
+  "name": "imagery_image",
+  "page": "Internal Only Canvas",
+  "variants": 2,
+  "size": "220x120",
+  "props": {
+   "Type": [
+    "Fill",
+    "Image"
+   ]
+  }
+ },
+ {
+  "name": "imagery_profile",
+  "page": "Internal Only Canvas",
+  "variants": 4,
+  "size": "420x120",
+  "props": {
+   "Fill": [
+    "false",
+    "true"
+   ],
+   "New": [
+    "false",
+    "true"
+   ]
+  }
+ },
+ {
+  "name": "imagery_profile",
+  "page": "Internal Only Canvas",
+  "variants": 60,
+  "size": "620x1071",
+  "props": {
+   "Fill": [
+    "false",
+    "true"
+   ],
+   "Badge": [
+    "icon",
+    "new",
+    "none"
+   ],
+   "State": [
+    "Enabled",
+    "disabled",
+    "focused",
+    "focused pressed",
+    "normal",
+    "pressed",
+    "selected",
+    "selected disabled",
+    "selected focused",
+    "selected focused pressed",
+    "selected pressed"
+   ]
+  }
+ },
+ {
+  "name": "img_app_market",
+  "page": "Internal Only Canvas",
+  "variants": 16,
+  "size": "740x728",
+  "props": {
+   "Name": [
+    "Delivery",
+    "Dummy",
+    "Eats",
+    "Flo",
+    "Kakao",
+    "Mycle",
+    "Naver",
+    "Netflex",
+    "Reminder",
+    "Spotify",
+    "Starbucks",
+    "Tmap",
+    "Vibe",
+    "YT_Music",
+    "Youtube",
+    "charge"
+   ]
+  }
+ },
+ {
+  "name": "img_app_market",
+  "page": "Internal Only Canvas",
+  "variants": 17,
+  "size": "740x896",
+  "props": {
+   "Name": [
+    "Delivery",
+    "Eats",
+    "Kakao",
+    "Mycle",
+    "Naver",
+    "Netflex",
+    "Reminder",
+    "Spotify",
+    "Starbucks",
+    "Tmap",
+    "Vibe",
+    "YT_Music",
+    "Youtube",
+    "charge",
+    "high_performance",
+    "ms_team",
+    "sxm"
+   ]
+  }
+ },
+ {
+  "name": "img_apps",
+  "page": "Internal Only Canvas",
+  "variants": 16,
+  "size": "740x728",
+  "props": {
+   "Name": [
+    "Android_Auto",
+    "Bluetooth",
+    "Call",
+    "Carplay",
+    "Gleo AI",
+    "Message",
+    "Mirroring",
+    "Music",
+    "Navigation",
+    "Radio",
+    "app market",
+    "blackbox",
+    "camera",
+    "driving",
+    "energy",
+    "vehicle"
+   ]
+  }
+ },
+ {
+  "name": "img_apps",
+  "page": "Internal Only Canvas",
+  "variants": 124,
+  "size": "740x6997",
+  "props": {
+   "Name": [
+    "3d_showroom",
+    "Android Auto",
+    "App Market",
+    "Bluetooth",
+    "Built-in Cam",
+    "CCS Genesis",
+    "CCS Hyundai",
+    "CCS Kia",
+    "Calendar",
+    "Call",
+    "Camera",
+    "Carplay",
+    "Charging",
+    "DMB",
+    "Driving",
+    "Dynamic Control",
+    "Entertainment",
+    "Factory Mode",
+    "Genesis Music",
+    "Gleo AI",
+    "Global Search",
+    "Google Cast",
+    "HD Radio Data",
+    "Make My Genesis",
+    "Manual",
+    "Media Center",
+    "Message",
+    "Mirroring",
+    "Music",
+    "Navigation",
+    "Non-Navi UX",
+    "One App Genesis",
+    "One App Hyundai",
+    "One App Kia",
+    "Order Pay",
+    "Qibla",
+    "Radio",
+    "Routines",
+    "Trailer",
+    "USB Music",
+    "Vehicle",
+    "Vehicle Management",
+    "Voice Feed",
+    "Weather",
+    "e-Call",
+    "hi-pass"
+   ],
+   "Theme": [
+    "Genesis",
+    "Hyundai",
+    "Kia"
+   ]
+  }
+ },
+ {
+  "name": "ivi_app_bar",
+  "page": "Internal Only Canvas",
+  "variants": 3,
+  "size": "360x300",
+  "props": {
+   "State": [
+    "Disabled",
+    "Enabled",
+    "Pressed"
+   ]
+  }
+ },
+ {
+  "name": "ivi_basic_button",
+  "page": "Internal Only Canvas",
+  "variants": 18,
+  "size": "1680x320",
+  "props": {
+   "Type": [
+    "Primary",
+    "Secondary"
+   ],
+   "Size": [
+    "Large",
+    "Medium",
+    "Small"
+   ],
+   "State": [
+    "Disabled",
+    "Enabled",
+    "Pressed"
+   ]
+  }
+ },
+ {
+  "name": "ivi_basic_button",
+  "page": "Internal Only Canvas",
+  "variants": 18,
+  "size": "1680x320",
+  "props": {
+   "Type": [
+    "Primary",
+    "Secondary"
+   ],
+   "Size": [
+    "Large",
+    "Medium",
+    "Small"
+   ],
+   "State": [
+    "Disabled",
+    "Enabled",
+    "Pressed"
+   ]
+  }
+ },
+ {
+  "name": "ivi_contact_button",
+  "page": "Internal Only Canvas",
+  "variants": 32,
+  "size": "1680x360",
+  "props": {
+   "Type": [
+    "Accept",
+    "Decline",
+    "End & Accept",
+    "Hold & Accept",
+    "Keypad",
+    "Merge",
+    "Message",
+    "Message Play",
+    "Mute",
+    "On Phone",
+    "Swap"
+   ],
+   "State": [
+    "Disabled",
+    "Enabled",
+    "Pressed",
+    "Selected"
+   ]
+  }
+ },
+ {
+  "name": "ivi_dv",
+  "page": "Internal Only Canvas",
+  "variants": 4,
+  "size": "4160x1480",
+  "props": {
+   "state": [
+    "driving",
+    "parked",
+    "parking",
+    "system check"
+   ]
+  }
+ },
+ {
+  "name": "ivi_dv/3d/auto_parking/space",
+  "page": "Internal Only Canvas",
+  "variants": 2,
+  "size": "320x284",
+  "props": {
+   "selected": [
+    "off",
+    "on"
+   ]
+  }
+ },
+ {
+  "name": "ivi_dv/3dview",
+  "page": "Internal Only Canvas",
+  "variants": 4,
+  "size": "1980x2872",
+  "props": {
+   "view type": [
+    "bird",
+    "top"
+   ],
+   "utility": [
+    "no",
+    "yes"
+   ]
+  }
+ },
+ {
+  "name": "ivi_dv/3dview/control",
+  "page": "Internal Only Canvas",
+  "variants": 2,
+  "size": "1980x800",
+  "props": {
+   "direction": [
+    "front",
+    "rear"
+   ]
+  }
+ },
+ {
+  "name": "ivi_dv/3dview/target",
+  "page": "Internal Only Canvas",
+  "variants": 2,
+  "size": "1980x1480",
+  "props": {
+   "utility": [
+    "off",
+    "on"
+   ]
+  }
+ },
+ {
+  "name": "ivi_dv/bottom/driving_mode",
+  "page": "Internal Only Canvas",
+  "variants": 6,
+  "size": "264x404",
+  "props": {
+   "color": [
+    "blue",
+    "gray",
+    "green",
+    "navy",
+    "orange",
+    "red"
+   ]
+  }
+ },
+ {
+  "name": "ivi_dv/bottom/ipedal",
+  "page": "Internal Only Canvas",
+  "variants": 2,
+  "size": "194x148",
+  "props": {
+   "Property 1": [
+    "off",
+    "on"
+   ]
+  }
+ },
+ {
+  "name": "ivi_dv/bottom/regen_braking",
+  "page": "Internal Only Canvas",
+  "variants": 8,
+  "size": "468x148",
+  "props": {
+   "type": [
+    "auto",
+    "auto2",
+    "level 0",
+    "level 1",
+    "level 2",
+    "level 3",
+    "max",
+    "stop"
+   ]
+  }
+ },
+ {
+  "name": "ivi_dv/left",
+  "page": "Internal Only Canvas",
+  "variants": 6,
+  "size": "1336x848",
+  "props": {
+   "max(gasoline)": [
+    "False",
+    "True"
+   ],
+   "state": [
+    "autoparking",
+    "driving",
+    "parked",
+    "system check"
+   ]
+  }
+ },
+ {
+  "name": "ivi_dv/left",
+  "page": "Internal Only Canvas",
+  "variants": 7,
+  "size": "1596x852",
+  "props": {
+   "max(gasoline)": [
+    "False",
+    "True"
+   ],
+   "state": [
+    "autoparking",
+    "driving",
+    "parked",
+    "system check"
+   ]
+  }
+ },
+ {
+  "name": "ivi_dv/left/ad_indicator",
+  "page": "Internal Only Canvas",
+  "variants": 4,
+  "size": "506x140",
+  "props": {
+   "Property 1": [
+    "activated",
+    "autopark",
+    "ready",
+    "ready with speed limit info"
+   ]
+  }
+ },
+ {
+  "name": "ivi_dv/left/ad_indicator",
+  "page": "Internal Only Canvas",
+  "variants": 4,
+  "size": "506x140",
+  "props": {
+   "Property 1": [
+    "activated",
+    "autopark",
+    "ready",
+    "ready with speed limit info"
+   ]
+  }
+ },
+ {
+  "name": "ivi_dv/left/doorlock_switch",
+  "page": "Internal Only Canvas",
+  "variants": 2,
+  "size": "344x160",
+  "props": {
+   "lock": [
+    "off",
+    "on"
+   ],
+   "Property 2": [
+    "doorlock_switch"
+   ]
+  }
+ },
+ {
+  "name": "ivi_dv/left/doorlock_switch",
+  "page": "Internal Only Canvas",
+  "variants": 2,
+  "size": "344x160",
+  "props": {
+   "lock": [
+    "off",
+    "on"
+   ],
+   "Property 2": [
+    "doorlock_switch"
+   ]
+  }
+ },
+ {
+  "name": "ivi_dv/left/sign",
+  "page": "Internal Only Canvas",
+  "variants": 2,
+  "size": "260x182",
+  "props": {
+   "type": [
+    "sign1",
+    "sign2"
+   ]
+  }
+ },
+ {
+  "name": "ivi_dv/left/sign",
+  "page": "Internal Only Canvas",
+  "variants": 2,
+  "size": "260x182",
+  "props": {
+   "type": [
+    "sign1",
+    "sign2"
+   ]
+  }
+ },
+ {
+  "name": "ivi_dv/left/sign/1",
+  "page": "Internal Only Canvas",
+  "variants": 33,
+  "size": "2060x232",
+  "props": {
+   "type": [
+    "가변형",
+    "갓길단속",
+    "구간단속",
+    "꼬리물기",
+    "끼어들기",
+    "램프미터링카메라",
+    "버스전용차로위반단속",
+    "신호위반",
+    "신호위반과속단속",
+    "어린이보호구역",
+    "어린이보호구역신호위반과속",
+    "이동식과속단속",
+    "제한속도",
+    "주정차위반",
+    "차로변경",
+    "표지판고장",
+    "후면과속"
+   ],
+   "\bsize": [
+    "current",
+    "next"
+   ]
+  }
+ },
+ {
+  "name": "ivi_dv/left/sign/1",
+  "page": "Internal Only Canvas",
+  "variants": 33,
+  "size": "2060x232",
+  "props": {
+   "type": [
+    "가변형",
+    "갓길단속",
+    "구간단속",
+    "꼬리물기",
+    "끼어들기",
+    "램프미터링카메라",
+    "버스전용차로위반단속",
+    "신호위반",
+    "신호위반과속단속",
+    "어린이보호구역",
+    "어린이보호구역신호위반과속",
+    "이동식과속단속",
+    "제한속도",
+    "주정차위반",
+    "차로변경",
+    "표지판고장",
+    "후면과속"
+   ],
+   "\bsize": [
+    "current",
+    "next"
+   ]
+  }
+ },
+ {
+  "name": "ivi_dv/left/sign/2",
+  "page": "Internal Only Canvas",
+  "variants": 19,
+  "size": "2300x140",
+  "props": {
+   "type": [
+    "고속도로공사",
+    "고속방지턱",
+    "교통정보수집",
+    "낙석도로",
+    "내리막 주의",
+    "도로미끄럼감지",
+    "도로파손감지",
+    "버스전용차로이용가능",
+    "버스전용차로이용불가",
+    "사고다발",
+    "안개지역",
+    "야생동물주의",
+    "어린이보호구역",
+    "역주행알림",
+    "졸음운전",
+    "좁아지는도로",
+    "주정차주의",
+    "철도건널목",
+    "추락주의"
+   ]
+  }
+ },
+ {
+  "name": "ivi_dv/left/sign/2",
+  "page": "Internal Only Canvas",
+  "variants": 19,
+  "size": "2300x140",
+  "props": {
+   "type": [
+    "고속도로공사",
+    "고속방지턱",
+    "교통정보수집",
+    "낙석도로",
+    "내리막 주의",
+    "도로미끄럼감지",
+    "도로파손감지",
+    "버스전용차로이용가능",
+    "버스전용차로이용불가",
+    "사고다발",
+    "안개지역",
+    "야생동물주의",
+    "어린이보호구역",
+    "역주행알림",
+    "졸음운전",
+    "좁아지는도로",
+    "주정차주의",
+    "철도건널목",
+    "추락주의"
+   ]
+  }
+ },
+ {
+  "name": "ivi_dv/left/sign/distance",
+  "page": "Internal Only Canvas",
+  "variants": 4,
+  "size": "532x188",
+  "props": {
+   "type": [
+    "blue",
+    "normal",
+    "red",
+    "red_average"
+   ]
+  }
+ },
+ {
+  "name": "ivi_dv/left/sign/distance",
+  "page": "Internal Only Canvas",
+  "variants": 4,
+  "size": "532x188",
+  "props": {
+   "type": [
+    "blue",
+    "normal",
+    "red",
+    "red_average"
+   ]
+  }
+ },
+ {
+  "name": "ivi_dv/middle/vehicle_control",
+  "page": "Internal Only Canvas",
+  "variants": 4,
+  "size": "571x304",
+  "props": {
+   "align": [
+    "left",
+    "right"
+   ],
+   "control": [
+    "charging port",
+    "others"
+   ]
+  }
+ },
+ {
+  "name": "ivi_dv/top/standard",
+  "page": "Internal Only Canvas",
+  "variants": 9,
+  "size": "2976x1847",
+  "props": {
+   "type": [
+    "autoparking",
+    "driving",
+    "parked"
+   ],
+   "powertrain": [
+    "ev",
+    "gasoline",
+    "phev"
+   ]
+  }
+ },
+ {
+  "name": "ivi_dv/top/wide",
+  "page": "Internal Only Canvas",
+  "variants": 9,
+  "size": "3580x1574",
+  "props": {
+   "type": [
+    "autoparking",
+    "driving",
+    "parked"
+   ],
+   "powertrain": [
+    "ev",
+    "gasoline",
+    "phev"
+   ]
+  }
+ },
+ {
+  "name": "ivi_dv/top_group1/gear",
+  "page": "Internal Only Canvas",
+  "variants": 4,
+  "size": "190x400",
+  "props": {
+   "gear": [
+    "driving",
+    "neutral",
+    "parked",
+    "rear"
+   ]
+  }
+ },
+ {
+  "name": "ivi_dv/top_group1/guage/ev",
+  "page": "Internal Only Canvas",
+  "variants": 3,
+  "size": "880x104",
+  "props": {
+   "type": [
+    "charge",
+    "default",
+    "power"
+   ]
+  }
+ },
+ {
+  "name": "ivi_dv/top_group1/guage/gasoline",
+  "page": "Internal Only Canvas",
+  "variants": 6,
+  "size": "880x188",
+  "props": {
+   "rpm": [
+    "6000rpm",
+    "8000rpm"
+   ],
+   "type": [
+    "default",
+    "normal",
+    "overload"
+   ]
+  }
+ },
+ {
+  "name": "ivi_dv/top_group1/guage/phev",
+  "page": "Internal Only Canvas",
+  "variants": 4,
+  "size": "880x132",
+  "props": {
+   "type": [
+    "charge",
+    "default",
+    "eco",
+    "power"
+   ]
+  }
+ },
+ {
+  "name": "ivi_dv/top_group1/powertrain",
+  "page": "Internal Only Canvas",
+  "variants": 2,
+  "size": "275x180",
+  "props": {
+   "Property 1": [
+    "ev",
+    "gasoline"
+   ]
+  }
+ },
+ {
+  "name": "ivi_dv/top_group1/powertrain/battery",
+  "page": "Internal Only Canvas",
+  "variants": 7,
+  "size": "636x76",
+  "props": {
+   "status": [
+    "1-10%",
+    "11-20%",
+    "21-100%",
+    "charging",
+    "cooling",
+    "low temp",
+    "preconditioned"
+   ]
+  }
+ },
+ {
+  "name": "ivi_dv/top_group1/powertrain/battery_phev",
+  "page": "Internal Only Canvas",
+  "variants": 7,
+  "size": "580x100",
+  "props": {
+   "state": [
+    "0-10%",
+    "11-20%",
+    "21-100%",
+    "charging",
+    "cooling",
+    "low temp",
+    "preconditioned"
+   ]
+  }
+ },
+ {
+  "name": "ivi_dv/top_group2/telltale",
+  "page": "Internal Only Canvas",
+  "variants": 6,
+  "size": "1924x570",
+  "props": {
+   "type": [
+    "Diesel",
+    "EV",
+    "FCEV",
+    "Gasoline",
+    "LPi",
+    "PHEV"
+   ]
+  }
+ },
+ {
+  "name": "ivi_dv/top_group3/minitbt",
+  "page": "Internal Only Canvas",
+  "variants": 2,
+  "size": "404x336",
+  "props": {
+   "Type": [
+    "Cruise",
+    "Normal"
+   ]
+  }
+ },
+ {
+  "name": "ivi_fullscreen_button",
+  "page": "Internal Only Canvas",
+  "variants": 2,
+  "size": "771x188",
+  "props": {
+   "state": [
+    "fold",
+    "full"
+   ]
+  }
+ },
+ {
+  "name": "ivi_gnb/horizontal",
+  "page": "Internal Only Canvas",
+  "variants": 3,
+  "size": "2640x640",
+  "props": {
+   "status": [
+    "edit",
+    "normal",
+    "window"
+   ]
+  }
+ },
+ {
+  "name": "ivi_gnb/vertical",
+  "page": "Internal Only Canvas",
+  "variants": 6,
+  "size": "1998x1734",
+  "props": {
+   "Formfactor": [
+    "Connect-WE_2",
+    "Connect-WF",
+    "Connect-WS_2"
+   ],
+   "State": [
+    "Enabled"
+   ],
+   "Position": [
+    "Driver",
+    "Passenger"
+   ]
+  }
+ },
+ {
+  "name": "ivi_icon_button",
+  "page": "Internal Only Canvas",
+  "variants": 18,
+  "size": "572x320",
+  "props": {
+   "Type": [
+    "Basic",
+    "Circle",
+    "Plain"
+   ],
+   "State": [
+    "Diabled",
+    "Enabled",
+    "Pressed"
+   ],
+   "Size": [
+    "Medium",
+    "Small"
+   ]
+  }
+ },
+ {
+  "name": "ivi_icon_button",
+  "page": "Internal Only Canvas",
+  "variants": 18,
+  "size": "572x320",
+  "props": {
+   "Type": [
+    "Basic",
+    "Circle",
+    "Plain"
+   ],
+   "State": [
+    "Diabled",
+    "Enabled",
+    "Pressed"
+   ],
+   "Size": [
+    "Medium",
+    "Small"
+   ]
+  }
+ },
+ {
+  "name": "ivi_notification_vehicle",
+  "page": "Internal Only Canvas",
+  "variants": 10,
+  "size": "1727x882",
+  "props": {
+   "urgency": [
+    "TOR",
+    "high",
+    "low",
+    "mid(미정)"
+   ],
+   "type": [
+    "icon+text",
+    "icon+text+image",
+    "text only",
+    "true"
+   ]
+  }
+ },
+ {
+  "name": "ivi_osd",
+  "page": "Internal Only Canvas",
+  "variants": 9,
+  "size": "1870x800",
+  "props": {
+   "type": [
+    "distance_1",
+    "distance_2",
+    "distance_3",
+    "distance_4",
+    "light",
+    "media",
+    "seat",
+    "sound",
+    "wiper"
+   ]
+  }
+ },
+ {
+  "name": "ivi_segmented_control/solid",
+  "page": "Internal Only Canvas",
+  "variants": 9,
+  "size": "1216x1020",
+  "props": {
+   "Size": [
+    "Large",
+    "Medium"
+   ],
+   "Segments": [
+    "2",
+    "3",
+    "4",
+    "5",
+    "6"
+   ]
+  }
+ },
+ {
+  "name": "ivi_statusbar",
+  "page": "Internal Only Canvas",
+  "variants": 2,
+  "size": "3052x292",
+  "props": {
+   "types": [
+    "normal",
+    "window"
+   ]
+  }
+ },
+ {
+  "name": "ivi_statusbar_wide",
+  "page": "Internal Only Canvas",
+  "variants": 2,
+  "size": "576x1520",
+  "props": {
+   "type": [
+    "wide_extended",
+    "wide_standard"
+   ]
+  }
+ },
+ {
+  "name": "ivi_statusbar_wide",
+  "page": "Internal Only Canvas",
+  "variants": 3,
+  "size": "605x1520",
+  "props": {
+   "Formfactor": [
+    "Connect-WE_2",
+    "Connect-WF",
+    "Connect-WS_2"
+   ]
+  }
+ },
+ {
+  "name": "ivi_utility_item",
+  "page": "Internal Only Canvas",
+  "variants": 4,
+  "size": "784x548",
+  "props": {
+   "type": [
+    "auto parking",
+    "driving info",
+    "media",
+    "tpms"
+   ]
+  }
+ },
+ {
+  "name": "ivi_window_bar",
+  "page": "Internal Only Canvas",
+  "variants": 3,
+  "size": "240x321",
+  "props": {
+   "State": [
+    "Disabled",
+    "Enabled",
+    "Pressed"
+   ]
+  }
+ },
+ {
+  "name": "ivi_window_bar",
+  "page": "Internal Only Canvas",
+  "variants": 3,
+  "size": "240x321",
+  "props": {
+   "State": [
+    "Disabled",
+    "Enabled",
+    "Pressed"
+   ]
+  }
+ },
+ {
+  "name": "noti_img/tpms",
+  "page": "Internal Only Canvas",
+  "variants": 4,
+  "size": "420x168",
+  "props": {
+   "color": [
+    "\bred",
+    "black",
+    "color4",
+    "white(static)"
+   ]
+  }
+ },
+ {
+  "name": "segmented_controls/goast_button",
+  "page": "Internal Only Canvas",
+  "variants": 10,
+  "size": "1120x208",
+  "props": {
+   "Size": [
+    "Large",
+    "Medium"
+   ],
+   "State": [
+    "Disabled",
+    "Enabled",
+    "Pressed"
+   ],
+   "Focused": [
+    "false",
+    "true"
+   ]
+  }
+ },
+ {
+  "name": "slider_track",
+  "page": "Internal Only Canvas",
+  "variants": 20,
+  "size": "1045x1060",
+  "props": {
+   "Size": [
+    "Medium",
+    "Small"
+   ],
+   "State": [
+    "Enabled",
+    "Pressed"
+   ],
+   "Level": [
+    "High",
+    "Low",
+    "Max",
+    "Mid",
+    "Min"
+   ]
+  }
+ },
+ {
+  "name": "statusbar_button",
+  "page": "Internal Only Canvas",
+  "variants": 7,
+  "size": "520x280",
+  "props": {
+   "status": [
+    "enabled",
+    "null",
+    "pressed",
+    "selected"
+   ],
+   "type": [
+    "icon",
+    "placeholder",
+    "profile"
+   ]
+  }
+ },
+ {
+  "name": "statusbar_button",
+  "page": "Internal Only Canvas",
+  "variants": 12,
+  "size": "721x232",
+  "props": {
+   "State": [
+    "Disabled",
+    "Enabled",
+    "Focused",
+    "Focused Pressed",
+    "Pressed",
+    "Selected"
+   ],
+   "Type": [
+    "Icon",
+    "Profile"
+   ]
+  }
+ },
+ {
+  "name": "statusbar_icon",
+  "page": "Internal Only Canvas",
+  "variants": 59,
+  "size": "1728x1412",
+  "props": {
+   "Type": [
+    "Bluetooth",
+    "Built-in Cam",
+    "Camera",
+    "Global Search",
+    "Hotspot",
+    "In Call",
+    "Location Sharing",
+    "Microphone",
+    "More",
+    "Mute",
+    "Network",
+    "Notification",
+    "Update",
+    "Wifi",
+    "Wireless Charging"
+   ],
+   "Charging State": [
+    "Dual CC",
+    "Dual CE",
+    "Dual CF",
+    "Dual CN",
+    "Dual EC",
+    "Dual EE",
+    "Dual EF",
+    "Dual EN",
+    "Dual FC",
+    "Dual FE",
+    "Dual FF",
+    "Dual FN",
+    "Dual NC",
+    "Dual NE",
+    "Dual NF",
+    "NA",
+    "Single Charging",
+    "Single Error",
+    "Single Full"
+   ],
+   "Update State": [
+    "Complete",
+    "Downloading",
+    "NA",
+    "Reserved",
+    "Stop"
+   ],
+   "Network State": [
+    "5G 0",
+    "5G 1",
+    "5G 2",
+    "5G 3",
+    "5G 4",
+    "LTE 0",
+    "LTE 1",
+    "LTE 2",
+    "LTE 3",
+    "LTE 4",
+    "NA",
+    "Offline 0",
+    "Offline 1",
+    "Offline 2",
+    "Offline 3",
+    "Offline 4"
+   ],
+   "Built-in Cam State": [
+    "Connected",
+    "Enabled",
+    "Error",
+    "NA",
+    "SD Card Error"
+   ],
+   "Wifi State": [
+    "1",
+    "2",
+    "3",
+    "4",
+    "Error",
+    "NA",
+    "None"
+   ],
+   "Bluetooth State": [
+    "NA",
+    "OFF",
+    "ON",
+    "z"
+   ],
+   "Sound State": [
+    "Mute",
+    "NA",
+    "Unmute"
+   ]
+  }
+ },
+ {
+  "name": "statusbar_indicator/wide",
+  "page": "Internal Only Canvas",
+  "variants": 10,
+  "size": "331x490",
+  "props": {
+   "Type": [
+    "Call",
+    "Call_2",
+    "Cam",
+    "Mic",
+    "MicCam"
+   ],
+   "State": [
+    "Disabled",
+    "Enabled"
+   ]
+  }
+ },
+ {
+  "name": "statusbar_privacy_indicator",
+  "page": "Internal Only Canvas",
+  "variants": 4,
+  "size": "412x124",
+  "props": {
+   "Multi": [
+    "False",
+    "True"
+   ],
+   "Wide": [
+    "False",
+    "True"
+   ]
+  }
+ },
+ {
+  "name": "thumb_profile",
+  "page": "Internal Only Canvas",
+  "variants": 2,
+  "size": "107x186",
+  "props": {
+   "theme": [
+    "dark",
+    "light"
+   ]
+  }
+ },
+ {
+  "name": "utility/handle",
+  "page": "Internal Only Canvas",
+  "variants": 4,
+  "size": "560x160",
+  "props": {
+   "type": [
+    "enabled",
+    "pressed"
+   ],
+   "shape": [
+    "arrow",
+    "bar"
+   ]
+  }
+ },
+ {
+  "name": "utility/indicator",
+  "page": "Internal Only Canvas",
+  "variants": 2,
+  "size": "141x48",
+  "props": {
+   "type": [
+    "none",
+    "normal"
+   ]
+  }
+ },
+ {
+  "name": "utility/tpms/btn",
+  "page": "Internal Only Canvas",
+  "variants": 2,
+  "size": "280x203",
+  "props": {
+   "Property 1": [
+    "normal",
+    "pressed"
+   ]
+  }
+ },
+ {
+  "name": "utility/tpms/detail",
+  "page": "Internal Only Canvas",
+  "variants": 5,
+  "size": "536x784",
+  "props": {
+   "type": [
+    "danger",
+    "error",
+    "error2",
+    "normal",
+    "warning"
+   ]
+  }
+ },
+ {
+  "name": "utility/tpms/detail_image",
+  "page": "Internal Only Canvas",
+  "variants": 5,
+  "size": "468x152",
+  "props": {
+   "type": [
+    "1 fl",
+    "2 fr",
+    "3 rl",
+    "4 rr",
+    "normal"
+   ]
+  }
+ },
+ {
+  "name": "utility/tpms/vehicle/part",
+  "page": "Internal Only Canvas",
+  "variants": 16,
+  "size": "176x663",
+  "props": {
+   "type": [
+    "accent",
+    "danger",
+    "normal",
+    "warning"
+   ],
+   "tire": [
+    "1 fl",
+    "2 fr",
+    "3 rl",
+    "4 rr"
+   ]
+  }
+ },
+ {
+  "name": "vehicle_image/bird",
+  "page": "Internal Only Canvas",
+  "variants": 8,
+  "size": "840x10630",
+  "props": {
+   "mode": [
+    "dark",
+    "light"
+   ],
+   "zoom level": [
+    "075",
+    "100",
+    "120",
+    "130"
+   ]
+  }
+ },
+ {
+  "name": "vehicle_image/quater",
+  "page": "Internal Only Canvas",
+  "variants": 32,
+  "size": "8340x11606",
+  "props": {
+   "mode": [
+    "dark",
+    "light"
+   ],
+   "front": [
+    "no",
+    "yes"
+   ],
+   "lamp": [
+    "-",
+    "drl",
+    "headlamp",
+    "none"
+   ],
+   "open": [
+    "door",
+    "frunk",
+    "none",
+    "trunk"
+   ]
+  }
+ },
+ {
+  "name": "vehicle_image/top",
+  "page": "Internal Only Canvas",
+  "variants": 8,
+  "size": "880x10630",
+  "props": {
+   "mode": [
+    "dark",
+    "light"
+   ],
+   "zoom level": [
+    "050",
+    "075",
+    "100",
+    "130"
+   ]
+  }
+ }
+]

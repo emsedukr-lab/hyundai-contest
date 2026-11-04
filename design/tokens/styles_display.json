@@ -1,0 +1,272 @@
+{
+ "text": {
+  "Body/B3 | 12/Regular400": {
+   "font": "42dot Sans OTF",
+   "weight": "Regular",
+   "size": 12.0,
+   "lineHeight": "1.5",
+   "letterSpacing": "0.0%"
+  },
+  "Body/Large/Strong": {
+   "font": "Asta Sans",
+   "weight": "Bold",
+   "size": 30.0,
+   "lineHeight": "38.0",
+   "letterSpacing": "0.0%"
+  },
+  "Title/Medium/Strong": {
+   "font": "42dot Sans OTF",
+   "weight": "Bold",
+   "size": 36.0,
+   "lineHeight": "44.0",
+   "letterSpacing": "0.0%"
+  },
+  "Headline/Small/Extra_Strong": {
+   "font": "42dot Sans OTF",
+   "weight": "ExtraBold",
+   "size": 48.0,
+   "lineHeight": "64.0",
+   "letterSpacing": "0.0%"
+  },
+  "Driving/Speed_kmh": {
+   "font": "Asta Sans",
+   "weight": "Bold",
+   "size": 112.0,
+   "lineHeight": "134.0",
+   "letterSpacing": "-3.0%"
+  },
+  "Headline/Medium/Extra_Strong": {
+   "font": "Asta Sans",
+   "weight": "ExtraBold",
+   "size": 56.0,
+   "lineHeight": "72.0",
+   "letterSpacing": "0.0%"
+  },
+  "Body/Small/Strong": {
+   "font": "Asta Sans",
+   "weight": "Bold",
+   "size": 26.0,
+   "lineHeight": "34.0",
+   "letterSpacing": "0.0%"
+  },
+  "Title/Large/Strong": {
+   "font": "Asta Sans",
+   "weight": "Bold",
+   "size": 40.0,
+   "lineHeight": "52.0",
+   "letterSpacing": "0.0%"
+  },
+  "Body/Medium/Normal": {
+   "font": "42dot Sans OTF",
+   "weight": "Regular",
+   "size": 28.0,
+   "lineHeight": "36.0",
+   "letterSpacing": "0.0%"
+  },
+  "Body/Medium/Strong": {
+   "font": "Asta Sans",
+   "weight": "Bold",
+   "size": 28.0,
+   "lineHeight": "36.0",
+   "letterSpacing": "0.0%"
+  },
+  "Body/Small/Normal": {
+   "font": "42dot Sans OTF",
+   "weight": "Regular",
+   "size": 26.0,
+   "lineHeight": "34.0",
+   "letterSpacing": "0.0%"
+  },
+  "Title/Small/Strong": {
+   "font": "Asta Sans",
+   "weight": "Bold",
+   "size": 32.0,
+   "lineHeight": "40.0",
+   "letterSpacing": "0.0%"
+  },
+  "Label/Medium": {
+   "font": "42dot Sans OTF",
+   "weight": "Regular",
+   "size": 24.0,
+   "lineHeight": "28.0",
+   "letterSpacing": "0.0%"
+  },
+  "Body/Large/Normal": {
+   "font": "42dot Sans OTF",
+   "weight": "Regular",
+   "size": 30.0,
+   "lineHeight": "38.0",
+   "letterSpacing": "0.0%"
+  },
+  "Title/Medium/Extra_Strong": {
+   "font": "42dot Sans OTF",
+   "weight": "ExtraBold",
+   "size": 36.0,
+   "lineHeight": "44.0",
+   "letterSpacing": "0.0%"
+  },
+  "Title/Small/Normal": {
+   "font": "42dot Sans OTF",
+   "weight": "Regular",
+   "size": 32.0,
+   "lineHeight": "40.0",
+   "letterSpacing": "0.0%"
+  },
+  "Headline/Large/Extra_Strong": {
+   "font": "Asta Sans",
+   "weight": "ExtraBold",
+   "size": 60.0,
+   "lineHeight": "80.0",
+   "letterSpacing": "0.0%"
+  },
+  "Driving/Speed_MPH": {
+   "font": "42dot Sans OTF",
+   "weight": "Bold",
+   "size": 36.0,
+   "lineHeight": "44.0",
+   "letterSpacing": "-3.0%"
+  },
+  "Driving/AD_speed": {
+   "font": "42dot Sans OTF",
+   "weight": "ExtraBold",
+   "size": 48.0,
+   "lineHeight": "60.0",
+   "letterSpacing": "-3.0%"
+  },
+  "Driving/Traffic_Sign": {
+   "font": "42dot Sans OTF",
+   "weight": "ExtraBold",
+   "size": 40.0,
+   "lineHeight": "48.0",
+   "letterSpacing": "-3.0%"
+  },
+  "Driving/Traffic_Sign_Sub": {
+   "font": "42dot Sans OTF",
+   "weight": "Bold",
+   "size": 18.0,
+   "lineHeight": "24.0",
+   "letterSpacing": "-4.0%"
+  },
+  "Headline/Medium/Strong": {
+   "font": "Asta Sans",
+   "weight": "Bold",
+   "size": 56.0,
+   "lineHeight": "72.0",
+   "letterSpacing": "0.0%"
+  },
+  "Headline/Small/Strong": {
+   "font": "Asta Sans",
+   "weight": "Bold",
+   "size": 48.0,
+   "lineHeight": "64.0",
+   "letterSpacing": "0.0%"
+  },
+  "Headline/Small/dp_Strong": {
+   "font": "HyundaiSansUI_JP_KR_Latin",
+   "weight": "SemiBold",
+   "size": 46.0,
+   "lineHeight": "60.0",
+   "letterSpacing": "0.0%"
+  },
+  "Title/Large/dp_Strong": {
+   "font": "HyundaiSansUI_JP_KR_Latin",
+   "weight": "SemiBold",
+   "size": 38.0,
+   "lineHeight": "48.0",
+   "letterSpacing": "0.0%"
+  },
+  "Body/Small/dp_Strong": {
+   "font": "HyundaiSansUI_JP_KR_Latin",
+   "weight": "SemiBold",
+   "size": 24.0,
+   "lineHeight": "32.0",
+   "letterSpacing": "0.0%"
+  },
+  "Headline/Small/dp_Extra_Strong": {
+   "font": "HyundaiSansUI_JP_KR_Latin",
+   "weight": "Bold",
+   "size": 46.0,
+   "lineHeight": "60.0",
+   "letterSpacing": "0.0%"
+  },
+  "Headline/Small/dp_Normal (HMG)": {
+   "font": "HyundaiSansUI_JP_KR_Latin",
+   "weight": "Regular",
+   "size": 46.0,
+   "lineHeight": "60.0",
+   "letterSpacing": "0.0%"
+  },
+  "Title/Large/dp_Extra_Strong": {
+   "font": "HyundaiSansUI_JP_KR_Latin",
+   "weight": "Bold",
+   "size": 38.0,
+   "lineHeight": "48.0",
+   "letterSpacing": "0.0%"
+  },
+  "Title/Large/dp_Normal": {
+   "font": "HyundaiSansUI_JP_KR_Latin",
+   "weight": "Regular",
+   "size": 38.0,
+   "lineHeight": "48.0",
+   "letterSpacing": "0.0%"
+  }
+ },
+ "effect": {
+  "Shadow/Light/Level1": [
+   {
+    "type": "DROP_SHADOW",
+    "x": 0.0,
+    "y": 6.0,
+    "blur": 24.0,
+    "spread": 0.0,
+    "color": "#14000000"
+   }
+  ],
+  "Shadow/Strong": [
+   {
+    "type": "DROP_SHADOW",
+    "x": 0.0,
+    "y": 12.0,
+    "blur": 48.0,
+    "spread": 0.0,
+    "color": "#33000000"
+   }
+  ],
+  "Shadow/Light/Level2": [
+   {
+    "type": "DROP_SHADOW",
+    "x": 0.0,
+    "y": 8.0,
+    "blur": 32.0,
+    "spread": 0.0,
+    "color": "#29000000"
+   },
+   {
+    "type": "DROP_SHADOW",
+    "x": 0.0,
+    "y": 2.0,
+    "blur": 2.0,
+    "spread": 0.0,
+    "color": "#14000000"
+   }
+  ],
+  "App icon Lighting_Dark": [
+   {
+    "type": "INNER_SHADOW",
+    "x": 0.0,
+    "y": -1.0,
+    "blur": 1.0,
+    "spread": 0.0,
+    "color": "#1AFFFFFF"
+   },
+   {
+    "type": "INNER_SHADOW",
+    "x": 0.0,
+    "y": 1.0,
+    "blur": 1.0,
+    "spread": 0.0,
+    "color": "#40FFFFFF"
+   }
+  ]
+ }
+}

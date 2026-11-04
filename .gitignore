@@ -3,3 +3,7 @@ node_modules/
 .env
 .env.*
 docs/research/raw/
+design/extracted/
+design/images/
+design/tools/.venv/
+__pycache__/
