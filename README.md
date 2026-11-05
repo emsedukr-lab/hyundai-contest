@@ -30,6 +30,8 @@ npm run dev -w @tteonaljido/worker       # http://localhost:8787 (API + 웹)
 
 ### 2) 차량 앱 (Pleos Connect Emulator)
 
+처음 clone했다면 Android SDK 위치를 알려 줍니다. Android Studio로 `car/`를 열면 `car/local.properties`가 자동으로 생기고, 터미널에서는 `export ANDROID_HOME=~/Library/Android/sdk`(macOS 기본 위치)로 지정합니다. 서명 키(`.secrets/`)가 없으면 release APK는 서명 없이 만들어집니다. 제출용 서명본은 `apk/`에 있습니다.
+
 ```sh
 cd car
 ./gradlew :app:assembleDevDebug          # dev: 서버 http://10.0.2.2:8787
