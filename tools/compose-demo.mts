@@ -3,10 +3,10 @@
  * car screen and phone side by side on a 1920×1080 frame, Korean captions, waiting stretches cut out.
  *   npx tsx tools/compose-demo.mts
  * This ffmpeg has no drawtext/libass, so the frame and captions are drawn as transparent PNGs in Chrome and overlaid.
- * Only waits are removed (page loads, the second QR's network retry); every kept second is real, unedited screen video.
+ * Only waits are removed (page loads, network round trips); every kept second is real, unedited screen video.
  */
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
 
@@ -16,19 +16,30 @@ const outDir = `${root}media/demo/`;
 mkdirSync(`${work}overlay`, { recursive: true });
 mkdirSync(outDir, { recursive: true });
 
-interface Timeline { phoneStart: number; segments: Array<{ file: string; at: number }>; captions: Array<{ at: number; text: string }> }
+interface Timeline { phoneStart: number; total: number; segments: Array<{ file: string; at: number }>; captions: Array<{ at: number; text: string }>; waits?: Array<{ from: number; to: number; what: string }> }
 const tl: Timeline = JSON.parse(readFileSync(`${work}timeline.json`, 'utf8'));
 const carAt = tl.segments[0].at;
+// phone.mp4: 780×1688 screenshots (current recorder). phone.webm: the first take's Playwright video (390×760 page area).
+const phoneFile = existsSync(`${work}phone.mp4`) ? `${work}phone.mp4` : `${work}phone.webm`;
+const phonePrep = phoneFile.endsWith('.mp4') ? 'null' : 'crop=390:760:0:0,scale=390:844:flags=lanczos';
 
-/** Kept stretches in recording time (seconds since the recorder started). Chosen by looking at frames of this take. */
-const KEEP: Array<[number, number]> = JSON.parse(process.env.KEEP ?? 'null') ?? [
-  [9.5, 21], // trip list → QR appears (①)
-  [27.5, 31], // ② starts; the phone page load that followed took ~22 s
-  [53.5, 100], // connect request → code → choose trip → send → car review → import (③–⑦), ⑧ starts
-  [104, 106], // second QR (skips a 3 s "retrying connection" state)
-  [110, 114.5], // second connection code on both screens
-  [126, 174.5], // same version → trip detail → navigation guidance → closing caption (⑧–⑩)
-];
+/**
+ * Kept stretches in recording time (seconds since the recorder started): from just before the first caption to the end,
+ * minus the middle of every logged wait longer than 2 s (page loads, network round trips), which keeps 0.7 s at each end.
+ * KEEP='[[a,b],…]' overrides this (the first take, which logged no waits, used hand-picked ranges).
+ */
+const autoKeep = (): Array<[number, number]> => {
+  const start = Math.max(tl.segments[0].at, tl.phoneStart) + 0.5;
+  const end = Math.min(tl.total - 1.5, tl.captions.at(-1)!.at + 9);
+  let parts: Array<[number, number]> = [[start, end]];
+  for (const w of tl.waits ?? []) {
+    if (w.to - w.from <= 2) continue;
+    const [c0, c1] = [w.from + 0.7, w.to - 0.7];
+    parts = parts.flatMap(([x, y]) => (c1 <= x || c0 >= y ? [[x, y]] : ([[x, c0], [c1, y]] as Array<[number, number]>).filter(([p, q]) => q - p > 0.2)));
+  }
+  return parts;
+};
+const KEEP: Array<[number, number]> = JSON.parse(process.env.KEEP ?? 'null') ?? autoKeep();
 const total = KEEP.reduce((s, [a, b]) => s + (b - a), 0);
 /** Maps a recording time to output time; times inside a cut snap to the next kept stretch. */
 const toOut = (g: number) => {
@@ -43,8 +54,8 @@ const toOut = (g: number) => {
 
 // ---- overlays (frame + one PNG per caption) ----
 const W = 1920, H = 1080;
-const CAR = { x: 40, y: 124, w: 1370, h: 771 };
-const PHONE = { x: 1440, y: 100, w: 440, h: 858 }; // the phone clip's page area is 390×760 (top-left of the frame)
+const CAR = { x: 40, y: 124, w: 1410, h: 793 };
+const PHONE = { x: 1480, y: 100, w: 400, h: 866 }; // phone.mp4 is the whole 780×1688 page
 const font = `${root}design/fonts/asta_sans.ttf`;
 const css = `
   @font-face { font-family: Asta; src: url('file://${font}'); }
@@ -99,13 +110,13 @@ const pieces = (label: string, offset: number) =>
   KEEP.map(([a, b], i) => `[${label}s${i}]trim=start=${f(a - offset)}:end=${f(b - offset)},setpts=PTS-STARTPTS[${label}${i}]`).join(';');
 const concat = (label: string) => `${KEEP.map((_, i) => `[${label}${i}]`).join('')}concat=n=${KEEP.length}:v=1:a=0`;
 
-const inputs = ['-loop', '1', '-framerate', '30', '-i', `${work}overlay/frame.png`, '-i', `${work}${tl.segments[0].file}`, '-i', `${work}phone.webm`];
+const inputs = ['-loop', '1', '-framerate', '30', '-i', `${work}overlay/frame.png`, '-i', `${work}${tl.segments[0].file}`, '-i', phoneFile];
 caps.forEach((c) => inputs.push('-loop', '1', '-framerate', '30', '-i', c.file));
 const graph = [
   `[1:v]fps=30,split=${KEEP.length}${KEEP.map((_, i) => `[cars${i}]`).join('')}`,
   pieces('car', carAt),
   `${concat('car')},scale=${CAR.w}:${CAR.h}:flags=lanczos[carv]`,
-  `[2:v]fps=30,crop=390:760:0:0,tpad=stop_mode=clone:stop_duration=8,split=${KEEP.length}${KEEP.map((_, i) => `[phs${i}]`).join('')}`,
+  `[2:v]fps=30,${phonePrep},tpad=stop_mode=clone:stop_duration=8,split=${KEEP.length}${KEEP.map((_, i) => `[phs${i}]`).join('')}`,
   pieces('ph', tl.phoneStart),
   `${concat('ph')},scale=${PHONE.w}:${PHONE.h}:flags=lanczos[phv]`,
   `[0:v][carv]overlay=${CAR.x}:${CAR.y}:shortest=0[b1]`,

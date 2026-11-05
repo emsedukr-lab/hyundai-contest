@@ -1,13 +1,13 @@
 /**
- * Records the ~2-minute demo: the release car app on the Pleos emulator (adb screenrecord) side by side with
- * a phone browser (Playwright), against the deployed relay. Also samples the car app's memory at each step.
- * Output: raw clips + timeline.json (captions, segment offsets, memory samples) in .work/demo/;
- * tools/compose-demo.mts turns them into media/demo/떠날지도_시연.mp4.
+ * Records the demo take: the release car app on the Pleos emulator (adb screenrecord, full 2560×1440) and a phone
+ * browser (Chrome screencast at 2× device pixels), against the deployed relay. Also samples the car app's memory.
+ * Output in .work/demo/: car_N.mp4, phone.mp4, timeline.json (captions, waits, offsets, memory samples).
+ * tools/compose-demo.mts (landscape) and tools/compose-shorts.mts (vertical) turn it into media/demo/*.mp4.
  *   npx tsx tools/record-demo.mts [emulator-serial]
  * The QR is read from a screenshot of the car screen, exactly as a phone camera would.
  */
 import { execFileSync, spawn } from 'node:child_process';
-import { mkdirSync, readdirSync, renameSync, writeFileSync } from 'node:fs';
+import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import jsQR from 'jsqr';
@@ -80,6 +80,16 @@ const caption = (text: string) => {
 };
 
 const log = (m: string) => console.log(`[${((Date.now() - t0) / 1000).toFixed(1)}] ${m}`);
+/** Marks a stretch spent waiting on the network or a page load; the composers trim long waits automatically. */
+const waits: Array<{ from: number; to: number; what: string }> = [];
+async function waiting<T>(what: string, fn: () => Promise<T>): Promise<T> {
+  const from = (Date.now() - t0) / 1000;
+  try {
+    return await fn();
+  } finally {
+    waits.push({ from, to: (Date.now() - t0) / 1000, what });
+  }
+}
 
 // Car: wipe our own app's data (no trips from earlier runs) and start on the empty trip list.
 sh(`am force-stop ${PKG}`);
@@ -94,7 +104,7 @@ const segments: Array<{ file: string; at: number }> = [];
 let stopping = false;
 const record = (): Promise<void> => {
   const file = `/sdcard/demo_${segments.length}.mp4`;
-  const p = spawn(ADB, ['-s', SERIAL, 'shell', 'screenrecord', '--size', '1280x720', '--bit-rate', '8000000', '--time-limit', '170', file]);
+  const p = spawn(ADB, ['-s', SERIAL, 'shell', 'screenrecord', '--size', '2560x1440', '--bit-rate', '16000000', '--time-limit', '170', file]);
   segments.push({ file, at: (Date.now() - t0) / 1000 });
   return new Promise((resolve) => p.once('exit', () => (stopping ? resolve() : record().then(resolve))));
 };
@@ -106,11 +116,30 @@ const ctx = await browser.newContext({
   isMobile: true,
   hasTouch: true,
   locale: 'ko-KR',
-  recordVideo: { dir: work, size: { width: 780, height: 1688 } },
 });
-const phoneStart = (Date.now() - t0) / 1000;
 const page = await ctx.newPage();
-await page.goto(HOME);
+// Phone video: a screenshot loop at ~12 fps in device pixels (780×1688). Playwright's recordVideo and Chrome's
+// screencast both ignore the 2× mobile emulation here and come out soft (~390 px wide).
+rmSync(`${work}phone_frames`, { recursive: true, force: true });
+mkdirSync(`${work}phone_frames`, { recursive: true });
+const phoneFrames: Array<{ file: string; at: number }> = [];
+let shooting = true;
+const shooter = (async () => {
+  while (shooting) {
+    const at = (Date.now() - t0) / 1000;
+    try {
+      const buf = await page.screenshot({ type: 'jpeg', quality: 90, timeout: 2000 });
+      const file = `phone_frames/${String(phoneFrames.length).padStart(5, '0')}.jpg`;
+      writeFileSync(`${work}${file}`, buf);
+      phoneFrames.push({ file, at });
+    } catch {
+      // mid-navigation; take the next one
+    }
+    await sleep(70);
+  }
+})();
+const open = (url: string) => waiting('phone page load', () => page.goto(url, { waitUntil: 'domcontentloaded' }));
+await open(HOME);
 await sleep(1500);
 
 let failure: string | null = null;
@@ -121,28 +150,44 @@ const readQr = () => {
   return url;
 };
 try {
+  caption('휴대폰에서 짠 3박 4일 강릉 여행 · 예약 시각 2개, 숙소 3박, 일차별 동선');
+  await click(page, '샘플 여행 추가');
+  await page.getByText('강릉 3박 4일', { exact: true }).first().click();
+  const day2 = page.locator('button[data-tab-value="2"]'); // Astryx tabs are buttons, not role=tab
+  await day2.waitFor();
+  await sleep(1200);
+  await day2.scrollIntoViewIfNeeded();
+  await sleep(1500);
+  await day2.click();
+  await sleep(3000);
+  await click(page, '뒤로');
+  await page.getByText('내 여행').waitFor();
+  await sleep(800);
+
   caption('① 주차 중 차량에서 「모바일 여행 불러오기」 · QR은 5분 동안 한 번만 쓸 수 있어요');
-  await tapUntil(byTag('import'), byText('남은 시간'), 'QR');
+  await waiting('QR session', () => tapUntil(byTag('import'), byText('남은 시간'), 'QR'));
   await sleep(3000);
   sample('QR 표시');
   const url = readQr();
 
   caption('② 휴대폰 카메라로 스캔 · 링크를 여는 것만으로는 아무것도 보내지 않아요');
-  await page.goto(url);
-  await page.getByText('차량 연결 요청').waitFor();
+  await open(url);
+  await waiting('phone page load', () => page.getByText('차량 연결 요청').waitFor());
   await sleep(3500);
   await click(page, '연결하고 확인 코드 보기');
   caption('③ 두 화면의 6자리 확인 코드가 같은지 비교 · 종단간 암호화 키에서 만든 코드예요');
-  await page.getByText('확인 코드를 비교해 주세요').waitFor();
-  await waitFor(byText('휴대폰이 연결됐어요'), 'car code');
+  await waiting('claim', async () => {
+    await page.getByText('확인 코드를 비교해 주세요').waitFor();
+    await waitFor(byText('휴대폰이 연결됐어요'), 'car code');
+  });
   await sleep(4500);
   sample('코드 확인');
   await click(page, '같아요');
   caption('④ 보낼 여행을 하나 고르고, 보낼 항목을 확인 · 집 주소는 기본으로 보내지 않아요');
   await page.getByText('차량으로 보낼 여행').waitFor();
   await sleep(1500);
-  await click(page, '샘플 여행 추가');
-  await sleep(2000);
+  await page.getByText('강릉 3박 4일', { exact: true }).first().click();
+  await sleep(1500);
   await click(page, '다음');
   await page.getByText('보낼 정보 확인').waitFor();
   await page.mouse.wheel(0, 500);
@@ -152,7 +197,7 @@ try {
   caption('⑤ 휴대폰에서 전송 승인 · 서버도 내용을 볼 수 없게 암호화해요 · 아직 차량에 적용 전');
   await click(page, '차량으로 보내기');
   await page.getByText('아직 적용 전').first().waitFor();
-  await waitFor(byText('받은 여행 확인'), 'review');
+  await waiting('car receive', () => waitFor(byText('받은 여행 확인'), 'review'));
   caption('⑥ 차량이 다시 검사 · 고정 일정·이동시간·숙소·영업정보를 보여 주고 계획은 바꾸지 않아요');
   await sleep(6500);
   sample('요약·재검증');
@@ -164,21 +209,23 @@ try {
 
   caption('⑧ 같은 여행을 다시 보내면? 중복 없이 「바뀐 것 없음」 · 새 버전이면 업데이트할지 물어봐요');
   tap(await waitFor(byTag('닫기'), 'close'));
-  await page.goto(HOME); // a camera opens a fresh page; /c#old → /c#new alone would only change the fragment
-  await tapUntil(byTag('import'), byText('남은 시간'), 'QR 2');
+  await open(HOME); // a camera opens a fresh page; /c#old → /c#new alone would only change the fragment
+  await waiting('QR session', () => tapUntil(byTag('import'), byText('남은 시간'), 'QR 2'));
   await sleep(1500);
-  await page.goto(readQr());
+  await open(readQr());
   await click(page, '연결하고 확인 코드 보기');
-  await page.getByText('확인 코드를 비교해 주세요').waitFor();
-  await waitFor(byText('휴대폰이 연결됐어요'), 'car code 2');
+  await waiting('claim', async () => {
+    await page.getByText('확인 코드를 비교해 주세요').waitFor();
+    await waitFor(byText('휴대폰이 연결됐어요'), 'car code 2');
+  });
   await click(page, '같아요');
   await page.getByText('차량으로 보낼 여행').waitFor();
-  await page.getByText('강릉 3박 4일').first().click();
+  await page.getByText('강릉 3박 4일', { exact: true }).first().click();
   await click(page, '다음');
   await page.getByText('보낼 정보 확인').waitFor();
   await click(page, '다음');
   await click(page, '차량으로 보내기');
-  await waitFor(byText('이미 불러온 여행과 같아요'), 'same version');
+  await waiting('car receive', () => waitFor(byText('이미 불러온 여행과 같아요'), 'same version'));
   await sleep(3500);
   tap(await waitFor(byTag('choice_ACKNOWLEDGE_SAME'), 'ack'));
   await page.getByText('차량에 이미 같은 버전이 있어요').waitFor();
@@ -202,7 +249,7 @@ try {
   await sleep(7000); // the navigation may come to the front with the new route
   sh(`am start --user 10 -n ${PKG}/.MainActivity`);
   caption('⑩ 요청만 하고 끝내지 않고, 내비가 확정한 목적지를 확인한 뒤 「안내 시작」을 알려요');
-  await waitFor(byText('안내를 시작했어요'), 'guidance confirmed', 45_000);
+  await waiting('navigation confirm', () => waitFor(byText('안내를 시작했어요'), 'guidance confirmed', 45_000));
   await sleep(4500);
   caption('떠날지도 · 한 번만 가져오고 계정 연결은 없어요 · 주행 중에는 QR·승인 화면을 숨겨요');
   await sleep(5000);
@@ -211,6 +258,8 @@ try {
   console.error('FAILED:', failure);
   writeFileSync(`${work}failure.png`, adb('exec-out', 'screencap', '-p'));
 } finally {
+  shooting = false;
+  await shooter;
   await ctx.close();
   await browser.close();
   stopping = true;
@@ -220,8 +269,11 @@ try {
 }
 const total = (Date.now() - t0) / 1000;
 segments.forEach((s, i) => adb('pull', s.file, `${work}car_${i}.mp4`));
-const phoneClip = readdirSync(work).find((f) => f.endsWith('.webm'))!;
-renameSync(`${work}${phoneClip}`, `${work}phone.webm`);
-writeFileSync(`${work}timeline.json`, JSON.stringify({ failure, total, phoneStart, segments: segments.map((s, i) => ({ file: `car_${i}.mp4`, at: s.at })), captions, perf }, null, 2));
+// Screencast frames arrive only when the page repaints; hold each one until the next to get a constant-rate clip.
+const list = phoneFrames.map((f, i) => `file '${f.file}'\nduration ${((phoneFrames[i + 1]?.at ?? total) - f.at).toFixed(3)}`);
+writeFileSync(`${work}phone_frames.txt`, `${list.join('\n')}\nfile '${phoneFrames.at(-1)!.file}'\n`);
+execFileSync('ffmpeg', ['-v', 'error', '-y', '-f', 'concat', '-safe', '0', '-i', `${work}phone_frames.txt`, '-vf', 'scale=780:1688:force_original_aspect_ratio=decrease,pad=780:1688:(ow-iw)/2:0:white,fps=30', '-c:v', 'libx264', '-crf', '16', '-pix_fmt', 'yuv420p', `${work}phone.mp4`]);
+const phoneStart = phoneFrames[0].at;
+writeFileSync(`${work}timeline.json`, JSON.stringify({ failure, total, phoneStart, segments: segments.map((s, i) => ({ file: `car_${i}.mp4`, at: s.at })), captions, waits, perf }, null, 2));
 console.log(JSON.stringify({ failure, total, perf }, null, 1));
 if (failure) process.exitCode = 1;
