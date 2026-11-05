@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { parseTransfer, sampleTrip, type Trip } from '@tteonaljido/shared';
-import { addPlace, assign, move, newDoc, planWarnings, removePlace, savePlan, setLeg, setPeriod, toTransfer, unassign } from './trips';
+import { addPlace, assign, move, newDoc, planWarnings, relinkLegs, rememberLegs, removePlace, savePlan, setDepart, setEndBy, setLeg, setLodging, setPeriod, toTransfer, unassign, type LegBook } from './trips';
 
 // The warning assertions below check the Korean copy; jsdom reports navigator.language as en-US.
 vi.hoisted(() => Object.defineProperty(navigator, 'language', { value: 'ko-KR', configurable: true }));
@@ -94,5 +94,73 @@ describe('places added by name only', () => {
     const t = addPlace(sampleTrip(), { name: '묵호 논골담길', address: '', latE7: null, lonE7: null, category: 'OTHER', source: { provider: 'MANUAL', externalId: null }, naviPoi: null, hours: { status: 'UNKNOWN' } });
     const doc = await newDoc(t);
     expect(await parseTransfer(JSON.stringify(await toTransfer(doc, false)))).toMatchObject({ ok: true });
+  });
+});
+
+describe('travel times follow their pair of places', () => {
+  const relink = (prev: Trip, next: Trip, book: LegBook) => {
+    const linked = relinkLegs(prev, next, book);
+    rememberLegs(linked, book);
+    return linked;
+  };
+
+  it('moving stops back restores the typed times; the reverse direction is not reused', () => {
+    const book: LegBook = new Map();
+    const t0 = sampleTrip(); // day 2: skybay → v4 lake (5) → v5 donghwa (10) → v6 mandong (15) → v7 umji (10) → shilla (15)
+    rememberLegs(t0, book);
+    const swapped = relink(t0, move(t0, 2, 1, 1), book); // lake, mandong, donghwa, umji
+    // lake>mandong and donghwa>umji were never typed; mandong>donghwa is the reverse of donghwa>mandong (15): not reused
+    expect(day(swapped, 2).legs.map((l) => l?.minutes ?? null)).toEqual([5, null, null, null, 15]);
+    const back = relink(swapped, move(swapped, 2, 1, 1), book);
+    expect(day(back, 2).legs.map((l) => l?.minutes ?? null)).toEqual([5, 10, 15, 10, 15]);
+  });
+
+  it('removing and re-adding a stop keeps the times typed for each pair', () => {
+    const book: LegBook = new Map();
+    const t0 = sampleTrip();
+    rememberLegs(t0, book);
+    const without = relink(t0, unassign(t0, 'v7'), book);
+    expect(day(without, 2).legs.map((l) => l?.minutes ?? null)).toEqual([5, 10, 15, null]); // mandong → shilla never typed
+    const again = relink(without, assign(without, 'v7', 2), book);
+    expect(day(again, 2).legs.map((l) => l?.minutes ?? null)).toEqual([5, 10, 15, 10, 15]);
+  });
+
+  it('a lodging change re-checks the legs on both nights it touches', () => {
+    const book: LegBook = new Map();
+    const t0 = sampleTrip();
+    rememberLegs(t0, book);
+    const moved = relink(t0, setLodging(t0, 1, 'shilla'), book);
+    expect(day(moved, 1).legs.at(-1)).toBeNull(); // bohemian → shilla: unknown
+    expect(day(moved, 2).legs[0]).toBeNull(); // shilla → lake: unknown
+    const back = relink(moved, setLodging(moved, 1, 'skybay'), book);
+    expect(day(back, 1).legs.at(-1)?.minutes).toBe(20);
+    expect(day(back, 2).legs[0]?.minutes).toBe(5);
+  });
+
+  it('clearing a leg forgets it', () => {
+    const book: LegBook = new Map();
+    const t0 = sampleTrip();
+    rememberLegs(t0, book);
+    const cleared = relink(t0, setLeg(t0, 2, 0, null), book);
+    expect(book.has('skybay>lake')).toBe(false);
+    expect(day(cleared, 2).legs[0]).toBeNull();
+  });
+});
+
+describe('timetable on the phone', () => {
+  it('a missed fixed time is a warning before sending', () => {
+    const late = setDepart(sampleTrip(), 4, '09:45');
+    const w = planWarnings(late, home).filter((x) => x.level === 'warning').map((x) => x.text);
+    expect(w).toContain("4일차 '정동심곡바다부채길' 고정 10:00에 늦어요 (예상 10:15)");
+  });
+
+  it('a return-by time that the day runs past is a warning', () => {
+    const t = setEndBy(sampleTrip(), 2, '16:00');
+    expect(day(t, 2).endBy).toBe('16:00');
+    expect(planWarnings(t, home).map((x) => x.text)).toContain('2일차 도착 예상 16:30 · 목표 16:00보다 늦어요');
+  });
+
+  it('unknown opening hours leave lodging out, as the car does', () => {
+    expect(planWarnings(sampleTrip(), home).map((x) => x.text)).toContain('영업정보 미확인 11곳');
   });
 });

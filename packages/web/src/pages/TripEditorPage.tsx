@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { AlertDialog } from '@astryxdesign/core/AlertDialog';
 import { Badge } from '@astryxdesign/core/Badge';
 import { Banner } from '@astryxdesign/core/Banner';
@@ -23,7 +23,7 @@ import { VisitDialog } from '../editor/VisitDialog';
 import { trips } from '../lib/db';
 import { t } from '../lib/i18n';
 import { navigate } from '../lib/router';
-import { REASON_LABEL, addPlace, emptyPlan, newDoc, nightsLabel, planWarnings, savePlan, setPeriod, unassignedVisits, updateVisit, type TripDoc } from '../lib/trips';
+import { REASON_LABEL, addPlace, emptyPlan, newDoc, nightsLabel, planWarnings, relinkLegs, rememberLegs, savePlan, setPeriod, unassignedVisits, updateVisit, type LegBook, type TripDoc } from '../lib/trips';
 
 type ISOTime = Parameters<NonNullable<Parameters<typeof TimeInput>[0]['onChange']>>[0];
 type Range = NonNullable<Parameters<typeof DateRangeInput>[0]['value']>;
@@ -40,12 +40,16 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  /** Travel times typed this session by pair of places, so reordering does not throw them away. */
+  const book = useRef<LegBook>(new Map());
 
   useEffect(() => {
     void (async () => {
       const d = tripId ? await trips.get(tripId) : await newDoc(emptyPlan());
       if (!d) return navigate('/', true);
       setDoc(d);
+      book.current = new Map();
+      rememberLegs(d.plan, book.current);
       setPlan(d.plan);
       setHome(d.home);
     })();
@@ -55,7 +59,9 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
   if (!plan || !doc) return <Spinner />;
 
   const edit = (p: Trip) => {
-    setPlan(p);
+    const linked = relinkLegs(plan, p, book.current);
+    rememberLegs(linked, book.current);
+    setPlan(linked);
     setDirty(true);
     setSaved(null);
   };

@@ -19,6 +19,10 @@ import {
   fingerprint,
   generateKeyPair,
   sampleTrip,
+  departure,
+  timeline,
+  dayEnd,
+  dayIssues,
   sharedSecret,
   utf8,
   type Trip,
@@ -109,6 +113,47 @@ await invalid('unassigned-reason', 'UNASSIGNED_REASON_MISMATCH', (t) => (t.visit
 await invalid('hash-mismatch', 'HASH_MISMATCH', (t) => (t.name = '바뀐 이름'), { rehash: false });
 
 write('fixtures/expectations.json', expectations);
+
+/* ---------- timetable parity (TS timeline.ts ↔ Kotlin TripValidator) ---------- */
+rmSync(join(root, 'fixtures/timeline'), { recursive: true, force: true });
+const timelineCases: Record<string, Trip> = {};
+{
+  const base = sampleTrip();
+  timelineCases['sample'] = base;
+  const late = clone(base); // day 4 leaves 15 min later than the plan allows for the 10:00 fixed visit
+  late.days[3].departTime = '09:45';
+  timelineCases['late-for-fixed'] = late;
+  const arrive = clone(base); // arrival basis needs a start before midnight
+  arrive.firstDay = { basis: 'ARRIVE_FIRST_STOP', arriveTime: '00:30', prepMinutes: 10 };
+  arrive.days[0].legs[0] = { minutes: 90, source: 'USER_ESTIMATE' };
+  timelineCases['depart-previous-day'] = arrive;
+  const hours = clone(base); // user-entered hours: closed date, closed weekday, outside hours
+  hours.places = hours.places.map((p) =>
+    p.placeRef === 'lake' ? { ...p, hours: { status: 'USER_ENTERED', weekly: [1, 2, 3, 4, 5, 6, 7].map((weekday) => ({ weekday, open: '10:00', close: '18:00' })), closedDates: [] } }
+    : p.placeRef === 'mandong' ? { ...p, hours: { status: 'USER_ENTERED', weekly: [{ weekday: 1, open: '09:00', close: '21:00' }], closedDates: [] } }
+    : p.placeRef === 'umji' ? { ...p, hours: { status: 'USER_ENTERED', weekly: [6].map((weekday) => ({ weekday, open: '17:00', close: '23:00' })), closedDates: ['2026-11-21'] } }
+    : p) as Trip['places'];
+  timelineCases['opening-hours'] = hours;
+  const endBy = clone(base); // return-by time passed, and a day running past midnight
+  endBy.days[1].endBy = '16:00';
+  endBy.days[2].departTime = '22:30';
+  timelineCases['end-by-and-midnight'] = endBy;
+  const unknown = clone(base); // unknown legs before a fixed time
+  unknown.days[1].legs = [null, null, { minutes: 15, source: 'USER_ESTIMATE' }, null, null];
+  timelineCases['unknown-before-fixed'] = unknown;
+}
+const timelineExpect: Record<string, unknown> = {};
+for (const [name, trip] of Object.entries(timelineCases)) {
+  write(`fixtures/timeline/${name}.json`, await buildTransfer(trip, EXPORTED));
+  timelineExpect[name] = trip.days.map((d) => ({
+    dayIndex: d.dayIndex,
+    departure: departure(trip, d.dayIndex),
+    stops: timeline(trip, d.dayIndex),
+    dayEnd: dayEnd(trip, d.dayIndex),
+    issues: dayIssues(trip, d.dayIndex).map(({ severity, code, dayIndex, args }) => ({ severity, code, dayIndex, args })),
+  }));
+}
+write('fixtures/timeline-expectations.json', timelineExpect);
 
 /* ---------- crypto vectors (kept stable) ---------- */
 const vectorsPath = join(root, 'fixtures/crypto/vectors.json');

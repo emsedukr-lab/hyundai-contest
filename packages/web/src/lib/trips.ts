@@ -2,9 +2,12 @@ import {
   addDays,
   buildTransfer,
   contentHash,
+  dayIssues,
   epochDay,
   TRANSFER_LIMITS,
   type Day,
+  type DayIssue,
+  type Endpoint,
   type Home,
   type Place,
   type Trip,
@@ -186,6 +189,61 @@ export const setLodging = (plan: Trip, dayIndex: number, placeRef: string | null
 
 export const setDepart = (plan: Trip, dayIndex: number, time: string | null): Trip => mapDay(plan, dayIndex, (d) => ({ ...d, departTime: time }));
 
+/** Target time to reach the night's lodging (or home on the last day); the car warns when the day runs past it. */
+export const setEndBy = (plan: Trip, dayIndex: number, time: string | null): Trip => mapDay(plan, dayIndex, (d) => ({ ...d, endBy: time }));
+
+/* ---------- travel times follow their pair of places ---------- */
+
+const endpointKey = (e: Endpoint) => (e.kind === 'HOME' ? '@home' : e.placeRef);
+
+/** "from>to" for each leg of a day (same idea as the car's LegKeys); null where an end is not set. */
+export function legKeys(plan: Trip, dayIndex: number): (string | null)[] {
+  const d = plan.days[dayIndex - 1];
+  const start = dayIndex === 1 ? endpointKey(plan.origin) : plan.days[dayIndex - 2].lodgingPlaceRef;
+  const end = dayIndex === plan.days.length ? endpointKey(plan.finalDestination) : d.lodgingPlaceRef;
+  const points = [start, ...d.visitOrder.map((id) => visitOf(plan, id)?.placeRef ?? null), end];
+  return points.slice(0, -1).map((from, k) => (from && points[k + 1] ? `${from}>${points[k + 1]}` : null));
+}
+
+/** Travel times the user typed this editing session, by pair of places (kept in memory only). */
+export type LegBook = Map<string, number>;
+
+export function rememberLegs(plan: Trip, book: LegBook) {
+  plan.days.forEach((d) =>
+    legKeys(plan, d.dayIndex).forEach((key, k) => {
+      const leg = d.legs[k];
+      if (key && leg) book.set(key, leg.minutes);
+    }),
+  );
+}
+
+/**
+ * After an edit (reorder, add, remove, lodging, origin, final destination), a leg whose two ends changed takes the
+ * time typed for that exact pair (A→B, never the reverse), or becomes unknown. A leg whose ends did not change keeps
+ * its value; clearing it also forgets it.
+ */
+export function relinkLegs(prev: Trip, next: Trip, book: LegBook): Trip {
+  let touched = false;
+  const days = next.days.map((d) => {
+    const before = prev.days.find((p) => p.dayIndex === d.dayIndex);
+    const oldKeys = before ? legKeys(prev, d.dayIndex) : [];
+    const newKeys = legKeys(next, d.dayIndex);
+    const legs = d.legs.map((leg, k) => {
+      const key = newKeys[k];
+      if (key && key === oldKeys[k]) {
+        if (!leg && before?.legs[k]) book.delete(key);
+        return leg;
+      }
+      const known = key ? book.get(key) : undefined;
+      const relinked = known === undefined ? null : { minutes: known, source: 'USER_ESTIMATE' as const };
+      if (relinked?.minutes !== leg?.minutes) touched = true;
+      return relinked;
+    });
+    return { ...d, legs };
+  });
+  return touched ? { ...next, days } : next;
+}
+
 export const updateVisit = patchVisit;
 
 export const updatePlace = (plan: Trip, placeRef: string, patch: Partial<Place>): Trip => ({
@@ -218,6 +276,23 @@ export interface Warning {
   text: string;
 }
 
+/** A timetable finding (same codes as the car's re-check) in the UI language. */
+export function issueText(i: DayIssue): string {
+  const [day, a, b, c] = i.args;
+  switch (i.code) {
+    case 'FIRST_DEPARTURE_UNKNOWN': return t('timeline.firstDepartureUnknown');
+    case 'DEPARTURE_UNKNOWN': return t('timeline.departureUnknown', { day });
+    case 'DEPART_PREVIOUS_DAY': return t('timeline.departPreviousDay');
+    case 'LEG_UNKNOWN': return t('timeline.legUnknown', { day, n: a });
+    case 'LATE_FOR_FIXED': return t('timeline.lateForFixed', { day, name: a, fixed: b, expected: c });
+    case 'FIXED_UNCHECKED': return t('timeline.fixedUnchecked', { day, name: a, fixed: b });
+    case 'CLOSED_DATE': return t('timeline.closedDate', { day, name: a });
+    case 'CLOSED_WEEKDAY': return t('timeline.closedWeekday', { day, name: a });
+    case 'OUTSIDE_HOURS': return t('timeline.outsideHours', { day, name: a, start: b, end: c });
+    case 'PAST_END_BY': return t('timeline.pastEndBy', { day, end: a, endBy: b });
+  }
+}
+
 /** Advice shown while editing. Nothing here blocks saving or sending; the car re-checks everything. */
 export function planWarnings(plan: Trip, home: Home | null): Warning[] {
   const out: Warning[] = [];
@@ -231,9 +306,12 @@ export function planWarnings(plan: Trip, home: Home | null): Warning[] {
     if (v.fixed && v.unassignedReason !== null) out.push({ level: 'warning', text: t('trip.warn.fixedUnassigned', { name }) });
     if (v.fixed && !/:(00|30)$/.test(v.fixed.time)) out.push({ level: 'warning', text: t('trip.warn.fixedSlot', { name }) });
   }
+  // Timetable conflicts are found here before sending, with the same rules the car uses on arrival.
+  for (const d of plan.days) for (const i of dayIssues(plan, d.dayIndex)) if (i.severity === 'CONFLICT') out.push({ level: 'warning', text: issueText(i) });
   const missing = plan.days.reduce((n, d) => n + d.legs.filter((l) => l === null).length, 0);
   if (missing) out.push({ level: 'info', text: t('trip.warn.missingLegs', { n: missing }) });
-  const unknownHours = plan.places.filter((p) => p.hours.status === 'UNKNOWN').length;
+  // Lodging is left out, as in the car.
+  const unknownHours = plan.places.filter((p) => p.hours.status === 'UNKNOWN' && p.category !== 'LODGING').length;
   if (unknownHours) out.push({ level: 'info', text: t('trip.warn.unknownHours', { n: unknownHours }) });
   if ((plan.origin.kind === 'HOME' || plan.finalDestination.kind === 'HOME') && !home) {
     out.push({ level: 'info', text: t('trip.warn.noHome') });

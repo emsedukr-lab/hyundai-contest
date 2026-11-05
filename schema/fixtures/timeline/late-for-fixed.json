@@ -1,0 +1,498 @@
+{
+  "schema": "trip-transfer",
+  "schemaVersion": 1,
+  "exportedAt": "2026-11-05T09:30:00+09:00",
+  "contentHash": "IMJM-mb9odvH_mKQgH42vnuC-8upRx3wmzhbtF5qBms",
+  "trip": {
+    "tripId": "6f1c2d4e-8a3b-4c5d-9e7f-0a1b2c3d4e5f",
+    "revision": 1,
+    "updatedAt": "2026-11-05T09:00:00+09:00",
+    "name": "강릉 3박 4일",
+    "timezone": "Asia/Seoul",
+    "startDate": "2026-11-20",
+    "endDate": "2026-11-23",
+    "firstDay": {
+      "basis": "DEPART_ORIGIN",
+      "departTime": "08:00"
+    },
+    "origin": {
+      "kind": "HOME"
+    },
+    "finalDestination": {
+      "kind": "HOME"
+    },
+    "home": null,
+    "places": [
+      {
+        "placeRef": "cheolttuk",
+        "name": "철뚝소머리집",
+        "address": "강릉시 주문진읍 철둑길 42",
+        "latE7": 378920000,
+        "lonE7": 1288260000,
+        "category": "FOOD",
+        "source": {
+          "provider": "MANUAL",
+          "externalId": null
+        },
+        "naviPoi": null,
+        "hours": {
+          "status": "UNKNOWN"
+        }
+      },
+      {
+        "placeRef": "youngjin",
+        "name": "강릉영진횟집",
+        "address": "강릉시 연곡면 해안로 1429",
+        "latE7": 378730000,
+        "lonE7": 1288420000,
+        "category": "FOOD",
+        "source": {
+          "provider": "MANUAL",
+          "externalId": null
+        },
+        "naviPoi": null,
+        "hours": {
+          "status": "UNKNOWN"
+        }
+      },
+      {
+        "placeRef": "bohemian",
+        "name": "보헤미안박이추커피",
+        "address": "강릉시 사천면 해안로 1107",
+        "latE7": 378452000,
+        "lonE7": 1288738000,
+        "category": "CAFE",
+        "source": {
+          "provider": "MANUAL",
+          "externalId": null
+        },
+        "naviPoi": null,
+        "hours": {
+          "status": "UNKNOWN"
+        }
+      },
+      {
+        "placeRef": "skybay",
+        "name": "스카이베이호텔 경포",
+        "address": "강릉시 해안로 476",
+        "latE7": 378040000,
+        "lonE7": 1289080000,
+        "category": "LODGING",
+        "source": {
+          "provider": "MANUAL",
+          "externalId": null
+        },
+        "naviPoi": null,
+        "hours": {
+          "status": "UNKNOWN"
+        }
+      },
+      {
+        "placeRef": "lake",
+        "name": "경포호",
+        "address": "강릉시 저동 경포호 일원",
+        "latE7": 377955000,
+        "lonE7": 1288975000,
+        "category": "SIGHT",
+        "source": {
+          "provider": "MANUAL",
+          "externalId": null
+        },
+        "naviPoi": null,
+        "hours": {
+          "status": "UNKNOWN"
+        }
+      },
+      {
+        "placeRef": "donghwa",
+        "name": "강릉짬뽕순두부 동화가든 본점",
+        "address": "강릉시 초당순두부길77번길 15",
+        "latE7": 377910000,
+        "lonE7": 1289145000,
+        "category": "FOOD",
+        "source": {
+          "provider": "MANUAL",
+          "externalId": null
+        },
+        "naviPoi": null,
+        "hours": {
+          "status": "UNKNOWN"
+        }
+      },
+      {
+        "placeRef": "mandong",
+        "name": "만동제과 강릉점",
+        "address": "강릉시 금성로 6",
+        "latE7": 377547000,
+        "lonE7": 1288986000,
+        "category": "FOOD",
+        "source": {
+          "provider": "MANUAL",
+          "externalId": null
+        },
+        "naviPoi": null,
+        "hours": {
+          "status": "UNKNOWN"
+        }
+      },
+      {
+        "placeRef": "umji",
+        "name": "엄지네포장마차 본점",
+        "address": "강릉시 경강로2255번길 21",
+        "latE7": 377680000,
+        "lonE7": 1289100000,
+        "category": "FOOD",
+        "source": {
+          "provider": "MANUAL",
+          "externalId": null
+        },
+        "naviPoi": null,
+        "hours": {
+          "status": "UNKNOWN"
+        }
+      },
+      {
+        "placeRef": "shilla",
+        "name": "신라모노그램 강릉",
+        "address": "강릉시 해안로 186",
+        "latE7": 377963000,
+        "lonE7": 1289196000,
+        "category": "LODGING",
+        "source": {
+          "provider": "MANUAL",
+          "externalId": null
+        },
+        "naviPoi": null,
+        "hours": {
+          "status": "UNKNOWN"
+        }
+      },
+      {
+        "placeRef": "gyodong",
+        "name": "원조강릉교동반점 본점",
+        "address": "강릉시 강릉대로 205",
+        "latE7": 377590000,
+        "lonE7": 1288970000,
+        "category": "FOOD",
+        "source": {
+          "provider": "MANUAL",
+          "externalId": null
+        },
+        "naviPoi": null,
+        "hours": {
+          "status": "UNKNOWN"
+        }
+      },
+      {
+        "placeRef": "terarosa",
+        "name": "테라로사 커피공장 강릉본점",
+        "address": "강릉시 구정면 현천길 7",
+        "latE7": 377150000,
+        "lonE7": 1288930000,
+        "category": "CAFE",
+        "source": {
+          "provider": "MANUAL",
+          "externalId": null
+        },
+        "naviPoi": null,
+        "hours": {
+          "status": "UNKNOWN"
+        }
+      },
+      {
+        "placeRef": "topsten",
+        "name": "호텔탑스텐",
+        "address": "강릉시 옥계면 헌화로 455-34",
+        "latE7": 376480000,
+        "lonE7": 1290570000,
+        "category": "LODGING",
+        "source": {
+          "provider": "MANUAL",
+          "externalId": null
+        },
+        "naviPoi": null,
+        "hours": {
+          "status": "UNKNOWN"
+        }
+      },
+      {
+        "placeRef": "badabuchae",
+        "name": "정동심곡바다부채길",
+        "address": "강릉시 강동면 심곡리 114-3 심곡매표소",
+        "latE7": 376658000,
+        "lonE7": 1290480000,
+        "category": "SIGHT",
+        "source": {
+          "provider": "MANUAL",
+          "externalId": null
+        },
+        "naviPoi": null,
+        "hours": {
+          "status": "UNKNOWN"
+        }
+      },
+      {
+        "placeRef": "anmok",
+        "name": "안목해변 커피거리",
+        "address": "강릉시 창해로14번길 일원",
+        "latE7": 377720000,
+        "lonE7": 1289470000,
+        "category": "CAFE",
+        "source": {
+          "provider": "MANUAL",
+          "externalId": null
+        },
+        "naviPoi": null,
+        "hours": {
+          "status": "UNKNOWN"
+        }
+      }
+    ],
+    "visits": [
+      {
+        "visitId": "v1",
+        "placeRef": "cheolttuk",
+        "stayMinutes": 60,
+        "prepMinutes": 10,
+        "importance": "NORMAL",
+        "desiredTime": "10:30",
+        "fixed": null,
+        "dateFlexible": true,
+        "timeFlexible": true,
+        "unassignedReason": null
+      },
+      {
+        "visitId": "v2",
+        "placeRef": "youngjin",
+        "stayMinutes": 75,
+        "prepMinutes": 10,
+        "importance": "NORMAL",
+        "desiredTime": null,
+        "fixed": null,
+        "dateFlexible": true,
+        "timeFlexible": true,
+        "unassignedReason": null
+      },
+      {
+        "visitId": "v3",
+        "placeRef": "bohemian",
+        "stayMinutes": 60,
+        "prepMinutes": 10,
+        "importance": "NORMAL",
+        "desiredTime": null,
+        "fixed": null,
+        "dateFlexible": true,
+        "timeFlexible": true,
+        "unassignedReason": null
+      },
+      {
+        "visitId": "v4",
+        "placeRef": "lake",
+        "stayMinutes": 90,
+        "prepMinutes": 10,
+        "importance": "OPTIONAL",
+        "desiredTime": null,
+        "fixed": null,
+        "dateFlexible": true,
+        "timeFlexible": true,
+        "unassignedReason": null
+      },
+      {
+        "visitId": "v5",
+        "placeRef": "donghwa",
+        "stayMinutes": 60,
+        "prepMinutes": 10,
+        "importance": "MUST",
+        "desiredTime": null,
+        "fixed": {
+          "time": "13:00",
+          "kind": "RESERVATION"
+        },
+        "dateFlexible": false,
+        "timeFlexible": false,
+        "unassignedReason": null
+      },
+      {
+        "visitId": "v6",
+        "placeRef": "mandong",
+        "stayMinutes": 30,
+        "prepMinutes": 10,
+        "importance": "NORMAL",
+        "desiredTime": null,
+        "fixed": null,
+        "dateFlexible": true,
+        "timeFlexible": true,
+        "unassignedReason": null
+      },
+      {
+        "visitId": "v7",
+        "placeRef": "umji",
+        "stayMinutes": 60,
+        "prepMinutes": 10,
+        "importance": "NORMAL",
+        "desiredTime": null,
+        "fixed": null,
+        "dateFlexible": true,
+        "timeFlexible": true,
+        "unassignedReason": null
+      },
+      {
+        "visitId": "v8",
+        "placeRef": "gyodong",
+        "stayMinutes": 60,
+        "prepMinutes": 10,
+        "importance": "NORMAL",
+        "desiredTime": null,
+        "fixed": null,
+        "dateFlexible": true,
+        "timeFlexible": true,
+        "unassignedReason": null
+      },
+      {
+        "visitId": "v9",
+        "placeRef": "terarosa",
+        "stayMinutes": 90,
+        "prepMinutes": 10,
+        "importance": "NORMAL",
+        "desiredTime": null,
+        "fixed": null,
+        "dateFlexible": true,
+        "timeFlexible": true,
+        "unassignedReason": null
+      },
+      {
+        "visitId": "v10",
+        "placeRef": "badabuchae",
+        "stayMinutes": 180,
+        "prepMinutes": 20,
+        "importance": "MUST",
+        "desiredTime": null,
+        "fixed": {
+          "time": "10:00",
+          "kind": "USER"
+        },
+        "dateFlexible": false,
+        "timeFlexible": false,
+        "unassignedReason": null
+      },
+      {
+        "visitId": "v11",
+        "placeRef": "anmok",
+        "stayMinutes": 60,
+        "prepMinutes": 10,
+        "importance": "OPTIONAL",
+        "desiredTime": null,
+        "fixed": null,
+        "dateFlexible": true,
+        "timeFlexible": true,
+        "unassignedReason": "NO_TIME"
+      }
+    ],
+    "days": [
+      {
+        "dayIndex": 1,
+        "date": "2026-11-20",
+        "departTime": null,
+        "endBy": null,
+        "visitOrder": [
+          "v1",
+          "v2",
+          "v3"
+        ],
+        "legs": [
+          null,
+          {
+            "minutes": 15,
+            "source": "USER_ESTIMATE"
+          },
+          {
+            "minutes": 10,
+            "source": "USER_ESTIMATE"
+          },
+          {
+            "minutes": 20,
+            "source": "USER_ESTIMATE"
+          }
+        ],
+        "lodgingPlaceRef": "skybay"
+      },
+      {
+        "dayIndex": 2,
+        "date": "2026-11-21",
+        "departTime": "09:30",
+        "endBy": null,
+        "visitOrder": [
+          "v4",
+          "v5",
+          "v6",
+          "v7"
+        ],
+        "legs": [
+          {
+            "minutes": 5,
+            "source": "USER_ESTIMATE"
+          },
+          {
+            "minutes": 10,
+            "source": "USER_ESTIMATE"
+          },
+          {
+            "minutes": 15,
+            "source": "USER_ESTIMATE"
+          },
+          {
+            "minutes": 10,
+            "source": "USER_ESTIMATE"
+          },
+          {
+            "minutes": 15,
+            "source": "USER_ESTIMATE"
+          }
+        ],
+        "lodgingPlaceRef": "shilla"
+      },
+      {
+        "dayIndex": 3,
+        "date": "2026-11-22",
+        "departTime": "10:30",
+        "endBy": null,
+        "visitOrder": [
+          "v8",
+          "v9"
+        ],
+        "legs": [
+          {
+            "minutes": 20,
+            "source": "USER_ESTIMATE"
+          },
+          {
+            "minutes": 20,
+            "source": "USER_ESTIMATE"
+          },
+          {
+            "minutes": 35,
+            "source": "USER_ESTIMATE"
+          }
+        ],
+        "lodgingPlaceRef": "topsten"
+      },
+      {
+        "dayIndex": 4,
+        "date": "2026-11-23",
+        "departTime": "09:45",
+        "endBy": null,
+        "visitOrder": [
+          "v10"
+        ],
+        "legs": [
+          {
+            "minutes": 10,
+            "source": "USER_ESTIMATE"
+          },
+          null
+        ],
+        "lodgingPlaceRef": null
+      }
+    ]
+  }
+}

@@ -1,0 +1,755 @@
+{
+  "sample": [
+    {
+      "dayIndex": 1,
+      "departure": 480,
+      "stops": [
+        {
+          "visitId": "v1",
+          "arrive": null,
+          "start": null,
+          "end": null
+        },
+        {
+          "visitId": "v2",
+          "arrive": null,
+          "start": null,
+          "end": null
+        },
+        {
+          "visitId": "v3",
+          "arrive": null,
+          "start": null,
+          "end": null
+        }
+      ],
+      "dayEnd": null,
+      "issues": [
+        {
+          "severity": "UNCERTAIN",
+          "code": "LEG_UNKNOWN",
+          "dayIndex": 1,
+          "args": [
+            "1",
+            "1"
+          ]
+        }
+      ]
+    },
+    {
+      "dayIndex": 2,
+      "departure": 570,
+      "stops": [
+        {
+          "visitId": "v4",
+          "arrive": 575,
+          "start": 585,
+          "end": 675
+        },
+        {
+          "visitId": "v5",
+          "arrive": 685,
+          "start": 780,
+          "end": 840
+        },
+        {
+          "visitId": "v6",
+          "arrive": 855,
+          "start": 865,
+          "end": 895
+        },
+        {
+          "visitId": "v7",
+          "arrive": 905,
+          "start": 915,
+          "end": 975
+        }
+      ],
+      "dayEnd": 990,
+      "issues": []
+    },
+    {
+      "dayIndex": 3,
+      "departure": 630,
+      "stops": [
+        {
+          "visitId": "v8",
+          "arrive": 650,
+          "start": 660,
+          "end": 720
+        },
+        {
+          "visitId": "v9",
+          "arrive": 740,
+          "start": 750,
+          "end": 840
+        }
+      ],
+      "dayEnd": 875,
+      "issues": []
+    },
+    {
+      "dayIndex": 4,
+      "departure": 570,
+      "stops": [
+        {
+          "visitId": "v10",
+          "arrive": 580,
+          "start": 600,
+          "end": 780
+        }
+      ],
+      "dayEnd": null,
+      "issues": [
+        {
+          "severity": "UNCERTAIN",
+          "code": "LEG_UNKNOWN",
+          "dayIndex": 4,
+          "args": [
+            "4",
+            "1"
+          ]
+        }
+      ]
+    }
+  ],
+  "late-for-fixed": [
+    {
+      "dayIndex": 1,
+      "departure": 480,
+      "stops": [
+        {
+          "visitId": "v1",
+          "arrive": null,
+          "start": null,
+          "end": null
+        },
+        {
+          "visitId": "v2",
+          "arrive": null,
+          "start": null,
+          "end": null
+        },
+        {
+          "visitId": "v3",
+          "arrive": null,
+          "start": null,
+          "end": null
+        }
+      ],
+      "dayEnd": null,
+      "issues": [
+        {
+          "severity": "UNCERTAIN",
+          "code": "LEG_UNKNOWN",
+          "dayIndex": 1,
+          "args": [
+            "1",
+            "1"
+          ]
+        }
+      ]
+    },
+    {
+      "dayIndex": 2,
+      "departure": 570,
+      "stops": [
+        {
+          "visitId": "v4",
+          "arrive": 575,
+          "start": 585,
+          "end": 675
+        },
+        {
+          "visitId": "v5",
+          "arrive": 685,
+          "start": 780,
+          "end": 840
+        },
+        {
+          "visitId": "v6",
+          "arrive": 855,
+          "start": 865,
+          "end": 895
+        },
+        {
+          "visitId": "v7",
+          "arrive": 905,
+          "start": 915,
+          "end": 975
+        }
+      ],
+      "dayEnd": 990,
+      "issues": []
+    },
+    {
+      "dayIndex": 3,
+      "departure": 630,
+      "stops": [
+        {
+          "visitId": "v8",
+          "arrive": 650,
+          "start": 660,
+          "end": 720
+        },
+        {
+          "visitId": "v9",
+          "arrive": 740,
+          "start": 750,
+          "end": 840
+        }
+      ],
+      "dayEnd": 875,
+      "issues": []
+    },
+    {
+      "dayIndex": 4,
+      "departure": 585,
+      "stops": [
+        {
+          "visitId": "v10",
+          "arrive": 595,
+          "start": 615,
+          "end": 795
+        }
+      ],
+      "dayEnd": null,
+      "issues": [
+        {
+          "severity": "UNCERTAIN",
+          "code": "LEG_UNKNOWN",
+          "dayIndex": 4,
+          "args": [
+            "4",
+            "1"
+          ]
+        },
+        {
+          "severity": "CONFLICT",
+          "code": "LATE_FOR_FIXED",
+          "dayIndex": 4,
+          "args": [
+            "4",
+            "정동심곡바다부채길",
+            "10:00",
+            "10:15"
+          ]
+        }
+      ]
+    }
+  ],
+  "depart-previous-day": [
+    {
+      "dayIndex": 1,
+      "departure": -60,
+      "stops": [
+        {
+          "visitId": "v1",
+          "arrive": 30,
+          "start": 40,
+          "end": 100
+        },
+        {
+          "visitId": "v2",
+          "arrive": 115,
+          "start": 125,
+          "end": 200
+        },
+        {
+          "visitId": "v3",
+          "arrive": 210,
+          "start": 220,
+          "end": 280
+        }
+      ],
+      "dayEnd": 300,
+      "issues": [
+        {
+          "severity": "CONFLICT",
+          "code": "DEPART_PREVIOUS_DAY",
+          "dayIndex": 1,
+          "args": []
+        }
+      ]
+    },
+    {
+      "dayIndex": 2,
+      "departure": 570,
+      "stops": [
+        {
+          "visitId": "v4",
+          "arrive": 575,
+          "start": 585,
+          "end": 675
+        },
+        {
+          "visitId": "v5",
+          "arrive": 685,
+          "start": 780,
+          "end": 840
+        },
+        {
+          "visitId": "v6",
+          "arrive": 855,
+          "start": 865,
+          "end": 895
+        },
+        {
+          "visitId": "v7",
+          "arrive": 905,
+          "start": 915,
+          "end": 975
+        }
+      ],
+      "dayEnd": 990,
+      "issues": []
+    },
+    {
+      "dayIndex": 3,
+      "departure": 630,
+      "stops": [
+        {
+          "visitId": "v8",
+          "arrive": 650,
+          "start": 660,
+          "end": 720
+        },
+        {
+          "visitId": "v9",
+          "arrive": 740,
+          "start": 750,
+          "end": 840
+        }
+      ],
+      "dayEnd": 875,
+      "issues": []
+    },
+    {
+      "dayIndex": 4,
+      "departure": 570,
+      "stops": [
+        {
+          "visitId": "v10",
+          "arrive": 580,
+          "start": 600,
+          "end": 780
+        }
+      ],
+      "dayEnd": null,
+      "issues": [
+        {
+          "severity": "UNCERTAIN",
+          "code": "LEG_UNKNOWN",
+          "dayIndex": 4,
+          "args": [
+            "4",
+            "1"
+          ]
+        }
+      ]
+    }
+  ],
+  "opening-hours": [
+    {
+      "dayIndex": 1,
+      "departure": 480,
+      "stops": [
+        {
+          "visitId": "v1",
+          "arrive": null,
+          "start": null,
+          "end": null
+        },
+        {
+          "visitId": "v2",
+          "arrive": null,
+          "start": null,
+          "end": null
+        },
+        {
+          "visitId": "v3",
+          "arrive": null,
+          "start": null,
+          "end": null
+        }
+      ],
+      "dayEnd": null,
+      "issues": [
+        {
+          "severity": "UNCERTAIN",
+          "code": "LEG_UNKNOWN",
+          "dayIndex": 1,
+          "args": [
+            "1",
+            "1"
+          ]
+        }
+      ]
+    },
+    {
+      "dayIndex": 2,
+      "departure": 570,
+      "stops": [
+        {
+          "visitId": "v4",
+          "arrive": 575,
+          "start": 585,
+          "end": 675
+        },
+        {
+          "visitId": "v5",
+          "arrive": 685,
+          "start": 780,
+          "end": 840
+        },
+        {
+          "visitId": "v6",
+          "arrive": 855,
+          "start": 865,
+          "end": 895
+        },
+        {
+          "visitId": "v7",
+          "arrive": 905,
+          "start": 915,
+          "end": 975
+        }
+      ],
+      "dayEnd": 990,
+      "issues": [
+        {
+          "severity": "CONFLICT",
+          "code": "OUTSIDE_HOURS",
+          "dayIndex": 2,
+          "args": [
+            "2",
+            "경포호",
+            "09:45",
+            "11:15"
+          ]
+        },
+        {
+          "severity": "CONFLICT",
+          "code": "CLOSED_WEEKDAY",
+          "dayIndex": 2,
+          "args": [
+            "2",
+            "만동제과 강릉점"
+          ]
+        },
+        {
+          "severity": "CONFLICT",
+          "code": "CLOSED_DATE",
+          "dayIndex": 2,
+          "args": [
+            "2",
+            "엄지네포장마차 본점"
+          ]
+        }
+      ]
+    },
+    {
+      "dayIndex": 3,
+      "departure": 630,
+      "stops": [
+        {
+          "visitId": "v8",
+          "arrive": 650,
+          "start": 660,
+          "end": 720
+        },
+        {
+          "visitId": "v9",
+          "arrive": 740,
+          "start": 750,
+          "end": 840
+        }
+      ],
+      "dayEnd": 875,
+      "issues": []
+    },
+    {
+      "dayIndex": 4,
+      "departure": 570,
+      "stops": [
+        {
+          "visitId": "v10",
+          "arrive": 580,
+          "start": 600,
+          "end": 780
+        }
+      ],
+      "dayEnd": null,
+      "issues": [
+        {
+          "severity": "UNCERTAIN",
+          "code": "LEG_UNKNOWN",
+          "dayIndex": 4,
+          "args": [
+            "4",
+            "1"
+          ]
+        }
+      ]
+    }
+  ],
+  "end-by-and-midnight": [
+    {
+      "dayIndex": 1,
+      "departure": 480,
+      "stops": [
+        {
+          "visitId": "v1",
+          "arrive": null,
+          "start": null,
+          "end": null
+        },
+        {
+          "visitId": "v2",
+          "arrive": null,
+          "start": null,
+          "end": null
+        },
+        {
+          "visitId": "v3",
+          "arrive": null,
+          "start": null,
+          "end": null
+        }
+      ],
+      "dayEnd": null,
+      "issues": [
+        {
+          "severity": "UNCERTAIN",
+          "code": "LEG_UNKNOWN",
+          "dayIndex": 1,
+          "args": [
+            "1",
+            "1"
+          ]
+        }
+      ]
+    },
+    {
+      "dayIndex": 2,
+      "departure": 570,
+      "stops": [
+        {
+          "visitId": "v4",
+          "arrive": 575,
+          "start": 585,
+          "end": 675
+        },
+        {
+          "visitId": "v5",
+          "arrive": 685,
+          "start": 780,
+          "end": 840
+        },
+        {
+          "visitId": "v6",
+          "arrive": 855,
+          "start": 865,
+          "end": 895
+        },
+        {
+          "visitId": "v7",
+          "arrive": 905,
+          "start": 915,
+          "end": 975
+        }
+      ],
+      "dayEnd": 990,
+      "issues": [
+        {
+          "severity": "CONFLICT",
+          "code": "PAST_END_BY",
+          "dayIndex": 2,
+          "args": [
+            "2",
+            "16:30",
+            "16:00"
+          ]
+        }
+      ]
+    },
+    {
+      "dayIndex": 3,
+      "departure": 1350,
+      "stops": [
+        {
+          "visitId": "v8",
+          "arrive": 1370,
+          "start": 1380,
+          "end": 1440
+        },
+        {
+          "visitId": "v9",
+          "arrive": 1460,
+          "start": 1470,
+          "end": 1560
+        }
+      ],
+      "dayEnd": 1595,
+      "issues": []
+    },
+    {
+      "dayIndex": 4,
+      "departure": 570,
+      "stops": [
+        {
+          "visitId": "v10",
+          "arrive": 580,
+          "start": 600,
+          "end": 780
+        }
+      ],
+      "dayEnd": null,
+      "issues": [
+        {
+          "severity": "UNCERTAIN",
+          "code": "LEG_UNKNOWN",
+          "dayIndex": 4,
+          "args": [
+            "4",
+            "1"
+          ]
+        }
+      ]
+    }
+  ],
+  "unknown-before-fixed": [
+    {
+      "dayIndex": 1,
+      "departure": 480,
+      "stops": [
+        {
+          "visitId": "v1",
+          "arrive": null,
+          "start": null,
+          "end": null
+        },
+        {
+          "visitId": "v2",
+          "arrive": null,
+          "start": null,
+          "end": null
+        },
+        {
+          "visitId": "v3",
+          "arrive": null,
+          "start": null,
+          "end": null
+        }
+      ],
+      "dayEnd": null,
+      "issues": [
+        {
+          "severity": "UNCERTAIN",
+          "code": "LEG_UNKNOWN",
+          "dayIndex": 1,
+          "args": [
+            "1",
+            "1"
+          ]
+        }
+      ]
+    },
+    {
+      "dayIndex": 2,
+      "departure": 570,
+      "stops": [
+        {
+          "visitId": "v4",
+          "arrive": null,
+          "start": null,
+          "end": null
+        },
+        {
+          "visitId": "v5",
+          "arrive": null,
+          "start": 780,
+          "end": 840
+        },
+        {
+          "visitId": "v6",
+          "arrive": 855,
+          "start": 865,
+          "end": 895
+        },
+        {
+          "visitId": "v7",
+          "arrive": null,
+          "start": null,
+          "end": null
+        }
+      ],
+      "dayEnd": null,
+      "issues": [
+        {
+          "severity": "UNCERTAIN",
+          "code": "LEG_UNKNOWN",
+          "dayIndex": 2,
+          "args": [
+            "2",
+            "4"
+          ]
+        },
+        {
+          "severity": "UNCERTAIN",
+          "code": "FIXED_UNCHECKED",
+          "dayIndex": 2,
+          "args": [
+            "2",
+            "강릉짬뽕순두부 동화가든 본점",
+            "13:00"
+          ]
+        }
+      ]
+    },
+    {
+      "dayIndex": 3,
+      "departure": 630,
+      "stops": [
+        {
+          "visitId": "v8",
+          "arrive": 650,
+          "start": 660,
+          "end": 720
+        },
+        {
+          "visitId": "v9",
+          "arrive": 740,
+          "start": 750,
+          "end": 840
+        }
+      ],
+      "dayEnd": 875,
+      "issues": []
+    },
+    {
+      "dayIndex": 4,
+      "departure": 570,
+      "stops": [
+        {
+          "visitId": "v10",
+          "arrive": 580,
+          "start": 600,
+          "end": 780
+        }
+      ],
+      "dayEnd": null,
+      "issues": [
+        {
+          "severity": "UNCERTAIN",
+          "code": "LEG_UNKNOWN",
+          "dayIndex": 4,
+          "args": [
+            "4",
+            "1"
+          ]
+        }
+      ]
+    }
+  ]
+}
