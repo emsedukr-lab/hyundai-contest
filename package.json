@@ -24,6 +24,8 @@
     "tsx": "4.23.15",
     "jsqr": "1.4.0",
     "pngjs": "7.0.0",
-    "@types/pngjs": "6.0.5"
+    "@types/pngjs": "6.0.5",
+    "qrcode": "1.5.4",
+    "@types/qrcode": "1.5.5"
   }
 }
