@@ -6,6 +6,7 @@
 - 모바일 웹: React · Astryx · 기기 안에만 저장 (계정 없음)
 - 중계 서버: Cloudflare Worker + Durable Object · 종단간 암호화 (서버는 내용을 볼 수 없음)
 - 배포: **https://tteonaljido.tteonaljido-worker.workers.dev** (모바일 웹 + API, 개인정보 안내 `/privacy`)
+- 시연 영상: [`media/demo/떠날지도_시연.mp4`](media/demo/떠날지도_시연.mp4) (1분 56초) — release APK(Pleos 에뮬레이터)와 휴대폰 브라우저를 배포 서버로 연결한 실제 화면 녹화
 
 ## APK 위치
 
@@ -45,18 +46,20 @@ adb shell am start --user 10 -n io.tteonaljido.car/.MainActivity   # 사용자 �
 자동 시험:
 
 ```sh
-npm test                                              # shared 41 · worker 12 · web 10
-(cd car && ./gradlew test)                            # Kotlin 43
+npm test                                              # shared 43 · worker 12 · web 17
+(cd car && ./gradlew test)                            # Kotlin 44
 npx tsx tools/pairing-smoke.mts http://localhost:8787 # 서버 흐름
 npx tsx tools/e2e-mobile.mts                          # Chrome 휴대폰 + 가짜 차량
-npx tsx tools/e2e-car.mts emulator-5580               # 에뮬레이터 차량 앱 + Chrome 휴대폰
+npx tsx tools/e2e-car.mts emulator-5580               # 에뮬레이터 차량 앱(dev debug) + Chrome 휴대폰
+npx tsx tools/record-demo.mts emulator-5580           # release APK + 배포 서버 전체 흐름 녹화·메모리 기록
+npx tsx tools/compose-demo.mts                        # 녹화 → media/demo/떠날지도_시연.mp4
 ```
 
 ## 테스트 환경과 설정
 
 | 항목 | 값 |
 |---|---|
-| 에뮬레이터 | Pleos Connect Emulator 2.1.0, Android 14(API 34) arm64, 2560×1440 160dpi, RAM 4GB, cold boot 권장 |
+| 에뮬레이터 | Pleos Connect Emulator 2.1.0, Android 14(API 34) arm64, 2560×1440 160dpi, RAM 4GB, `-gpu host`로 cold boot 권장 |
 | 개발 도구 | Android Studio 내장 JDK 21, AGP 9.2.1, Gradle 9.4.1, compileSdk 37 / targetSdk 34 / minSdk 28 |
 | Node | 22.13 이상 (wrangler 4.151.3, Vite 7.3.7) |
 | 브라우저 | Chrome/Safari 최신 (WebCrypto 필요 → HTTPS 또는 localhost) |
