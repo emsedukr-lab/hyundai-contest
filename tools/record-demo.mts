@@ -7,7 +7,7 @@
  * The QR is read from a screenshot of the car screen, exactly as a phone camera would.
  */
 import { execFileSync, spawn } from 'node:child_process';
-import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import jsQR from 'jsqr';
@@ -126,9 +126,10 @@ const phoneFrames: Array<{ file: string; at: number }> = [];
 let shooting = true;
 const shooter = (async () => {
   while (shooting) {
-    const at = (Date.now() - t0) / 1000;
     try {
       const buf = await page.screenshot({ type: 'jpeg', quality: 90, timeout: 2000 });
+      // Stamp when the call returns: a capture can wait seconds during a page load, and the image shows the page then.
+      const at = (Date.now() - t0) / 1000;
       const file = `phone_frames/${String(phoneFrames.length).padStart(5, '0')}.jpg`;
       writeFileSync(`${work}${file}`, buf);
       phoneFrames.push({ file, at });
@@ -269,11 +270,16 @@ try {
 }
 const total = (Date.now() - t0) / 1000;
 segments.forEach((s, i) => adb('pull', s.file, `${work}car_${i}.mp4`));
-// Screencast frames arrive only when the page repaints; hold each one until the next to get a constant-rate clip.
-const list = phoneFrames.map((f, i) => `file '${f.file}'\nduration ${((phoneFrames[i + 1]?.at ?? total) - f.at).toFixed(3)}`);
-writeFileSync(`${work}phone_frames.txt`, `${list.join('\n')}\nfile '${phoneFrames.at(-1)!.file}'\n`);
-execFileSync('ffmpeg', ['-v', 'error', '-y', '-f', 'concat', '-safe', '0', '-i', `${work}phone_frames.txt`, '-vf', 'scale=780:1688:force_original_aspect_ratio=decrease,pad=780:1688:(ow-iw)/2:0:white,fps=30', '-c:v', 'libx264', '-crf', '16', '-pix_fmt', 'yuv420p', `${work}phone.mp4`]);
+// Constant 30 fps clip: output frame n shows the latest screenshot taken by phoneStart + n/30. Built as a numbered
+// symlink sequence because concat-demuxer durations get rounded per frame and drift by seconds over a take.
 const phoneStart = phoneFrames[0].at;
+rmSync(`${work}phone_seq`, { recursive: true, force: true });
+mkdirSync(`${work}phone_seq`);
+for (let n = 0, j = 0; phoneStart + n / 30 < total; n++) {
+  while (j + 1 < phoneFrames.length && phoneFrames[j + 1].at <= phoneStart + n / 30) j++;
+  symlinkSync(`${work}${phoneFrames[j].file}`, `${work}phone_seq/${String(n).padStart(5, '0')}.jpg`);
+}
+execFileSync('ffmpeg', ['-v', 'error', '-y', '-framerate', '30', '-i', `${work}phone_seq/%05d.jpg`, '-vf', 'scale=780:1688:force_original_aspect_ratio=decrease,pad=780:1688:0:0:white', '-c:v', 'libx264', '-crf', '16', '-pix_fmt', 'yuv420p', `${work}phone.mp4`]);
 writeFileSync(`${work}timeline.json`, JSON.stringify({ failure, total, phoneStart, segments: segments.map((s, i) => ({ file: `car_${i}.mp4`, at: s.at })), captions, waits, perf }, null, 2));
 console.log(JSON.stringify({ failure, total, perf }, null, 1));
 if (failure) process.exitCode = 1;

@@ -6,7 +6,8 @@
 - 모바일 웹: React · Astryx · 기기 안에만 저장 (계정 없음)
 - 중계 서버: Cloudflare Worker + Durable Object · 종단간 암호화 (서버는 내용을 볼 수 없음)
 - 배포: **https://tteonaljido.tteonaljido-worker.workers.dev** (모바일 웹 + API, 개인정보 안내 `/privacy`)
-- 시연 영상: [`media/demo/떠날지도_시연.mp4`](media/demo/떠날지도_시연.mp4) (1분 56초) — release APK(Pleos 에뮬레이터)와 휴대폰 브라우저를 배포 서버로 연결한 실제 화면 녹화
+- 시연 영상: [`media/demo/떠날지도_시연.mp4`](media/demo/떠날지도_시연.mp4) (2분) — release APK(Pleos 에뮬레이터)와 휴대폰 브라우저를 배포 서버로 연결한 실제 화면 녹화
+- 세로 숏폼: [`media/demo/떠날지도_숏폼.mp4`](media/demo/떠날지도_숏폼.mp4) (56초, 1080×1920) — 같은 녹화에서 편집, 게시 문구는 `submission/숏폼_게시문구.md`
 
 ## APK 위치
 
@@ -53,6 +54,7 @@ npx tsx tools/e2e-mobile.mts                          # Chrome 휴대폰 + 가�
 npx tsx tools/e2e-car.mts emulator-5580               # 에뮬레이터 차량 앱(dev debug) + Chrome 휴대폰
 npx tsx tools/record-demo.mts emulator-5580           # release APK + 배포 서버 전체 흐름 녹화·메모리 기록
 npx tsx tools/compose-demo.mts                        # 녹화 → media/demo/떠날지도_시연.mp4
+npx tsx tools/compose-shorts.mts                      # 녹화 → media/demo/떠날지도_숏폼.mp4 (세로)
 ```
 
 ## 테스트 환경과 설정
