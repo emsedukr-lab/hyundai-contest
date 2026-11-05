@@ -10,11 +10,12 @@ import { Heading, Text } from '@astryxdesign/core/Text';
 import { TimeInput } from '@astryxdesign/core/TimeInput';
 import type { Endpoint, Trip } from '@tteonaljido/shared';
 import { dateLabel, minutesLabel } from '../lib/format';
+import { t } from '../lib/i18n';
 import { assign, lodgingPlaces, move, placeOf, setDepart, setLeg, setLodging, unassign, unassignedVisits, visitOf } from '../lib/trips';
 
 type ISOTime = Parameters<NonNullable<Parameters<typeof TimeInput>[0]['onChange']>>[0];
 
-const endpointName = (plan: Trip, e: Endpoint) => (e.kind === 'HOME' ? '집' : (placeOf(plan, e.placeRef)?.name ?? '장소'));
+const endpointName = (plan: Trip, e: Endpoint) => (e.kind === 'HOME' ? t('common.home') : (placeOf(plan, e.placeRef)?.name ?? t('common.place')));
 
 /** Per-day order, travel times, departure and lodging. Edits never move fixed visits on their own. */
 export function DaysSection({ plan, onChange, onOpenPlace, onError }: { plan: Trip; onChange: (p: Trip) => void; onOpenPlace: (ref: string) => void; onError: (m: string) => void }) {
@@ -22,8 +23,8 @@ export function DaysSection({ plan, onChange, onOpenPlace, onError }: { plan: Tr
   const day = plan.days.find((d) => String(d.dayIndex) === tab) ?? plan.days[0];
   const i = day.dayIndex - 1;
   const isLast = i === plan.days.length - 1;
-  const start = i === 0 ? endpointName(plan, plan.origin) : (placeOf(plan, plan.days[i - 1].lodgingPlaceRef ?? '')?.name ?? '전날 숙소 (미정)');
-  const end = isLast ? endpointName(plan, plan.finalDestination) : (placeOf(plan, day.lodgingPlaceRef ?? '')?.name ?? '숙소 (미정)');
+  const start = i === 0 ? endpointName(plan, plan.origin) : (placeOf(plan, plan.days[i - 1].lodgingPlaceRef ?? '')?.name ?? t('days.prevLodgingUnset'));
+  const end = isLast ? endpointName(plan, plan.finalDestination) : (placeOf(plan, day.lodgingPlaceRef ?? '')?.name ?? t('days.lodgingUnset'));
   const pool = unassignedVisits(plan);
   const safe = (f: () => Trip) => {
     try {
@@ -36,42 +37,42 @@ export function DaysSection({ plan, onChange, onOpenPlace, onError }: { plan: Tr
   const leg = (k: number) => (
     <HStack gap={2} vAlign="center" key={`leg${k}`}>
       <Text type="supporting" color="secondary">
-        ↓ 이동
+        {t('days.travel')}
       </Text>
       <NumberInput
-        label={`${k}번 구간 이동 시간(분)`}
+        label={t('days.legLabel', { k })}
         isLabelHidden
         value={day.legs[k]?.minutes ?? null}
-        placeholder="미입력"
+        placeholder={t('days.legEmpty')}
         onChange={(v: number | null) => safe(() => setLeg(plan, day.dayIndex, k, v === null || !Number.isFinite(v) ? null : Math.max(0, Math.min(1440, Math.round(v)))))}
         hasClear
         isIntegerOnly
         width={120}
       />
       <Text type="supporting" color="secondary">
-        {day.legs[k] ? minutesLabel(day.legs[k]!.minutes) : '확인 필요'}
+        {day.legs[k] ? minutesLabel(day.legs[k]!.minutes) : t('days.needsCheck')}
       </Text>
     </HStack>
   );
 
   return (
     <VStack gap={3}>
-      <Heading level={2}>일차별 일정</Heading>
+      <Heading level={2}>{t('days.title')}</Heading>
       <TabList value={String(day.dayIndex)} onChange={setTab} hasDivider>
         {plan.days.map((d) => (
-          <Tab key={d.dayIndex} value={String(d.dayIndex)} label={`${d.dayIndex}일차`} />
+          <Tab key={d.dayIndex} value={String(d.dayIndex)} label={t('common.day', { day: d.dayIndex })} />
         ))}
       </TabList>
       <Text type="supporting" color="secondary">
         {dateLabel(day.date)}
       </Text>
       {i === 0 ? (
-        <Text type="supporting">{plan.firstDay.basis === 'DEPART_ORIGIN' ? `${start}에서 ${plan.firstDay.departTime} 출발` : `${start}에서 출발 · 첫 장소 ${plan.firstDay.arriveTime} 도착 기준`}</Text>
+        <Text type="supporting">{plan.firstDay.basis === 'DEPART_ORIGIN' ? t('days.departAt', { start, time: plan.firstDay.departTime }) : t('days.departArrive', { start, time: plan.firstDay.arriveTime })}</Text>
       ) : (
-        <TimeInput label={`${start}에서 출발`} value={(day.departTime ?? undefined) as ISOTime} increment={30} hasClear onChange={(v) => safe(() => setDepart(plan, day.dayIndex, v ? String(v).slice(0, 5) : null))} />
+        <TimeInput label={t('days.departFrom', { start })} value={(day.departTime ?? undefined) as ISOTime} increment={30} hasClear onChange={(v) => safe(() => setDepart(plan, day.dayIndex, v ? String(v).slice(0, 5) : null))} />
       )}
       <VStack gap={2}>
-        {day.visitOrder.length === 0 && <Text color="secondary">아직 넣은 장소가 없어요</Text>}
+        {day.visitOrder.length === 0 && <Text color="secondary">{t('days.empty')}</Text>}
         {day.visitOrder.flatMap((id, k) => {
           const v = visitOf(plan, id)!;
           const p = placeOf(plan, v.placeRef)!;
@@ -83,29 +84,29 @@ export function DaysSection({ plan, onChange, onOpenPlace, onError }: { plan: Tr
                   <VStack gap={0.5}>
                     <HStack gap={1} vAlign="center" wrap="wrap">
                       <Text type="label">{`${k + 1}. ${p.name}`}</Text>
-                      {v.fixed && <Badge variant="info" label={`고정 ${v.fixed.time}`} />}
-                      {v.importance === 'MUST' && <Badge variant="warning" label="꼭" />}
+                      {v.fixed && <Badge variant="info" label={t('common.fixedAt', { time: v.fixed.time })} />}
+                      {v.importance === 'MUST' && <Badge variant="warning" label={t('common.must')} />}
                     </HStack>
                     <Text type="supporting" color="secondary">
-                      {`머무는 시간 ${minutesLabel(v.stayMinutes)}${v.desiredTime ? ` · 희망 ${v.desiredTime}` : ''}`}
+                      {`${t('days.stay', { duration: minutesLabel(v.stayMinutes) })}${v.desiredTime ? ` · ${t('days.desired', { time: v.desiredTime })}` : ''}`}
                     </Text>
                   </VStack>
                 </StackItem>
-                <Button label="위로" size="sm" variant="ghost" isDisabled={k === 0} onClick={() => safe(() => move(plan, day.dayIndex, k, -1))} />
-                <Button label="아래로" size="sm" variant="ghost" isDisabled={k === day.visitOrder.length - 1} onClick={() => safe(() => move(plan, day.dayIndex, k, 1))} />
-                <Button label="상세" size="sm" variant="ghost" onClick={() => onOpenPlace(p.placeRef)} />
-                <Button label="빼기" size="sm" variant="ghost" onClick={() => safe(() => unassign(plan, id))} />
+                <Button label={t('days.up')} size="sm" variant="ghost" isDisabled={k === 0} onClick={() => safe(() => move(plan, day.dayIndex, k, -1))} />
+                <Button label={t('days.down')} size="sm" variant="ghost" isDisabled={k === day.visitOrder.length - 1} onClick={() => safe(() => move(plan, day.dayIndex, k, 1))} />
+                <Button label={t('days.details')} size="sm" variant="ghost" onClick={() => onOpenPlace(p.placeRef)} />
+                <Button label={t('days.remove')} size="sm" variant="ghost" onClick={() => safe(() => unassign(plan, id))} />
               </HStack>
             </Card>,
           ];
         })}
         {leg(day.visitOrder.length)}
-        <Text type="label">{isLast ? `귀가: ${end}` : `묵을 곳: ${end}`}</Text>
+        <Text type="label">{isLast ? t('days.endHome', { end }) : t('days.endLodging', { end })}</Text>
       </VStack>
       {pool.length > 0 && (
         <Selector
-          label={`${day.dayIndex}일차에 장소 넣기`}
-          placeholder="배정 안 된 장소에서 고르기"
+          label={t('days.addPlace', { day: day.dayIndex })}
+          placeholder={t('days.addPlace.placeholder')}
           options={pool.map((v) => ({ value: v.visitId, label: placeOf(plan, v.placeRef)?.name ?? v.visitId }))}
           value=""
           onChange={(id) => safe(() => assign(plan, id, day.dayIndex))}
@@ -113,12 +114,12 @@ export function DaysSection({ plan, onChange, onOpenPlace, onError }: { plan: Tr
       )}
       {!isLast && (
         <Selector
-          label={`${day.dayIndex}일차 밤 숙소`}
-          placeholder={lodgingPlaces(plan).length ? '숙소 고르기' : "먼저 '숙소' 종류의 장소를 추가해 주세요"}
-          options={[{ value: '', label: '미정' }, ...lodgingPlaces(plan).map((p) => ({ value: p.placeRef, label: p.name }))]}
+          label={t('days.lodging', { day: day.dayIndex })}
+          placeholder={lodgingPlaces(plan).length ? t('days.lodging.placeholder') : t('days.lodging.none')}
+          options={[{ value: '', label: t('days.lodging.unset') }, ...lodgingPlaces(plan).map((p) => ({ value: p.placeRef, label: p.name }))]}
           value={day.lodgingPlaceRef ?? ''}
           onChange={(ref) => safe(() => setLodging(plan, day.dayIndex, ref || null))}
-          description="다음 날은 이 숙소에서 출발해요. 같은 숙소를 여러 날 고를 수 있어요."
+          description={t('days.lodging.detail')}
         />
       )}
     </VStack>

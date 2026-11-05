@@ -5,8 +5,10 @@ import { Theme } from '@astryxdesign/core/theme';
 import { defaultThemeSlug, themes } from './astryx-themes';
 import App from './App';
 import { requestPersistence } from './lib/db';
+import { lang } from './lib/i18n';
 
 void requestPersistence();
+document.documentElement.lang = lang;
 const dark = window.matchMedia?.('(prefers-color-scheme: dark)').matches;
 createRoot(document.getElementById('root')!).render(
   <Theme theme={themes[defaultThemeSlug]} mode={dark ? 'dark' : 'light'}>

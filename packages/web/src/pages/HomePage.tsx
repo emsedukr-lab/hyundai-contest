@@ -11,6 +11,7 @@ import { Heading, Text } from '@astryxdesign/core/Text';
 import { sampleTrip, type Trip } from '@tteonaljido/shared';
 import { trips } from '../lib/db';
 import { periodLabel } from '../lib/format';
+import { t } from '../lib/i18n';
 import { navigate } from '../lib/router';
 import { newDoc, nightsLabel, nowIso, unassignedVisits, type TripDoc } from '../lib/trips';
 
@@ -25,7 +26,7 @@ export function HomePage() {
   const addSample = async () => {
     const plan: Trip = { ...sampleTrip(nowIso()), tripId: crypto.randomUUID() };
     await trips.put(await newDoc(plan));
-    setMessage('강릉 3박 4일 샘플을 추가했어요. 좌표는 시연용 근사값이에요.');
+    setMessage(t('home.sampleAdded'));
     await reload();
   };
 
@@ -34,7 +35,7 @@ export function HomePage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `떠날지도-백업-${nowIso().slice(0, 10)}.json`;
+    a.download = t('home.backupFileName', { date: nowIso().slice(0, 10) });
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -44,10 +45,10 @@ export function HomePage() {
       const data = JSON.parse(await file.text()) as { format?: string; trips?: TripDoc[] };
       if (data.format !== 'tteonaljido-backup' || !Array.isArray(data.trips)) throw new Error();
       for (const d of data.trips) await trips.put(await newDoc({ ...d.plan, revision: d.revision, updatedAt: d.updatedAt }, d.home));
-      setMessage(`여행 ${data.trips.length}개를 가져왔어요`);
+      setMessage(t('home.imported', { n: data.trips.length }));
       await reload();
     } catch {
-      setMessage('떠날지도 백업 파일이 아니에요');
+      setMessage(t('home.notBackup'));
     }
   };
 
@@ -57,9 +58,9 @@ export function HomePage() {
       header={
         <LayoutHeader hasDivider>
           <VStack gap={0.5}>
-            <Heading level={1}>떠날지도</Heading>
+            <Heading level={1}>{t('home.title')}</Heading>
             <Text type="supporting" color="secondary">
-              여행을 휴대폰에서 짜고, 차에서 QR로 불러와요
+              {t('home.tagline')}
             </Text>
           </VStack>
         </LayoutHeader>
@@ -70,25 +71,25 @@ export function HomePage() {
             {message && <Banner status="info" title={message} isDismissable onDismiss={() => setMessage(null)} />}
             {docs !== null && docs.length === 0 ? (
               <EmptyState
-                title="저장된 여행이 없어요"
-                description="새 여행을 만들거나 샘플 여행으로 먼저 둘러보세요."
+                title={t('common.noTrips')}
+                description={t('home.empty.description')}
                 actions={
                   <HStack gap={2}>
-                    <Button label="새 여행" variant="primary" onClick={() => navigate('/trips/new')} />
-                    <Button label="샘플 여행 추가" variant="secondary" onClick={addSample} />
+                    <Button label={t('home.newTrip')} variant="primary" onClick={() => navigate('/trips/new')} />
+                    <Button label={t('common.addSample')} variant="secondary" onClick={addSample} />
                   </HStack>
                 }
               />
             ) : (
-              <List hasDividers header={<Text type="label">내 여행</Text>}>
+              <List hasDividers header={<Text type="label">{t('home.myTrips')}</Text>}>
                 {(docs ?? []).map((d) => (
                   <ListItem
                     key={d.tripId}
                     label={d.plan.name}
-                    description={`${periodLabel(d.plan.startDate, d.plan.endDate)} · ${nightsLabel(d.plan)} · 장소 ${d.plan.places.length}곳`}
+                    description={t('common.tripSummary', { period: periodLabel(d.plan.startDate, d.plan.endDate), nights: nightsLabel(d.plan), places: d.plan.places.length })}
                     endContent={
                       <HStack gap={1}>
-                        {unassignedVisits(d.plan).length > 0 && <Badge variant="warning" label={`미배정 ${unassignedVisits(d.plan).length}`} />}
+                        {unassignedVisits(d.plan).length > 0 && <Badge variant="warning" label={t('home.unassignedBadge', { n: unassignedVisits(d.plan).length })} />}
                         <Badge variant="neutral" label={`v${d.revision}`} />
                       </HStack>
                     }
@@ -98,16 +99,16 @@ export function HomePage() {
               </List>
             )}
             <Text type="supporting" color="secondary">
-              여행은 이 휴대폰 브라우저에만 저장돼요. 계정이 없고 서버에 보관하지 않아요. 차로 보낼 때만, 고른 여행 하나가 암호화되어 잠시 전달돼요.
+              {t('home.storageNote')}
             </Text>
             <HStack gap={2} wrap="wrap">
-              <Button label="백업 내보내기" variant="ghost" size="sm" isDisabled={!docs?.length} onClick={exportAll} />
-              <Button label="백업 가져오기" variant="ghost" size="sm" onClick={() => setShowImport((v) => !v)} />
-              <Button label="개인정보 안내" variant="ghost" size="sm" onClick={() => navigate('/privacy')} />
+              <Button label={t('home.exportBackup')} variant="ghost" size="sm" isDisabled={!docs?.length} onClick={exportAll} />
+              <Button label={t('home.importBackup')} variant="ghost" size="sm" onClick={() => setShowImport((v) => !v)} />
+              <Button label={t('privacy.title')} variant="ghost" size="sm" onClick={() => navigate('/privacy')} />
             </HStack>
             {showImport && (
               <FileInput
-                label="백업 파일"
+                label={t('home.backupFile.label')}
                 mode="input"
                 accept="application/json"
                 value={null}
@@ -115,7 +116,7 @@ export function HomePage() {
                   const file = Array.isArray(f) ? f[0] : f;
                   if (file) void importFile(file).then(() => setShowImport(false));
                 }}
-                description="떠날지도에서 내보낸 JSON 파일"
+                description={t('home.backupFile.description')}
               />
             )}
           </VStack>
@@ -125,8 +126,8 @@ export function HomePage() {
         docs?.length ? (
           <LayoutFooter hasDivider>
             <HStack gap={2}>
-              <Button label="새 여행" variant="primary" onClick={() => navigate('/trips/new')} />
-              <Button label="샘플 여행 추가" variant="secondary" onClick={addSample} />
+              <Button label={t('home.newTrip')} variant="primary" onClick={() => navigate('/trips/new')} />
+              <Button label={t('common.addSample')} variant="secondary" onClick={addSample} />
             </HStack>
           </LayoutFooter>
         ) : undefined

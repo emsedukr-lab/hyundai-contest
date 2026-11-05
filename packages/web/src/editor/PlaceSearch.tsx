@@ -10,14 +10,15 @@ import { HStack, StackItem, VStack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import type { Place } from '@tteonaljido/shared';
+import { t } from '../lib/i18n';
 import { ApiError, searchPlaces, type PlaceHit } from '../lib/pairing';
 
 export const CATEGORY_OPTIONS = [
-  { value: 'SIGHT', label: '관광·산책' },
-  { value: 'FOOD', label: '식사' },
-  { value: 'CAFE', label: '카페·디저트' },
-  { value: 'LODGING', label: '숙소' },
-  { value: 'OTHER', label: '기타' },
+  { value: 'SIGHT', label: t('place.category.sight') },
+  { value: 'FOOD', label: t('place.category.food') },
+  { value: 'CAFE', label: t('place.category.cafe') },
+  { value: 'LODGING', label: t('common.lodging') },
+  { value: 'OTHER', label: t('place.category.other') },
 ];
 export const CATEGORY_LABEL = Object.fromEntries(CATEGORY_OPTIONS.map((o) => [o.value, o.label])) as Record<Place['category'], string>;
 
@@ -35,7 +36,7 @@ const fromHit = (h: PlaceHit): NewPlace => ({
 });
 
 /** Kakao search through our relay, with a manual fallback when search is not available. */
-export function PlaceSearch({ onPick, label = '장소 검색', lodgingOnly = false }: { onPick: (p: NewPlace) => void; label?: string; lodgingOnly?: boolean }) {
+export function PlaceSearch({ onPick, label = t('place.search'), lodgingOnly = false }: { onPick: (p: NewPlace) => void; label?: string; lodgingOnly?: boolean }) {
   const [q, setQ] = useState('');
   const [hits, setHits] = useState<PlaceHit[] | null>(null);
   const [busy, setBusy] = useState(false);
@@ -62,7 +63,7 @@ export function PlaceSearch({ onPick, label = '장소 검색', lodgingOnly = fal
       setHits(null);
       const off = e instanceof ApiError && e.status === 503;
       setUnavailable(off);
-      setNote(off ? '지금은 장소 검색을 쓸 수 없어요. 이름으로 추가하면 차량에서 내비로 위치를 찾아요.' : '검색하지 못했어요. 인터넷 연결을 확인하거나 이름으로 추가해 주세요.');
+      setNote(off ? t('place.search.unavailable') : t('place.search.failed'));
     } finally {
       setBusy(false);
     }
@@ -72,13 +73,13 @@ export function PlaceSearch({ onPick, label = '장소 검색', lodgingOnly = fal
     <VStack gap={2}>
       <HStack gap={2} vAlign="end">
         <StackItem size="fill">
-          <TextInput label={label} value={q} onChange={setQ} onEnter={run} placeholder="예: 경포호, 테라로사" hasClear />
+          <TextInput label={label} value={q} onChange={setQ} onEnter={run} placeholder={t('place.search.placeholder')} hasClear />
         </StackItem>
-        <Button label="검색" variant="secondary" isLoading={busy} onClick={run} />
+        <Button label={t('place.search.action')} variant="secondary" isLoading={busy} onClick={run} />
       </HStack>
       {note && <Banner status="info" title={note} />}
-      {note && q.trim() && <Button label={`'${q.trim().slice(0, 20)}' 이름으로 추가`} variant="primary" size="sm" onClick={addByName} />}
-      {hits && hits.length === 0 && <Banner status="info" title="검색 결과가 없어요" />}
+      {note && q.trim() && <Button label={t('place.search.addByName', { query: q.trim().slice(0, 20) })} variant="primary" size="sm" onClick={addByName} />}
+      {hits && hits.length === 0 && <Banner status="info" title={t('place.search.noResults')} />}
       {hits && hits.length > 0 && (
         <List hasDividers>
           {hits.map((h) => (
@@ -96,7 +97,7 @@ export function PlaceSearch({ onPick, label = '장소 검색', lodgingOnly = fal
         </List>
       )}
       <HStack gap={2}>
-        <Button label={unavailable ? '주소·좌표까지 직접 입력' : '직접 입력'} variant="ghost" size="sm" onClick={() => setManual(true)} />
+        <Button label={unavailable ? t('place.manual.full') : t('place.manual.open')} variant="ghost" size="sm" onClick={() => setManual(true)} />
       </HStack>
       <ManualPlaceDialog isOpen={manual} lodgingOnly={lodgingOnly} onClose={() => setManual(false)} onSave={(p) => (onPick(p), setManual(false))} />
     </VStack>
@@ -115,24 +116,24 @@ function ManualPlaceDialog({ isOpen, onClose, onSave, lodgingOnly }: { isOpen: b
 
   return (
     <Dialog isOpen={isOpen} onOpenChange={(o) => !o && onClose()} width={480}>
-      <DialogHeader title="장소 직접 입력" onOpenChange={(o) => !o && onClose()} />
+      <DialogHeader title={t('place.manual.title')} onOpenChange={(o) => !o && onClose()} />
       <VStack gap={4}>
         <FormLayout>
-          <TextInput label="이름" value={name} onChange={setName} isRequired />
-          <TextInput label="주소" value={address} onChange={setAddress} isOptional />
+          <TextInput label={t('place.manual.name')} value={name} onChange={setName} isRequired />
+          <TextInput label={t('place.manual.address')} value={address} onChange={setAddress} isOptional />
           <HStack gap={2}>
-            <NumberInput label="위도" value={lat} onChange={(v: number | null) => setLat(v)} step={0.0001} placeholder="37.7955" isOptional hasClear />
-            <NumberInput label="경도" value={lon} onChange={(v: number | null) => setLon(v)} step={0.0001} placeholder="128.8975" isOptional hasClear />
+            <NumberInput label={t('place.manual.lat')} value={lat} onChange={(v: number | null) => setLat(v)} step={0.0001} placeholder="37.7955" isOptional hasClear />
+            <NumberInput label={t('place.manual.lon')} value={lon} onChange={(v: number | null) => setLon(v)} step={0.0001} placeholder="128.8975" isOptional hasClear />
           </HStack>
           <Text type="supporting" color="secondary">
-            좌표를 모르면 비워 두세요. 차량에서 안내할 때 현대차 내비로 위치를 찾아요.
+            {t('place.manual.coordsHint')}
           </Text>
-          {!lodgingOnly && <Selector label="종류" options={CATEGORY_OPTIONS} value={category} onChange={(v) => setCategory(v as Place['category'])} />}
+          {!lodgingOnly && <Selector label={t('common.type')} options={CATEGORY_OPTIONS} value={category} onChange={(v) => setCategory(v as Place['category'])} />}
         </FormLayout>
         <HStack gap={2} hAlign="end">
-          <Button label="취소" variant="secondary" onClick={onClose} />
+          <Button label={t('common.cancel')} variant="secondary" onClick={onClose} />
           <Button
-            label="추가"
+            label={t('place.manual.add')}
             variant="primary"
             isDisabled={!valid}
             onClick={() =>

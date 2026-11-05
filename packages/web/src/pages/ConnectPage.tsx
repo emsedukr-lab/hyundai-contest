@@ -15,71 +15,72 @@ import { Heading, Text } from '@astryxdesign/core/Text';
 import { isTerminal, parseQrFragment, sampleTrip, type SessionView } from '@tteonaljido/shared';
 import { pairings, trips, type PairingRecord } from '../lib/db';
 import { codeLabel, periodLabel } from '../lib/format';
+import { t } from '../lib/i18n';
 import { ApiError, cancel, claim, confirmCode, finish, openPairing, send, status, supportsWebCrypto } from '../lib/pairing';
 import { navigate } from '../lib/router';
 import { newDoc, nightsLabel, nowIso, planWarnings, unassignedVisits, type TripDoc } from '../lib/trips';
 
 type Stage = 'loading' | 'invalid' | 'unsupported' | 'intro' | 'code' | 'pick' | 'consent' | 'approve' | 'status';
 
-const STEPS = ['연결', '코드 확인', '여행 선택', '보낼 정보', '보내기'];
+const STEPS = [t('connect.step.connect'), t('connect.step.code'), t('connect.step.pick'), t('connect.step.consent'), t('connect.step.send')];
 const STEP_OF: Partial<Record<Stage, number>> = { intro: 0, code: 1, pick: 2, consent: 3, approve: 4, status: 4 };
 const LAST_SID = 'tteonaljido.lastSid';
 
 const ERROR_TEXT: Record<string, string> = {
-  ALREADY_CLAIMED: '이미 사용된 QR이에요. 차량에서 새 QR을 받아 다시 스캔해 주세요.',
-  EXPIRED: '시간이 지난 QR이에요. 차량에서 새 QR을 받아 다시 스캔해 주세요.',
-  NOT_FOUND: '연결 정보를 찾을 수 없어요. 차량에서 새 QR을 받아 주세요.',
-  FINGERPRINT: 'QR과 연결 대상이 일치하지 않아요. 보내지 말고 차량에서 새 QR을 받아 주세요.',
-  UNAUTHORIZED: '연결 확인에 실패했어요. 차량에서 새 QR을 받아 주세요.',
-  NETWORK: '인터넷 연결을 확인한 뒤 다시 시도해 주세요. 보낸 내용은 그대로 다시 보내져요.',
-  RATE_LIMITED: '요청이 너무 많아요. 잠시 뒤 다시 시도해 주세요.',
-  PAYLOAD_CONFLICT: '이 연결로는 이미 다른 여행을 보냈어요. 차량에서 새 QR을 받아 주세요.',
-  UNSUPPORTED_SCHEMA: '차량 앱 업데이트가 필요해요. 이 휴대폰의 여행 형식을 차량 앱이 아직 지원하지 않아요.',
-  UNSUPPORTED_VERSION: '차량 앱 업데이트가 필요해요.',
-  APPLYING: '차량에서 이미 저장하는 중이라 취소할 수 없어요. 차량 화면을 확인해 주세요.',
-  INVALID_STATE: '지금 단계에서는 할 수 없는 작업이에요. 상태를 새로 확인해 주세요.',
+  ALREADY_CLAIMED: t('connect.error.alreadyClaimed'),
+  EXPIRED: t('connect.error.expired'),
+  NOT_FOUND: t('connect.error.notFound'),
+  FINGERPRINT: t('connect.error.fingerprint'),
+  UNAUTHORIZED: t('connect.error.unauthorized'),
+  NETWORK: t('connect.error.network'),
+  RATE_LIMITED: t('connect.error.rateLimited'),
+  PAYLOAD_CONFLICT: t('connect.error.payloadConflict'),
+  UNSUPPORTED_SCHEMA: t('connect.error.unsupportedSchema'),
+  UNSUPPORTED_VERSION: t('connect.error.unsupportedVersion'),
+  APPLYING: t('connect.error.applying'),
+  INVALID_STATE: t('connect.error.invalidState'),
 };
 
 const RESULT_TEXT: Record<string, string> = {
-  IMPORTED_NEW: '차량에 새 여행으로 불러왔어요',
-  UPDATED: '차량의 같은 여행을 최신 버전으로 바꿨어요',
-  SAVED_AS_COPY: '차량에 별도 여행(사본)으로 저장했어요',
-  ALREADY_IMPORTED: '차량에 이미 같은 버전이 있어요. 바뀐 것은 없어요',
-  USER_DECLINED: '차량에서 불러오기를 취소했어요',
-  INVALID_PAYLOAD: '차량이 여행 내용을 확인하지 못해 불러오지 않았어요',
-  UNSUPPORTED_VERSION: '차량 앱 업데이트가 필요해서 불러오지 않았어요',
-  DECRYPT_FAILED: '차량에서 내용을 열지 못했어요. 새 QR로 다시 시도해 주세요',
-  STORAGE_ERROR: '차량 저장에 실패했어요. 차량 화면을 확인해 주세요',
+  IMPORTED_NEW: t('connect.result.importedNew'),
+  UPDATED: t('connect.result.updated'),
+  SAVED_AS_COPY: t('connect.result.savedAsCopy'),
+  ALREADY_IMPORTED: t('connect.result.alreadyImported'),
+  USER_DECLINED: t('connect.result.userDeclined'),
+  INVALID_PAYLOAD: t('connect.result.invalidPayload'),
+  UNSUPPORTED_VERSION: t('connect.result.unsupportedVersion'),
+  DECRYPT_FAILED: t('connect.result.decryptFailed'),
+  STORAGE_ERROR: t('connect.result.storageError'),
 };
 
 /** What the phone may honestly claim at each server state: sending is not the same as being applied. */
 function statusText(v: SessionView): { title: string; detail: string; tone: 'info' | 'success' | 'warning' | 'error'; done: boolean } {
   switch (v.state) {
     case 'CLAIMED':
-      return { title: '아직 보내지 않았어요', detail: '여행을 고르고 보내기를 눌러 주세요.', tone: 'info', done: false };
+      return { title: t('connect.status.notSent'), detail: t('connect.status.notSent.detail'), tone: 'info', done: false };
     case 'MOBILE_APPROVED':
       return v.carFetched
-        ? { title: '차량이 받았어요 · 아직 적용 전', detail: '차량 화면에서 내용을 확인하고 불러오기를 승인해 주세요.', tone: 'info', done: false }
-        : { title: '차량으로 보냈어요 · 아직 적용 전', detail: '차량이 받을 때까지 기다리는 중이에요.', tone: 'info', done: false };
+        ? { title: t('connect.status.received'), detail: t('connect.status.received.detail'), tone: 'info', done: false }
+        : { title: t('connect.status.sent'), detail: t('connect.status.sent.detail'), tone: 'info', done: false };
     case 'CAR_APPLYING':
-      return { title: '차량에서 저장하는 중이에요', detail: '잠시만 기다려 주세요.', tone: 'info', done: false };
+      return { title: t('connect.status.applying'), detail: t('connect.status.applying.detail'), tone: 'info', done: false };
     case 'APPLIED':
-      return { title: RESULT_TEXT[v.resultCode ?? ''] ?? '차량에 적용됐어요', detail: '차량에서 여행 목록을 확인할 수 있어요.', tone: 'success', done: true };
+      return { title: RESULT_TEXT[v.resultCode ?? ''] ?? t('connect.status.applied'), detail: t('connect.status.applied.detail'), tone: 'success', done: true };
     case 'REJECTED':
-      return { title: RESULT_TEXT[v.resultCode ?? ''] ?? '차량에서 불러오지 않았어요', detail: '필요하면 차량에서 새 QR을 받아 다시 보내 주세요.', tone: 'warning', done: true };
+      return { title: RESULT_TEXT[v.resultCode ?? ''] ?? t('connect.status.rejected'), detail: t('connect.status.rejected.detail'), tone: 'warning', done: true };
     case 'EXPIRED':
       return v.expireReason === 'UNCONFIRMED'
-        ? { title: '차량 적용 여부를 확인하지 못했어요', detail: '차량 화면의 여행 목록에서 직접 확인해 주세요.', tone: 'warning', done: true }
-        : { title: '연결 시간이 지났어요', detail: '차량에서 새 QR을 받아 다시 시작해 주세요.', tone: 'warning', done: true };
+        ? { title: t('connect.status.unconfirmed'), detail: t('connect.status.unconfirmed.detail'), tone: 'warning', done: true }
+        : { title: t('connect.status.expired'), detail: t('connect.status.expired.detail'), tone: 'warning', done: true };
     case 'CANCELLED':
       return {
-        title: v.cancelReason === 'MOBILE' ? '연결을 취소했어요' : v.cancelReason === 'SECURITY' ? '보안을 위해 연결이 중단됐어요' : '차량에서 연결을 취소했어요',
-        detail: '보낸 내용은 서버에서 지워졌어요.',
+        title: v.cancelReason === 'MOBILE' ? t('connect.status.cancelledByPhone') : v.cancelReason === 'SECURITY' ? t('connect.status.cancelledForSecurity') : t('connect.status.cancelledByCar'),
+        detail: t('connect.status.cancelled.detail'),
         tone: 'warning',
         done: true,
       };
     default:
-      return { title: '연결 대기 중', detail: '', tone: 'info', done: false };
+      return { title: t('connect.status.waiting'), detail: '', tone: 'info', done: false };
   }
 }
 
@@ -95,7 +96,7 @@ export function ConnectPage() {
   const scanSecret = useRef<string | null>(null);
 
   const doc = useMemo(() => docs.find((d) => d.tripId === picked) ?? null, [docs, picked]);
-  const fail = (e: unknown) => setErr(ERROR_TEXT[e instanceof ApiError ? e.code : 'NETWORK'] ?? '문제가 생겼어요. 다시 시도해 주세요.');
+  const fail = (e: unknown) => setErr(ERROR_TEXT[e instanceof ApiError ? e.code : 'NETWORK'] ?? t('connect.error.unknown'));
 
   // Read the QR fragment once, then remove it from the address bar and history.
   useEffect(() => {
@@ -136,7 +137,7 @@ export function ConnectPage() {
     } catch (e) {
       if (e instanceof ApiError && e.code === 'NOT_FOUND') {
         setView((prev) => prev ?? null);
-        setErr('연결 기록이 이미 정리됐어요. 차량 화면에서 결과를 확인해 주세요.');
+        setErr(t('connect.error.recordGone'));
         await pairings.remove(rec.sid);
       } else fail(e);
     }
@@ -210,29 +211,29 @@ export function ConnectPage() {
       case 'loading':
         return <Spinner />;
       case 'unsupported':
-        return <Banner status="error" title="이 브라우저에서는 연결할 수 없어요" description="휴대폰 기본 카메라로 QR을 다시 스캔해 기본 브라우저(Safari·Chrome)에서 열어 주세요." />;
+        return <Banner status="error" title={t('connect.unsupported.title')} description={t('connect.unsupported.description')} />;
       case 'invalid':
         return (
           <Banner
             status="warning"
-            title="QR을 다시 스캔해 주세요"
-            description="연결 정보가 없거나 형식이 맞지 않아요. 주차한 상태에서 차량의 '모바일 여행 불러오기' 화면에 표시된 QR을 휴대폰 카메라로 스캔해 주세요."
+            title={t('connect.invalid.title')}
+            description={t('connect.invalid.description')}
           />
         );
       case 'intro':
         return (
           <VStack gap={4}>
             <VStack gap={1}>
-              <Heading level={2}>차량 연결 요청</Heading>
+              <Heading level={2}>{t('connect.intro.title')}</Heading>
               <Text type="supporting" color="secondary">
-                차량 화면의 QR로 들어왔어요. 이 연결은 여행 하나를 한 번 보내는 데만 쓰이고, 계정이나 기기 연결이 남지 않아요.
+                {t('connect.intro.description')}
               </Text>
             </VStack>
             <List hasDividers>
-              <ListItem label="1. 연결하고 확인 코드 보기" description="차량 화면의 6자리 코드와 같은지 비교해요" />
-              <ListItem label="2. 보낼 여행 고르기" description="이 휴대폰에 저장된 여행 중 하나만 골라요" />
-              <ListItem label="3. 휴대폰에서 보내기 승인" description="보낼 정보를 확인하고 승인해요" />
-              <ListItem label="4. 차량에서 불러오기 승인" description="차량에서 한 번 더 승인해야 불러와져요" />
+              <ListItem label={t('connect.intro.step1')} description={t('connect.intro.step1.detail')} />
+              <ListItem label={t('connect.intro.step2')} description={t('connect.intro.step2.detail')} />
+              <ListItem label={t('connect.intro.step3')} description={t('connect.intro.step3.detail')} />
+              <ListItem label={t('connect.intro.step4')} description={t('connect.intro.step4.detail')} />
             </List>
           </VStack>
         );
@@ -240,15 +241,15 @@ export function ConnectPage() {
         return (
           <VStack gap={4}>
             <VStack gap={1}>
-              <Heading level={2}>확인 코드를 비교해 주세요</Heading>
+              <Heading level={2}>{t('connect.code.title')}</Heading>
               <Text type="supporting" color="secondary">
-                차량 화면에 보이는 코드와 같아야 해요. 다르면 다른 차량이나 잘못된 연결일 수 있어요.
+                {t('connect.code.description')}
               </Text>
             </VStack>
             <Card variant="muted" padding={6}>
               <VStack gap={1} align="center">
                 <Text type="supporting" color="secondary">
-                  확인 코드
+                  {t('connect.code.label')}
                 </Text>
                 <Text type="display-2" hasTabularNumbers>
                   {rec?.confirmCode ? codeLabel(rec.confirmCode) : '------'}
@@ -261,12 +262,12 @@ export function ConnectPage() {
         return (
           <VStack gap={4}>
             <VStack gap={1}>
-              <Heading level={2}>차량으로 보낼 여행</Heading>
+              <Heading level={2}>{t('connect.pick.title')}</Heading>
               <Text type="supporting" color="secondary">
-                하나만 골라요. 고른 여행만 보내지고, 다른 여행은 이 휴대폰에 그대로 남아요.
+                {t('connect.pick.description')}
               </Text>
             </VStack>
-            {docs.length === 0 && <Banner status="info" title="저장된 여행이 없어요" description="샘플 여행을 추가하거나 새 여행을 만든 뒤 이 화면으로 돌아오세요." />}
+            {docs.length === 0 && <Banner status="info" title={t('common.noTrips')} description={t('connect.pick.empty')} />}
             <VStack gap={2}>
               {docs.map((d) => {
                 const warnings = planWarnings(d.plan, d.home).filter((w) => w.level === 'warning').length;
@@ -280,17 +281,17 @@ export function ConnectPage() {
                         <Badge variant="neutral" label={`v${d.revision}`} />
                       </HStack>
                       <Text type="supporting" color="secondary">
-                        {periodLabel(d.plan.startDate, d.plan.endDate)} · {nightsLabel(d.plan)} · 장소 {d.plan.places.length}곳
+                        {t('common.tripSummary', { period: periodLabel(d.plan.startDate, d.plan.endDate), nights: nightsLabel(d.plan), places: d.plan.places.length })}
                       </Text>
-                      {warnings > 0 && <Badge variant="warning" label={`확인할 점 ${warnings}`} />}
+                      {warnings > 0 && <Badge variant="warning" label={t('connect.pick.warnings', { n: warnings })} />}
                     </VStack>
                   </SelectableCard>
                 );
               })}
             </VStack>
             <HStack gap={2}>
-              <Button label="샘플 여행 추가" variant="secondary" size="sm" onClick={addSample} />
-              <Button label="새 여행 만들기" variant="ghost" size="sm" onClick={() => navigate('/trips/new')} />
+              <Button label={t('common.addSample')} variant="secondary" size="sm" onClick={addSample} />
+              <Button label={t('connect.pick.newTrip')} variant="ghost" size="sm" onClick={() => navigate('/trips/new')} />
             </HStack>
           </VStack>
         );
@@ -298,28 +299,28 @@ export function ConnectPage() {
         return doc ? (
           <VStack gap={4}>
             <VStack gap={1}>
-              <Heading level={2}>보낼 정보 확인</Heading>
+              <Heading level={2}>{t('connect.consent.title')}</Heading>
               <Text type="supporting" color="secondary">
-                여행을 실행하는 데 필요한 정보만 보내요. 휴대폰에서 암호화되어 서버는 내용을 볼 수 없어요.
+                {t('connect.consent.description')}
               </Text>
             </VStack>
             <Switch
-              label="집 주소 포함"
+              label={t('connect.consent.includeHome')}
               value={includeHome && !!doc.home}
               isDisabled={!doc.home}
               onChange={setIncludeHome}
-              description={doc.home ? `${doc.home.address} · 끄면 차량 내비게이션의 '집'을 사용해요` : "저장된 집 주소가 없어요. 차량 내비게이션의 '집'을 사용해요"}
+              description={doc.home ? t('connect.consent.homeOn', { address: doc.home.address }) : t('connect.consent.noHome')}
             />
-            <List hasDividers header={<Text type="label">보내는 정보</Text>}>
-              <ListItem label="여행 이름·기간·시간대" description={`${doc.plan.name} · ${periodLabel(doc.plan.startDate, doc.plan.endDate)}`} />
-              <ListItem label={`장소 ${doc.plan.places.length}곳`} description="이름·주소·좌표, 배정 안 된 장소 포함" />
-              <ListItem label="일차별 순서와 시간" description="방문 순서, 희망·고정 시각, 체류 시간, 변경 허용 여부, 입력한 이동시간" />
-              <ListItem label="숙소와 출발·귀가 설정" description="박별 숙소, 첫날 출발 기준, 출발지와 마지막 귀가지" />
-              <ListItem label="집 주소" description={includeHome && doc.home ? '포함' : '포함하지 않음'} />
+            <List hasDividers header={<Text type="label">{t('connect.consent.sent')}</Text>}>
+              <ListItem label={t('connect.consent.basics')} description={`${doc.plan.name} · ${periodLabel(doc.plan.startDate, doc.plan.endDate)}`} />
+              <ListItem label={t('connect.consent.places', { n: doc.plan.places.length })} description={t('connect.consent.places.detail')} />
+              <ListItem label={t('connect.consent.days')} description={t('connect.consent.days.detail')} />
+              <ListItem label={t('connect.consent.lodging')} description={t('connect.consent.lodging.detail')} />
+              <ListItem label={t('common.homeAddress')} description={includeHome && doc.home ? t('common.included') : t('common.notIncluded')} />
             </List>
-            <List hasDividers header={<Text type="label">보내지 않는 정보</Text>}>
-              <ListItem label="계정·결제·예약번호·비밀번호·메모" description="전송 형식에 해당 칸이 없어요" />
-              <ListItem label="이 휴대폰의 다른 여행" />
+            <List hasDividers header={<Text type="label">{t('connect.consent.notSent')}</Text>}>
+              <ListItem label={t('connect.consent.private')} description={t('connect.consent.private.detail')} />
+              <ListItem label={t('connect.consent.otherTrips')} />
             </List>
           </VStack>
         ) : null;
@@ -327,17 +328,21 @@ export function ConnectPage() {
         return doc && rec ? (
           <VStack gap={4}>
             <VStack gap={1}>
-              <Heading level={2}>보내기 전에 확인</Heading>
+              <Heading level={2}>{t('connect.approve.title')}</Heading>
               <Text type="supporting" color="secondary">
-                보내면 차량 화면에 요약이 떠요. 차량에서 한 번 더 승인해야 불러와져요.
+                {t('connect.approve.description')}
               </Text>
             </VStack>
             <MetadataList orientation="vertical">
-              <MetadataListItem label="여행">{`${doc.plan.name} (v${doc.revision})`}</MetadataListItem>
-              <MetadataListItem label="기간">{`${periodLabel(doc.plan.startDate, doc.plan.endDate)} · ${nightsLabel(doc.plan)}`}</MetadataListItem>
-              <MetadataListItem label="장소">{`${doc.plan.places.length}곳 · 고정 일정 ${doc.plan.visits.filter((v) => v.fixed).length}개 · 미배정 ${unassignedVisits(doc.plan).length}곳`}</MetadataListItem>
-              <MetadataListItem label="집 주소">{includeHome && doc.home ? '포함' : '포함하지 않음'}</MetadataListItem>
-              <MetadataListItem label="연결 대상">{`확인 코드 ${rec.confirmCode ? codeLabel(rec.confirmCode) : ''} · 차량 앱 ${rec.carAppVersion ?? ''}`}</MetadataListItem>
+              <MetadataListItem label={t('connect.approve.trip')}>{`${doc.plan.name} (v${doc.revision})`}</MetadataListItem>
+              <MetadataListItem label={t('connect.approve.period')}>{`${periodLabel(doc.plan.startDate, doc.plan.endDate)} · ${nightsLabel(doc.plan)}`}</MetadataListItem>
+              <MetadataListItem label={t('connect.approve.places')}>
+                {t('connect.approve.placesValue', { places: doc.plan.places.length, fixed: doc.plan.visits.filter((v) => v.fixed).length, unassigned: unassignedVisits(doc.plan).length })}
+              </MetadataListItem>
+              <MetadataListItem label={t('common.homeAddress')}>{includeHome && doc.home ? t('common.included') : t('common.notIncluded')}</MetadataListItem>
+              <MetadataListItem label={t('connect.approve.target')}>
+                {t('connect.approve.targetValue', { code: rec.confirmCode ? codeLabel(rec.confirmCode) : '', version: rec.carAppVersion ?? '' })}
+              </MetadataListItem>
             </MetadataList>
           </VStack>
         ) : null;
@@ -349,16 +354,19 @@ export function ConnectPage() {
             ) : (
               <HStack gap={2} vAlign="center">
                 <Spinner />
-                <Text>상태를 확인하는 중이에요</Text>
+                <Text>{t('connect.status.checking')}</Text>
               </HStack>
             )}
             {view && (
               <List hasDividers>
-                <ListItem label="휴대폰에서 보냄" endContent={<Badge variant={rec?.sealed || view.state !== 'CLAIMED' ? 'success' : 'neutral'} label={rec?.sealed || view.state !== 'CLAIMED' ? '완료' : '대기'} />} />
-                <ListItem label="차량이 받음" endContent={<Badge variant={view.carFetched ? 'success' : 'neutral'} label={view.carFetched ? '완료' : '대기'} />} />
                 <ListItem
-                  label="차량에 적용"
-                  endContent={<Badge variant={view.state === 'APPLIED' ? 'success' : sessionOver ? 'warning' : 'neutral'} label={view.state === 'APPLIED' ? '완료' : sessionOver ? '안 됨' : '대기'} />}
+                  label={t('connect.track.sent')}
+                  endContent={<Badge variant={rec?.sealed || view.state !== 'CLAIMED' ? 'success' : 'neutral'} label={rec?.sealed || view.state !== 'CLAIMED' ? t('connect.track.done') : t('connect.track.waiting')} />}
+                />
+                <ListItem label={t('connect.track.received')} endContent={<Badge variant={view.carFetched ? 'success' : 'neutral'} label={view.carFetched ? t('connect.track.done') : t('connect.track.waiting')} />} />
+                <ListItem
+                  label={t('connect.track.applied')}
+                  endContent={<Badge variant={view.state === 'APPLIED' ? 'success' : sessionOver ? 'warning' : 'neutral'} label={view.state === 'APPLIED' ? t('connect.track.done') : sessionOver ? t('connect.track.failed') : t('connect.track.waiting')} />}
                 />
               </List>
             )}
@@ -368,50 +376,50 @@ export function ConnectPage() {
   })();
 
   const footer = (() => {
-    const cancelBtn = !sessionOver && rec?.mobileToken && <Button label="연결 취소" variant="ghost" isDisabled={busy} onClick={doCancel} />;
+    const cancelBtn = !sessionOver && rec?.mobileToken && <Button label={t('connect.cancel')} variant="ghost" isDisabled={busy} onClick={doCancel} />;
     switch (stage) {
       case 'intro':
-        return <Button label="연결하고 확인 코드 보기" variant="primary" isLoading={busy} onClick={doClaim} />;
+        return <Button label={t('connect.intro.action')} variant="primary" isLoading={busy} onClick={doClaim} />;
       case 'code':
         return (
           <>
-            <Button label="달라요 · 취소" variant="secondary" isDisabled={busy} onClick={doCancel} />
-            <Button label="같아요" variant="primary" onClick={async () => rec && (setRec(await confirmCode(rec)), setStage('pick'))} />
+            <Button label={t('connect.code.mismatch')} variant="secondary" isDisabled={busy} onClick={doCancel} />
+            <Button label={t('connect.code.match')} variant="primary" onClick={async () => rec && (setRec(await confirmCode(rec)), setStage('pick'))} />
           </>
         );
       case 'pick':
         return (
           <>
             {cancelBtn}
-            <Button label="다음" variant="primary" isDisabled={!doc} onClick={() => setStage('consent')} />
+            <Button label={t('common.next')} variant="primary" isDisabled={!doc} onClick={() => setStage('consent')} />
           </>
         );
       case 'consent':
         return (
           <>
-            <Button label="이전" variant="secondary" onClick={() => setStage('pick')} />
-            <Button label="다음" variant="primary" onClick={() => setStage('approve')} />
+            <Button label={t('common.prev')} variant="secondary" onClick={() => setStage('pick')} />
+            <Button label={t('common.next')} variant="primary" onClick={() => setStage('approve')} />
           </>
         );
       case 'approve':
         return (
           <>
-            <Button label="이전" variant="secondary" isDisabled={busy} onClick={() => setStage('consent')} />
-            <Button label="차량으로 보내기" variant="primary" isLoading={busy} onClick={doSend} />
+            <Button label={t('common.prev')} variant="secondary" isDisabled={busy} onClick={() => setStage('consent')} />
+            <Button label={t('connect.send')} variant="primary" isLoading={busy} onClick={doSend} />
           </>
         );
       case 'status':
         return sessionOver ? (
-          <Button label="내 여행으로" variant="primary" onClick={() => navigate('/')} />
+          <Button label={t('connect.toTrips')} variant="primary" onClick={() => navigate('/')} />
         ) : (
           <>
             {cancelBtn}
-            {err && rec?.sealed && view?.state === 'CLAIMED' && <Button label="다시 보내기" variant="primary" isLoading={busy} onClick={doSend} />}
-            <Button label="상태 새로고침" variant="secondary" onClick={() => void refresh()} />
+            {err && rec?.sealed && view?.state === 'CLAIMED' && <Button label={t('connect.resend')} variant="primary" isLoading={busy} onClick={doSend} />}
+            <Button label={t('connect.refresh')} variant="secondary" onClick={() => void refresh()} />
           </>
         );
       default:
-        return <Button label="내 여행으로" variant="secondary" onClick={() => navigate('/')} />;
+        return <Button label={t('connect.toTrips')} variant="secondary" onClick={() => navigate('/')} />;
     }
   })();
 
@@ -422,9 +430,9 @@ export function ConnectPage() {
       header={
         <LayoutHeader hasDivider>
           <VStack gap={3}>
-            <Heading level={1}>모바일 여행 보내기</Heading>
+            <Heading level={1}>{t('connect.title')}</Heading>
             {step !== undefined && (
-              <Stepper activeStep={step} label="진행 단계">
+              <Stepper activeStep={step} label={t('connect.stepper')}>
                 {STEPS.map((s, i) => (
                   <Step key={s} step={i} label={s} status={i === step && stage === 'status' && view?.state === 'APPLIED' ? 'success' : undefined} />
                 ))}

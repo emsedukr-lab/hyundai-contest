@@ -1,6 +1,9 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { parseTransfer, sampleTrip, type Trip } from '@tteonaljido/shared';
 import { addPlace, assign, move, newDoc, planWarnings, removePlace, savePlan, setLeg, setPeriod, toTransfer, unassign } from './trips';
+
+// The warning assertions below check the Korean copy; jsdom reports navigator.language as en-US.
+vi.hoisted(() => Object.defineProperty(navigator, 'language', { value: 'ko-KR', configurable: true }));
 
 const home = { address: '서울특별시 중구 세종대로 110', latE7: 375_662_952, lonE7: 1_269_779_451 };
 const day = (t: Trip, i: number) => t.days[i - 1];

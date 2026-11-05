@@ -11,6 +11,7 @@ import {
   type TripTransfer,
   type Visit,
 } from '@tteonaljido/shared';
+import { t } from './i18n';
 
 /**
  * A trip as kept on this phone. `plan` is the editable trip in transfer shape (home always null);
@@ -50,7 +51,7 @@ export function emptyPlan(tripId: string = crypto.randomUUID()): Trip {
     tripId,
     revision: 1,
     updatedAt: nowIso(),
-    name: '새 여행',
+    name: t('trip.defaultName'),
     timezone: 'Asia/Seoul',
     startDate: start,
     endDate: addDays(start, 1),
@@ -95,7 +96,7 @@ export const dayCount = (start: string, end: string) => epochDay(end) - epochDay
 /** Changes the period. Day N keeps day N's plan; visits on days that no longer exist become unassigned. */
 export function setPeriod(plan: Trip, start: string, end: string): Trip {
   const n = dayCount(start, end);
-  if (n < 1 || n > TRANSFER_LIMITS.maxDays) throw new Error(`여행 기간은 1~${TRANSFER_LIMITS.maxDays}일이에요`);
+  if (n < 1 || n > TRANSFER_LIMITS.maxDays) throw new Error(t('trip.error.period', { max: TRANSFER_LIMITS.maxDays }));
   const days = Array.from({ length: n }, (_, i) => {
     const old = plan.days[i];
     return old ? { ...old, dayIndex: i + 1, date: addDays(start, i) } : emptyDay(i + 1, addDays(start, i));
@@ -161,7 +162,7 @@ export function assign(plan: Trip, visitId: string, dayIndex: number): Trip {
   const cleared = plan.visits.find((v) => v.visitId === visitId)?.unassignedReason === null ? unassign(plan, visitId) : plan;
   const day = cleared.days.find((d) => d.dayIndex === dayIndex);
   if (!day) return plan;
-  if (day.visitOrder.length >= TRANSFER_LIMITS.maxVisitsPerDay) throw new Error(`하루에 ${TRANSFER_LIMITS.maxVisitsPerDay}곳까지 넣을 수 있어요`);
+  if (day.visitOrder.length >= TRANSFER_LIMITS.maxVisitsPerDay) throw new Error(t('trip.error.dayFull', { max: TRANSFER_LIMITS.maxVisitsPerDay }));
   const n = day.visitOrder.length;
   const placed = mapDay(cleared, dayIndex, (d) => ({ ...d, visitOrder: [...d.visitOrder, visitId], legs: [...d.legs.slice(0, n), null, null] }));
   return patchVisit(placed, visitId, { unassignedReason: null });
@@ -201,15 +202,15 @@ export const lodgingPlaces = (plan: Trip) => plan.places.filter((p) => p.categor
 
 export const nightsLabel = (plan: Trip) => {
   const n = plan.days.length;
-  return n === 1 ? '당일' : `${n - 1}박 ${n}일`;
+  return n === 1 ? t('trip.dayTrip') : t('trip.nights', { nights: n - 1, days: n });
 };
 
 export const REASON_LABEL: Record<NonNullable<Visit['unassignedReason']>, string> = {
-  NOT_SCHEDULED_YET: '아직 일정에 넣지 않음',
-  NO_TIME: '시간이 부족함',
-  OUTSIDE_PERIOD: '여행 기간 밖',
-  CLOSED: '방문일 휴무',
-  USER_EXCLUDED: '이번엔 제외',
+  NOT_SCHEDULED_YET: t('trip.reason.notScheduledYet'),
+  NO_TIME: t('trip.reason.noTime'),
+  OUTSIDE_PERIOD: t('trip.reason.outsidePeriod'),
+  CLOSED: t('trip.reason.closed'),
+  USER_EXCLUDED: t('trip.reason.userExcluded'),
 };
 
 export interface Warning {
@@ -222,20 +223,20 @@ export function planWarnings(plan: Trip, home: Home | null): Warning[] {
   const out: Warning[] = [];
   const last = plan.days.length - 1;
   plan.days.forEach((d, i) => {
-    if (i < last && !d.lodgingPlaceRef) out.push({ level: 'warning', text: `${d.dayIndex}일차 밤에 묵을 숙소를 정해 주세요` });
-    if (i === last && d.lodgingPlaceRef) out.push({ level: 'warning', text: '마지막 날은 숙소 대신 귀가지로 끝나요' });
+    if (i < last && !d.lodgingPlaceRef) out.push({ level: 'warning', text: t('trip.warn.noLodging', { day: d.dayIndex }) });
+    if (i === last && d.lodgingPlaceRef) out.push({ level: 'warning', text: t('trip.warn.lastLodging') });
   });
   for (const v of plan.visits) {
     const name = placeOf(plan, v.placeRef)?.name ?? '';
-    if (v.fixed && v.unassignedReason !== null) out.push({ level: 'warning', text: `고정 일정 '${name}'이 어느 날에도 들어가 있지 않아요` });
-    if (v.fixed && !/:(00|30)$/.test(v.fixed.time)) out.push({ level: 'warning', text: `고정 시각은 30분 단위예요 (${name})` });
+    if (v.fixed && v.unassignedReason !== null) out.push({ level: 'warning', text: t('trip.warn.fixedUnassigned', { name }) });
+    if (v.fixed && !/:(00|30)$/.test(v.fixed.time)) out.push({ level: 'warning', text: t('trip.warn.fixedSlot', { name }) });
   }
   const missing = plan.days.reduce((n, d) => n + d.legs.filter((l) => l === null).length, 0);
-  if (missing) out.push({ level: 'info', text: `이동시간이 비어 있는 구간 ${missing}곳은 차량에서 '확인 필요'로 표시돼요` });
+  if (missing) out.push({ level: 'info', text: t('trip.warn.missingLegs', { n: missing }) });
   const unknownHours = plan.places.filter((p) => p.hours.status === 'UNKNOWN').length;
-  if (unknownHours) out.push({ level: 'info', text: `영업정보 미확인 ${unknownHours}곳` });
+  if (unknownHours) out.push({ level: 'info', text: t('trip.warn.unknownHours', { n: unknownHours }) });
   if ((plan.origin.kind === 'HOME' || plan.finalDestination.kind === 'HOME') && !home) {
-    out.push({ level: 'info', text: "집 주소를 넣지 않으면 차량 내비의 '집'을 사용해요" });
+    out.push({ level: 'info', text: t('trip.warn.noHome') });
   }
   return out;
 }
