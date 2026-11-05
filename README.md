@@ -5,12 +5,13 @@
 - 차량 앱: Kotlin · Jetpack Compose · Pleos Connect 2.1.5 디자인 토큰 · NaviHelper 3.0.5
 - 모바일 웹: React · Astryx · 기기 안에만 저장 (계정 없음)
 - 중계 서버: Cloudflare Worker + Durable Object · 종단간 암호화 (서버는 내용을 볼 수 없음)
+- 배포: **https://tteonaljido.tteonaljido-worker.workers.dev** (모바일 웹 + API, 개인정보 안내 `/privacy`)
 
 ## APK 위치
 
 | 파일 | 상태 |
 |---|---|
-| `apk/팀명_떠날지도_release.apk` | 배포 서버 주소 확정 후 생성 예정 (prod flavor, 서명 release) |
+| `apk/떠날지도_release.apk` | 서명된 release (prod, 서버 `https://tteonaljido.tteonaljido-worker.workers.dev`). 제출 시 `팀명_떠날지도_release.apk`로 이름 변경. 해시는 `apk/SHA256SUMS.txt` |
 | `car/app/build/outputs/apk/dev/debug/app-dev-debug.apk` | 로컬 개발용 (`./gradlew :app:assembleDevDebug`) |
 
 ## 실행 방법
@@ -60,7 +61,8 @@ npx tsx tools/e2e-car.mts emulator-5580               # 에뮬레이터 차량 �
 | Node | 22.13 이상 (wrangler 4.151.3, Vite 7.3.7) |
 | 브라우저 | Chrome/Safari 최신 (WebCrypto 필요 → HTTPS 또는 localhost) |
 | 권한 | `INTERNET`, `ACCESS_NETWORK_STATE`, `pleos.car.permission.NAVI_ROUTE`, `NAVI_ROUTE_SEARCH`, `NAVI_CUSTOM_MAP` |
-| 서버 주소 | dev: `-Ptteonaljido.devApi`, `-Ptteonaljido.devWeb` / prod: `-Ptteonaljido.prodOrigin=https://…` |
+| 서버 주소 | dev: `-Ptteonaljido.devApi`, `-Ptteonaljido.devWeb` / prod: `car/gradle.properties`의 `tteonaljido.prodOrigin` (배포 주소) |
+| 설치 | `adb install -r apk/떠날지도_release.apk` (기어 P 상태에서 실행) |
 | 시연 모드 | 설정 → 시연 모드 (에뮬레이터 전용, 데이터 별도 보관, 주행 시연 스위치) |
 
 ## 문서
