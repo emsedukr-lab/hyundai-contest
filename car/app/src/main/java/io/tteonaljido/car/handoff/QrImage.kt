@@ -45,13 +45,14 @@ fun QrImage(text: String, maxSize: Dp, modifier: Modifier = Modifier) {
         val availablePx = with(density) { minOf(maxSize, maxWidth, maxHeight).toPx() }
         val px = (availablePx / matrix.width).toInt()
         if (px < MIN_PX_PER_MODULE) {
-            PleosText("창을 넓혀 주세요 · QR을 읽기 어려운 크기예요", Pleos.type.bodyMedium)
+            PleosText(androidx.compose.ui.res.stringResource(R.string.qr_too_small), Pleos.type.bodyMedium)
             return@BoxWithConstraints
         }
         val side = with(density) { (px * matrix.width).toDp() }
         val white = colorResource(R.color.pleos_static_light_100)
         val black = colorResource(R.color.pleos_static_dark_100)
-        Box(Modifier.size(side).background(white).semantics { contentDescription = "연결 QR코드" }) {
+        val description = androidx.compose.ui.res.stringResource(R.string.qr_description)
+        Box(Modifier.size(side).background(white).semantics { contentDescription = description }) {
             Canvas(Modifier.size(side)) {
                 for (y in 0 until matrix.height) for (x in 0 until matrix.width) {
                     if (matrix[x, y]) drawRect(black, Offset((x * px).toFloat(), (y * px).toFloat()), Size(px.toFloat(), px.toFloat()))

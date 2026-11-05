@@ -18,7 +18,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import io.tteonaljido.car.BuildConfig
 import io.tteonaljido.car.Guide
 import io.tteonaljido.car.R
 import io.tteonaljido.car.TripsViewModel
@@ -34,14 +36,17 @@ import io.tteonaljido.car.ui.components.PleosText
 import io.tteonaljido.car.ui.components.Screen
 import io.tteonaljido.car.ui.components.StatusLine
 import io.tteonaljido.car.ui.components.Tone
+import io.tteonaljido.car.ui.issueText
+import io.tteonaljido.car.ui.noteText
+import io.tteonaljido.car.ui.text
 import io.tteonaljido.car.ui.theme.Pleos
-import io.tteonaljido.trip.CarOverlay
 import io.tteonaljido.trip.Endpoint
 import io.tteonaljido.trip.LocalTrip
 import io.tteonaljido.trip.NextDestination
 import io.tteonaljido.trip.Severity
 import io.tteonaljido.trip.Target
 import io.tteonaljido.trip.TripValidator
+import java.util.Locale
 
 @Composable
 fun TripsScreen(vm: TripsViewModel, drive: DriveState, onImport: () -> Unit, onOpen: (String) -> Unit, onSettings: () -> Unit) {
@@ -49,25 +54,26 @@ fun TripsScreen(vm: TripsViewModel, drive: DriveState, onImport: () -> Unit, onO
     val unreadable by vm.unreadable.collectAsState()
     val secondary = colorResource(R.color.pleos_text_dark_secondary)
     Screen {
-        PleosHeader("떠날지도", "휴대폰에서 만든 여행을 차에서 이어 가요") {
-            PleosButton(if (drive.parked) "모바일 여행 불러오기" else "주차 중에만 사용", onImport, enabled = drive.parked, tag = "import")
-            PleosButton("설정", onSettings, type = ButtonType.SECONDARY, tag = "settings")
+        PleosHeader(stringResource(R.string.app_name), stringResource(R.string.trips_subtitle)) {
+            PleosButton(stringResource(if (drive.parked) R.string.import_button else R.string.parked_only), onImport, enabled = drive.parked, tag = "import")
+            PleosButton(stringResource(R.string.settings), onSettings, type = ButtonType.SECONDARY, tag = "settings")
         }
-        if (unreadable > 0) StatusLine("읽을 수 없는 여행 파일 ${unreadable}개 · 원본은 그대로 두었어요", Tone.WARNING)
+        if (unreadable > 0) StatusLine(stringResource(R.string.unreadable_files, unreadable), Tone.WARNING)
         if (trips.isEmpty()) {
             PleosCard {
-                PleosText("저장된 여행이 없어요", Pleos.type.titleMedium)
-                PleosText("주차한 뒤 '모바일 여행 불러오기'를 누르고, 휴대폰 카메라로 QR을 스캔하세요.", Pleos.type.bodyLarge, secondary)
+                PleosText(stringResource(R.string.no_trips_title), Pleos.type.titleMedium)
+                PleosText(stringResource(R.string.no_trips_body), Pleos.type.bodyLarge, secondary)
             }
         }
         LazyColumn(verticalArrangement = Arrangement.spacedBy(24.dp)) {
             items(trips, key = { it.localId }) { t ->
                 val report = remember(t) { TripValidator.validate(t.plan, t.overlay) }
                 val today = vm.todayIndex(t)
+                val period = stringResource(R.string.labeled, periodLabel(t.plan), nightsLabel(t.plan))
                 PleosCard(onClick = { onOpen(t.localId) }) {
                     PleosText(t.plan.name, Pleos.type.titleMedium, maxLines = 1)
-                    PleosText("${periodLabel(t.plan)} · ${nightsLabel(t.plan)}${today?.let { " · 오늘 ${it}일차" } ?: ""}", Pleos.type.bodyLarge, secondary, maxLines = 1)
-                    PleosText("장소 ${t.plan.places.size}곳 · 충돌 ${report.conflicts}건 · 확인 필요 ${report.uncertain}건 · v${t.meta.revision}", Pleos.type.bodySmall, secondary, maxLines = 1)
+                    PleosText(if (today != null) stringResource(R.string.trip_card_today, period, today) else period, Pleos.type.bodyLarge, secondary, maxLines = 1)
+                    PleosText(stringResource(R.string.trip_card_stats, t.plan.places.size, report.conflicts, report.uncertain, t.meta.revision), Pleos.type.bodySmall, secondary, maxLines = 1)
                 }
             }
         }
@@ -85,12 +91,12 @@ fun TripDetailScreen(vm: TripsViewModel, localId: String, drive: DriveState, onB
     val report = remember(t) { TripValidator.validate(t.plan, t.overlay) }
 
     Screen {
-        PleosHeader(t.plan.name, "${periodLabel(t.plan)} · ${nightsLabel(t.plan)} · v${t.meta.revision}") {
-            PleosButton("목록", onBack, type = ButtonType.SECONDARY, size = ButtonSize.SMALL)
+        PleosHeader(t.plan.name, stringResource(R.string.detail_subtitle, periodLabel(t.plan), nightsLabel(t.plan), t.meta.revision)) {
+            PleosButton(stringResource(R.string.list), onBack, type = ButtonType.SECONDARY, size = ButtonSize.SMALL)
         }
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             t.plan.days.forEach { d ->
-                PleosButton("${d.dayIndex}일차", { day = d.dayIndex }, type = if (d.dayIndex == day) ButtonType.PRIMARY else ButtonType.SECONDARY, size = ButtonSize.SMALL, tag = "day${d.dayIndex}")
+                PleosButton(stringResource(R.string.day_n, d.dayIndex), { day = d.dayIndex }, type = if (d.dayIndex == day) ButtonType.PRIMARY else ButtonType.SECONDARY, size = ButtonSize.SMALL, tag = "day${d.dayIndex}")
             }
         }
         BoxWithConstraints(Modifier.fillMaxWidth().weight(1f)) {
@@ -100,15 +106,15 @@ fun TripDetailScreen(vm: TripsViewModel, localId: String, drive: DriveState, onB
                 Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
                     NextCard(vm, t, day, drive)
                     PleosCard {
-                        PleosText("확인할 점", Pleos.type.titleSmall)
+                        PleosText(stringResource(R.string.to_check), Pleos.type.titleSmall)
                         val shown = (report.forDay(day) + report.issues.filter { it.dayIndex == null }).filter { it.severity != Severity.INFO }.take(5)
-                        if (shown.isEmpty()) PleosText("이 날은 확인할 점이 없어요", Pleos.type.bodyMedium, secondary)
-                        shown.forEach { StatusLine("${if (it.severity == Severity.CONFLICT) "충돌" else "확인 필요"} · ${it.text}", if (it.severity == Severity.CONFLICT) Tone.NEGATIVE else Tone.WARNING) }
+                        if (shown.isEmpty()) PleosText(stringResource(R.string.nothing_to_check), Pleos.type.bodyMedium, secondary)
+                        shown.forEach { SeverityLine(it.severity, issueText(it)) }
                         if (t.plan.home == null && t.overlay.home == null && (t.plan.origin is Endpoint.Home || t.plan.finalDestination is Endpoint.Home)) {
-                            PleosButton("내비 '집' 불러오기", { vm.loadNaviHome(localId) }, type = ButtonType.SECONDARY, enabled = drive.parked, tag = "naviHome")
+                            PleosButton(stringResource(R.string.load_navi_home), { vm.loadNaviHome(localId) }, type = ButtonType.SECONDARY, enabled = drive.parked, tag = "naviHome")
                         }
                     }
-                    PleosButton("이 여행 삭제", { confirmDelete = true }, type = ButtonType.SECONDARY, size = ButtonSize.SMALL, enabled = drive.parked)
+                    PleosButton(stringResource(R.string.delete_trip), { confirmDelete = true }, type = ButtonType.SECONDARY, size = ButtonSize.SMALL, enabled = drive.parked)
                 }
             }
             if (wide) Row(horizontalArrangement = Arrangement.spacedBy(32.dp)) {
@@ -121,8 +127,8 @@ fun TripDetailScreen(vm: TripsViewModel, localId: String, drive: DriveState, onB
     GuideDialogs(vm, guide)
     if (confirmDelete) {
         PleosSystemPopup(
-            "이 여행을 삭제할까요?", "차량에서만 지워져요. 휴대폰에 저장된 여행은 그대로예요.", "삭제", { confirmDelete = false; vm.delete(localId); onBack() },
-            cancel = "취소", onCancel = { confirmDelete = false },
+            stringResource(R.string.delete_trip_title), stringResource(R.string.delete_trip_body), stringResource(R.string.delete), { confirmDelete = false; vm.delete(localId); onBack() },
+            cancel = stringResource(R.string.cancel), onCancel = { confirmDelete = false },
         )
     }
 }
@@ -132,23 +138,24 @@ private fun DayPlan(t: LocalTrip, day: Int) {
     val d = t.plan.days[day - 1]
     val secondary = colorResource(R.color.pleos_text_dark_secondary)
     val times = remember(t, day) { TripValidator.timeline(t.plan, day).associateBy { it.visitId } }
-    val start = if (day == 1) (if (t.plan.origin is Endpoint.Home) "집" else "출발지") else (t.plan.days[day - 2].lodgingPlaceRef?.let { TripValidator.placeName(t.plan, it) } ?: "숙소 미정")
+    val home = stringResource(R.string.home)
+    val start = if (day == 1) (if (t.plan.origin is Endpoint.Home) home else stringResource(R.string.origin_place))
+    else t.plan.days[day - 2].lodgingPlaceRef?.let { TripValidator.placeName(t.plan, it) } ?: stringResource(R.string.lodging_undecided)
     PleosCard {
-        PleosText("${day}일차 · ${dateLabel(d.date)}", Pleos.type.titleSmall)
-        PleosText("$start 출발 ${TripValidator.departure(t.plan, day)?.let(TripValidator::hhmm) ?: "시각 미정"}", Pleos.type.bodyMedium, secondary)
+        PleosText(stringResource(R.string.day_header, day, dateLabel(d.date)), Pleos.type.titleSmall)
+        PleosText(stringResource(R.string.depart_from, start, TripValidator.departure(t.plan, day)?.let(TripValidator::hhmm) ?: stringResource(R.string.time_unknown)), Pleos.type.bodyMedium, secondary)
         d.visitOrder.forEachIndexed { k, id ->
             val v = t.plan.visits.first { it.visitId == id }
-            val st = times[id]
-            val time = st?.start?.let(TripValidator::hhmm) ?: "시각 확인 필요"
-            val done = if (id in t.overlay.visited) " · 방문함" else ""
-            PleosText("${k + 1}. $time  ${TripValidator.placeName(t.plan, v.placeRef)}${v.fixed?.let { " · 고정" } ?: ""}$done", Pleos.type.bodyLarge, maxLines = 1)
-            d.legs.getOrNull(k + 1)?.let { PleosText("    ↓ 이동 ${it.minutes}분", Pleos.type.bodySmall, secondary, maxLines = 1) }
-                ?: PleosText("    ↓ 이동시간 미확인", Pleos.type.bodySmall, secondary, maxLines = 1)
+            val time = times[id]?.start?.let(TripValidator::hhmm) ?: stringResource(R.string.time_check)
+            val marks = (if (v.fixed != null) stringResource(R.string.stop_fixed) else "") + (if (id in t.overlay.visited) stringResource(R.string.stop_visited) else "")
+            PleosText(stringResource(R.string.stop_line, k + 1, time, TripValidator.placeName(t.plan, v.placeRef)) + marks, Pleos.type.bodyLarge, maxLines = 1)
+            val leg = d.legs.getOrNull(k + 1)
+            PleosText(if (leg != null) stringResource(R.string.leg_minutes, leg.minutes) else stringResource(R.string.leg_unknown), Pleos.type.bodySmall, secondary, maxLines = 1)
         }
         val last = day == t.plan.days.size
-        val end = if (last) (if (t.plan.finalDestination is Endpoint.Home) "집" else (t.plan.finalDestination as Endpoint.AtPlace).let { TripValidator.placeName(t.plan, it.placeRef) })
-        else d.lodgingPlaceRef?.let { TripValidator.placeName(t.plan, it) } ?: "숙소 미정"
-        PleosText(if (last) "귀가: $end" else "묵을 곳: $end", Pleos.type.bodyLargeStrong, maxLines = 1)
+        val end = if (last) (t.plan.finalDestination as? Endpoint.AtPlace)?.let { TripValidator.placeName(t.plan, it.placeRef) } ?: home
+        else d.lodgingPlaceRef?.let { TripValidator.placeName(t.plan, it) } ?: stringResource(R.string.lodging_undecided)
+        PleosText(stringResource(if (last) R.string.return_to else R.string.stay_at, end), Pleos.type.bodyLargeStrong, maxLines = 1)
     }
 }
 
@@ -156,17 +163,24 @@ private fun DayPlan(t: LocalTrip, day: Int) {
 private fun NextCard(vm: TripsViewModel, t: LocalTrip, day: Int, drive: DriveState) {
     val step = remember(t, day) { NextDestination.of(t.plan, t.overlay, day) }
     val secondary = colorResource(R.color.pleos_text_dark_secondary)
+    val home = stringResource(R.string.home)
+    val label = when (val tg = step.target) {
+        null -> stringResource(R.string.none)
+        is Target.Final -> tg.place?.name ?: home
+        else -> tg.label
+    }
     PleosCard {
-        PleosText("다음 목적지 · ${day}일차", Pleos.type.label, secondary)
-        PleosText(step.target?.label ?: "없음", Pleos.type.titleMedium, maxLines = 1)
-        if (step.note.isNotBlank()) PleosText(step.note, Pleos.type.bodyMedium, secondary, maxLines = 1)
+        PleosText(stringResource(R.string.next_destination_day, day), Pleos.type.label, secondary)
+        PleosText(label, Pleos.type.titleMedium, maxLines = 1)
+        val note = noteText(step)
+        if (note.isNotBlank()) PleosText(note, Pleos.type.bodyMedium, secondary, maxLines = 1)
         if (drive.parked) {
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                PleosButton("다음 목적지 안내", { vm.guideNext(t.localId, day) }, enabled = step.target != null, tag = "guide")
-                (step.target as? Target.Stop)?.let { s -> PleosButton("도착 처리", { vm.markVisited(t.localId, s.visitId) }, type = ButtonType.SECONDARY, tag = "visited") }
+                PleosButton(stringResource(R.string.guide_next), { vm.guideNext(t.localId, day) }, enabled = step.target != null, tag = "guide")
+                (step.target as? Target.Stop)?.let { s -> PleosButton(stringResource(R.string.mark_arrived), { vm.markVisited(t.localId, s.visitId) }, type = ButtonType.SECONDARY, tag = "visited") }
             }
         } else {
-            PleosText("주차하면 안내를 요청할 수 있어요", Pleos.type.bodyMedium, secondary)
+            PleosText(stringResource(R.string.guide_when_parked), Pleos.type.bodyMedium, secondary)
         }
     }
 }
@@ -175,18 +189,30 @@ private fun NextCard(vm: TripsViewModel, t: LocalTrip, day: Int, drive: DriveSta
 private fun GuideDialogs(vm: TripsViewModel, g: Guide) {
     when (g) {
         Guide.Idle -> Unit
-        is Guide.Working -> PleosSystemPopup("잠시만요", g.text, "닫기", vm::dismissGuide)
-        is Guide.ConfirmReplace -> PleosSystemPopup("현재 경로를 바꿀까요?", "지금 '${g.current}'(으)로 안내 중이에요. '${g.target}'(으)로 바꿀까요?", "바꾸기", { vm.confirmReplace() }, cancel = "그대로 두기", onCancel = vm::dismissGuide)
-        is Guide.ConfirmPlace -> PleosSystemPopup(
-            "이 장소가 맞나요?",
-            if (g.metres < 0) "내비가 고른 곳은 '${g.found.name}'이에요. 계획한 '${g.wanted}'가 맞나요?"
-            else "내비가 고른 곳은 '${g.found.name}'이에요. 계획한 '${g.wanted}'와 약 ${if (g.metres >= 1000) "%.1fkm".format(g.metres / 1000.0) else "${g.metres}m"} 떨어져 있어요.",
-            "맞아요", vm::acceptPlace, cancel = "내비에서 다시 찾기", onCancel = vm::searchInNavi,
+        is Guide.Working -> PleosSystemPopup(stringResource(R.string.wait_title), text(g.msg), stringResource(R.string.close), vm::dismissGuide)
+        is Guide.ConfirmReplace -> PleosSystemPopup(
+            stringResource(R.string.replace_title), stringResource(R.string.replace_body, g.current, g.target), stringResource(R.string.replace_yes), { vm.confirmReplace() },
+            cancel = stringResource(R.string.replace_no), onCancel = vm::dismissGuide,
         )
-        is Guide.ConfirmHome -> PleosSystemPopup("내비의 '집'을 사용할까요?", "${g.home.address.ifBlank { g.home.name }.ifBlank { "내비 즐겨찾기 '집'" }} · 이 차량의 여행 출발·귀가에만 사용해요.", "사용", vm::acceptHome, cancel = "취소", onCancel = vm::dismissGuide)
-        is Guide.Done -> PleosSystemPopup("완료", g.text, "확인", vm::dismissGuide)
-        is Guide.Failed -> if (g.canSearch) PleosSystemPopup("안내를 확인하지 못했어요", g.text, "내비에서 찾기", vm::searchInNavi, cancel = "닫기", onCancel = vm::dismissGuide)
-        else PleosSystemPopup("안내할 수 없어요", g.text, "확인", vm::dismissGuide)
+        is Guide.ConfirmPlace -> {
+            val distance = if (g.metres >= 1000) String.format(Locale.ROOT, "%.1fkm", g.metres / 1000.0) else "${g.metres}m"
+            PleosSystemPopup(
+                stringResource(R.string.place_title),
+                if (g.metres < 0) stringResource(R.string.place_body_unknown, g.found.name, g.wanted) else stringResource(R.string.place_body_distance, g.found.name, g.wanted, distance),
+                stringResource(R.string.place_yes), vm::acceptPlace, cancel = stringResource(R.string.place_search_again), onCancel = vm::searchInNavi,
+            )
+        }
+        is Guide.ConfirmHome -> PleosSystemPopup(
+            stringResource(R.string.home_title),
+            stringResource(R.string.home_body, g.home.address.ifBlank { g.home.name }.ifBlank { stringResource(R.string.home_bookmark) }),
+            stringResource(R.string.use), vm::acceptHome, cancel = stringResource(R.string.cancel), onCancel = vm::dismissGuide,
+        )
+        is Guide.Done -> PleosSystemPopup(stringResource(R.string.done_title), text(g.msg), stringResource(R.string.confirm), vm::dismissGuide)
+        is Guide.Failed -> if (g.canSearch) PleosSystemPopup(
+            stringResource(R.string.failed_title), text(g.msg), stringResource(R.string.search_in_navi), vm::searchInNavi,
+            cancel = stringResource(R.string.close), onCancel = vm::dismissGuide,
+        )
+        else PleosSystemPopup(stringResource(R.string.cannot_guide_title), text(g.msg), stringResource(R.string.confirm), vm::dismissGuide)
     }
 }
 
@@ -204,30 +230,30 @@ fun SettingsScreen(
     var confirm by remember { mutableStateOf(false) }
     val secondary = colorResource(R.color.pleos_text_dark_secondary)
     Screen {
-        PleosHeader("설정") { PleosButton("목록", onBack, type = ButtonType.SECONDARY, size = ButtonSize.SMALL) }
+        PleosHeader(stringResource(R.string.settings)) { PleosButton(stringResource(R.string.list), onBack, type = ButtonType.SECONDARY, size = ButtonSize.SMALL) }
         Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(24.dp)) {
             PleosCard {
-                PleosText("개인정보", Pleos.type.titleSmall)
-                PleosText("불러온 여행은 이 차량에만 암호화해 저장해요. 계정 연결이나 휴대폰과의 계속 동기화는 없어요.", Pleos.type.bodyMedium, secondary)
-                PleosText("렌터카·공용 차량을 반납하기 전에는 여행을 모두 삭제해 주세요.", Pleos.type.bodyMedium, secondary)
-                PleosButton("모든 여행 삭제", { confirm = true }, type = ButtonType.SECONDARY, tag = "deleteAll")
+                PleosText(stringResource(R.string.privacy), Pleos.type.titleSmall)
+                PleosText(stringResource(R.string.privacy_body), Pleos.type.bodyMedium, secondary)
+                PleosText(stringResource(R.string.privacy_rental), Pleos.type.bodyMedium, secondary)
+                PleosButton(stringResource(R.string.delete_all), { confirm = true }, type = ButtonType.SECONDARY, tag = "deleteAll")
             }
             if (isEmulator) PleosCard {
-                PleosText("시연 (에뮬레이터 전용)", Pleos.type.titleSmall)
-                PleosText("시연 데이터는 실제 데이터와 따로 저장해요.", Pleos.type.bodyMedium, secondary)
+                PleosText(stringResource(R.string.demo_title), Pleos.type.titleSmall)
+                PleosText(stringResource(R.string.demo_body), Pleos.type.bodyMedium, secondary)
                 Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    PleosButton(if (demo) "시연 모드 끄기" else "시연 모드 켜기", { onDemo(!demo) }, type = ButtonType.SECONDARY, tag = "demo")
-                    if (demo) PleosButton(if (demoDriving) "주행 시연 끄기" else "주행 시연 켜기", { onDemoDriving(!demoDriving) }, type = ButtonType.SECONDARY, tag = "demoDriving")
+                    PleosButton(stringResource(if (demo) R.string.demo_off else R.string.demo_on), { onDemo(!demo) }, type = ButtonType.SECONDARY, tag = "demo")
+                    if (demo) PleosButton(stringResource(if (demoDriving) R.string.demo_driving_off else R.string.demo_driving_on), { onDemoDriving(!demoDriving) }, type = ButtonType.SECONDARY, tag = "demoDriving")
                 }
             }
             PleosCard {
-                PleosText("정보", Pleos.type.titleSmall)
-                PleosText("떠날지도 ${io.tteonaljido.car.BuildConfig.VERSION_NAME} · 연결 서버 ${server.removePrefix("https://").removePrefix("http://")}", Pleos.type.bodySmall, secondary)
+                PleosText(stringResource(R.string.about), Pleos.type.titleSmall)
+                PleosText(stringResource(R.string.about_body, BuildConfig.VERSION_NAME, server.removePrefix("https://").removePrefix("http://")), Pleos.type.bodySmall, secondary)
             }
         }
     }
-    if (confirm) PleosSystemPopup("모든 여행을 삭제할까요?", "이 차량에 저장된 여행과 방문 기록이 지워져요. 휴대폰의 여행은 그대로예요.", "삭제", { confirm = false; vm.deleteAll() }, cancel = "취소", onCancel = { confirm = false })
+    if (confirm) PleosSystemPopup(
+        stringResource(R.string.delete_all_title), stringResource(R.string.delete_all_body), stringResource(R.string.delete), { confirm = false; vm.deleteAll() },
+        cancel = stringResource(R.string.cancel), onCancel = { confirm = false },
+    )
 }
-
-@Suppress("unused")
-private fun overlayOf(t: LocalTrip): CarOverlay = t.overlay

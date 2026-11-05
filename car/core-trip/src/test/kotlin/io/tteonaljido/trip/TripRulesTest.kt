@@ -118,7 +118,7 @@ class TripRulesTest {
         val d = ImportDecision.decide(newer, listOf(stored))
         assertEquals(ImportCase.NEWER, d.case)
         assertEquals(listOf(ImportChoice.UPDATE, ImportChoice.SAVE_COPY, ImportChoice.CANCEL), d.choices)
-        assertTrue(d.changes.any { it.startsWith("이름") })
+        assertTrue(d.changes.any { it.code == "NAME" && it.text.startsWith("이름") })
     }
 
     @Test fun olderRevisionNeverDowngrades() {

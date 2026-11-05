@@ -8,7 +8,10 @@ enum class ImportCase { NEW, SAME, NEWER, OLDER, DIVERGED }
 
 enum class ImportChoice { IMPORT_NEW, UPDATE, SAVE_COPY, ACKNOWLEDGE_SAME, CANCEL }
 
-data class Decision(val case: ImportCase, val existing: LocalTrip?, val choices: List<ImportChoice>, val changes: List<String> = emptyList())
+/** One line of an update summary; `text` is Korean, apps localize from `code` + `args` (strings `change_<code>`). */
+data class Change(val code: String, val text: String, val args: List<String> = emptyList())
+
+data class Decision(val case: ImportCase, val existing: LocalTrip?, val choices: List<ImportChoice>, val changes: List<Change> = emptyList())
 
 data class Applied(val trip: LocalTrip?, val resultCode: String)
 
@@ -60,23 +63,24 @@ object ImportDecision {
     }
 
     /** Short human summary of what an update would change. */
-    fun changes(old: Trip, new: Trip): List<String> {
-        val out = mutableListOf<String>()
-        if (old.name != new.name) out += "이름: ${old.name} → ${new.name}"
-        if (old.startDate != new.startDate || old.endDate != new.endDate) out += "기간: ${old.startDate}~${old.endDate} → ${new.startDate}~${new.endDate}"
+    fun changes(old: Trip, new: Trip): List<Change> {
+        val out = mutableListOf<Change>()
+        fun c(code: String, text: String, vararg args: Any) { out += Change(code, text, args.map(Any::toString)) }
+        if (old.name != new.name) c("NAME", "이름: ${old.name} → ${new.name}", old.name, new.name)
+        if (old.startDate != new.startDate || old.endDate != new.endDate) c("PERIOD", "기간: ${old.startDate}~${old.endDate} → ${new.startDate}~${new.endDate}", "${old.startDate}~${old.endDate}", "${new.startDate}~${new.endDate}")
         val oldPlaces = old.places.map { it.placeRef }.toSet()
         val newPlaces = new.places.map { it.placeRef }.toSet()
-        (newPlaces - oldPlaces).size.takeIf { it > 0 }?.let { out += "장소 ${it}곳 추가" }
-        (oldPlaces - newPlaces).size.takeIf { it > 0 }?.let { out += "장소 ${it}곳 삭제" }
+        (newPlaces - oldPlaces).size.takeIf { it > 0 }?.let { c("PLACES_ADDED", "장소 ${it}곳 추가", it) }
+        (oldPlaces - newPlaces).size.takeIf { it > 0 }?.let { c("PLACES_REMOVED", "장소 ${it}곳 삭제", it) }
         val oldFixed = old.visits.filter { it.fixed != null }.associate { it.visitId to it.fixed }
         val newFixed = new.visits.filter { it.fixed != null }.associate { it.visitId to it.fixed }
-        if (oldFixed != newFixed) out += "고정 일정 변경"
+        if (oldFixed != newFixed) c("FIXED", "고정 일정 변경")
         new.days.forEach { d ->
             val o = old.days.getOrNull(d.dayIndex - 1)
-            if (o == null || o.visitOrder != d.visitOrder) out += "${d.dayIndex}일차 순서 변경"
-            if (o != null && o.lodgingPlaceRef != d.lodgingPlaceRef) out += "${d.dayIndex}일차 숙소 변경"
+            if (o == null || o.visitOrder != d.visitOrder) c("ORDER", "${d.dayIndex}일차 순서 변경", d.dayIndex)
+            if (o != null && o.lodgingPlaceRef != d.lodgingPlaceRef) c("LODGING", "${d.dayIndex}일차 숙소 변경", d.dayIndex)
         }
-        if (old.firstDay != new.firstDay || old.origin != new.origin || old.finalDestination != new.finalDestination) out += "출발·귀가 설정 변경"
-        return out.ifEmpty { listOf("세부 시간·설정 변경") }
+        if (old.firstDay != new.firstDay || old.origin != new.origin || old.finalDestination != new.finalDestination) c("ENDPOINTS", "출발·귀가 설정 변경")
+        return out.ifEmpty { listOf(Change("DETAILS", "세부 시간·설정 변경")) }
     }
 }

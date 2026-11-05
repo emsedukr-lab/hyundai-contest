@@ -29,7 +29,7 @@ sealed interface RouteOutcome {
     data class Confirmed(val binding: NaviBinding) : RouteOutcome
     data class Different(val binding: NaviBinding, val match: Match) : RouteOutcome
     data object NoAnswer : RouteOutcome
-    data class Unavailable(val reason: String) : RouteOutcome
+    data class Unavailable(@androidx.annotation.StringRes val reason: Int) : RouteOutcome
 }
 
 /** The only door to the Hyundai navigation. `route` changes the real destination, so it runs only on an explicit tap. */
@@ -101,7 +101,7 @@ class PleosNaviGateway(context: Context) : NaviGateway {
     }
 
     override suspend fun route(target: RouteTarget, previous: NaviBinding?): RouteOutcome {
-        if (_status.value != NaviStatus.CONNECTED) return RouteOutcome.Unavailable("내비게이션에 연결되지 않았어요")
+        if (_status.value != NaviStatus.CONNECTED) return RouteOutcome.Unavailable(io.tteonaljido.car.R.string.navi_not_connected)
         val lat = target.latE7 ?: return RouteOutcome.NoAnswer
         val lon = target.lonE7 ?: return RouteOutcome.NoAnswer
         try {
@@ -117,7 +117,7 @@ class PleosNaviGateway(context: Context) : NaviGateway {
                 ),
             )
         } catch (e: Throwable) {
-            return RouteOutcome.Unavailable("내비게이션이 요청을 받지 않았어요")
+            return RouteOutcome.Unavailable(io.tteonaljido.car.R.string.navi_rejected)
         }
         // The navigation first reports an empty destination, then settles after its route screen.
         // Confirmation is its own answer, not our request: same POI or within 150 m of what we asked for.
@@ -149,7 +149,7 @@ class OfflineNaviGateway : NaviGateway {
     override val status: StateFlow<NaviStatus> = MutableStateFlow(NaviStatus.UNAVAILABLE)
     override suspend fun currentDestination(): NaviBinding? = null
     override suspend fun homeBookmark(): NaviBinding? = null
-    override suspend fun route(target: RouteTarget, previous: NaviBinding?): RouteOutcome = RouteOutcome.Unavailable("이 기기에는 현대자동차그룹 내비게이션이 없어요")
+    override suspend fun route(target: RouteTarget, previous: NaviBinding?): RouteOutcome = RouteOutcome.Unavailable(io.tteonaljido.car.R.string.navi_missing)
     override fun openSearch(keyword: String) {}
     override fun openAddHome() {}
     override fun close() {}

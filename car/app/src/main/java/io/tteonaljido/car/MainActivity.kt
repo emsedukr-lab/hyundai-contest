@@ -40,7 +40,7 @@ class MainActivity : ComponentActivity() {
                 val demo by c.demo.collectAsState()
                 val drive by remember(demo) { c.drive() }.collectAsState()
                 val demoDriving by c.demoGate.state.collectAsState()
-                val trips: TripsViewModel = viewModel(key = "trips-$demo", factory = viewModelFactory { initializer { TripsViewModel(c::trips, c.navi) } })
+                val trips: TripsViewModel = viewModel(key = "trips-$demo", factory = viewModelFactory { initializer { TripsViewModel(c::trips, c.navi, getString(R.string.home), getString(R.string.home_bookmark)) } })
                 tripsVm = trips
                 val import: ImportViewModel = viewModel(
                     key = "import-$demo",
