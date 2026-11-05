@@ -20,11 +20,11 @@ object NextDestination {
         return if (n in 1..trip.days.size) n.toInt() else null
     }
 
-    /** First not-yet-visited stop of the given day; then that night's lodging, or the final destination on the last day. */
+    /** First stop of the given day neither visited nor skipped; then that night's lodging, or the final destination on the last day. */
     fun of(trip: Trip, overlay: CarOverlay, dayIndex: Int): NextStep {
         val day = trip.days[dayIndex - 1]
         val places = trip.places.associateBy { it.placeRef }
-        val stop = day.visitOrder.firstOrNull { it !in overlay.visited }
+        val stop = day.visitOrder.firstOrNull { it !in overlay.visited && it !in overlay.skipped }
         if (stop != null) {
             val v = trip.visits.first { it.visitId == stop }
             val p = places.getValue(v.placeRef)

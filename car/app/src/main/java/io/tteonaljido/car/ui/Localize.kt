@@ -42,6 +42,7 @@ private val ISSUE = mapOf(
     "RETURN_HOME_UNKNOWN" to R.string.issue_return_home_unknown,
     "NAVI_RESOLVE" to R.string.issue_navi_resolve,
     "PAST_TRIP" to R.string.issue_past_trip,
+    "LEG_NAVI" to R.string.issue_leg_navi,
 )
 
 private val CHANGE = mapOf(

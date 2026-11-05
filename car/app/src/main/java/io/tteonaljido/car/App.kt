@@ -1,8 +1,10 @@
 package io.tteonaljido.car
 
 import android.app.Application
+import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
+import io.tteonaljido.car.guide.GuidanceTracker
 import io.tteonaljido.car.handoff.PairingClient
 import io.tteonaljido.car.navi.NaviGateway
 import io.tteonaljido.car.navi.OfflineNaviGateway
@@ -14,6 +16,7 @@ import io.tteonaljido.car.safety.DrivingGate
 import io.tteonaljido.car.storage.SecureBox
 import io.tteonaljido.car.storage.SessionStore
 import io.tteonaljido.car.storage.TripRepository
+import io.tteonaljido.trip.LocalTrip
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -45,4 +48,27 @@ class Container(private val app: Application) {
 
     fun drive(): StateFlow<DriveState> = if (demo.value) demoGate.state else carGate?.state ?: unknown
     fun trips() = TripRepository(app.filesDir, demo.value, box)
+
+    /** Emulator demo only: shifts the app's clock (e.g. to day 2, 09:00) for scripted demos; the screen says so while on. */
+    val clockOffset = MutableStateFlow(0L)
+    fun nowMs(): Long = System.currentTimeMillis() + clockOffset.value
+
+    private val prefs = app.getSharedPreferences("settings", Context.MODE_PRIVATE)
+    /** Mark a stop as visited when the navigation reports arriving there (default on; always undoable). */
+    val autoArrive = MutableStateFlow(prefs.getBoolean("autoArrive", true))
+    fun setAutoArrive(on: Boolean) {
+        prefs.edit().putBoolean("autoArrive", on).apply()
+        autoArrive.value = on
+    }
+
+    private val tripLock = Any()
+
+    /** The single write path for stored trips: the screen and the arrival tracker both write overlays. */
+    fun updateTrip(localId: String, f: (LocalTrip) -> LocalTrip): LocalTrip? = synchronized(tripLock) {
+        val repo = trips()
+        val t = repo.load().trips.firstOrNull { it.localId == localId } ?: return null
+        f(t).also(repo::save)
+    }
+
+    val tracker = GuidanceTracker(this)
 }

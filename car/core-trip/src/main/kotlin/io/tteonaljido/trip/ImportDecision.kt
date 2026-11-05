@@ -59,7 +59,17 @@ object ImportDecision {
             lat == null || lon == null || metres(lat, lon, b.latE7, b.lonE7) <= 150.0
         }
         val visits = incoming.visits.map { it.visitId }.toSet()
-        return overlay.copy(poiBindings = bindings, visited = overlay.visited.filter { it in visits }.toSet())
+        val known = places.keys + LegKeys.HOME + LegKeys.ORIGIN
+        val estimates = overlay.legEstimates.filterKeys { key -> key.split('>').let { it.size == 2 && it.all(known::contains) } }
+        val guiding = overlay.guiding?.takeIf { g -> (g.visitId == null || g.visitId in visits) && (g.placeRef == null || g.placeRef in places) }
+        return overlay.copy(
+            poiBindings = bindings,
+            visited = overlay.visited.filter { it in visits }.toSet(),
+            visitedAt = overlay.visitedAt.filterKeys { it in visits },
+            skipped = overlay.skipped.filter { it in visits }.toSet(),
+            legEstimates = estimates,
+            guiding = guiding,
+        )
     }
 
     /** Short human summary of what an update would change. */

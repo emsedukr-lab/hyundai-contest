@@ -67,7 +67,7 @@ export function sampleTrip(updatedAt = '2026-11-05T09:00:00+09:00'): Trip {
       visit('v1', 'cheolttuk', 60, { desiredTime: '10:30' }),
       visit('v2', 'youngjin', 75),
       visit('v3', 'bohemian', 60),
-      visit('v4', 'lake', 90),
+      visit('v4', 'lake', 90, { importance: 'OPTIONAL' }), // optional, so the car can suggest skipping it when running late
       visit('v5', 'donghwa', 60, { importance: 'MUST', fixed: { time: '13:00', kind: 'RESERVATION' }, dateFlexible: false, timeFlexible: false }),
       visit('v6', 'mandong', 30),
       visit('v7', 'umji', 60),

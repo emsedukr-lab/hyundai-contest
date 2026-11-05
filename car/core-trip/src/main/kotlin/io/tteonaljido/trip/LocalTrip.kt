@@ -37,14 +37,49 @@ data class NaviBinding(
     val address: String,
 )
 
+/**
+ * Car-side state. Every field has a default so trips saved by an older version still load
+ * (a file written by this version cannot be read by an older APK: downgrades are not supported).
+ */
 @Serializable
 data class CarOverlay(
     /** Home confirmed from the navigation's HOME bookmark, used when the payload carried no home address. */
     val home: NaviBinding? = null,
-    /** User re-set the first-day origin in the car. */
+    /** User re-set the first-day origin in the car ("여기서 출발"). */
     val originOverride: NaviBinding? = null,
     val poiBindings: Map<String, NaviBinding> = emptyMap(),
     val visited: Set<String> = emptySet(),
+    /** When and how each visit was marked done (visitId → stamp). */
+    val visitedAt: Map<String, VisitStamp> = emptyMap(),
+    /** Stops the driver chose to skip in the car; the plan itself is unchanged. */
+    val skipped: Set<String> = emptySet(),
+    /** Travel times measured by the car's navigation, keyed by [LegKeys] ("from>to"). Used only where the plan has none. */
+    val legEstimates: Map<String, LegEstimate> = emptyMap(),
+    /** What this app last handed to the navigation, so its arrival event can be matched to a stop. */
+    val guiding: GuidingTarget? = null,
+)
+
+@Serializable
+enum class VisitHow { MANUAL, NAVI_ARRIVED, DEMO_SIGNAL }
+
+@Serializable
+data class VisitStamp(val at: Long, val how: VisitHow)
+
+/** A leg's travel time as the navigation estimated it from the car's position (`requestTrip`), never typed or guessed. */
+@Serializable
+data class LegEstimate(val minutes: Int, val metres: Int, val at: Long, val source: String = "NAVI")
+
+@Serializable
+data class GuidingTarget(
+    val dayIndex: Int,
+    /** Null when heading to the night's lodging or the final destination. */
+    val visitId: String?,
+    val placeRef: String?,
+    val latE7: Int,
+    val lonE7: Int,
+    /** The name the navigation itself confirmed; its arrival event carries the same name. */
+    val name: String,
+    val requestedAt: Long,
 )
 
 object PlanHash {

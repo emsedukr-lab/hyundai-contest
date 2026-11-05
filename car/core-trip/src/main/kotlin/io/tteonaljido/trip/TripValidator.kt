@@ -20,6 +20,37 @@ data class ValidationReport(val issues: List<Issue>) {
 /** Planned times for one stop; null where an unknown travel time breaks the chain. */
 data class StopTime(val visitId: String, val arrive: Int?, val start: Int?, val end: Int?)
 
+enum class LegFrom { USER, NAVI }
+
+/** A leg's travel time and where it came from: the phone's plan first, else the car navigation's estimate. */
+data class LegValue(val minutes: Int, val from: LegFrom)
+
+/** Keys for car-side leg estimates: "from>to", where each end is a placeRef, [HOME] or [ORIGIN]. */
+object LegKeys {
+    const val HOME = "@home"
+    const val ORIGIN = "@origin"
+
+    private fun endpoint(e: Endpoint) = when (e) {
+        is Endpoint.Home -> HOME
+        is Endpoint.AtPlace -> e.placeRef
+    }
+
+    fun dayStart(trip: Trip, overlay: CarOverlay, dayIndex: Int): String? =
+        if (dayIndex == 1) (if (overlay.originOverride != null) ORIGIN else endpoint(trip.origin)) else trip.days[dayIndex - 2].lodgingPlaceRef
+
+    fun dayEnd(trip: Trip, dayIndex: Int): String? =
+        if (dayIndex == trip.days.size) endpoint(trip.finalDestination) else trip.days[dayIndex - 1].lodgingPlaceRef
+
+    /** Key of leg k of a day (k = 0 leaves the day's start, k = stops leads to the night's lodging or the final destination). */
+    fun of(trip: Trip, overlay: CarOverlay, dayIndex: Int, k: Int): String? {
+        val order = trip.days[dayIndex - 1].visitOrder
+        fun ref(i: Int) = trip.visits.first { it.visitId == order[i] }.placeRef
+        val from = if (k == 0) dayStart(trip, overlay, dayIndex) else ref(k - 1)
+        val to = if (k == order.size) dayEnd(trip, dayIndex) else ref(k)
+        return if (from == null || to == null) null else "$from>$to"
+    }
+}
+
 object TripValidator {
     private val KOREA_LAT = 330_000_000..390_000_000
     private val KOREA_LON = 1_240_000_000..1_320_000_000
@@ -30,44 +61,60 @@ object TripValidator {
     fun placeName(trip: Trip, ref: String) = trip.places.firstOrNull { it.placeRef == ref }?.name ?: ref
     private fun visit(trip: Trip, id: String) = trip.visits.first { it.visitId == id }
 
+    /**
+     * Travel time of leg k: the plan's own value first, else the navigation's estimate. After "여기서 출발" the plan's
+     * first-day leg (from home) no longer applies, so only an estimate from the new origin counts.
+     */
+    fun leg(trip: Trip, overlay: CarOverlay, dayIndex: Int, k: Int): LegValue? {
+        val navi = LegKeys.of(trip, overlay, dayIndex, k)?.let(overlay.legEstimates::get)?.let { LegValue(it.minutes, LegFrom.NAVI) }
+        if (dayIndex == 1 && k == 0 && overlay.originOverride != null) return navi
+        return trip.days[dayIndex - 1].legs.getOrNull(k)?.let { LegValue(it.minutes, LegFrom.USER) } ?: navi
+    }
+
     /** Departure minute of a day, or null when it cannot be known. */
-    fun departure(trip: Trip, dayIndex: Int): Int? {
+    fun departure(trip: Trip, dayIndex: Int, overlay: CarOverlay = CarOverlay()): Int? {
         val day = trip.days[dayIndex - 1]
         if (dayIndex > 1) return day.departTime?.let(::minutes)
         return when (val f = trip.firstDay) {
             is FirstDay.DepartOrigin -> minutes(f.departTime)
             is FirstDay.ArriveFirstStop -> {
                 // Arrival basis: leave `leg` minutes before the target arrival; getting ready (prepMinutes) comes before that.
-                val leg = day.legs.firstOrNull() ?: return null
+                val leg = leg(trip, overlay, 1, 0) ?: return null
                 minutes(f.arriveTime) - leg.minutes
             }
         }
     }
 
-    /** Walks one day: arrival = departure + leg; a visit starts after prep, and not before its fixed time. */
-    fun timeline(trip: Trip, dayIndex: Int): List<StopTime> {
-        val day = trip.days[dayIndex - 1]
-        var clock: Int? = departure(trip, dayIndex)
-        return day.visitOrder.mapIndexed { k, id ->
-            val v = visit(trip, id)
-            val leg = day.legs.getOrNull(k)
-            val arrive = if (clock != null && leg != null) clock!! + leg.minutes else null
+    /**
+     * Walks stops from `start`: arrival = clock + leg; a visit starts after prep, and not before its fixed time.
+     * A fixed time restores the chain even after an unknown leg. Shared by the plan check and the live projection.
+     */
+    internal fun walk(start: Int?, items: List<Pair<Visit, Int?>>): List<StopTime> {
+        var clock: Int? = start
+        return items.map { (v, leg) ->
+            val arrive = if (clock != null && leg != null) clock!! + leg else null
             val fixed = v.fixed?.let { minutes(it.time) }
-            val start = when {
+            val begin = when {
                 arrive != null -> maxOf(arrive + v.prepMinutes, fixed ?: 0)
-                fixed != null -> fixed // an anchor restores the chain even after an unknown leg
+                fixed != null -> fixed
                 else -> null
             }
-            val end = start?.plus(v.stayMinutes)
+            val end = begin?.plus(v.stayMinutes)
             clock = end
-            StopTime(id, arrive, start, end)
+            StopTime(v.visitId, arrive, begin, end)
         }
     }
 
-    fun dayEnd(trip: Trip, dayIndex: Int): Int? {
+    /** Walks one day of the plan from its departure. */
+    fun timeline(trip: Trip, dayIndex: Int, overlay: CarOverlay = CarOverlay()): List<StopTime> {
         val day = trip.days[dayIndex - 1]
-        val last = if (day.visitOrder.isEmpty()) departure(trip, dayIndex) else timeline(trip, dayIndex).last().end
-        val leg = day.legs.lastOrNull() ?: return null
+        return walk(departure(trip, dayIndex, overlay), day.visitOrder.mapIndexed { k, id -> visit(trip, id) to leg(trip, overlay, dayIndex, k)?.minutes })
+    }
+
+    fun dayEnd(trip: Trip, dayIndex: Int, overlay: CarOverlay = CarOverlay()): Int? {
+        val day = trip.days[dayIndex - 1]
+        val last = if (day.visitOrder.isEmpty()) departure(trip, dayIndex, overlay) else timeline(trip, dayIndex, overlay).last().end
+        val leg = leg(trip, overlay, dayIndex, day.visitOrder.size) ?: return null
         return last?.plus(leg.minutes)
     }
 
@@ -105,15 +152,18 @@ object TripValidator {
         val start = LocalDate.parse(trip.startDate)
         trip.days.forEach { d ->
             val n = d.dayIndex
-            if (departure(trip, n) == null) {
+            if (departure(trip, n, overlay) == null) {
                 if (n == 1) add(Severity.UNCERTAIN, "FIRST_DEPARTURE_UNKNOWN", "첫날 출발 시각을 계산할 수 없어요 (첫 구간 이동시간 없음)", n)
                 else add(Severity.UNCERTAIN, "DEPARTURE_UNKNOWN", "${n}일차 출발 시각이 없어요", n, n)
-            } else if (n == 1 && departure(trip, 1)!! < 0) {
+            } else if (n == 1 && departure(trip, 1, overlay)!! < 0) {
                 add(Severity.CONFLICT, "DEPART_PREVIOUS_DAY", "첫 장소 도착 시각을 맞추려면 전날 출발해야 해요", n)
             }
-            val missing = d.legs.count { it == null }
+            val legs = (0..d.visitOrder.size).map { leg(trip, overlay, n, it) }
+            val missing = legs.count { it == null }
             if (missing > 0) add(Severity.UNCERTAIN, "LEG_UNKNOWN", "${n}일차 이동시간 미확인 ${missing}구간 · 충돌 확인 불가", n, n, missing)
-            val times = timeline(trip, n)
+            val navi = legs.count { it?.from == LegFrom.NAVI }
+            if (navi > 0) add(Severity.INFO, "LEG_NAVI", "${n}일차 ${navi}구간은 내비 예상 이동시간이에요", n, n, navi)
+            val times = timeline(trip, n, overlay)
             val date = start.plusDays((n - 1).toLong())
             times.forEach { st ->
                 val v = visit(trip, st.visitId)
@@ -125,7 +175,7 @@ object TripValidator {
                 if (fixed != null && st.arrive == null) add(Severity.UNCERTAIN, "FIXED_UNCHECKED", "${n}일차 '$name' 고정 ${v.fixed!!.time}: 이동시간이 없어 확인할 수 없어요", n, n, name, v.fixed!!.time)
                 hoursIssue(trip, v.placeRef, date, st)?.let { add(Severity.CONFLICT, it.code, "${n}일차 '$name' ${it.text}", n, n, name, *it.extra.toTypedArray()) }
             }
-            val end = dayEnd(trip, n)
+            val end = dayEnd(trip, n, overlay)
             val endBy = d.endBy?.let(::minutes)
             if (endBy != null && end != null && end > endBy) add(Severity.CONFLICT, "PAST_END_BY", "${n}일차 도착 예상 ${hhmm(end)} · 목표 ${d.endBy}보다 늦어요", n, n, hhmm(end), d.endBy!!)
         }

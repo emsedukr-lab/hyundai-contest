@@ -40,7 +40,12 @@ class MainActivity : ComponentActivity() {
                 val demo by c.demo.collectAsState()
                 val drive by remember(demo) { c.drive() }.collectAsState()
                 val demoDriving by c.demoGate.state.collectAsState()
-                val trips: TripsViewModel = viewModel(key = "trips-$demo", factory = viewModelFactory { initializer { TripsViewModel(c::trips, c.navi, getString(R.string.home), getString(R.string.home_bookmark)) } })
+                val clockOffset by c.clockOffset.collectAsState()
+                val autoArrive by c.autoArrive.collectAsState()
+                val trips: TripsViewModel = viewModel(
+                    key = "trips-$demo",
+                    factory = viewModelFactory { initializer { TripsViewModel(c::trips, c::updateTrip, c.navi, c.tracker, c::nowMs, c.clockOffset, getString(R.string.home), getString(R.string.home_bookmark)) } },
+                )
                 tripsVm = trips
                 val import: ImportViewModel = viewModel(
                     key = "import-$demo",
@@ -52,13 +57,16 @@ class MainActivity : ComponentActivity() {
                 BackHandler { if (route == Route.Trips) moveTaskToBack(true) else route = Route.Trips }
 
                 when (val r = route) {
-                    Route.Trips -> TripsScreen(trips, drive, onImport = { import.start(); route = Route.Import }, onOpen = { route = Route.Detail(it) }, onSettings = { route = Route.Settings })
-                    is Route.Detail -> TripDetailScreen(trips, r.id, drive, onBack = { route = Route.Trips })
+                    Route.Trips -> TripsScreen(trips, drive, clockOffset != 0L, onImport = { import.start(); route = Route.Import }, onOpen = { route = Route.Detail(it) }, onSettings = { route = Route.Settings })
+                    is Route.Detail -> TripDetailScreen(trips, r.id, drive, clockOffset != 0L, onBack = { route = Route.Trips })
                     Route.Import -> ImportScreen(import, drive, onClose = { trips.reload(); route = Route.Trips }, onOpenTrip = { trips.reload(); route = Route.Detail(it) })
                     Route.Settings -> SettingsScreen(
-                        trips, c.isEmulator, demo, demoDriving == DriveState.RESTRICTED, BuildConfig.API_BASE,
+                        trips, c.isEmulator, demo, demoDriving == DriveState.RESTRICTED, clockOffset != 0L, autoArrive, BuildConfig.API_BASE,
                         onDemo = { on -> c.demo.value = on && c.isEmulator },
                         onDemoDriving = { on -> c.demoGate.set(on) },
+                        onDemoClock = { on -> setDemoClock(if (on) demoDayTwo() else null) },
+                        onDemoArrive = { if (c.isEmulator) c.navi.demoArrive() },
+                        onAutoArrive = c::setAutoArrive,
                         onBack = { route = Route.Trips },
                     )
                 }
@@ -71,12 +79,34 @@ class MainActivity : ComponentActivity() {
         handleDemoIntent(intent)
     }
 
-    /** Debug builds on the emulator only: `am start ... --ez demo true --ez demoDriving true` for scripted tests. */
+    /** Emulator only: moves the app clock to `target` (null = real time). The screen shows a demo-time line while on. */
+    private fun setDemoClock(target: java.time.ZonedDateTime?) {
+        val c = (application as App).container
+        if (!c.isEmulator) return
+        c.clockOffset.value = target?.let { it.toInstant().toEpochMilli() - System.currentTimeMillis() } ?: 0L
+    }
+
+    /** Day 2 of the earliest stored trip at 09:00 in its time zone (the sample: 2026-11-21 09:00 KST). */
+    private fun demoDayTwo(): java.time.ZonedDateTime {
+        val c = (application as App).container
+        val t = c.trips().load().trips.minByOrNull { it.plan.startDate }
+        val zone = java.time.ZoneId.of(t?.plan?.timezone ?: "Asia/Seoul")
+        val start = java.time.LocalDate.parse(t?.plan?.startDate ?: "2026-11-20")
+        return start.plusDays(1).atTime(9, 0).atZone(zone)
+    }
+
+    /**
+     * Debug builds on the emulator only, for scripted tests:
+     * `am start ... --ez demo true --ez demoDriving true --es demoNow 2026-11-21T09:00 --ez demoArrive true`.
+     */
     private fun handleDemoIntent(intent: Intent?) {
         val c = (application as App).container
         if (!BuildConfig.DEBUG || !c.isEmulator || intent == null) return
         if (intent.hasExtra("demo")) c.demo.value = intent.getBooleanExtra("demo", false)
         if (intent.hasExtra("demoDriving")) c.demoGate.set(intent.getBooleanExtra("demoDriving", false))
+        intent.getStringExtra("demoNow")?.let { v -> setDemoClock(if (v == "off") null else java.time.LocalDateTime.parse(v).atZone(java.time.ZoneId.of("Asia/Seoul"))) }
+        if (intent.getBooleanExtra("demoArrive", false)) c.navi.demoArrive()
+        intent.getStringExtra("probe")?.let { (c.navi as? io.tteonaljido.car.navi.PleosNaviGateway)?.probe?.run(it) }
     }
 
     override fun onResume() {
