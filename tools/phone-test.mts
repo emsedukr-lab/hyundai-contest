@@ -30,24 +30,35 @@ const api = async (method: string, path: string, token?: string, body?: unknown)
   return data;
 };
 
-const car = await generateKeyPair();
-const carPub = await exportPublicRaw(car.publicKey);
-const s = await api('POST', '/sessions', undefined, { carPub: b64url(carPub), appVersion: 'phone-test', supportedSchemaVersions: [1] });
-const url = formatQrUrl(base, { sid: s.sid, scanSecret: s.scanSecret, fingerprint: await fingerprint(carPub) });
-const png = `${out}phone-test-qr.png`;
-await QRCode.toFile(png, url, { errorCorrectionLevel: 'M', margin: 4, scale: 12, color: { dark: '#000000', light: '#FFFFFF' } });
-try {
-  execFileSync('open', [png]);
-} catch {
-  /* not on macOS */
+async function newSession() {
+  const car = await generateKeyPair();
+  const carPub = await exportPublicRaw(car.publicKey);
+  const s = await api('POST', '/sessions', undefined, { carPub: b64url(carPub), appVersion: 'phone-test', supportedSchemaVersions: [1] });
+  const url = formatQrUrl(base, { sid: s.sid, scanSecret: s.scanSecret, fingerprint: await fingerprint(carPub) });
+  const png = `${out}phone-test-qr.png`;
+  await QRCode.toFile(png, url, { errorCorrectionLevel: 'M', margin: 4, scale: 12, color: { dark: '#000000', light: '#FFFFFF' } });
+  try {
+    execFileSync('open', [png]);
+  } catch {
+    /* not on macOS */
+  }
+  log(`새 QR 표시 (${png}) · 5분 동안 1회 · 휴대폰 기본 카메라로 스캔하세요. 세션 ${s.sid.slice(0, 4)}…`);
+  return { car, carPub, s };
 }
-log(`QR 표시: ${png} (5분 동안 1회). 휴대폰 기본 카메라로 스캔하세요.`);
 
+// Re-issues the QR while nobody has connected, so the tester is not racing the 5-minute window.
+const giveUp = Date.now() + 30 * 60_000;
+let { car, carPub, s } = await newSession();
 let code = '';
 let last = '';
-const deadline = Date.now() + 16 * 60_000;
-while (Date.now() < deadline) {
-  const v = await api('GET', `/sessions/${s.sid}`, s.carToken);
+while (Date.now() < giveUp) {
+  const v = await api('GET', `/sessions/${s.sid}`, s.carToken).catch((e) => ({ state: 'ERROR', error: String(e) }));
+  if (v.state === 'EXPIRED' && v.expireReason === 'QR') {
+    log('QR 만료(휴대폰 연결 없음) → 새 QR');
+    ({ car, carPub, s } = await newSession());
+    last = '';
+    continue;
+  }
   if (v.state !== last) {
     last = v.state;
     if (v.state === 'CLAIMED') {
@@ -72,9 +83,9 @@ while (Date.now() < deadline) {
       await api('POST', `/sessions/${s.sid}/result`, s.carToken, { outcome: 'APPLIED', resultCode: 'IMPORTED_NEW', appliedRevision: t.revision });
       log('적용 보고 완료 · 휴대폰에 "차량에 새 여행으로 불러왔어요"가 보여야 합니다.');
     } else {
-      log(`상태: ${v.state}${v.expireReason ? ` (${v.expireReason})` : ''}${v.cancelReason ? ` (${v.cancelReason})` : ''}`);
+      log(`상태: ${v.state}${v.expireReason ? ` (${v.expireReason})` : ''}${v.cancelReason ? ` (${v.cancelReason})` : ''}${v.error ? ` ${v.error}` : ''}`);
     }
-    if (['APPLIED', 'REJECTED', 'CANCELLED', 'EXPIRED'].includes(v.state)) break;
+    if (['APPLIED', 'REJECTED', 'CANCELLED'].includes(v.state) || (v.state === 'EXPIRED' && v.expireReason !== 'QR')) break;
   }
   await sleep(1000);
 }

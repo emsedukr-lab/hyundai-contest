@@ -85,3 +85,11 @@ describe('warnings', () => {
     expect(texts).toContain("차량 내비의 '집'");
   });
 });
+
+describe('places added by name only', () => {
+  it('a place without coordinates still makes a valid transfer', async () => {
+    const t = addPlace(sampleTrip(), { name: '묵호 논골담길', address: '', latE7: null, lonE7: null, category: 'OTHER', source: { provider: 'MANUAL', externalId: null }, naviPoi: null, hours: { status: 'UNKNOWN' } });
+    const doc = await newDoc(t);
+    expect(await parseTransfer(JSON.stringify(await toTransfer(doc, false)))).toMatchObject({ ok: true });
+  });
+});

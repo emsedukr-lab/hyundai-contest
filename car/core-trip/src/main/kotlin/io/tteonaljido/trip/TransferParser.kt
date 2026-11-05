@@ -85,7 +85,8 @@ internal object SchemaRules {
         trip.home?.let { need(it.address.length in 1..120 && lat(it.latE7) && lon(it.lonE7), "home") }
         need(trip.places.size <= 100 && trip.visits.size <= 100 && trip.days.size in 1..14, "sizes")
         trip.places.forEach { p ->
-            need(REF.matches(p.placeRef) && p.name.length in 1..60 && p.address.length <= 120 && lat(p.latE7) && lon(p.lonE7), "place")
+            need(REF.matches(p.placeRef) && p.name.length in 1..60 && p.address.length <= 120, "place")
+            need((p.latE7 == null) == (p.lonE7 == null) && (p.latE7?.let(::lat) ?: true) && (p.lonE7?.let(::lon) ?: true), "place.coordinates")
             need((p.source.externalId?.length ?: 0) <= 40, "place.source")
             p.naviPoi?.let { need(it.poiId.length in 1..40 && it.poiSubId.length <= 40 && it.poiProvider.length in 1..40, "naviPoi") }
             (p.hours as? OpeningHours.UserEntered)?.let { h ->

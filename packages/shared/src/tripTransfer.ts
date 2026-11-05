@@ -44,12 +44,13 @@ export const OpeningHours = z.discriminatedUnion('status', [
   }),
 ]);
 
+/** Coordinates are optional (e.g. added by name when search is unavailable); the car then finds the place in its navigation. */
 export const Place = z.strictObject({
   placeRef: Ref,
   name: Name,
   address: Address,
-  latE7: LatE7,
-  lonE7: LonE7,
+  latE7: LatE7.nullable(),
+  lonE7: LonE7.nullable(),
   category: PlaceCategory,
   source: z.strictObject({
     provider: z.enum(['KAKAO', 'MANUAL']),
@@ -57,7 +58,7 @@ export const Place = z.strictObject({
   }),
   naviPoi: NaviPoi.nullable(),
   hours: OpeningHours,
-});
+}).refine((p) => (p.latE7 === null) === (p.lonE7 === null), 'latE7 and lonE7 must both be set or both be null');
 
 export const Visit = z.strictObject({
   visitId: Ref,

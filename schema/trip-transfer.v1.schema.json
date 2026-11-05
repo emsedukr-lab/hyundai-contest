@@ -224,14 +224,28 @@
                 "maxLength": 120
               },
               "latE7": {
-                "type": "integer",
-                "minimum": -900000000,
-                "maximum": 900000000
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": -900000000,
+                    "maximum": 900000000
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
               },
               "lonE7": {
-                "type": "integer",
-                "minimum": -1800000000,
-                "maximum": 1800000000
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": -1800000000,
+                    "maximum": 1800000000
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
               },
               "category": {
                 "type": "string",

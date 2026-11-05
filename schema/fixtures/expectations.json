@@ -11,6 +11,13 @@
   "valid/day-trip.json": {
     "valid": true
   },
+  "valid/place-without-coordinates.json": {
+    "valid": true
+  },
+  "invalid/half-coordinates.json": {
+    "valid": false,
+    "code": "SCHEMA"
+  },
   "invalid/unknown-field.json": {
     "valid": false,
     "code": "SCHEMA"

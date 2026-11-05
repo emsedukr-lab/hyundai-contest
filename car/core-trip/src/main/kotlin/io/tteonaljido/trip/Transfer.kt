@@ -73,8 +73,9 @@ data class Place(
     val placeRef: String,
     val name: String,
     val address: String,
-    val latE7: Int,
-    val lonE7: Int,
+    /** Null when the place was added by name only; the car then finds it in its navigation. */
+    val latE7: Int?,
+    val lonE7: Int?,
     val category: PlaceCategory,
     val source: Source,
     val naviPoi: NaviPoi?,

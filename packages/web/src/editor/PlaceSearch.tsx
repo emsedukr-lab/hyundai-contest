@@ -7,6 +7,7 @@ import { List, ListItem } from '@astryxdesign/core/List';
 import { NumberInput } from '@astryxdesign/core/NumberInput';
 import { Selector } from '@astryxdesign/core/Selector';
 import { HStack, StackItem, VStack } from '@astryxdesign/core/Stack';
+import { Text } from '@astryxdesign/core/Text';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import type { Place } from '@tteonaljido/shared';
 import { ApiError, searchPlaces, type PlaceHit } from '../lib/pairing';
@@ -39,7 +40,17 @@ export function PlaceSearch({ onPick, label = '장소 검색', lodgingOnly = fal
   const [hits, setHits] = useState<PlaceHit[] | null>(null);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
+  const [unavailable, setUnavailable] = useState(false);
   const [manual, setManual] = useState(false);
+
+  /** Adds a place by name only; the car finds its exact location in the Hyundai navigation. */
+  const addByName = () => {
+    const name = q.trim().slice(0, 60);
+    if (!name) return;
+    onPick({ name, address: '', latE7: null, lonE7: null, category: lodgingOnly ? 'LODGING' : 'OTHER', source: { provider: 'MANUAL', externalId: null }, naviPoi: null, hours: { status: 'UNKNOWN' } });
+    setQ('');
+    setNote(null);
+  };
 
   const run = async () => {
     if (!q.trim()) return;
@@ -49,7 +60,9 @@ export function PlaceSearch({ onPick, label = '장소 검색', lodgingOnly = fal
       setHits(await searchPlaces(q.trim()));
     } catch (e) {
       setHits(null);
-      setNote(e instanceof ApiError && e.status === 503 ? '지금은 장소 검색을 쓸 수 없어요. 직접 입력해 주세요.' : '검색하지 못했어요. 인터넷 연결을 확인하거나 직접 입력해 주세요.');
+      const off = e instanceof ApiError && e.status === 503;
+      setUnavailable(off);
+      setNote(off ? '지금은 장소 검색을 쓸 수 없어요. 이름으로 추가하면 차량에서 내비로 위치를 찾아요.' : '검색하지 못했어요. 인터넷 연결을 확인하거나 이름으로 추가해 주세요.');
     } finally {
       setBusy(false);
     }
@@ -64,6 +77,7 @@ export function PlaceSearch({ onPick, label = '장소 검색', lodgingOnly = fal
         <Button label="검색" variant="secondary" isLoading={busy} onClick={run} />
       </HStack>
       {note && <Banner status="info" title={note} />}
+      {note && q.trim() && <Button label={`'${q.trim().slice(0, 20)}' 이름으로 추가`} variant="primary" size="sm" onClick={addByName} />}
       {hits && hits.length === 0 && <Banner status="info" title="검색 결과가 없어요" />}
       {hits && hits.length > 0 && (
         <List hasDividers>
@@ -82,7 +96,7 @@ export function PlaceSearch({ onPick, label = '장소 검색', lodgingOnly = fal
         </List>
       )}
       <HStack gap={2}>
-        <Button label="직접 입력" variant="ghost" size="sm" onClick={() => setManual(true)} />
+        <Button label={unavailable ? '주소·좌표까지 직접 입력' : '직접 입력'} variant="ghost" size="sm" onClick={() => setManual(true)} />
       </HStack>
       <ManualPlaceDialog isOpen={manual} lodgingOnly={lodgingOnly} onClose={() => setManual(false)} onSave={(p) => (onPick(p), setManual(false))} />
     </VStack>
@@ -95,7 +109,9 @@ function ManualPlaceDialog({ isOpen, onClose, onSave, lodgingOnly }: { isOpen: b
   const [lat, setLat] = useState<number | null>(null);
   const [lon, setLon] = useState<number | null>(null);
   const [category, setCategory] = useState<Place['category']>(lodgingOnly ? 'LODGING' : 'SIGHT');
-  const valid = name.trim().length > 0 && lat !== null && lon !== null && Math.abs(lat) <= 90 && Math.abs(lon) <= 180;
+  // Coordinates are optional; when given, both are needed and must be in range.
+  const hasCoords = lat !== null && lon !== null;
+  const valid = name.trim().length > 0 && (lat === null) === (lon === null) && (!hasCoords || (Math.abs(lat!) <= 90 && Math.abs(lon!) <= 180));
 
   return (
     <Dialog isOpen={isOpen} onOpenChange={(o) => !o && onClose()} width={480}>
@@ -105,9 +121,12 @@ function ManualPlaceDialog({ isOpen, onClose, onSave, lodgingOnly }: { isOpen: b
           <TextInput label="이름" value={name} onChange={setName} isRequired />
           <TextInput label="주소" value={address} onChange={setAddress} isOptional />
           <HStack gap={2}>
-            <NumberInput label="위도" value={lat} onChange={setLat} step={0.0001} placeholder="37.7955" isRequired />
-            <NumberInput label="경도" value={lon} onChange={setLon} step={0.0001} placeholder="128.8975" isRequired />
+            <NumberInput label="위도" value={lat} onChange={(v: number | null) => setLat(v)} step={0.0001} placeholder="37.7955" isOptional hasClear />
+            <NumberInput label="경도" value={lon} onChange={(v: number | null) => setLon(v)} step={0.0001} placeholder="128.8975" isOptional hasClear />
           </HStack>
+          <Text type="supporting" color="secondary">
+            좌표를 모르면 비워 두세요. 차량에서 안내할 때 현대차 내비로 위치를 찾아요.
+          </Text>
           {!lodgingOnly && <Selector label="종류" options={CATEGORY_OPTIONS} value={category} onChange={(v) => setCategory(v as Place['category'])} />}
         </FormLayout>
         <HStack gap={2} hAlign="end">
@@ -120,8 +139,8 @@ function ManualPlaceDialog({ isOpen, onClose, onSave, lodgingOnly }: { isOpen: b
               onSave({
                 name: name.trim().slice(0, 60),
                 address: address.trim().slice(0, 120),
-                latE7: Math.round(lat! * 1e7),
-                lonE7: Math.round(lon! * 1e7),
+                latE7: hasCoords ? Math.round(lat! * 1e7) : null,
+                lonE7: hasCoords ? Math.round(lon! * 1e7) : null,
                 category,
                 source: { provider: 'MANUAL', externalId: null },
                 naviPoi: null,

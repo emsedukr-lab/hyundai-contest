@@ -94,6 +94,8 @@ class TripsViewModel(private val repo: () -> TripRepository, private val navi: N
             }
         }
         pending = Pending(localId, placeRef, target, Kind.ROUTE)
+        // Added by name only: no coordinates to route to, so go straight to the navigation's own search.
+        if (target.latE7 == null && placeRef != null) return searchInNavi()
         viewModelScope.launch {
             _guide.value = Guide.Working("내비게이션 상태를 확인하는 중")
             val current = navi.currentDestination()
@@ -111,7 +113,7 @@ class TripsViewModel(private val repo: () -> TripRepository, private val navi: N
         _guide.value = Guide.Working("${p.target.name}(으)로 안내를 요청했어요 · 내비 화면에서 경로를 확인해 주세요")
         _guide.value = when (val r = navi.route(p.target, p.previous)) {
             is RouteOutcome.Confirmed -> { bind(p, r.binding); pending = null; Guide.Done("안내를 시작했어요 · ${r.binding.name}") }
-            is RouteOutcome.Different -> Guide.ConfirmPlace(r.binding, p.target.name, metres(p.target.latE7, p.target.lonE7, r.binding.latE7, r.binding.lonE7).toInt())
+            is RouteOutcome.Different -> Guide.ConfirmPlace(r.binding, p.target.name, p.target.latE7?.let { lat -> metres(lat, p.target.lonE7!!, r.binding.latE7, r.binding.lonE7).toInt() } ?: -1)
             RouteOutcome.NoAnswer -> Guide.Failed("내비게이션이 목적지를 확인해 주지 않았어요", canSearch = p.placeRef != null)
             is RouteOutcome.Unavailable -> Guide.Failed(r.reason, false)
         }
@@ -137,7 +139,7 @@ class TripsViewModel(private val repo: () -> TripRepository, private val navi: N
         val t = trip(p.localId) ?: return
         val place = t.plan.places.firstOrNull { it.placeRef == p.placeRef } ?: return
         pending = p.copy(kind = Kind.SEARCH)
-        _guide.value = Guide.Working("내비에서 장소를 고른 뒤 이 앱으로 돌아와 주세요")
+        _guide.value = Guide.Working(if (p.target.latE7 == null) "'${place.name}' 위치가 계획에 없어 내비에서 찾아요 · 고른 뒤 이 앱으로 돌아와 주세요" else "내비에서 장소를 고른 뒤 이 앱으로 돌아와 주세요")
         navi.openSearch(PlaceMatch.keyword(place))
     }
 
@@ -147,7 +149,9 @@ class TripsViewModel(private val repo: () -> TripRepository, private val navi: N
         viewModelScope.launch {
             if (p.kind == Kind.HOME) return@launch checkHome()
             val got = navi.currentDestination() ?: return@launch run { _guide.value = Guide.Failed("내비에서 고른 장소가 없어요", true) }
-            val d = metres(p.target.latE7, p.target.lonE7, got.latE7, got.lonE7).toInt()
+            val tLat = p.target.latE7
+            val tLon = p.target.lonE7
+            val d = if (tLat == null || tLon == null) -1 else metres(tLat, tLon, got.latE7, got.lonE7).toInt()
             _guide.value = when (PlaceMatch.classify(p.target.latE7, p.target.lonE7, p.target.poiId, got.latE7, got.lonE7, got.poiId)) {
                 Match.SAME -> { bind(p, got); pending = null; Guide.Done("내비 장소로 연결했어요 · ${got.name}") }
                 Match.NEAR, Match.FAR -> Guide.ConfirmPlace(got, p.target.name, d)

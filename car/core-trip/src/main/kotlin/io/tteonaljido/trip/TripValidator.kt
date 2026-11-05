@@ -76,11 +76,18 @@ object TripValidator {
 
         // Places
         trip.places.forEach { p ->
-            if (p.latE7 == 0 && p.lonE7 == 0) add(Severity.CONFLICT, "NO_COORDINATES", "${p.name}: 좌표가 없어요")
-            else if (p.latE7 !in KOREA_LAT || p.lonE7 !in KOREA_LON) add(Severity.UNCERTAIN, "OUTSIDE_KOREA", "${p.name}: 국내 범위 밖 좌표예요")
+            val lat = p.latE7
+            val lon = p.lonE7
+            when {
+                lat == null || lon == null ->
+                    if (p.placeRef !in overlay.poiBindings) add(Severity.UNCERTAIN, "NAME_ONLY", "${p.name}: 이름만 있어요 · 안내할 때 내비에서 위치를 확인해요")
+                lat == 0 && lon == 0 -> add(Severity.CONFLICT, "NO_COORDINATES", "${p.name}: 좌표가 없어요")
+                lat !in KOREA_LAT || lon !in KOREA_LON -> add(Severity.UNCERTAIN, "OUTSIDE_KOREA", "${p.name}: 국내 범위 밖 좌표예요")
+            }
         }
-        trip.places.forEachIndexed { i, a ->
-            trip.places.drop(i + 1).filter { it.name == a.name && metres(a.latE7, a.lonE7, it.latE7, it.lonE7) < 30 }.forEach {
+        val located = trip.places.filter { it.latE7 != null && it.lonE7 != null }
+        located.forEachIndexed { i, a ->
+            located.drop(i + 1).filter { it.name == a.name && metres(a.latE7!!, a.lonE7!!, it.latE7!!, it.lonE7!!) < 30 }.forEach {
                 add(Severity.INFO, "DUPLICATE_PLACE", "${a.name}: 같은 장소가 두 번 있어요")
             }
         }

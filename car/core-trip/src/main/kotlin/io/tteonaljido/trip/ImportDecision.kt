@@ -51,7 +51,9 @@ object ImportDecision {
         val places = incoming.places.associateBy { it.placeRef }
         val bindings = overlay.poiBindings.filter { (ref, b) ->
             val p = places[ref] ?: return@filter false
-            metres(p.latE7, p.lonE7, b.latE7, b.lonE7) <= 150.0
+            val lat = p.latE7
+            val lon = p.lonE7
+            lat == null || lon == null || metres(lat, lon, b.latE7, b.lonE7) <= 150.0
         }
         val visits = incoming.visits.map { it.visitId }.toSet()
         return overlay.copy(poiBindings = bindings, visited = overlay.visited.filter { it in visits }.toSet())

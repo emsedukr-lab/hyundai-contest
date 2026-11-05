@@ -10,8 +10,10 @@ object PlaceMatch {
     const val SAME_METRES = 150.0
     const val NEAR_METRES = 2_000.0
 
-    fun classify(wantLatE7: Int, wantLonE7: Int, wantPoiId: String?, gotLatE7: Int, gotLonE7: Int, gotPoiId: String?): Match {
+    /** Without planned coordinates nothing can be checked automatically, so the user always confirms (NEAR). */
+    fun classify(wantLatE7: Int?, wantLonE7: Int?, wantPoiId: String?, gotLatE7: Int, gotLonE7: Int, gotPoiId: String?): Match {
         if (!wantPoiId.isNullOrEmpty() && wantPoiId == gotPoiId) return Match.SAME
+        if (wantLatE7 == null || wantLonE7 == null) return Match.NEAR
         val d = metres(wantLatE7, wantLonE7, gotLatE7, gotLonE7)
         return when {
             d <= SAME_METRES -> Match.SAME

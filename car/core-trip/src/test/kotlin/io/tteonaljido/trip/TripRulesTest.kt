@@ -74,6 +74,15 @@ class TripRulesTest {
         assertFalse("ORIGIN_HOME_UNKNOWN" in codes(sample, CarOverlay(home = home)))
     }
 
+    @Test fun nameOnlyPlaceIsUncertainUntilTheNavigationConfirmsIt() {
+        val t = load("place-without-coordinates")
+        val issue = TripValidator.validate(t).issues.single { it.code == "NAME_ONLY" }
+        assertEquals(Severity.UNCERTAIN, issue.severity)
+        val bound = CarOverlay(poiBindings = mapOf("mukho" to NaviBinding("", "", "", 375_500_000, 1_291_100_000, "묵호 논골담길", "")))
+        assertFalse("NAME_ONLY" in codes(t, bound))
+        assertEquals(Match.NEAR, PlaceMatch.classify(null, null, null, 1, 1, null))
+    }
+
     @Test fun pastTripSuggestsCleanup() {
         assertTrue("PAST_TRIP" in codes(sample, today = LocalDate.parse("2026-12-01")))
         assertFalse("PAST_TRIP" in codes(sample, today = LocalDate.parse("2026-11-21")))

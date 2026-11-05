@@ -169,6 +169,8 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
                 <PlaceSearch
                   label="집 주소 검색"
                   onPick={(p) => {
+                    // Home needs coordinates; without them the car keeps using its navigation HOME.
+                    if (p.latE7 === null || p.lonE7 === null) return setError("집은 검색 결과나 좌표로만 넣을 수 있어요. 비워 두면 차량 내비의 '집'을 써요.");
                     setHome({ address: (p.address || p.name).slice(0, 120), latE7: p.latE7, lonE7: p.lonE7 });
                     setDirty(true);
                   }}

@@ -23,7 +23,7 @@ import kotlin.math.roundToInt
 
 enum class NaviStatus { CONNECTING, CONNECTED, UNAVAILABLE }
 
-data class RouteTarget(val name: String, val address: String, val latE7: Int, val lonE7: Int, val poiId: String?, val poiSubId: String?, val poiProvider: String?)
+data class RouteTarget(val name: String, val address: String, val latE7: Int?, val lonE7: Int?, val poiId: String?, val poiSubId: String?, val poiProvider: String?)
 
 sealed interface RouteOutcome {
     data class Confirmed(val binding: NaviBinding) : RouteOutcome
@@ -102,11 +102,13 @@ class PleosNaviGateway(context: Context) : NaviGateway {
 
     override suspend fun route(target: RouteTarget, previous: NaviBinding?): RouteOutcome {
         if (_status.value != NaviStatus.CONNECTED) return RouteOutcome.Unavailable("내비게이션에 연결되지 않았어요")
+        val lat = target.latE7 ?: return RouteOutcome.NoAnswer
+        val lon = target.lonE7 ?: return RouteOutcome.NoAnswer
         try {
             navi.requestRoute(
                 RouteInfo(
-                    latitude = target.latE7 / 1e7,
-                    longitude = target.lonE7 / 1e7,
+                    latitude = lat / 1e7,
+                    longitude = lon / 1e7,
                     poiName = target.name,
                     poiId = target.poiId.orEmpty(),
                     address = target.address,

@@ -77,6 +77,12 @@ await valid('day-trip', {
   days: [{ dayIndex: 1, date: '2026-11-20', departTime: null, endBy: '20:00', visitOrder: ['v1'], legs: [null, null], lodgingPlaceRef: null }],
 });
 
+const byName = clone(sampleTrip());
+byName.places.push({ placeRef: 'mukho', name: '묵호 논골담길', address: '동해시 묵호진동', latE7: null, lonE7: null, category: 'SIGHT', source: { provider: 'MANUAL', externalId: null }, naviPoi: null, hours: { status: 'UNKNOWN' } });
+byName.visits.push({ ...byName.visits[0], visitId: 'v12', placeRef: 'mukho', unassignedReason: 'NOT_SCHEDULED_YET', desiredTime: null });
+await valid('place-without-coordinates', byName);
+
+await invalid('half-coordinates', 'SCHEMA', (t) => (t.places[0].lonE7 = null));
 await invalid('unknown-field', 'SCHEMA', () => {}, { raw: (t) => ((t.trip as Record<string, unknown>).memo = '예약번호 1234') });
 await invalid('secret-field', 'SCHEMA', () => {}, { raw: (t) => ((t.trip as Record<string, unknown>).reservationPassword = 'x') });
 await invalid('float-coordinate', 'SCHEMA', () => {}, {
