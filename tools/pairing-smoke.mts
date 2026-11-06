@@ -50,6 +50,7 @@ step(`car decrypted "${parsed.transfer.trip.name}" (codes match: ${carKeys.confi
 await api('POST', `/sessions/${created.sid}/lock`, created.carToken);
 await api('POST', `/sessions/${created.sid}/result`, created.carToken, { outcome: 'APPLIED', resultCode: 'IMPORTED_NEW', appliedRevision: 1 });
 const status = await api('GET', `/sessions/${link.sid}/status`, claimed.mobileToken);
+if (status.state !== 'APPLIED' || status.resultCode !== 'IMPORTED_NEW') throw new Error(`phone saw ${status.state}/${status.resultCode}, expected APPLIED/IMPORTED_NEW`);
 step(`phone sees ${status.state}/${status.resultCode}`);
 
 const again = await fetch(`${base}/api/v1/sessions/${link.sid}/claim`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ scanSecret: link.scanSecret, mobilePub: b64url(phonePub) }) });

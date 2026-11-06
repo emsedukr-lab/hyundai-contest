@@ -13,9 +13,11 @@ import jsQR from 'jsqr';
 import { PNG } from 'pngjs';
 import { chromium, type Page } from 'playwright-core';
 
-const SERIAL = process.argv[2] ?? 'emulator-5580';
-const ADB = `${homedir()}/Library/Android/sdk/platform-tools/adb`;
+const SERIAL = process.argv[2] ?? process.env.ANDROID_SERIAL ?? 'emulator-5580';
+const ADB = process.env.ANDROID_ADB ?? `${homedir()}/Library/Android/sdk/platform-tools/adb`;
 const PKG = 'io.tteonaljido.car';
+const USER = process.env.CAR_USER ?? '10';
+const CHROME = process.env.CHROME_PATH ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const shots = fileURLToPath(new URL('../docs/evidence/m4/', import.meta.url));
 mkdirSync(shots, { recursive: true });
 
@@ -100,16 +102,16 @@ async function newQr(): Promise<string> {
 
 // The emulator's VHAL injection is blocked on user builds, so driving is simulated with the app's
 // emulator-only demo gate (debug builds). Demo mode also keeps test data out of the real store.
-const demo = (driving: boolean) => sh(`am start --user 10 -n ${PKG}/.MainActivity --ez demo true --ez demoDriving ${driving}`);
+const demo = (driving: boolean) => sh(`am start --user ${USER} -n ${PKG}/.MainActivity --ez demo true --ez demoDriving ${driving}`);
 sh(`am force-stop ${PKG}`);
 demo(false);
 await waitFor(byText('떠날지도'), 'app start');
 // Start clean through the app's own UI (also exercises "모든 여행 삭제").
 // Debug builds: the demo store is emptied by an intent, not through the Settings popup (UI Automator misses popups on a loaded emulator).
-sh(`am start --user 10 -n ${PKG}/.MainActivity --ez demo true --ez demoDriving false --ez demoWipe true`);
+sh(`am start --user ${USER} -n ${PKG}/.MainActivity --ez demo true --ez demoDriving false --ez demoWipe true`);
 await waitFor(byText('저장된 여행이 없어요'), 'empty trip list');
 
-const browser = await chromium.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true });
+const browser = await chromium.launch({ executablePath: CHROME, headless: true });
 const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true, locale: 'ko-KR' });
 try {
   /* ---------- round 1: new trip ---------- */
@@ -123,7 +125,7 @@ try {
   check(decodeQr(carShot('03-driving-hides-qr')) === null, 'no QR is on screen while driving');
   demo(false);
   await waitFor(byText('남은 시간'), 'QR back after parking');
-  check(true, 'session survives the driving interruption');
+  check(decodeQr(carShot('03b-qr-back')) === url1, 'session survives the driving interruption (same QR after parking)');
 
   const page = await ctx.newPage();
   const phoneCode = await phoneSends(page, url1, true);
@@ -131,13 +133,13 @@ try {
   check(byText(`코드 ${phoneCode}`)(ui()), `car summary shows the same confirm code as the phone (${phoneCode})`);
   carShot('04-review-new');
   await page.getByText('차량이 받았어요 · 아직 적용 전').waitFor();
-  check(true, 'phone waits for the car approval (sent ≠ applied)');
+  check(!(await page.getByText('차량에 새 여행으로 불러왔어요').isVisible().catch(() => false)), 'phone waits for the car approval (sent ≠ applied)');
   check(byText('새 여행이에요')(ui()), 'car offers "새 여행" for an unknown trip');
   tap(await waitFor(byTag('choice_IMPORT_NEW'), 'import choice'));
   await waitFor(byText('새 여행으로 불러왔어요'), 'car done');
   carShot('05-imported');
   await page.getByText('차량에 새 여행으로 불러왔어요').waitFor();
-  check(true, 'phone shows applied only after the car approved');
+  check(await page.getByText('차량에 새 여행으로 불러왔어요').isVisible(), 'phone shows applied only after the car approved');
 
   tap(await waitFor(byText('여행 보기'), 'open trip'));
   await waitFor(byText('다음 목적지'), 'trip detail');
@@ -156,7 +158,7 @@ try {
   carShot('07-same-version');
   tap(await waitFor(byTag('choice_ACKNOWLEDGE_SAME'), 'acknowledge'));
   await page2.getByText('차량에 이미 같은 버전이 있어요').waitFor();
-  check(true, 'resending the same revision changes nothing and tells the phone');
+  check(await page2.getByText('차량에 이미 같은 버전이 있어요').isVisible(), 'resending the same revision changes nothing and tells the phone');
   sh('input keyevent KEYCODE_BACK');
   await waitFor(byTag('import'), 'trip list');
   const after = ui().filter((n) => n.text === '강릉 3박 4일').length;
@@ -168,7 +170,7 @@ try {
   await page3.goto(url1);
   await click(page3, '연결하고 확인 코드 보기');
   await page3.getByText('이미 사용된 QR이에요', { exact: false }).waitFor();
-  check(true, 'a used QR cannot be claimed again');
+  check(await page3.getByText('이미 사용된 QR이에요', { exact: false }).isVisible(), 'a used QR cannot be claimed again');
   console.log('car E2E passed');
 } finally {
   demo(false);

@@ -16,8 +16,13 @@ const outDir = `${root}media/demo/`;
 mkdirSync(`${work}overlay`, { recursive: true });
 mkdirSync(outDir, { recursive: true });
 
-interface Timeline { phoneStart: number; total: number; segments: Array<{ file: string; at: number }>; captions: Array<{ at: number; text: string }>; waits?: Array<{ from: number; to: number; what: string }> }
+interface Timeline { phoneStart: number; total: number; segments: Array<{ file: string; at: number }>; captions: Array<{ at: number; text: string }>; waits?: Array<{ from: number; to: number; what: string }>; failure?: string | null }
 const tl: Timeline = JSON.parse(readFileSync(`${work}timeline.json`, 'utf8'));
+// A take that errored out is not worth composing; re-record it (ALLOW_FAILED_TAKE=1 forces it).
+if (tl.failure && !process.env.ALLOW_FAILED_TAKE) {
+  console.error(`refusing to compose a failed recording: ${tl.failure}. Re-record, or set ALLOW_FAILED_TAKE=1 to override.`);
+  process.exit(1);
+}
 const carAt = tl.segments[0].at;
 // phone.mp4: 780×1688 screenshots (current recorder). phone.webm: the first take's Playwright video (390×760 page area).
 const phoneFile = existsSync(`${work}phone.mp4`) ? `${work}phone.mp4` : `${work}phone.webm`;
@@ -91,7 +96,7 @@ const captionHtml = (text: string) => {
   </style><div class="c">${badge}<div>${body}</div></div>`;
 };
 
-const browser = await chromium.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true });
+const browser = await chromium.launch({ executablePath: process.env.CHROME_PATH ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true });
 const page = await browser.newPage({ viewport: { width: W, height: H } });
 const shoot = async (html: string, file: string) => {
   writeFileSync(`${work}overlay/page.html`, `<!doctype html><meta charset="utf-8">${html}`);

@@ -14,9 +14,11 @@ import jsQR from 'jsqr';
 import { PNG } from 'pngjs';
 import { chromium, type Page } from 'playwright-core';
 
-const SERIAL = process.argv[2] ?? 'emulator-5580';
-const ADB = `${homedir()}/Library/Android/sdk/platform-tools/adb`;
+const SERIAL = process.argv[2] ?? process.env.ANDROID_SERIAL ?? 'emulator-5580';
+const ADB = process.env.ANDROID_ADB ?? `${homedir()}/Library/Android/sdk/platform-tools/adb`;
 const PKG = 'io.tteonaljido.car';
+const USER = process.env.CAR_USER ?? '10';
+const CHROME = process.env.CHROME_PATH ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const HOME = 'https://tteonaljido.tteonaljido-worker.workers.dev/';
 const work = fileURLToPath(new URL('../.work/demo/', import.meta.url));
 
@@ -99,8 +101,8 @@ async function waiting<T>(what: string, fn: () => Promise<T>): Promise<T> {
 
 // Car: wipe our own app's data (no trips from earlier runs) and start on the empty trip list.
 sh(`am force-stop ${PKG}`);
-sh(`pm clear --user 10 ${PKG}`);
-sh(`am start --user 10 -n ${PKG}/.MainActivity`);
+sh(`pm clear --user ${USER} ${PKG}`);
+sh(`am start --user ${USER} -n ${PKG}/.MainActivity`);
 await waitFor(byTag('import'), 'trip list');
 await sleep(3000);
 
@@ -123,7 +125,7 @@ const record = (): Promise<void> => {
   return new Promise((resolve) => p.once('exit', () => (stopping ? resolve() : record().then(resolve))));
 };
 const recording = record();
-const browser = await chromium.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true });
+const browser = await chromium.launch({ executablePath: CHROME, headless: true });
 const ctx = await browser.newContext({
   viewport: { width: 390, height: 844 },
   deviceScaleFactor: 2,
@@ -288,7 +290,7 @@ try {
     tap(replace);
   }
   await sleep(7000); // the navigation comes to the front with the new route
-  sh(`am start --user 10 -n ${PKG}/.MainActivity`);
+  sh(`am start --user ${USER} -n ${PKG}/.MainActivity`);
   await waiting('navigation confirm', () => waitFor(byText('안내를 시작했어요'), 'guidance confirmed', 45_000));
   await sleep(2500);
   tap(await waitFor(byTag('확인'), 'dismiss guide'));
@@ -327,7 +329,8 @@ try {
   await ctx.close();
   await browser.close();
   stopping = true;
-  sh('pkill -INT screenrecord || true');
+  // Stop only the screenrecord we started (matched by our distinctive args), never any other process on the device.
+  sh("pkill -INT -f 'screenrecord --size 2560x1440' 2>/dev/null || pkill -INT screenrecord 2>/dev/null || true");
   await recording;
   await sleep(1500);
 }

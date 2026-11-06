@@ -27,8 +27,14 @@ interface Timeline {
   segments: Array<{ file: string; at: number }>;
   captions: Array<{ at: number; text: string }>;
   waits?: Array<{ from: number; to: number; what: string }>;
+  failure?: string | null;
 }
 const tl: Timeline = JSON.parse(readFileSync(`${work}timeline.json`, 'utf8'));
+// A take that errored out is not worth composing; re-record it (ALLOW_FAILED_TAKE=1 forces it).
+if (tl.failure && !process.env.ALLOW_FAILED_TAKE) {
+  console.error(`refusing to compose a failed recording: ${tl.failure}. Re-record, or set ALLOW_FAILED_TAKE=1 to override.`);
+  process.exit(1);
+}
 const car = { file: `${work}${tl.segments[0].file}`, at: tl.segments[0].at };
 const probe = (f: string) => execFileSync('ffprobe', ['-v', 'error', '-select_streams', 'v:0', '-show_entries', 'stream=width,height', '-of', 'csv=p=0', f]).toString().trim().split(',').map(Number);
 const [carW] = probe(car.file);
@@ -135,7 +141,7 @@ const endHtml = `<style>${css}
 </style><div class="c"><div class="n">떠날지도</div><div class="t">휴대폰에서 짠 여행을<br>QR 한 번으로 차에</div><div class="bar"></div>
 <div class="s">Pleos Connect 차량용 앱<br>계정 연결 없음 · 내비 남은 시간으로 예약 시각을 지켜요</div></div>`;
 
-const browser = await chromium.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true });
+const browser = await chromium.launch({ executablePath: process.env.CHROME_PATH ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true });
 const page = await browser.newPage({ viewport: { width: W, height: H } });
 const shoot = async (html: string, file: string) => {
   writeFileSync(`${tmp}card.html`, `<!doctype html><meta charset="utf-8">${html}`);
