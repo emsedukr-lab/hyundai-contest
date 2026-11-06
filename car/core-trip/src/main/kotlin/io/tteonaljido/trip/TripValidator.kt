@@ -36,7 +36,9 @@ object LegKeys {
     }
 
     fun dayStart(trip: Trip, overlay: CarOverlay, dayIndex: Int): String? =
-        if (dayIndex == 1) (if (overlay.originOverride != null) ORIGIN else endpoint(trip.origin)) else trip.days[dayIndex - 2].lodgingPlaceRef
+        if (overlay.originFor(dayIndex) != null) ORIGIN
+        else if (dayIndex == 1) endpoint(trip.origin)
+        else trip.days[dayIndex - 2].lodgingPlaceRef
 
     fun dayEnd(trip: Trip, dayIndex: Int): String? =
         if (dayIndex == trip.days.size) endpoint(trip.finalDestination) else trip.days[dayIndex - 1].lodgingPlaceRef
@@ -67,7 +69,8 @@ object TripValidator {
      */
     fun leg(trip: Trip, overlay: CarOverlay, dayIndex: Int, k: Int): LegValue? {
         val navi = LegKeys.of(trip, overlay, dayIndex, k)?.let(overlay.legEstimates::get)?.let { LegValue(it.minutes, LegFrom.NAVI) }
-        if (dayIndex == 1 && k == 0 && overlay.originOverride != null) return navi
+        // After "여기서 출발" on this day, the plan's first leg (from the lodging or origin) no longer applies.
+        if (k == 0 && overlay.originFor(dayIndex) != null) return navi
         return trip.days[dayIndex - 1].legs.getOrNull(k)?.let { LegValue(it.minutes, LegFrom.USER) } ?: navi
     }
 
@@ -195,7 +198,7 @@ object TripValidator {
 
         // Origin and return
         val homeKnown = trip.home != null || overlay.home != null
-        if (trip.origin is Endpoint.Home && overlay.originOverride == null && !homeKnown) add(Severity.UNCERTAIN, "ORIGIN_HOME_UNKNOWN", "첫날 출발지(집)를 차량 내비에서 확인해 주세요", 1)
+        if (trip.origin is Endpoint.Home && overlay.originFor(1) == null && !homeKnown) add(Severity.UNCERTAIN, "ORIGIN_HOME_UNKNOWN", "첫날 출발지(집)를 차량 내비에서 확인해 주세요", 1)
         if (trip.finalDestination is Endpoint.Home && !homeKnown) add(Severity.UNCERTAIN, "RETURN_HOME_UNKNOWN", "마지막 날 귀가지(집)를 차량 내비에서 확인해 주세요", last)
 
         // Navigation scope

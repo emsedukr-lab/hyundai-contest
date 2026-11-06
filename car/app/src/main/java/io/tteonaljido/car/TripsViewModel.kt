@@ -11,6 +11,7 @@ import io.tteonaljido.car.navi.RouteTarget
 import io.tteonaljido.car.storage.TripRepository
 import io.tteonaljido.car.ui.Msg
 import io.tteonaljido.trip.Endpoint
+import io.tteonaljido.trip.originFor
 import io.tteonaljido.trip.GuidingTarget
 import io.tteonaljido.trip.LegEstimate
 import io.tteonaljido.trip.LegKeys
@@ -326,9 +327,10 @@ class TripsViewModel(
         viewModelScope.launch {
             _guide.value = Guide.Working(Msg(R.string.here_checking))
             val here = navi.currentLocation() ?: return@launch run { _guide.value = Guide.Failed(Msg(R.string.here_no_location), false) }
-            val dayOne = day == 1 && t0.plan.days[0].visitOrder.none { it in t0.overlay.visited }
+            // Re-setting the day's start point only makes sense before any of that day's stops are done.
+            val fresh = t0.plan.days[day - 1].visitOrder.none { it in t0.overlay.visited }
             val origin = NaviBinding("", "", "", here.latE7, here.lonE7, here.address, here.address)
-            val t = if (dayOne) update(localId) { it.copy(overlay = it.overlay.copy(originOverride = origin)) } ?: t0 else t0
+            val t = if (fresh) update(localId) { it.copy(overlay = it.overlay.copy(originOverrides = it.overlay.originOverrides + (day to origin))) } ?: t0 else t0
             val step = NextDestination.of(t.plan, t.overlay, day)
             val target = targetOf(t, step)?.first
             if (target?.latE7 == null) {
@@ -351,6 +353,24 @@ class TripsViewModel(
         }
     }
 
+    /** Undo "여기서 출발": the day starts from the plan again, and its from-here estimate is dropped. */
+    fun undoDepartHere(localId: String, day: Int) {
+        val t = trip(localId) ?: return
+        if (t.overlay.originFor(day) == null) return
+        // The leg key is "@origin>…" only while the override is still active, so read it before clearing.
+        val key = LegKeys.of(t.plan, t.overlay, day, 0)
+        update(localId) {
+            it.copy(overlay = it.overlay.copy(
+                originOverrides = it.overlay.originOverrides - day,
+                originOverride = if (day == 1) null else it.overlay.originOverride,
+                legEstimates = if (key != null) it.overlay.legEstimates - key else it.overlay.legEstimates,
+            ))
+        }
+        _here.value = _here.value - localId
+        reload()
+        _guide.value = Guide.Done(Msg(R.string.here_reset))
+    }
+
     /** Key of the plan leg that starts where the car stands (the day's start, or the stop just visited), or null. */
     private fun legStartingHere(t: LocalTrip, day: Int, lat: Int, lon: Int): String? {
         val order = t.plan.days[day - 1].visitOrder
@@ -358,7 +378,7 @@ class TripsViewModel(
         val fromRef: String? = if (k == 0) LegKeys.dayStart(t.plan, t.overlay, day) else order[k - 1].takeIf { it in t.overlay.visited }?.let { id -> t.plan.visits.first { it.visitId == id }.placeRef }
         val at: Pair<Int, Int>? = when (fromRef) {
             null -> null
-            LegKeys.ORIGIN -> t.overlay.originOverride?.let { it.latE7 to it.lonE7 }
+            LegKeys.ORIGIN -> t.overlay.originFor(day)?.let { it.latE7 to it.lonE7 }
             LegKeys.HOME -> (t.overlay.home?.let { it.latE7 to it.lonE7 } ?: t.plan.home?.let { it.latE7 to it.lonE7 })
             else -> t.overlay.poiBindings[fromRef]?.let { it.latE7 to it.lonE7 } ?: t.plan.places.first { it.placeRef == fromRef }.let { p -> p.latE7?.let { la -> p.lonE7?.let { lo -> la to lo } } }
         }

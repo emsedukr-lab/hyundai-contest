@@ -245,10 +245,12 @@
     <string name="skip">건너뛰기</string>
     <string name="undo_arrival">도착 되돌리기</string>
     <string name="unskip">%1$s 되돌리기</string>
+    <string name="undo_depart">출발지 되돌리기</string>
     <string name="depart_here">여기서 출발</string>
     <string name="nearby_chargers">근처 충전소</string>
     <string name="here_checking">현재 위치와 내비 예상 시간을 확인하는 중</string>
     <string name="here_no_location">내비에서 현재 위치를 받지 못했어요</string>
+    <string name="here_reset">출발지를 계획대로 되돌렸어요</string>
     <string name="here_set">출발지를 현재 위치로 바꿨어요 · %1$s</string>
     <string name="here_estimate_hm">여기서 %1$s까지 내비 예상 %2$d시간 %3$d분 · %4$skm</string>
     <string name="here_estimate_m">여기서 %1$s까지 내비 예상 %2$d분 · %3$skm</string>

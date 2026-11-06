@@ -30,6 +30,9 @@ data class ImportMeta(
 /** The trip's time zone. The parser rejects unknown ids, but a file from an older build must not crash a screen. */
 fun Trip.zoneOrUtc(): java.time.ZoneId = runCatching { java.time.ZoneId.of(timezone) }.getOrDefault(java.time.ZoneOffset.UTC)
 
+/** Where the day now starts from after "여기서 출발", or null if it still starts from the plan. Reads the per-day map, falling back to the legacy first-day field. */
+fun CarOverlay.originFor(dayIndex: Int): NaviBinding? = originOverrides[dayIndex] ?: if (dayIndex == 1) originOverride else null
+
 /** A place as confirmed in the Hyundai navigation (never a Kakao or manual id). */
 @Serializable
 data class NaviBinding(
@@ -50,8 +53,10 @@ data class NaviBinding(
 data class CarOverlay(
     /** Home confirmed from the navigation's HOME bookmark, used when the payload carried no home address. */
     val home: NaviBinding? = null,
-    /** User re-set the first-day origin in the car ("여기서 출발"). */
+    /** Legacy: the first-day origin the user re-set in the car ("여기서 출발"). Kept so older files still load; new overrides go in [originOverrides]. */
     val originOverride: NaviBinding? = null,
+    /** "여기서 출발" per day (dayIndex → where the day now starts from). Any day, not just the first. */
+    val originOverrides: Map<Int, NaviBinding> = emptyMap(),
     val poiBindings: Map<String, NaviBinding> = emptyMap(),
     val visited: Set<String> = emptySet(),
     /** When and how each visit was marked done (visitId → stamp). */

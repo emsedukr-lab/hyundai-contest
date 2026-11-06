@@ -245,10 +245,12 @@
     <string name="skip">Skip</string>
     <string name="undo_arrival">Undo arrival</string>
     <string name="unskip">Restore %1$s</string>
+    <string name="undo_depart">Reset start point</string>
     <string name="depart_here">Start from here</string>
     <string name="nearby_chargers">Nearby chargers</string>
     <string name="here_checking">Checking your location and the navigation estimate</string>
     <string name="here_no_location">The navigation didn\'t return the current location</string>
+    <string name="here_reset">Reset the start point to the plan</string>
     <string name="here_set">Start set to your current location · %1$s</string>
     <string name="here_estimate_hm">From here to %1$s: %2$d h %3$d min · %4$s km (navigation estimate)</string>
     <string name="here_estimate_m">From here to %1$s: %2$d min · %3$s km (navigation estimate)</string>

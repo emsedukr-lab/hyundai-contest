@@ -121,6 +121,15 @@ class LiveProjectionTest {
         assertEquals("@origin>cheolttuk", LegKeys.of(sample, CarOverlay(originOverride = here), 1, 0))
     }
 
+    @Test fun startHereWorksOnAnyDayNotJustTheFirst() {
+        val day2 = CarOverlay(originOverrides = mapOf(2 to here))
+        assertEquals("@origin>lake", LegKeys.of(sample, day2, 2, 0))              // leaves from here, not the night's lodging
+        assertNull(TripValidator.leg(sample, day2, 2, 0))                         // plan's lodging→first-stop leg no longer applies
+        val estimated = day2.copy(legEstimates = mapOf("@origin>lake" to LegEstimate(40, 30_000, 0)))
+        assertEquals(LegValue(40, LegFrom.NAVI), TripValidator.leg(sample, estimated, 2, 0))
+        assertEquals("skybay>lake", LegKeys.of(sample, CarOverlay(), 2, 0))       // other days untouched
+    }
+
     /* ---------- next destination, arrival, update ---------- */
 
     @Test fun nextDestinationSkipsSkippedStops() {

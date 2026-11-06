@@ -49,6 +49,7 @@ import io.tteonaljido.car.ui.theme.Pleos
 import io.tteonaljido.trip.Basis
 import io.tteonaljido.trip.DeadlineKind
 import io.tteonaljido.trip.Endpoint
+import io.tteonaljido.trip.originFor
 import io.tteonaljido.trip.LegFrom
 import io.tteonaljido.trip.LocalTrip
 import io.tteonaljido.trip.NextDestination
@@ -251,7 +252,8 @@ private fun DayPlan(t: LocalTrip, day: Int, live: LiveView?) {
     val projArrive = live?.projection?.takeIf { it.dayIndex == day }?.stops?.associate { it.visitId to it.arrive } ?: emptyMap()
     val zone = remember(t) { t.plan.zoneOrUtc() }
     val home = stringResource(R.string.home)
-    val start = if (day == 1) (if (t.overlay.originOverride != null) stringResource(R.string.origin_here) else if (t.plan.origin is Endpoint.Home) home else stringResource(R.string.origin_place))
+    val start = if (t.overlay.originFor(day) != null) stringResource(R.string.origin_here)
+    else if (day == 1) (if (t.plan.origin is Endpoint.Home) home else stringResource(R.string.origin_place))
     else t.plan.days[day - 2].lodgingPlaceRef?.let { TripValidator.placeName(t.plan, it) } ?: stringResource(R.string.lodging_undecided)
     @Composable
     fun legLine(k: Int) {
@@ -332,6 +334,7 @@ private fun NextCard(vm: TripsViewModel, t: LocalTrip, day: Int, live: LiveView?
             PleosButton(stringResource(R.string.guide_next), { vm.guideNext(t.localId, day) }, enabled = step.target != null, tag = "guide")
             (step.target as? Target.Stop)?.let { s -> PleosButton(stringResource(R.string.mark_arrived), { vm.markVisited(t.localId, s.visitId) }, type = ButtonType.SECONDARY, enabled = isToday, tag = "visited") }
             PleosButton(stringResource(R.string.depart_here), { vm.departHere(t.localId, day) }, type = ButtonType.SECONDARY, enabled = isToday, tag = "departHere")
+            if (t.overlay.originFor(day) != null) PleosButton(stringResource(R.string.undo_depart), { vm.undoDepartHere(t.localId, day) }, type = ButtonType.SECONDARY, tag = "undoDepart")
         }
         if (skip != null || arrival?.visitId != null || skippedToday.isNotEmpty() || lowSoc) {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
