@@ -43,6 +43,8 @@
     <string name="time_unknown">시각 미정</string>
     <string name="time_check">시각 확인 필요</string>
     <string name="stop_line">%1$d. %2$s  %3$s</string>
+    <string name="stop_eta_now">"    지금 도착 %1$s · 계획 %2$s"</string>
+    <string name="stop_eta_now_noplan">"    지금 도착 %1$s"</string>
     <string name="stop_fixed">" · 고정"</string>
     <string name="stop_visited">" · 방문함"</string>
     <string name="leg_minutes">"    ↓ 이동 %1$d분"</string>
@@ -54,6 +56,8 @@
     <string name="next_destination_day">다음 목적지 · %1$d일차</string>
     <string name="guide_next">다음 목적지 안내</string>
     <string name="mark_arrived">도착 처리</string>
+    <string name="drive_remain">%1$skm 남음</string>
+    <string name="drive_must">꼭 가야 하는 고정 일정</string>
     <string name="guide_when_parked">주차하면 안내를 요청할 수 있어요</string>
     <string name="next_fixed">고정 %1$s</string>
     <string name="next_no_lodging">%1$s일차 숙소가 정해지지 않았어요</string>

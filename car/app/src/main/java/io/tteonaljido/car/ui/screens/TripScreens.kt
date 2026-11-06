@@ -29,6 +29,7 @@ import io.tteonaljido.car.LiveView
 import io.tteonaljido.car.guide.ArrivalNote
 import io.tteonaljido.car.R
 import io.tteonaljido.car.TripsViewModel
+import io.tteonaljido.car.navi.NaviLive
 import io.tteonaljido.car.safety.DriveState
 import io.tteonaljido.car.safety.parked
 import io.tteonaljido.car.ui.components.ButtonSize
@@ -131,7 +132,7 @@ fun TripDetailScreen(vm: TripsViewModel, localId: String, drive: DriveState, dem
         if (demoClock) DemoClockLine(now)
         if (!drive.parked) {
             // Driving: one glanceable card, no scrolling, no buttons; it changes only as text.
-            DrivingTripView(t, vm.todayIndex(t, now) ?: day, live)
+            DrivingTripView(t, vm.todayIndex(t, now) ?: day, live, naviLive)
             return@Screen
         }
         report.issues.firstOrNull { it.code == "PAST_TRIP" }?.let { past ->
@@ -147,7 +148,7 @@ fun TripDetailScreen(vm: TripsViewModel, localId: String, drive: DriveState, dem
         }
         BoxWithConstraints(Modifier.fillMaxWidth().weight(1f)) {
             val wide = maxWidth >= 1000.dp
-            val plan: @Composable () -> Unit = { DayPlan(t, day) }
+            val plan: @Composable () -> Unit = { DayPlan(t, day, live) }
             val side: @Composable () -> Unit = {
                 Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
                     NextCard(vm, t, day, live, vm.hereFor(t, day, now, here), arrival?.takeIf { it.localId == t.localId })
@@ -219,7 +220,7 @@ private fun liveStatus(t: LocalTrip, v: LiveView): Pair<String, Tone>? {
 }
 
 @Composable
-private fun DrivingTripView(t: LocalTrip, day: Int, live: LiveView?) {
+private fun DrivingTripView(t: LocalTrip, day: Int, live: LiveView?, naviLive: NaviLive?) {
     val step = remember(t, day) { NextDestination.of(t.plan, t.overlay, day) }
     val secondary = colorResource(R.color.pleos_text_dark_secondary)
     val label = when (val tg = step.target) {
@@ -227,19 +228,27 @@ private fun DrivingTripView(t: LocalTrip, day: Int, live: LiveView?) {
         is Target.Final -> tg.place?.name ?: stringResource(R.string.home)
         else -> tg.label
     }
+    // '꼭': the next stop has a fixed reservation time, so it must not be dropped.
+    val mustKeep = (step.target as? Target.Stop)?.let { s -> t.plan.visits.first { it.visitId == s.visitId }.fixed != null } == true
+    // The navigation's live remaining distance, only while it is actually guiding to this destination.
+    val remainMetres = naviLive?.remainMetres?.takeIf { naviLive.guiding && live?.naviElsewhere == null }
     PleosCard {
         PleosText(stringResource(R.string.next_destination_day, day), Pleos.type.label, secondary)
         PleosText(label, Pleos.type.titleLarge, maxLines = 1)
+        if (mustKeep) StatusLine(stringResource(R.string.drive_must), Tone.WARNING)
+        remainMetres?.let { PleosText(stringResource(R.string.drive_remain, String.format(Locale.ROOT, "%.1f", it / 1000.0)), Pleos.type.titleMedium) }
         live?.let { v -> liveStatus(t, v)?.let { (text, tone) -> StatusLine(text, tone) } }
         PleosText(stringResource(R.string.guide_when_parked), Pleos.type.bodyMedium, secondary, maxLines = 1)
     }
 }
 
 @Composable
-private fun DayPlan(t: LocalTrip, day: Int) {
+private fun DayPlan(t: LocalTrip, day: Int, live: LiveView?) {
     val d = t.plan.days[day - 1]
     val secondary = colorResource(R.color.pleos_text_dark_secondary)
     val times = remember(t, day) { TripValidator.timeline(t.plan, day, t.overlay).associateBy { it.visitId } }
+    // Live timetable: re-timed arrivals for today's still-to-come stops (null for other days — `live` is only today's).
+    val projArrive = live?.projection?.takeIf { it.dayIndex == day }?.stops?.associate { it.visitId to it.arrive } ?: emptyMap()
     val zone = remember(t) { t.plan.zoneOrUtc() }
     val home = stringResource(R.string.home)
     val start = if (day == 1) (if (t.overlay.originOverride != null) stringResource(R.string.origin_here) else if (t.plan.origin is Endpoint.Home) home else stringResource(R.string.origin_place))
@@ -273,6 +282,14 @@ private fun DayPlan(t: LocalTrip, day: Int) {
                     else -> ""
                 }
             PleosText(stringResource(R.string.stop_line, k + 1, time, TripValidator.placeName(t.plan, v.placeRef)) + marks, Pleos.type.bodyLarge, maxLines = 1)
+            projArrive[id]?.let { now ->
+                val planned = times[id]?.arrive
+                PleosText(
+                    if (planned != null) stringResource(R.string.stop_eta_now, TripValidator.hhmm(now), TripValidator.hhmm(planned))
+                    else stringResource(R.string.stop_eta_now_noplan, TripValidator.hhmm(now)),
+                    Pleos.type.bodySmall, secondary, maxLines = 1,
+                )
+            }
             legLine(k + 1)
         }
         val last = day == t.plan.days.size

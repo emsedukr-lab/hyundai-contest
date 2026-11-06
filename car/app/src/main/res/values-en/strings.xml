@@ -43,6 +43,8 @@
     <string name="time_unknown">time not set</string>
     <string name="time_check">time to check</string>
     <string name="stop_line">%1$d. %2$s  %3$s</string>
+    <string name="stop_eta_now">"    Now arriving %1$s · plan %2$s"</string>
+    <string name="stop_eta_now_noplan">"    Now arriving %1$s"</string>
     <string name="stop_fixed">" · fixed"</string>
     <string name="stop_visited">" · visited"</string>
     <string name="leg_minutes">"    ↓ %1$d min drive"</string>
@@ -54,6 +56,8 @@
     <string name="next_destination_day">Next stop · day %1$d</string>
     <string name="guide_next">Guide to next stop</string>
     <string name="mark_arrived">Mark arrived</string>
+    <string name="drive_remain">%1$skm to go</string>
+    <string name="drive_must">A must-keep fixed stop</string>
     <string name="guide_when_parked">You can request guidance once parked</string>
     <string name="next_fixed">Fixed %1$s</string>
     <string name="next_no_lodging">No lodging set for day %1$s</string>
