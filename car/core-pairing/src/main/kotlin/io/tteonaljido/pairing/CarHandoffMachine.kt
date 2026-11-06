@@ -10,7 +10,7 @@ sealed interface HandoffState {
     data object Creating : HandoffState
     data class ShowingQr(val qrUrl: String, val deadline: Long) : HandoffState
     data class Claimed(val code: String, val deadline: Long) : HandoffState
-    data class Receiving(val code: String) : HandoffState
+    data class Receiving(val code: String, val deadline: Long) : HandoffState
     data class Review(val code: String, val deadline: Long) : HandoffState
     data object Applying : HandoffState
     data class Done(val resultCode: String, val localId: String?) : HandoffState
@@ -90,15 +90,20 @@ object CarHandoffMachine {
             }
             is HandoffState.Claimed -> when (e) {
                 is HandoffEvent.View -> when (e.view.state) {
-                    "MOBILE_APPROVED", "CAR_APPLYING" -> Step(HandoffState.Receiving(s.code), listOf(Effect.FetchPayload))
+                    "MOBILE_APPROVED", "CAR_APPLYING" -> Step(HandoffState.Receiving(s.code, s.deadline), listOf(Effect.FetchPayload))
                     else -> Step(s.copy(deadline = if (e.view.deadline > 0) e.view.deadline else s.deadline))
                 }
+                // With no network the countdown would otherwise sit at 0:00 forever; expire when the upload window passes.
+                is HandoffEvent.Tick -> if (e.now >= s.deadline) Step(HandoffState.Expired("UPLOAD"), listOf(Effect.Disconnect)) else Step(s)
                 is HandoffEvent.UserCancel -> Step(HandoffState.Cancelled("CAR"), listOf(Effect.CancelRemote, Effect.Disconnect))
                 else -> Step(s)
             }
             is HandoffState.Receiving -> when (e) {
                 is HandoffEvent.PayloadReady -> Step(HandoffState.Review(s.code, Long.MAX_VALUE))
                 is HandoffEvent.PayloadRejected -> Step(HandoffState.Failed(e.kind), listOf(Effect.ReportRejected(e.resultCode), Effect.Disconnect))
+                is HandoffEvent.View -> Step(s.copy(deadline = if (e.view.deadline > 0) e.view.deadline else s.deadline))
+                // Fetching the payload retries, but not past the window: give up instead of hanging on "수신 중".
+                is HandoffEvent.Tick -> if (e.now >= s.deadline) Step(HandoffState.Expired("RESULT"), listOf(Effect.Disconnect)) else Step(s)
                 is HandoffEvent.UserCancel -> Step(HandoffState.Cancelled("CAR"), listOf(Effect.CancelRemote, Effect.Disconnect))
                 else -> Step(s)
             }

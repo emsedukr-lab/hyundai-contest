@@ -34,6 +34,8 @@ export interface Session {
   mobilePub: string | null;
   mobileTokenHash: string | null;
   payload: StoredPayload | null;
+  /** Survives the end of the session, so an identical re-upload after a lost response is recognised. */
+  uploadedBodyHash: string | null;
   carFetchedAt: number | null;
   outcome: 'APPLIED' | 'REJECTED' | null;
   resultCode: ResultCode | null;
@@ -94,8 +96,11 @@ export function transition(s: Session, e: SessionEvent, now: number, t: Ttl = DE
     }
     case 'CLAIM_OK':
       if (s.state === 'EXPIRED') return fail('EXPIRED');
+      // A retry after a lost claim response: the same phone (same key) is given a fresh token; a different phone is refused.
+      if (s.state === 'CLAIMED') return s.mobilePub === e.mobilePub ? ok({ ...s, mobileTokenHash: e.mobileTokenHash }) : fail('ALREADY_CLAIMED');
       if (s.state !== 'CREATED') return fail('ALREADY_CLAIMED');
-      return ok({ ...s, state: 'CLAIMED', scanSecretHash: '', mobilePub: e.mobilePub, mobileTokenHash: e.mobileTokenHash, deadline: now + t.upload });
+      // The scan secret stays usable until the upload, so the claim can be retried; only this phone's key can reclaim it.
+      return ok({ ...s, state: 'CLAIMED', mobilePub: e.mobilePub, mobileTokenHash: e.mobileTokenHash, deadline: now + t.upload });
     case 'CLAIM_BAD': {
       if (s.state === 'EXPIRED') return fail('EXPIRED');
       if (s.state !== 'CREATED') return fail('ALREADY_CLAIMED');
@@ -104,13 +109,14 @@ export function transition(s: Session, e: SessionEvent, now: number, t: Ttl = DE
       return ok({ ...s, claimAttempts: attempts });
     }
     case 'UPLOAD':
+      // An identical re-send is always safe: during the session (payload still held) and after it (tombstone hash).
+      if (s.payload?.bodyHash === e.payload.bodyHash || s.uploadedBodyHash === e.payload.bodyHash) return ok(s, false);
+      if (s.state === 'MOBILE_APPROVED' || s.state === 'CAR_APPLYING') return fail('PAYLOAD_CONFLICT');
       if (s.state === 'EXPIRED') return fail('EXPIRED');
-      if (s.state === 'MOBILE_APPROVED' || s.state === 'CAR_APPLYING') {
-        return s.payload?.bodyHash === e.payload.bodyHash ? ok(s, false) : fail('PAYLOAD_CONFLICT');
-      }
       if (s.state !== 'CLAIMED') return fail('INVALID_STATE');
       if (!s.supportedSchemaVersions.includes(e.payload.schemaVersion)) return fail('UNSUPPORTED_VERSION');
-      return ok({ ...s, state: 'MOBILE_APPROVED', payload: e.payload, deadline: now + t.result });
+      // The scan secret is spent now that the trip is uploaded.
+      return ok({ ...s, state: 'MOBILE_APPROVED', payload: e.payload, uploadedBodyHash: e.payload.bodyHash, scanSecretHash: '', deadline: now + t.result });
     case 'FETCH':
       if (s.state === 'EXPIRED') return fail('EXPIRED');
       if ((s.state !== 'MOBILE_APPROVED' && s.state !== 'CAR_APPLYING') || !s.payload) return fail('INVALID_STATE');

@@ -104,10 +104,11 @@ class PleosNaviGateway(context: Context) : NaviGateway {
     override val live: StateFlow<NaviLive?> = _live
     private val _arrivals = MutableSharedFlow<NaviArrival>(extraBufferCapacity = 4)
     override val arrivals: SharedFlow<NaviArrival> = _arrivals
-    private var destinationWaiter: CompletableDeferred<DestinationInfo?>? = null
-    private var bookmarkWaiter: CompletableDeferred<List<BookmarkInfo>>? = null
-    private var locationWaiter: CompletableDeferred<CurrentLocationInfo?>? = null
-    private var tripWaiter: CompletableDeferred<TripInfo?>? = null
+    // Set on the main thread, completed on SDK callback threads: @Volatile so the callback sees the latest waiter.
+    @Volatile private var destinationWaiter: CompletableDeferred<DestinationInfo?>? = null
+    @Volatile private var bookmarkWaiter: CompletableDeferred<List<BookmarkInfo>>? = null
+    @Volatile private var locationWaiter: CompletableDeferred<CurrentLocationInfo?>? = null
+    @Volatile private var tripWaiter: CompletableDeferred<TripInfo?>? = null
     /** Debug builds only: logs every navigation callback and runs single queries (see NaviProbe). */
     val probe: NaviProbe? = if (BuildConfig.DEBUG) NaviProbe(navi) else null
 
@@ -153,7 +154,12 @@ class PleosNaviGateway(context: Context) : NaviGateway {
             when (errorCode) {
                 NaviErrorCode.CAUSE_SEARCH_TRIP -> tripWaiter?.complete(null)
                 NaviErrorCode.CAUSE_LOW_BATTERY -> _live.value = (_live.value ?: NaviLive(false, "", null, null, null, null)).copy(lowBattery = true)
-                else -> destinationWaiter?.complete(null)
+                else -> {
+                    // The error doesn't say which query failed; end whichever is waiting (only one runs at a time) so none hangs for its full timeout.
+                    destinationWaiter?.complete(null)
+                    locationWaiter?.complete(null)
+                    bookmarkWaiter?.complete(emptyList())
+                }
             }
         }
     }

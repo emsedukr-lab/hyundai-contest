@@ -74,10 +74,10 @@ export default {
 
     const action = parts[4];
     if (parts.length !== 5 || !ACTIONS.has(action)) return error('NOT_FOUND');
-    if (action === 'claim') {
-      if (req.method !== 'POST') return error('NOT_FOUND');
-      if (await limited(env.RL_CLAIM, ip)) return error('RATE_LIMITED');
-    }
+    // Each action has exactly one method; a GET must never drive state (lock/cancel/result).
+    const allowed = action === 'payload' ? ['GET', 'PUT'] : action === 'status' || action === 'events' ? ['GET'] : ['POST'];
+    if (!allowed.includes(req.method)) return error('NOT_FOUND');
+    if (action === 'claim' && (await limited(env.RL_CLAIM, ip))) return error('RATE_LIMITED');
     if (action === 'events' && req.headers.get('Upgrade') !== 'websocket') return error('BAD_REQUEST');
     return forward(env, sid, action, req);
   },

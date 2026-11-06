@@ -72,14 +72,27 @@ export class PairingSession extends DurableObject<Env> {
       if (expired.ok && expired.changed) {
         await this.save(expired.session);
         this.broadcast(expired.session);
+        if (isTerminal(expired.session.state)) this.closeSockets();
       }
       return r;
     }
     if (r.changed) {
       await this.save(r.session);
       this.broadcast(r.session);
+      // The final state is sent; the car need not hold the socket open for the whole tombstone window.
+      if (isTerminal(r.session.state)) this.closeSockets();
     }
     return r;
+  }
+
+  private closeSockets() {
+    for (const ws of this.ctx.getWebSockets('car')) {
+      try {
+        ws.close(1000, 'done');
+      } catch {
+        /* already closed */
+      }
+    }
   }
 
   override async alarm() {
@@ -172,6 +185,7 @@ export class PairingSession extends DurableObject<Env> {
       mobilePub: null,
       mobileTokenHash: null,
       payload: null,
+      uploadedBodyHash: null,
       carFetchedAt: null,
       outcome: null,
       resultCode: null,
@@ -187,7 +201,8 @@ export class PairingSession extends DurableObject<Env> {
     const body = await readJson<ClaimRequest>(req, SMALL_BODY);
     if (body === 'TOO_LARGE') return error('PAYLOAD_TOO_LARGE');
     if (!body || !isB64url(body.scanSecret, 22, 22) || !isB64url(body.mobilePub, 87, 87)) return error('BAD_REQUEST');
-    if (s.state !== 'CREATED') return this.respond(await this.apply(s, { type: 'CLAIM_BAD' }));
+    // CREATED is the first claim; CLAIMED lets the same phone retry after a lost response. Anything else is a bad attempt.
+    if (s.state !== 'CREATED' && s.state !== 'CLAIMED') return this.respond(await this.apply(s, { type: 'CLAIM_BAD' }));
     if (!(await matchesHash(body.scanSecret, s.scanSecretHash))) {
       const r = await this.apply(s, { type: 'CLAIM_BAD' });
       return r.ok ? error('UNAUTHORIZED') : error(r.error);

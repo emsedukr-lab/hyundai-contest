@@ -138,6 +138,41 @@ describe('pairing relay', () => {
     expect((await call('POST', `/sessions/${car.sid}/lock`, { token: phone.body.mobileToken })).status).toBe(401);
   });
 
+  it('lets the same phone re-claim after a lost response, but refuses a second phone', async () => {
+    const car = await newCar();
+    const first = await claim(car);
+    expect(first.status).toBe(200);
+    // Same phone (same key), same scan secret: a fresh token, not a 409.
+    const again = await call<ClaimResponse>('POST', `/sessions/${car.sid}/claim`, { body: { scanSecret: car.scanSecret, mobilePub: b64url(first.pubRaw) } });
+    expect(again.status).toBe(200);
+    expect(again.body.mobileToken).not.toBe(first.body.mobileToken);
+    // A different phone with the same scan secret is still refused.
+    const other = await claim(car);
+    expect(other.status).toBe(409);
+    expect(other.body).toMatchObject({ error: 'ALREADY_CLAIMED' });
+  });
+
+  it('treats an identical re-upload after the session ends as success', async () => {
+    const car = await newCar();
+    const phone = await claim(car);
+    const sealed = await sealedPayload(car, phone);
+    await call('PUT', `/sessions/${car.sid}/payload`, { token: phone.body.mobileToken, body: { iv: sealed.iv, ct: sealed.ct, schemaVersion: 1 } });
+    await call('GET', `/sessions/${car.sid}/payload`, { token: car.carToken });
+    await call('POST', `/sessions/${car.sid}/lock`, { token: car.carToken });
+    await call('POST', `/sessions/${car.sid}/result`, { token: car.carToken, body: { outcome: 'APPLIED', resultCode: 'IMPORTED_NEW', appliedRevision: 1 } });
+    // The phone's upload response was lost; its identical re-send sees the final state, not a 409.
+    const resend = await call<SessionView>('PUT', `/sessions/${car.sid}/payload`, { token: phone.body.mobileToken, body: { iv: sealed.iv, ct: sealed.ct, schemaVersion: 1 } });
+    expect(resend.status).toBe(200);
+    expect(resend.body.state).toBe('APPLIED');
+  });
+
+  it('rejects state-changing actions over GET', async () => {
+    const car = await newCar();
+    for (const action of ['lock', 'result', 'cancel']) {
+      expect((await call('GET', `/sessions/${car.sid}/${action}`, { token: car.carToken })).status).toBe(404);
+    }
+  });
+
   it('refuses oversized payloads', async () => {
     const car = await newCar();
     const phone = await claim(car);
