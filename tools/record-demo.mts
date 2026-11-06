@@ -182,7 +182,8 @@ try {
   const dlg = page.locator('dialog[open]');
   await dlg.getByText('여유 있으면', { exact: true }).click();
   await sleep(1500);
-  await dlg.getByRole('button', { name: '닫기', exact: true }).click();
+  // The dialog has both a header ✕ and a bottom primary button labelled 닫기; click the explicit bottom one.
+  await dlg.getByRole('button', { name: '닫기', exact: true }).last().click();
   const save = page.getByRole('button', { name: '저장', exact: true });
   if (await save.isEnabled().catch(() => false)) await save.click();
   await sleep(1500);
@@ -329,8 +330,9 @@ try {
   await ctx.close();
   await browser.close();
   stopping = true;
-  // Stop only the screenrecord we started (matched by our distinctive args), never any other process on the device.
-  sh("pkill -INT -f 'screenrecord --size 2560x1440' 2>/dev/null || pkill -INT screenrecord 2>/dev/null || true");
+  // Match by process name only (never -f: the pattern would also match this pkill's own command line and SIGINT our shell).
+  // screenrecord on the emulator is exclusively the one we started, so a name match is already limited to our process.
+  sh('pkill -INT screenrecord || true');
   await recording;
   await sleep(1500);
 }
