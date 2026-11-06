@@ -21,5 +21,6 @@
     { "name": "RL_API", "namespace_id": "1003", "simple": { "limit": 120, "period": 60 } },
     { "name": "RL_SEARCH", "namespace_id": "1004", "simple": { "limit": 30, "period": 60 } }
   ],
-  "observability": { "enabled": true, "head_sampling_rate": 1 }
+  // Off on purpose: request logs would keep URLs and client addresses, and the privacy design promises neither is stored.
+  "observability": { "enabled": false }
 }

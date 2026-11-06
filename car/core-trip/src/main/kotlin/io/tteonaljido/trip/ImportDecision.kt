@@ -33,17 +33,15 @@ object ImportDecision {
 
     fun apply(choice: ImportChoice, incoming: Trip, decision: Decision, newId: String, now: Long): Applied {
         require(choice in decision.choices) { "choice $choice not offered for ${decision.case}" }
-        fun meta(source: String?) = ImportMeta(source, incoming.revision, PlanHash.of(incoming), now)
+        fun meta(source: String?, copy: Boolean = false) = ImportMeta(source, incoming.revision, PlanHash.of(incoming), now, copy)
         return when (choice) {
             ImportChoice.IMPORT_NEW -> Applied(LocalTrip(newId, incoming, CarOverlay(), meta(incoming.tripId)), "IMPORTED_NEW")
             ImportChoice.UPDATE -> {
                 val old = decision.existing!!
                 Applied(old.copy(plan = incoming, overlay = reconcile(old.overlay, incoming), meta = meta(incoming.tripId)), "UPDATED")
             }
-            ImportChoice.SAVE_COPY -> {
-                val name = (incoming.name.take(55) + " (사본)")
-                Applied(LocalTrip(newId, incoming.copy(name = name), CarOverlay(), meta(null)), "SAVED_AS_COPY")
-            }
+            // The plan is stored exactly as sent; "copy" is metadata and screens add the suffix in the UI language.
+            ImportChoice.SAVE_COPY -> Applied(LocalTrip(newId, incoming, CarOverlay(), meta(null, copy = true)), "SAVED_AS_COPY")
             ImportChoice.ACKNOWLEDGE_SAME -> Applied(null, "ALREADY_IMPORTED")
             ImportChoice.CANCEL -> Applied(null, "USER_DECLINED")
         }

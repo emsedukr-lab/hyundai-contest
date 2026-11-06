@@ -141,7 +141,7 @@ describe('pairing relay', () => {
   it('refuses oversized payloads', async () => {
     const car = await newCar();
     const phone = await claim(car);
-    const res = await call('PUT', `/sessions/${car.sid}/payload`, { token: phone.body.mobileToken, raw: JSON.stringify({ iv: 'A'.repeat(16), ct: 'A'.repeat(100_000), schemaVersion: 1 }) });
+    const res = await call('PUT', `/sessions/${car.sid}/payload`, { token: phone.body.mobileToken, raw: JSON.stringify({ iv: 'A'.repeat(16), ct: 'A'.repeat(140_000), schemaVersion: 1 }) });
     expect(res).toMatchObject({ status: 413, body: { error: 'PAYLOAD_TOO_LARGE' } });
   });
 
@@ -190,6 +190,7 @@ describe('pairing relay', () => {
   });
 
   it('place search reports unavailable without a server key', async () => {
-    expect((await call('GET', '/places/search?q=%EA%B0%95%EB%A6%89')).status).toBe(503);
+    expect((await call('POST', '/places/search', { raw: JSON.stringify({ q: '강릉' }) })).status).toBe(503);
+    expect((await call('GET', '/places/search?q=x')).status).toBe(404); // the term is never accepted in a URL
   });
 });

@@ -17,8 +17,8 @@ import ai.pleos.playground.navi.helper.listener.NaviHelperEventListener
 import android.util.Log
 
 /**
- * Debug-only probe for the navigation API (pre-checks S1–S7 in the plan): logs every callback with its numbers and
- * runs single queries on request. Attached only when BuildConfig.DEBUG; release builds never construct it.
+ * Debug-only probe for the navigation API (pre-checks S1–S7 in the plan): logs every callback as numbers and booleans
+ * (no place names, addresses or coordinates) and runs single queries on request. Attached only when BuildConfig.DEBUG; release builds never construct it.
  *   adb shell am start --user 10 -n io.tteonaljido.car/.MainActivity --es probe "trip:37.7955,128.8975"
  *   probe values: trip:<lat,lon> | route:<lat,lon> | location | state | destination | chargers | cancel
  */
@@ -29,31 +29,31 @@ class NaviProbe(private val navi: NaviHelper) {
     val listener = object : NaviHelperEventListener {
         override fun onDrivingInfo(drivingInfo: DrivingInfo) {
             val d = drivingInfo.destination
-            log("onDrivingInfo dest=${d.name} duration=${d.duration} distance=${d.distance} charge=${d.remainDestinationChargingValue} waypoints=${drivingInfo.waypoints.size}")
+            log("onDrivingInfo named=${d.name.isNotBlank()} duration=${d.duration} distance=${d.distance} charge=${d.remainDestinationChargingValue} waypoints=${drivingInfo.waypoints.size}")
         }
         override fun onNavigationStatus(navigationStatus: NavigationStatus) = log("onNavigationStatus $navigationStatus")
         override fun onRouteStarted(routeStartInfo: RouteStartInfo) =
-            log("onRouteStarted name=${routeStartInfo.name} duration=${routeStartInfo.duration} distance=${routeStartInfo.distance} toll=${routeStartInfo.tollFare} charge=${routeStartInfo.remainDestinationChargingValue}")
+            log("onRouteStarted named=${routeStartInfo.name.isNotBlank()} duration=${routeStartInfo.duration} distance=${routeStartInfo.distance} toll=${routeStartInfo.tollFare} charge=${routeStartInfo.remainDestinationChargingValue}")
         override fun onRouteEnded() = log("onRouteEnded")
         override fun onRouteCancelled() = log("onRouteCancelled")
         override fun onReRouteEnded() = log("onReRouteEnded")
         override fun onDestinationChanged() = log("onDestinationChanged")
         override fun onDestinationArrived(destinationArrivedInfo: DestinationArrivedInfo) =
-            log("onDestinationArrived name=${destinationArrivedInfo.name} duration=${destinationArrivedInfo.duration} distance=${destinationArrivedInfo.distance}")
-        override fun onWayPointArrived(waypointArrivedInfo: WaypointArrivedInfo) = log("onWayPointArrived ${waypointArrivedInfo.name}")
+            log("onDestinationArrived named=${!destinationArrivedInfo.name.isNullOrBlank()} duration=${destinationArrivedInfo.duration} distance=${destinationArrivedInfo.distance}")
+        override fun onWayPointArrived(waypointArrivedInfo: WaypointArrivedInfo) = log("onWayPointArrived named=${!waypointArrivedInfo.name.isNullOrBlank()}")
         override fun onDestinationInfo(destinationInfo: DestinationInfo) =
-            log("onDestinationInfo name=${destinationInfo.name} remainTime=${destinationInfo.remainTime} remainDistance=${destinationInfo.remainDistance} lat=${destinationInfo.latitude} lon=${destinationInfo.longitude}")
+            log("onDestinationInfo named=${destinationInfo.name.isNotBlank()} remainTime=${destinationInfo.remainTime} remainDistance=${destinationInfo.remainDistance} located=${destinationInfo.latitude != 0.0}")
         override fun onCurrentLocationInfo(currentLocationInfo: CurrentLocationInfo) =
-            log("onCurrentLocationInfo lat=${currentLocationInfo.latitude} lon=${currentLocationInfo.longitude} heading=${currentLocationInfo.heading} address=${currentLocationInfo.address}")
+            log("onCurrentLocationInfo located=${currentLocationInfo.latitude != 0.0} heading=${currentLocationInfo.heading} addressed=${!currentLocationInfo.address.isNullOrBlank()}")
         override fun onRouteStateInfo(routeStateInfo: RouteStateInfo) =
             log("onRouteStateInfo mode=${routeStateInfo.naviMode} routing=${routeStateInfo.isRouting} option=${routeStateInfo.routeOption} charge=${routeStateInfo.remainDestinationChargingInt}")
         override fun onTripInfo(tripInfo: TripInfo) =
-            log("onTripInfo distance=${tripInfo.distance} eta=${tripInfo.eta} socAtDest=${tripInfo.estimatedSocAtDest} energy=${tripInfo.energyConsumption} firstPoint=${tripInfo.summary.routePoints.firstOrNull()} points=${tripInfo.summary.routePoints.size}")
+            log("onTripInfo distance=${tripInfo.distance} eta=${tripInfo.eta} socAtDest=${tripInfo.estimatedSocAtDest} energy=${tripInfo.energyConsumption} points=${tripInfo.summary.routePoints.size}")
         override fun onError(errorCode: NaviErrorCode) = log("onError $errorCode")
     }
 
     fun run(cmd: String) {
-        log("probe $cmd")
+        log("probe ${cmd.substringBefore(':')}") // the command's coordinates stay out of the log
         runCatching {
             when {
                 cmd.startsWith("trip:") -> {

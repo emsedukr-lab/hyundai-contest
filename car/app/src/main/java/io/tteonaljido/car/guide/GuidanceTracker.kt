@@ -31,17 +31,25 @@ class GuidanceTracker(private val c: Container) {
     val lastArrival: StateFlow<ArrivalNote?> = _last
 
     init {
-        scope.launch { c.navi.arrivals.collect(::onArrival) }
+        scope.launch { c.navi.arrivals.collect { onArrival(it) } }
     }
 
-    private fun onArrival(a: NaviArrival) {
+    private suspend fun onArrival(a: NaviArrival) {
         if (!c.autoArrive.value) return
-        val t = c.trips().load().trips.filter { it.overlay.guiding != null }.maxByOrNull { it.overlay.guiding!!.requestedAt } ?: return
-        val g = t.overlay.guiding!!
-        if (!a.demo && !ArrivalRule.matches(g, a.name, null, null)) return
+        // The arrival event carries only a name; the car's position lets a renamed destination still match within 150 m.
+        val here = if (a.demo) null else runCatching { c.navi.currentLocation() }.getOrNull()
         val now = c.nowMs()
-        c.updateTrip(t.localId) { it.copy(overlay = it.overlay.arrived(g, now, if (a.demo) VisitHow.DEMO_SIGNAL else VisitHow.NAVI_ARRIVED)) } ?: return
-        _last.value = ArrivalNote(t.localId, g.visitId, g.name, now, a.demo)
+        val how = if (a.demo) VisitHow.DEMO_SIGNAL else VisitHow.NAVI_ARRIVED
+        // Read the latest guiding target and write the result under the same lock, so a route started in the meantime
+        // (or a trip deleted) is not confused with this arrival.
+        val note = c.locked { repo ->
+            val t = repo.load().trips.filter { it.overlay.guiding != null }.maxByOrNull { it.overlay.guiding!!.requestedAt } ?: return@locked null
+            val g = t.overlay.guiding!!
+            if (!a.demo && !ArrivalRule.matches(g, a.name, here?.latE7, here?.lonE7)) return@locked null
+            repo.save(t.copy(overlay = t.overlay.arrived(g, now, how)))
+            ArrivalNote(t.localId, g.visitId, g.name, now, a.demo)
+        } ?: return
+        _last.value = note
         _changed.tryEmit(Unit)
     }
 

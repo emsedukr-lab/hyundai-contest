@@ -38,6 +38,10 @@
     "valid": false,
     "code": "SCHEMA"
   },
+  "invalid/bad-timezone.json": {
+    "valid": false,
+    "code": "SCHEMA"
+  },
   "invalid/unsupported-version.json": {
     "valid": false,
     "code": "UNSUPPORTED_VERSION"

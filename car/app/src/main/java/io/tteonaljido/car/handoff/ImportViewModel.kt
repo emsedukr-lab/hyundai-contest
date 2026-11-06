@@ -8,7 +8,7 @@ import io.tteonaljido.car.BuildConfig
 import io.tteonaljido.car.storage.ActiveSession
 import io.tteonaljido.car.storage.PendingResult
 import io.tteonaljido.car.storage.SessionStore
-import io.tteonaljido.car.storage.TripRepository
+import io.tteonaljido.car.storage.TripStore
 import io.tteonaljido.pairing.CarHandoffMachine
 import io.tteonaljido.pairing.Effect
 import io.tteonaljido.pairing.FailKind
@@ -45,7 +45,7 @@ data class ReviewData(val transfer: TripTransfer, val decision: Decision, val re
  */
 class ImportViewModel(
     private val client: PairingClient,
-    private val trips: () -> TripRepository,
+    private val store: TripStore,
     private val sessions: SessionStore,
     private val webOrigin: String,
     private val onTripsChanged: () -> Unit,
@@ -201,7 +201,7 @@ class ImportViewModel(
                     )
                     is ParseResult.Ok -> {
                         val trip = r.transfer.trip
-                        val stored = trips().load().trips
+                        val stored = store.locked { it.load().trips }
                         val decision = ImportDecision.decide(trip, stored)
                         val today = runCatching { LocalDate.now(ZoneId.of(trip.timezone)) }.getOrNull()
                         val report = TripValidator.validate(trip, decision.existing?.overlay ?: CarOverlay(), today)
@@ -227,16 +227,25 @@ class ImportViewModel(
         try {
             retrying { client.lock(s.sid, s.token) }
         } catch (e: ApiException) {
-            // The session ended before the commit gate: nothing is written.
+            // The session ended before the commit gate: nothing is written. Show what actually happened to it.
+            val ended = runCatching { client.snapshot(s.sid, s.token) }.getOrNull()
             _review.value = null
             disconnect()
-            _state.value = HandoffState.Expired("RESULT")
+            _state.value = when (ended?.state) {
+                "CANCELLED" -> HandoffState.Cancelled(ended.cancelReason ?: "MOBILE")
+                "EXPIRED" -> HandoffState.Expired(ended.expireReason ?: "RESULT")
+                else -> HandoffState.Expired("RESULT")
+            }
             return
         }
+        // Decide again from the files as they are now, under the store lock: an arrival or a delete may have happened
+        // while the review was on screen, and the saved result must not overwrite it.
         val applied = try {
-            ImportDecision.apply(c, review.transfer.trip, review.decision, UUID.randomUUID().toString(), System.currentTimeMillis()).also { a ->
-                a.trip?.let { trips().save(it) }
-            }
+            store.locked { repo ->
+                val fresh = ImportDecision.decide(review.transfer.trip, repo.load().trips)
+                if (c !in fresh.choices) return@locked null
+                ImportDecision.apply(c, review.transfer.trip, fresh, UUID.randomUUID().toString(), System.currentTimeMillis()).also { a -> a.trip?.let(repo::save) }
+            } ?: return dispatch(HandoffEvent.ApplyFailed)
         } catch (e: Exception) {
             return dispatch(HandoffEvent.ApplyFailed)
         }
@@ -254,14 +263,18 @@ class ImportViewModel(
         if (send(p)) sessions.clearPending()
     }
 
+    /** True only when the relay holds the answer or can never take it; otherwise the saved result stays for a later retry. */
     private suspend fun send(p: PendingResult): Boolean = try {
         retrying { client.result(p.sid, p.carToken, ResultRequest(p.outcome, p.resultCode, p.appliedRevision)) }
         true
     } catch (e: ApiException) {
-        true // the session ended or the result was already recorded: nothing left to retry
+        e.status in setOf(404, 409, 410) // gone, already answered, or ended; 429/5xx fall through as "not yet"
     } catch (e: Exception) {
         false
     }
+
+    /** Re-sends a result the relay has not taken yet (called when the app comes back to the front). */
+    fun retryPending() { viewModelScope.launch { flushPending() } }
 
     private suspend fun flushPending() {
         val p = sessions.loadPending() ?: return
@@ -296,7 +309,9 @@ class ImportViewModel(
             try {
                 return block()
             } catch (e: ApiException) {
-                throw e
+                if (e.status != 429 && e.status < 500) throw e // a definite answer; only overload and server errors are retried
+                delay(wait)
+                wait *= 2
             } catch (e: Exception) {
                 _offline.value = true
                 delay(wait)

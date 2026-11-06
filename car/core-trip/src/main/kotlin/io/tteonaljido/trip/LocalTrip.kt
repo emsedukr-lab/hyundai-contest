@@ -23,7 +23,12 @@ data class ImportMeta(
     val revision: Int,
     val planHash: String,
     val importedAt: Long,
+    /** Saved as a detached copy ("사본"): the plan stays exactly as sent; screens add a localized suffix. */
+    val copy: Boolean = false,
 )
+
+/** The trip's time zone. The parser rejects unknown ids, but a file from an older build must not crash a screen. */
+fun Trip.zoneOrUtc(): java.time.ZoneId = runCatching { java.time.ZoneId.of(timezone) }.getOrDefault(java.time.ZoneOffset.UTC)
 
 /** A place as confirmed in the Hyundai navigation (never a Kakao or manual id). */
 @Serializable

@@ -27,6 +27,7 @@ import io.tteonaljido.trip.Target
 import io.tteonaljido.trip.VisitHow
 import io.tteonaljido.trip.VisitStamp
 import io.tteonaljido.trip.metres
+import io.tteonaljido.trip.zoneOrUtc
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -60,6 +61,8 @@ data class LiveView(val projection: Projection, val naviElsewhere: String?, val 
 class TripsViewModel(
     private val repo: () -> TripRepository,
     private val update: (String, (LocalTrip) -> LocalTrip) -> LocalTrip?,
+    private val deleteOne: (String) -> Unit,
+    private val deleteEvery: () -> Unit,
     private val navi: NaviGateway,
     private val tracker: GuidanceTracker,
     private val nowMs: () -> Long,
@@ -107,8 +110,8 @@ class TripsViewModel(
 
     fun trip(id: String) = _trips.value.firstOrNull { it.localId == id }
 
-    fun delete(id: String) { repo().delete(id); reload() }
-    fun deleteAll() { repo().deleteAll(); reload() }
+    fun delete(id: String) { deleteOne(id); reload() }
+    fun deleteAll() { deleteEvery(); reload() }
 
     private fun edit(id: String, f: (LocalTrip) -> LocalTrip) {
         update(id, f)
@@ -117,7 +120,8 @@ class TripsViewModel(
 
     fun markVisited(id: String, visitId: String) = edit(id) {
         val o = it.overlay
-        it.copy(overlay = o.copy(visited = o.visited + visitId, visitedAt = o.visitedAt + (visitId to VisitStamp(nowMs(), VisitHow.MANUAL))))
+        // A stop marked by hand is no longer what the navigation's arrival event should match.
+        it.copy(overlay = o.copy(visited = o.visited + visitId, visitedAt = o.visitedAt + (visitId to VisitStamp(nowMs(), VisitHow.MANUAL)), guiding = o.guiding?.takeIf { g -> g.visitId != visitId }))
     }
 
     fun undoVisited(id: String, visitId: String) {
@@ -125,15 +129,15 @@ class TripsViewModel(
         if (tracker.lastArrival.value?.visitId == visitId) tracker.dismiss()
     }
 
-    fun skip(id: String, visitId: String) = edit(id) { it.copy(overlay = it.overlay.copy(skipped = it.overlay.skipped + visitId)) }
+    fun skip(id: String, visitId: String) = edit(id) { it.copy(overlay = it.overlay.copy(skipped = it.overlay.skipped + visitId, guiding = it.overlay.guiding?.takeIf { g -> g.visitId != visitId })) }
     fun unskip(id: String, visitId: String) = edit(id) { it.copy(overlay = it.overlay.copy(skipped = it.overlay.skipped - visitId)) }
     fun dismissArrival() = tracker.dismiss()
     fun dismissGuide() { _guide.value = Guide.Idle; pending = null }
     fun openChargers() = navi.openNearbyChargers()
 
-    fun today(t: LocalTrip, now: Long = _now.value): LocalDate = Instant.ofEpochMilli(now).atZone(ZoneId.of(t.plan.timezone)).toLocalDate()
+    fun today(t: LocalTrip, now: Long = _now.value): LocalDate = Instant.ofEpochMilli(now).atZone(t.plan.zoneOrUtc()).toLocalDate()
     fun todayIndex(t: LocalTrip, now: Long = _now.value): Int? = runCatching { NextDestination.dayIndexFor(t.plan, today(t, now)) }.getOrNull()
-    private fun minuteOfDay(t: LocalTrip, now: Long) = Instant.ofEpochMilli(now).atZone(ZoneId.of(t.plan.timezone)).toLocalTime().let { it.hour * 60 + it.minute }
+    private fun minuteOfDay(t: LocalTrip, now: Long) = Instant.ofEpochMilli(now).atZone(t.plan.zoneOrUtc()).toLocalTime().let { it.hour * 60 + it.minute }
 
     private fun placeTarget(t: LocalTrip, p: Place): RouteTarget {
         val b = t.overlay.poiBindings[p.placeRef]

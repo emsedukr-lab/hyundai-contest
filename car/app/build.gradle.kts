@@ -31,6 +31,7 @@ val syncPleosRes = tasks.register<SyncPleosRes>("syncPleosRes") {
 }
 
 fun prop(name: String, default: String) = (findProperty(name) as String?) ?: default
+fun requireProp(name: String) = (findProperty(name) as String?) ?: error("Set $name in car/gradle.properties (or -P$name=https://…); the prod flavor must not fall back to a placeholder server")
 
 android {
     namespace = "io.tteonaljido.car"
@@ -57,8 +58,8 @@ android {
         }
         create("prod") {
             dimension = "server"
-            buildConfigField("String", "API_BASE", "\"${prop("tteonaljido.prodOrigin", "https://example.invalid")}\"")
-            buildConfigField("String", "WEB_ORIGIN", "\"${prop("tteonaljido.prodOrigin", "https://example.invalid")}\"")
+            buildConfigField("String", "API_BASE", "\"${requireProp("tteonaljido.prodOrigin")}\"")
+            buildConfigField("String", "WEB_ORIGIN", "\"${requireProp("tteonaljido.prodOrigin")}\"")
         }
     }
     signingConfigs {

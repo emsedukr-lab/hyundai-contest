@@ -29,12 +29,18 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 interface Node { text: string; desc: string; x: number; y: number }
 function ui(): Node[] {
-  try {
-    sh('uiautomator dump /sdcard/ui.xml >/dev/null');
-  } catch {
-    return []; // a dump can fail while the screen is changing; the caller polls again
+  // The Pleos driving view (a separate system window) sometimes answers the dump instead of our app: retry until our tree is there.
+  let xml = '';
+  for (let i = 0; i < 4 && !xml.includes('package="io.tteonaljido.car"'); i++) {
+    try {
+      sh('uiautomator dump /sdcard/ui.xml >/dev/null 2>&1');
+      xml = sh('cat /sdcard/ui.xml');
+    } catch {
+      xml = '';
+    }
   }
-  return [...sh('cat /sdcard/ui.xml').matchAll(/<node [^>]*>/g)].map((m) => {
+  if (!xml.includes('package="io.tteonaljido.car"')) return [];
+  return [...xml.matchAll(/<node [^>]*>/g)].map((m) => {
     const n = m[0];
     const [, a, b, c, d] = n.match(/bounds="\[(\d+),(\d+)\]\[(\d+),(\d+)\]"/)!.map(Number);
     return { text: n.match(/ text="([^"]*)"/)![1], desc: n.match(/content-desc="([^"]*)"/)![1], x: (a + c) / 2, y: (b + d) / 2 };
@@ -45,7 +51,7 @@ async function waitFor(pred: (n: Node[]) => Node | undefined, what: string, ms =
   while (Date.now() < end) {
     const hit = pred(ui());
     if (hit) return hit;
-    await sleep(400);
+    await sleep(1_500); // each poll launches a UI Automator runtime in the guest; keep it light
   }
   throw new Error(`timeout: ${what}`);
 }
@@ -97,6 +103,14 @@ sh(`pm clear --user 10 ${PKG}`);
 sh(`am start --user 10 -n ${PKG}/.MainActivity`);
 await waitFor(byTag('import'), 'trip list');
 await sleep(3000);
+
+// Demo mode (separate store) must be on: the demo clock and the demo arrival signal only exist with it. Done before
+// recording starts, so the switch is not in the video.
+tap(await waitFor(byTag('settings'), 'settings'));
+tap(await waitFor(byTag('demo'), 'demo on'));
+await sleep(600);
+tap(await waitFor(byTag('목록'), 'back from settings'));
+await waitFor(byTag('import'), 'trip list (demo)');
 
 // screenrecord stops itself after 180 s, so chain segments until told to stop; each segment's start is kept for alignment.
 sh('rm -f /sdcard/demo_*.mp4');
@@ -151,7 +165,7 @@ const readQr = () => {
   return url;
 };
 try {
-  caption('휴대폰에서 짠 3박 4일 강릉 여행 · 예약 시각 2개, 숙소 3박, 일차별 동선');
+  caption("휴대폰에서 짠 3박 4일 강릉 여행 · 예약 2곳, 숙소 3박 · 경포호는 '여유 있으면' 일정");
   await click(page, '샘플 여행 추가');
   await page.getByText('강릉 3박 4일', { exact: true }).first().click();
   const day2 = page.locator('button[data-tab-value="2"]'); // Astryx tabs are buttons, not role=tab
@@ -160,7 +174,16 @@ try {
   await day2.scrollIntoViewIfNeeded();
   await sleep(1500);
   await day2.click();
-  await sleep(3000);
+  await sleep(2500);
+  // 경포호 as '여유 있으면' (optional), as a user would mark it; the current sample already is, then nothing changes.
+  await page.getByRole('button', { name: '상세', exact: true }).first().click();
+  const dlg = page.locator('dialog[open]');
+  await dlg.getByText('여유 있으면', { exact: true }).click();
+  await sleep(1500);
+  await dlg.getByRole('button', { name: '닫기', exact: true }).click();
+  const save = page.getByRole('button', { name: '저장', exact: true });
+  if (await save.isEnabled().catch(() => false)) await save.click();
+  await sleep(1500);
   await click(page, '뒤로');
   await page.getByText('내 여행').waitFor();
   await sleep(800);

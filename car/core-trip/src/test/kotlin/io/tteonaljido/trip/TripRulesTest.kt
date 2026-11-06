@@ -154,7 +154,8 @@ class TripRulesTest {
         val newer = sample.copy(revision = 2)
         val copy = ImportDecision.apply(ImportChoice.SAVE_COPY, newer, ImportDecision.decide(newer, listOf(stored)), "C1", 1).trip!!
         assertNull(copy.meta.sourceTripId)
-        assertTrue(copy.plan.name.endsWith("(사본)"))
+        assertTrue(copy.meta.copy)
+        assertFalse(copy.plan.name.endsWith("(사본)")) // the plan itself is never edited
         assertEquals("L1", ImportDecision.decide(newer, listOf(copy, stored)).existing?.localId)
     }
 

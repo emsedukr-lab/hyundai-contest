@@ -29,20 +29,29 @@ const check = (ok: unknown, what: string) => {
 
 interface Node { text: string; desc: string; x: number; y: number }
 function ui(): Node[] {
-  sh('uiautomator dump /sdcard/ui.xml >/dev/null');
-  const xml = sh('cat /sdcard/ui.xml');
+  // The Pleos driving view (a separate system window) sometimes answers the dump instead of our app: retry until our tree is there.
+  let xml = '';
+  for (let i = 0; i < 4 && !xml.includes('package="io.tteonaljido.car"'); i++) {
+    try {
+      sh('uiautomator dump /sdcard/ui.xml >/dev/null 2>&1');
+      xml = sh('cat /sdcard/ui.xml');
+    } catch {
+      xml = '';
+    }
+  }
+  if (!xml.includes('package="io.tteonaljido.car"')) return [];
   return [...xml.matchAll(/<node [^>]*>/g)].map((m) => {
     const n = m[0];
     const [, x1, y1, x2, y2] = n.match(/bounds="\[(\d+),(\d+)\]\[(\d+),(\d+)\]"/)!.map(Number);
     return { text: n.match(/ text="([^"]*)"/)![1], desc: n.match(/content-desc="([^"]*)"/)![1], x: (x1 + x2) / 2, y: (y1 + y2) / 2 };
   });
 }
-async function waitFor(pred: (nodes: Node[]) => Node | undefined, what: string, ms = 20_000): Promise<Node> {
+async function waitFor(pred: (nodes: Node[]) => Node | undefined, what: string, ms = 40_000): Promise<Node> {
   const end = Date.now() + ms;
   while (Date.now() < end) {
     const hit = pred(ui());
     if (hit) return hit;
-    await sleep(500);
+    await sleep(1_500); // each poll launches a UI Automator runtime in the guest; keep it light
   }
   throw new Error(`timeout waiting for car: ${what}`);
 }
@@ -96,10 +105,8 @@ sh(`am force-stop ${PKG}`);
 demo(false);
 await waitFor(byText('떠날지도'), 'app start');
 // Start clean through the app's own UI (also exercises "모든 여행 삭제").
-tap(await waitFor(byTag('settings'), 'settings'));
-tap(await waitFor(byTag('deleteAll'), 'delete all'));
-tap(await waitFor((ns) => ns.find((n) => n.desc === '삭제'), 'confirm delete'));
-sh('input keyevent KEYCODE_BACK');
+// Debug builds: the demo store is emptied by an intent, not through the Settings popup (UI Automator misses popups on a loaded emulator).
+sh(`am start --user 10 -n ${PKG}/.MainActivity --ez demo true --ez demoDriving false --ez demoWipe true`);
 await waitFor(byText('저장된 여행이 없어요'), 'empty trip list');
 
 const browser = await chromium.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true });

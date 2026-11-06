@@ -48,9 +48,13 @@ export default {
 
     if (parts[2] === 'health' && parts.length === 3) return json({ ok: true, serverTime: Date.now() });
 
-    if (parts[2] === 'places' && parts[3] === 'search' && req.method === 'GET') {
+    if (parts[2] === 'places' && parts[3] === 'search') {
+      if (req.method !== 'POST') return error('NOT_FOUND');
       if (await limited(env.RL_SEARCH, ip)) return error('RATE_LIMITED');
-      return searchPlaces(url.searchParams, env.KAKAO_REST_KEY);
+      // The term travels in the body, never in the URL, so request logs cannot carry it.
+      const body = await readJson<Record<string, unknown>>(req, 1024);
+      if (!body || body === 'TOO_LARGE') return error('BAD_REQUEST');
+      return searchPlaces(body, env.KAKAO_REST_KEY);
     }
 
     if (parts[2] !== 'sessions') return error('NOT_FOUND');

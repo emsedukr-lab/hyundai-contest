@@ -9,6 +9,11 @@ import java.io.File
  * Imported trips, one encrypted file each, written atomically. Real and demo data never mix.
  * A file that cannot be read is kept untouched and reported, never silently replaced.
  */
+/** Serialises every read-modify-write of the trip files: screens, the import flow and the arrival tracker all go through it. */
+interface TripStore {
+    fun <T> locked(f: (TripRepository) -> T): T
+}
+
 class TripRepository(root: File, demo: Boolean, private val box: SecureBox) {
     private val dir = File(root, if (demo) "demo/trips" else "real/trips").apply { mkdirs() }
     private val json = Json { ignoreUnknownKeys = false; encodeDefaults = true }

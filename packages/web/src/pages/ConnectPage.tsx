@@ -39,6 +39,7 @@ const ERROR_TEXT: Record<string, string> = {
   UNSUPPORTED_VERSION: t('connect.error.unsupportedVersion'),
   APPLYING: t('connect.error.applying'),
   INVALID_STATE: t('connect.error.invalidState'),
+  PAYLOAD_TOO_LARGE: t('connect.error.tooLarge'),
 };
 
 const RESULT_TEXT: Record<string, string> = {
@@ -100,12 +101,17 @@ export function ConnectPage() {
 
   // Read the QR fragment once, then remove it from the address bar and history.
   useEffect(() => {
+    // The secret leaves the address bar first, synchronously: before any await and before any early return.
+    const link = parseQrFragment(location.hash);
+    if (location.hash) history.replaceState(null, '', '/c');
     void (async () => {
-      await pairings.prune();
-      setDocs(await trips.all());
+      try {
+        await pairings.prune();
+        setDocs(await trips.all());
+      } catch {
+        return setStage('invalid'); // storage unavailable (some private modes); the secret is already gone from the URL
+      }
       if (!supportsWebCrypto()) return setStage('unsupported');
-      const link = parseQrFragment(location.hash);
-      if (location.hash) history.replaceState(null, '', '/c');
       let r: PairingRecord | undefined;
       if (link) {
         scanSecret.current = link.scanSecret;

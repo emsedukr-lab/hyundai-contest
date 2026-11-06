@@ -16,6 +16,7 @@ import io.tteonaljido.car.safety.DrivingGate
 import io.tteonaljido.car.storage.SecureBox
 import io.tteonaljido.car.storage.SessionStore
 import io.tteonaljido.car.storage.TripRepository
+import io.tteonaljido.car.storage.TripStore
 import io.tteonaljido.trip.LocalTrip
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -31,7 +32,7 @@ class App : Application() {
 }
 
 /** Manual dependency wiring (the Pleos SDK pulls in Hilt, but the app does not need it). */
-class Container(private val app: Application) {
+class Container(private val app: Application) : TripStore {
     val isAutomotive = app.packageManager.hasSystemFeature(PackageManager.FEATURE_AUTOMOTIVE)
     val isEmulator = Build.HARDWARE.contains("ranchu") || Build.FINGERPRINT.contains("generic")
 
@@ -63,12 +64,17 @@ class Container(private val app: Application) {
 
     private val tripLock = Any()
 
-    /** The single write path for stored trips: the screen and the arrival tracker both write overlays. */
-    fun updateTrip(localId: String, f: (LocalTrip) -> LocalTrip): LocalTrip? = synchronized(tripLock) {
-        val repo = trips()
-        val t = repo.load().trips.firstOrNull { it.localId == localId } ?: return null
+    /** One lock for every read-modify-write of the trip files (a repository instance is per call, so its own lock is not enough). */
+    override fun <T> locked(f: (TripRepository) -> T): T = synchronized(tripLock) { f(trips()) }
+
+    /** The single write path for one stored trip. */
+    fun updateTrip(localId: String, f: (LocalTrip) -> LocalTrip): LocalTrip? = locked { repo ->
+        val t = repo.load().trips.firstOrNull { it.localId == localId } ?: return@locked null
         f(t).also(repo::save)
     }
+
+    fun deleteTrip(localId: String) { locked { it.delete(localId) } }
+    fun deleteAllTrips() { locked { it.deleteAll() } }
 
     val tracker = GuidanceTracker(this)
 }

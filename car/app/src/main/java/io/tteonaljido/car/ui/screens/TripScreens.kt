@@ -53,6 +53,7 @@ import io.tteonaljido.trip.Severity
 import io.tteonaljido.trip.Target
 import io.tteonaljido.trip.TripValidator
 import io.tteonaljido.trip.Visit
+import io.tteonaljido.trip.zoneOrUtc
 import java.util.Locale
 
 @Composable
@@ -64,7 +65,7 @@ fun TripsScreen(vm: TripsViewModel, drive: DriveState, demoClock: Boolean, onImp
     Screen {
         PleosHeader(stringResource(R.string.app_name), stringResource(R.string.trips_subtitle)) {
             PleosButton(stringResource(if (drive.parked) R.string.import_button else R.string.parked_only), onImport, enabled = drive.parked, tag = "import")
-            PleosButton(stringResource(R.string.settings), onSettings, type = ButtonType.SECONDARY, tag = "settings")
+            PleosButton(stringResource(R.string.settings), onSettings, type = ButtonType.SECONDARY, enabled = drive.parked, tag = "settings")
         }
         if (demoClock) DemoClockLine(now)
         if (unreadable > 0) StatusLine(stringResource(R.string.unreadable_files, unreadable), Tone.WARNING)
@@ -81,7 +82,7 @@ fun TripsScreen(vm: TripsViewModel, drive: DriveState, demoClock: Boolean, onImp
                 val today = vm.todayIndex(t, now)
                 val period = stringResource(R.string.labeled, periodLabel(t.plan), nightsLabel(t.plan))
                 PleosCard(onClick = { onOpen(t.localId) }) {
-                    PleosText(t.plan.name, Pleos.type.titleMedium, maxLines = 1)
+                    PleosText(tripTitle(t), Pleos.type.titleMedium, maxLines = 1)
                     PleosText(if (today != null) stringResource(R.string.trip_card_today, period, today) else period, Pleos.type.bodyLarge, secondary, maxLines = 1)
                     PleosText(stringResource(R.string.trip_card_stats, t.plan.places.size, report.conflicts, report.uncertain, t.meta.revision), Pleos.type.bodySmall, secondary, maxLines = 1)
                     report.issues.firstOrNull { it.code == "PAST_TRIP" }?.let { StatusLine(issueText(it), Tone.WARNING) }
@@ -90,6 +91,10 @@ fun TripsScreen(vm: TripsViewModel, drive: DriveState, demoClock: Boolean, onImp
         }
     }
 }
+
+/** A detached copy keeps the plan's own name; the "(사본)" marker is metadata, added here in the UI language. */
+@Composable
+private fun tripTitle(t: LocalTrip): String = if (t.meta.copy) t.plan.name + stringResource(R.string.copy_suffix) else t.plan.name
 
 /** Emulator demo clock: always visible while on, so a recorded demo never passes for real time. */
 @Composable
@@ -115,8 +120,9 @@ fun TripDetailScreen(vm: TripsViewModel, localId: String, drive: DriveState, dem
     val live = remember(t, day, now, naviLive, here) { vm.live(t, day, now, naviLive, here) }
 
     Screen {
-        PleosHeader(t.plan.name, stringResource(R.string.detail_subtitle, periodLabel(t.plan), nightsLabel(t.plan), t.meta.revision)) {
-            PleosButton(stringResource(R.string.list), onBack, type = ButtonType.SECONDARY, size = ButtonSize.SMALL)
+        PleosHeader(tripTitle(t), stringResource(R.string.detail_subtitle, periodLabel(t.plan), nightsLabel(t.plan), t.meta.revision)) {
+            // While driving the card below is the whole screen; Back still works, there is nothing to tap.
+            if (drive.parked) PleosButton(stringResource(R.string.list), onBack, type = ButtonType.SECONDARY, size = ButtonSize.SMALL)
         }
         if (demoClock) DemoClockLine(now)
         if (!drive.parked) {
@@ -184,12 +190,13 @@ private fun liveStatus(t: LocalTrip, v: LiveView): Pair<String, Tone>? {
         stringResource(if (fixed.kind == Visit.Fixed.Kind.RESERVATION) R.string.deadline_reservation else R.string.deadline_fixed, fixed.time)
     } ?: p.endBy?.let { stringResource(R.string.deadline_end_by, TripValidator.hhmm(it)) }
     val slack = p.fixed?.slack ?: p.endBy?.let { by -> p.endExpected?.let { by - it } }
-    val tail = when (p.status) {
-        Punctuality.ON_TIME -> stringResource(R.string.live_slack, deadline.orEmpty(), slack ?: 0)
-        Punctuality.TIGHT -> stringResource(R.string.live_tight, deadline.orEmpty(), slack ?: 0)
-        Punctuality.LATE -> stringResource(R.string.live_late, deadline.orEmpty(), -(slack ?: 0))
-        Punctuality.UNKNOWN -> stringResource(R.string.live_unknown, deadline.orEmpty())
-        Punctuality.NO_DEADLINE -> null
+    // A missing number is said to be missing, never shown as 0.
+    val tail = when {
+        p.status == Punctuality.NO_DEADLINE -> null
+        slack == null || p.status == Punctuality.UNKNOWN -> stringResource(R.string.live_unknown, deadline.orEmpty())
+        p.status == Punctuality.ON_TIME -> stringResource(R.string.live_slack, deadline.orEmpty(), slack)
+        p.status == Punctuality.TIGHT -> stringResource(R.string.live_tight, deadline.orEmpty(), slack)
+        else -> stringResource(R.string.live_late, deadline.orEmpty(), -slack)
     }
     val text = listOfNotNull(head, tail).joinToString(" · ")
     if (text.isBlank()) return null
@@ -224,7 +231,7 @@ private fun DayPlan(t: LocalTrip, day: Int) {
     val d = t.plan.days[day - 1]
     val secondary = colorResource(R.color.pleos_text_dark_secondary)
     val times = remember(t, day) { TripValidator.timeline(t.plan, day, t.overlay).associateBy { it.visitId } }
-    val zone = remember(t) { java.time.ZoneId.of(t.plan.timezone) }
+    val zone = remember(t) { t.plan.zoneOrUtc() }
     val home = stringResource(R.string.home)
     val start = if (day == 1) (if (t.overlay.originOverride != null) stringResource(R.string.origin_here) else if (t.plan.origin is Endpoint.Home) home else stringResource(R.string.origin_place))
     else t.plan.days[day - 2].lodgingPlaceRef?.let { TripValidator.placeName(t.plan, it) } ?: stringResource(R.string.lodging_undecided)
@@ -276,7 +283,7 @@ private fun NextCard(vm: TripsViewModel, t: LocalTrip, day: Int, live: LiveView?
         is Target.Final -> tg.place?.name ?: home
         else -> tg.label
     }
-    val zone = remember(t) { java.time.ZoneId.of(t.plan.timezone) }
+    val zone = remember(t) { t.plan.zoneOrUtc() }
     fun clock(ms: Long) = java.time.Instant.ofEpochMilli(ms).atZone(zone).let { String.format(Locale.ROOT, "%02d:%02d", it.hour, it.minute) }
     PleosCard {
         PleosText(stringResource(R.string.next_destination_day, day), Pleos.type.label, secondary)
@@ -382,10 +389,13 @@ fun SettingsScreen(
                     PleosButton(stringResource(if (demo) R.string.demo_off else R.string.demo_on), { onDemo(!demo) }, type = ButtonType.SECONDARY, tag = "demo")
                     if (demo) PleosButton(stringResource(if (demoDriving) R.string.demo_driving_off else R.string.demo_driving_on), { onDemoDriving(!demoDriving) }, type = ButtonType.SECONDARY, tag = "demoDriving")
                 }
-                PleosText(stringResource(R.string.demo_time_body), Pleos.type.bodyMedium, secondary)
-                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    PleosButton(stringResource(if (demoClock) R.string.demo_clock_off else R.string.demo_clock_on), { onDemoClock(!demoClock) }, type = ButtonType.SECONDARY, tag = "demoClock")
-                    PleosButton(stringResource(R.string.demo_arrive), onDemoArrive, type = ButtonType.SECONDARY, tag = "demoArrive")
+                // The demo clock and the demo arrival only exist with the demo store, so real trips never get demo timestamps.
+                if (demo) {
+                    PleosText(stringResource(R.string.demo_time_body), Pleos.type.bodyMedium, secondary)
+                    Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                        PleosButton(stringResource(if (demoClock) R.string.demo_clock_off else R.string.demo_clock_on), { onDemoClock(!demoClock) }, type = ButtonType.SECONDARY, tag = "demoClock")
+                        PleosButton(stringResource(R.string.demo_arrive), onDemoArrive, type = ButtonType.SECONDARY, tag = "demoArrive")
+                    }
                 }
             }
             PleosCard {

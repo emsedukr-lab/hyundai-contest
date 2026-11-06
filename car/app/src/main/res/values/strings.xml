@@ -254,7 +254,8 @@
     <string name="demo_clock_on">시연 시각: 2일차 09:00</string>
     <string name="demo_clock_off">실제 시각으로</string>
     <string name="demo_arrive">도착 신호(시연)</string>
-    <string name="issue_leg_navi">%1$d일차 %2$d구간은 내비 예상 이동시간이에요</string>
+    <string name="issue_leg_navi">%1$s일차 %2$s구간은 내비 예상 이동시간이에요</string>
+    <string name="copy_suffix">" (사본)"</string>
     <string name="skip_suggest">선택 일정 \'%1$s\' · 건너뛰면 예약 시각에 맞출 수 있어요</string>
     <string name="leg_hm">"    ↓ 이동 %1$d시간 %2$d분"</string>
     <string name="leg_navi_hm">"    ↓ 이동 %1$d시간 %2$d분 (내비 예상)"</string>

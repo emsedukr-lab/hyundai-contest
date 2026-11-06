@@ -108,6 +108,18 @@ try {
   await second.getByRole('button', { name: '연결하고 확인 코드 보기' }).click();
   await until(async () => (await second.getByText('이미 사용된 QR이에요', { exact: false }).count()) > 0, 'reusing the QR is refused');
   await shot(second, '08-reused');
+  // W2: a browser without WebCrypto still removes the secret from the address bar before it gives up.
+  const car2 = await generateKeyPair();
+  const carPub2 = await exportPublicRaw(car2.publicKey);
+  const s2 = await api('POST', '/sessions', undefined, { carPub: b64url(carPub2), appVersion: 'e2e-car', supportedSchemaVersions: [1] });
+  const qr2 = formatQrUrl(base, { sid: s2.sid, scanSecret: s2.scanSecret, fingerprint: await fingerprint(carPub2) });
+  const noCrypto = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, locale: 'ko-KR', isMobile: true, hasTouch: true });
+  await noCrypto.addInitScript("Object.defineProperty(Crypto.prototype, 'subtle', { get: () => undefined, configurable: true });"); // a string: tsx would inject a helper into a function
+  const bare = await noCrypto.newPage();
+  await bare.goto(qr2);
+  await bare.getByText('이 브라우저에서는 연결할 수 없어요').waitFor();
+  check(new URL(bare.url()).hash === '', 'without WebCrypto the secret is still removed from the address bar');
+  await noCrypto.close();
   console.log('mobile E2E passed');
 } finally {
   await browser.close();

@@ -102,7 +102,19 @@ export const Trip = z.strictObject({
   revision: z.int().min(1),
   updatedAt: z.iso.datetime({ offset: true }),
   name: Name,
-  timezone: z.string().regex(/^[A-Za-z_]+(\/[A-Za-z0-9_+-]+){0,2}$/).max(40),
+  timezone: z
+    .string()
+    .regex(/^[A-Za-z_]+(\/[A-Za-z0-9_+-]+){0,2}$/)
+    .max(40)
+    .refine((tz) => {
+      // A well-formed but unknown id would crash every date on the car; both sides reject it (Kotlin: ZoneId.of).
+      try {
+        new Intl.DateTimeFormat('en-US', { timeZone: tz });
+        return true;
+      } catch {
+        return false;
+      }
+    }, 'unknown time zone'),
   startDate: DateStr,
   endDate: DateStr,
   firstDay: FirstDay,

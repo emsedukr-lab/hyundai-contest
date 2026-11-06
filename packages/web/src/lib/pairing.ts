@@ -2,19 +2,20 @@ import {
   aadFor,
   b64url,
   canonicalJson,
+  type ClaimResponse,
   deriveSessionKeys,
   encrypt,
+  type ErrorCode,
   exportPublicRaw,
   fingerprint,
   fromB64url,
   generateKeyPair,
   importPublicRaw,
-  sharedSecret,
-  utf8,
-  type ClaimResponse,
-  type ErrorCode,
+  PROTOCOL,
   type QrLink,
   type SessionView,
+  sharedSecret,
+  utf8,
 } from '@tteonaljido/shared';
 import { pairings, sendLog, type PairingRecord } from './db';
 import { toTransfer, type TripDoc } from './trips';
@@ -110,8 +111,11 @@ export async function send(rec: PairingRecord, doc: TripDoc, includeHome: boolea
   const sameChoice = rec.sealed && rec.tripId === doc.tripId && rec.revision === doc.revision && rec.includeHome === includeHome;
   if (!sameChoice) {
     const transfer = await toTransfer(doc, includeHome);
+    const plain = utf8(canonicalJson(transfer));
+    // Same limit the car and the relay apply, checked here so the user hears it before anything is sent.
+    if (plain.byteLength > PROTOCOL.limits.maxPlaintextBytes) throw new ApiError('PAYLOAD_TOO_LARGE', 413);
     const keys = await sessionKeys(rec);
-    const sealed = await encrypt(keys.key, utf8(canonicalJson(transfer)), aadFor(rec.sid, 1));
+    const sealed = await encrypt(keys.key, plain, aadFor(rec.sid, 1));
     next = { ...rec, tripId: doc.tripId, revision: doc.revision, includeHome, sealed: { ...sealed, schemaVersion: 1 } };
     await pairings.put(next);
   }
@@ -138,7 +142,8 @@ export interface PlaceHit {
   category: 'SIGHT' | 'FOOD' | 'CAFE' | 'LODGING' | 'OTHER';
 }
 
+/** The term goes in the request body, not the URL, so no request log can carry it. */
 export async function searchPlaces(q: string): Promise<PlaceHit[]> {
-  const res = await api<{ results: PlaceHit[] }>('GET', `/places/search?q=${encodeURIComponent(q)}`);
+  const res = await api<{ results: PlaceHit[] }>('POST', '/places/search', null, { q });
   return res.results;
 }

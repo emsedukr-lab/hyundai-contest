@@ -230,11 +230,13 @@ export function relinkLegs(prev: Trip, next: Trip, book: LegBook): Trip {
     const newKeys = legKeys(next, d.dayIndex);
     const legs = d.legs.map((leg, k) => {
       const key = newKeys[k];
-      if (key && key === oldKeys[k]) {
+      // No key yet (lodging, origin or destination not set): nothing to relink against, so the typed value stays.
+      if (!key) return leg;
+      if (key === oldKeys[k]) {
         if (!leg && before?.legs[k]) book.delete(key);
         return leg;
       }
-      const known = key ? book.get(key) : undefined;
+      const known = book.get(key);
       const relinked = known === undefined ? null : { minutes: known, source: 'USER_ESTIMATE' as const };
       if (relinked?.minutes !== leg?.minutes) touched = true;
       return relinked;

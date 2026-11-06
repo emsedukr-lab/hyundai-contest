@@ -75,7 +75,7 @@ internal object SchemaRules {
         need(trip.revision >= 1, "revision")
         need(DATETIME.matches(trip.updatedAt), "updatedAt")
         need(trip.name.length in 1..60, "name")
-        need(TZ.matches(trip.timezone) && trip.timezone.length <= 40, "timezone")
+        need(TZ.matches(trip.timezone) && trip.timezone.length <= 40 && runCatching { java.time.ZoneId.of(trip.timezone) }.isSuccess, "timezone")
         need(date(trip.startDate) && date(trip.endDate), "dates")
         when (val f = trip.firstDay) {
             is FirstDay.DepartOrigin -> need(TIME.matches(f.departTime), "firstDay")

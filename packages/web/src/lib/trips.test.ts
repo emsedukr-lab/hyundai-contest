@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { parseTransfer, sampleTrip, type Trip } from '@tteonaljido/shared';
-import { addPlace, assign, move, newDoc, planWarnings, relinkLegs, rememberLegs, removePlace, savePlan, setDepart, setEndBy, setLeg, setLodging, setPeriod, toTransfer, unassign, type LegBook } from './trips';
+import { addPlace, assign, emptyPlan, move, newDoc, planWarnings, relinkLegs, rememberLegs, removePlace, savePlan, setDepart, setEndBy, setLeg, setLodging, setPeriod, toTransfer, unassign, type LegBook } from './trips';
 
 // The warning assertions below check the Korean copy; jsdom reports navigator.language as en-US.
 vi.hoisted(() => Object.defineProperty(navigator, 'language', { value: 'ko-KR', configurable: true }));
@@ -162,5 +162,21 @@ describe('timetable on the phone', () => {
 
   it('unknown opening hours leave lodging out, as the car does', () => {
     expect(planWarnings(sampleTrip(), home).map((x) => x.text)).toContain('영업정보 미확인 11곳');
+  });
+});
+
+describe('travel times before lodging is set', () => {
+  const market = { name: '주문진 수산시장', address: '강릉시 주문진읍', latE7: 378_930_000, lonE7: 1_288_260_000, category: 'FOOD' as const, source: { provider: 'MANUAL' as const, externalId: null }, naviPoi: null, hours: { status: 'UNKNOWN' as const } };
+
+  it('keeps a typed time on a leg whose far end is not set yet, through later edits', () => {
+    const book: LegBook = new Map();
+    let t = addPlace(emptyPlan('6f1c2d4e-8a3b-4c5d-9e7f-0a1b2c3d4e5f'), market); // 2 days, no lodging yet
+    t = assign(t, t.visits[0].visitId, 1);
+    rememberLegs(t, book);
+    const typed = relinkLegs(t, setLeg(t, 1, 1, 30), book); // the leg towards the still-unset lodging
+    rememberLegs(typed, book);
+    expect(day(typed, 1).legs[1]?.minutes).toBe(30);
+    const renamed = relinkLegs(typed, { ...typed, name: '강릉' }, book);
+    expect(day(renamed, 1).legs[1]?.minutes).toBe(30);
   });
 });

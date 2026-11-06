@@ -94,6 +94,7 @@ await invalid('float-coordinate', 'SCHEMA', () => {}, {
 });
 await invalid('bad-calendar-date', 'SCHEMA', (t) => (t.endDate = '2026-02-30'));
 await invalid('bad-time', 'SCHEMA', (t) => (t.visits[4].fixed = { time: '24:00', kind: 'USER' }));
+await invalid('bad-timezone', 'SCHEMA', (t) => (t.timezone = 'Asia/Nowhere'));
 await invalid('unsupported-version', 'UNSUPPORTED_VERSION', () => {}, { raw: (t) => (t.schemaVersion = 2) });
 await invalid('date-range', 'DATE_RANGE', (t) => (t.endDate = '2026-11-19'));
 await invalid('day-count', 'DAY_COUNT_MISMATCH', (t) => (t.endDate = '2026-11-24'));

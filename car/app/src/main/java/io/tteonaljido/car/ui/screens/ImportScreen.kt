@@ -140,24 +140,24 @@ fun ImportScreen(vm: ImportViewModel, drive: DriveState, onClose: () -> Unit, on
             HandoffState.Applying -> StatusLine(stringResource(R.string.applying))
             is HandoffState.Done -> PleosCard {
                 StatusLine(stringResource(RESULT_TEXT[s.resultCode] ?: R.string.result_done), if (s.resultCode == "USER_DECLINED") Tone.INFO else Tone.POSITIVE)
-                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                if (drive.parked) Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                     val id = s.localId
                     if (id != null && s.resultCode != "USER_DECLINED") PleosButton(stringResource(R.string.open_trip), { vm.dismissIfFinished(); onOpenTrip(id) })
                     PleosButton(stringResource(R.string.close), { vm.dismissIfFinished(); onClose() }, type = ButtonType.SECONDARY)
                 }
             }
-            is HandoffState.Expired -> Ended(stringResource(EXPIRE_TEXT[s.reason] ?: R.string.expired_generic), vm, onClose)
-            is HandoffState.Cancelled -> Ended(stringResource(CANCEL_TEXT[s.by] ?: R.string.cancelled_generic), vm, onClose)
-            is HandoffState.Failed -> Ended(stringResource(FAIL_TEXT.getValue(s.kind)), vm, onClose)
+            is HandoffState.Expired -> Ended(stringResource(EXPIRE_TEXT[s.reason] ?: R.string.expired_generic), vm, drive.parked, onClose)
+            is HandoffState.Cancelled -> Ended(stringResource(CANCEL_TEXT[s.by] ?: R.string.cancelled_generic), vm, drive.parked, onClose)
+            is HandoffState.Failed -> Ended(stringResource(FAIL_TEXT.getValue(s.kind)), vm, drive.parked, onClose)
         }
     }
 }
 
 @Composable
-private fun Ended(text: String, vm: ImportViewModel, onClose: () -> Unit) {
+private fun Ended(text: String, vm: ImportViewModel, parked: Boolean, onClose: () -> Unit) {
     PleosCard {
         StatusLine(text, Tone.WARNING)
-        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+        if (parked) Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             PleosButton(stringResource(R.string.new_qr), vm::start)
             PleosButton(stringResource(R.string.close), { vm.dismissIfFinished(); onClose() }, type = ButtonType.SECONDARY)
         }

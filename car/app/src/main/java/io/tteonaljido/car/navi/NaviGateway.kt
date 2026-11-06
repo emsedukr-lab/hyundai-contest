@@ -132,7 +132,8 @@ class PleosNaviGateway(context: Context) : NaviGateway {
         override fun onDrivingInfo(drivingInfo: DrivingInfo) {
             val d = drivingInfo.destination
             if (d.duration <= 0 && d.distance <= 0) return
-            _live.value = (_live.value ?: NaviLive(true, d.name, null, null, null, null)).copy(guiding = true, remainSeconds = d.duration, remainMetres = d.distance, at = System.currentTimeMillis())
+            // A zero is "unknown", never "arriving now".
+            _live.value = (_live.value ?: NaviLive(true, d.name, null, null, null, null)).copy(guiding = true, remainSeconds = d.duration.takeIf { it > 0 }, remainMetres = d.distance.takeIf { it > 0 }, at = System.currentTimeMillis())
         }
         override fun onNavigationStatus(status: NavigationStatus) {
             if (status == NavigationStatus.ROUTE_DRIVE) runCatching { navi.getDestinationInfo() } else stopped()
