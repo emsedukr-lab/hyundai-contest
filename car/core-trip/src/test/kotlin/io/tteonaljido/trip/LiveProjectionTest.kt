@@ -164,3 +164,43 @@ class LiveProjectionTest {
         assertTrue(loaded.overlay.legEstimates.isEmpty() && loaded.overlay.guiding == null && loaded.overlay.skipped.isEmpty())
     }
 }
+
+class DeadlineAndReconcileTest {
+    private val schemaDir = File(System.getProperty("schemaDir"))
+    private val sample = (TransferParser.parse(File(schemaDir, "fixtures/valid/sample.json").readText()) as ParseResult.Ok).transfer.trip
+    private fun m(hhmm: String) = TripValidator.minutes(hhmm)
+    private fun withDay(t: Trip, n: Int, f: (Day) -> Day) = t.copy(days = t.days.map { if (it.dayIndex == n) f(it) else it })
+
+    @Test fun returnByCanBindEvenWhenTheFixedStopIsFine() {
+        val t = withDay(sample, 2) { it.copy(endBy = "15:00") } // the day ends ~16:30, the 13:00 reservation is fine
+        val p = LiveProjection.project(t, CarOverlay(), 2, m("09:30"))
+        assertEquals(DeadlineKind.END_BY, p.deadlineKind)
+        assertEquals(Punctuality.LATE, p.status)
+        assertEquals(-90, p.deadlineSlack)
+        assertEquals("v4", p.skip?.visitId) // 경포호 is the optional stop before the reservation
+    }
+
+    @Test fun theMoreUrgentOfFixedAndReturnByBinds() {
+        val late = withDay(sample, 4) { it.copy(departTime = "09:55", endBy = "23:00") } // 10:00 fixed is tight, return-by is generous
+        val p = LiveProjection.project(late, CarOverlay(), 4, m("09:55"))
+        assertEquals(DeadlineKind.FIXED, p.deadlineKind)
+        assertEquals(Punctuality.LATE, p.status)
+    }
+
+    @Test fun reconcileDropsEstimatesAndGuidingForAMovedPlace() {
+        val o = CarOverlay(
+            poiBindings = mapOf(
+                "lake" to NaviBinding("", "", "", 377_955_000, 1_288_975_000, "경포호", ""),
+                "donghwa" to NaviBinding("", "", "", 377_910_000, 1_289_145_000, "동화가든", ""),
+            ),
+            legEstimates = mapOf("skybay>lake" to LegEstimate(5, 1, 0), "lake>donghwa" to LegEstimate(10, 1, 0), "donghwa>mandong" to LegEstimate(15, 1, 0)),
+            guiding = GuidingTarget(2, "v4", "lake", 377_955_000, 1_288_975_000, "경포호", 0),
+        )
+        val moved = sample.copy(places = sample.places.map { if (it.placeRef == "lake") it.copy(latE7 = 378_200_000) else it }) // 경포호 moved ~2.7 km
+        val r = ImportDecision.reconcile(o, moved)
+        assertFalse("lake" in r.poiBindings)
+        assertTrue("donghwa" in r.poiBindings)
+        assertEquals(setOf("donghwa>mandong"), r.legEstimates.keys) // both legs touching 경포호 dropped
+        assertNull(r.guiding)
+    }
+}

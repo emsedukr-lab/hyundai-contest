@@ -122,4 +122,7 @@ class MainActivity : ComponentActivity() {
         tripsVm?.onResume() // returning from the navigation's own search
         importVm?.retryPending() // a result the relay has not taken yet (offline, 429, 5xx)
     }
+
+    override fun onStart() { super.onStart(); tripsVm?.setVisible(true) }
+    override fun onStop() { super.onStop(); tripsVm?.setVisible(false) } // stop the background poll when no screen is shown
 }

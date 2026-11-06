@@ -44,6 +44,7 @@ import io.tteonaljido.car.ui.noteText
 import io.tteonaljido.car.ui.text
 import io.tteonaljido.car.ui.theme.Pleos
 import io.tteonaljido.trip.Basis
+import io.tteonaljido.trip.DeadlineKind
 import io.tteonaljido.trip.Endpoint
 import io.tteonaljido.trip.LegFrom
 import io.tteonaljido.trip.LocalTrip
@@ -185,11 +186,16 @@ private fun liveStatus(t: LocalTrip, v: LiveView): Pair<String, Tone>? {
         Basis.PLAN, Basis.FROM_HERE -> p.arriveNext?.let { stringResource(R.string.live_depart_now, TripValidator.hhmm(it)) }
         Basis.NONE -> null
     }
-    val deadline = p.fixed?.let { f ->
-        val fixed = t.plan.visits.first { it.visitId == f.visitId }.fixed!!
-        stringResource(if (fixed.kind == Visit.Fixed.Kind.RESERVATION) R.string.deadline_reservation else R.string.deadline_fixed, fixed.time)
-    } ?: p.endBy?.let { stringResource(R.string.deadline_end_by, TripValidator.hhmm(it)) }
-    val slack = p.fixed?.slack ?: p.endBy?.let { by -> p.endExpected?.let { by - it } }
+    // The binding deadline the projection chose (the more urgent of the fixed stop and the return-by time).
+    val deadline = when (p.deadlineKind) {
+        DeadlineKind.FIXED -> p.fixed?.let { f ->
+            val fixed = t.plan.visits.first { it.visitId == f.visitId }.fixed!!
+            stringResource(if (fixed.kind == Visit.Fixed.Kind.RESERVATION) R.string.deadline_reservation else R.string.deadline_fixed, fixed.time)
+        }
+        DeadlineKind.END_BY -> p.endBy?.let { stringResource(R.string.deadline_end_by, TripValidator.hhmm(it)) }
+        DeadlineKind.NONE -> null
+    }
+    val slack = p.deadlineSlack
     // A missing number is said to be missing, never shown as 0.
     val tail = when {
         p.status == Punctuality.NO_DEADLINE -> null

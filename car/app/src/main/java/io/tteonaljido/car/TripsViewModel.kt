@@ -88,6 +88,9 @@ class TripsViewModel(
     private enum class Kind { ROUTE, SEARCH, HOME }
     private var pending: Pending? = null
 
+    @Volatile private var visible = true
+    fun setVisible(v: Boolean) { visible = v }
+
     init {
         reload()
         viewModelScope.launch { tracker.changed.collect { reload() } }
@@ -95,6 +98,7 @@ class TripsViewModel(
         viewModelScope.launch {
             while (true) {
                 delay(30_000)
+                if (!visible) continue // no polling while the app is in the background
                 _now.value = nowMs()
                 // Push events cover route start/stop; while guiding, refresh the remaining time as a fallback.
                 if (navi.live.value?.guiding == true) navi.refreshLive()
@@ -136,7 +140,8 @@ class TripsViewModel(
     fun openChargers() = navi.openNearbyChargers()
 
     fun today(t: LocalTrip, now: Long = _now.value): LocalDate = Instant.ofEpochMilli(now).atZone(t.plan.zoneOrUtc()).toLocalDate()
-    fun todayIndex(t: LocalTrip, now: Long = _now.value): Int? = runCatching { NextDestination.dayIndexFor(t.plan, today(t, now)) }.getOrNull()
+    /** Which day of the trip "now" falls on. A 4-hour grace keeps it on the current day just past midnight (still driving to that night's lodging). */
+    fun todayIndex(t: LocalTrip, now: Long = _now.value): Int? = runCatching { NextDestination.dayIndexFor(t.plan, Instant.ofEpochMilli(now - 4 * 3_600_000L).atZone(t.plan.zoneOrUtc()).toLocalDate()) }.getOrNull()
     private fun minuteOfDay(t: LocalTrip, now: Long) = Instant.ofEpochMilli(now).atZone(t.plan.zoneOrUtc()).toLocalTime().let { it.hour * 60 + it.minute }
 
     private fun placeTarget(t: LocalTrip, p: Place): RouteTarget {
@@ -163,6 +168,9 @@ class TripsViewModel(
     }
 
     private fun stepKey(step: NextStep) = (step.target as? Target.Stop)?.visitId ?: "end"
+    private fun stepKey(day: Int, step: NextStep) = "$day:${stepKey(step)}"
+    /** A 'from here' estimate is about this exact next step and only trusted for a short while. */
+    private val HERE_TTL_MS = 15 * 60_000L
 
     /**
      * Today's live view: the rest of the day re-timed from now. The navigation's remaining time counts only when it is
@@ -177,7 +185,9 @@ class TripsViewModel(
                 (t.overlay.guiding?.let { g -> g.name == live.destName && (g.visitId ?: "end") == stepKey(step) } == true)
             )
         val h = hereFor(t, day, now, here)
-        val p = LiveProjection.project(t.plan, t.overlay, day, minuteOfDay(t, now), if (guidingThere) live!!.remainMinutes else null, h?.minutes)
+        // The navigation's remaining time is only trusted while it is fresh (it slides later each tick once pushes stop).
+        val fresh = live != null && System.currentTimeMillis() - live.at < 120_000L
+        val p = LiveProjection.project(t.plan, t.overlay, day, minuteOfDay(t, now), if (guidingThere && fresh) live!!.remainMinutes else null, h?.minutes)
         // A destination the car already reached (the navigation may keep it after arriving) is not "elsewhere".
         val stale = live?.destLatE7 != null && live.destLonE7 != null && t.plan.days[day - 1].visitOrder.filter { it in t.overlay.visited }.any { id ->
             val ref = t.plan.visits.first { it.visitId == id }.placeRef
@@ -194,7 +204,7 @@ class TripsViewModel(
     /** The latest estimate from here, if it is still about the next step and less than an hour old. */
     fun hereFor(t: LocalTrip, day: Int, now: Long, here: Map<String, HereEstimate>): HereEstimate? {
         val step = NextDestination.of(t.plan, t.overlay, day)
-        return here[t.localId]?.takeIf { it.targetKey == stepKey(step) && now - it.at < 60 * 60_000 }
+        return here[t.localId]?.takeIf { it.targetKey == stepKey(day, step) && now - it.at < HERE_TTL_MS }
     }
 
     /** Step 11 of the flow: hand the next destination to the real navigation, only on an explicit tap while parked. */
@@ -223,7 +233,9 @@ class TripsViewModel(
     private suspend fun route() {
         val p = pending ?: return
         _guide.value = Guide.Working(Msg(R.string.guide_requested, p.target.name))
-        _guide.value = when (val r = navi.route(p.target, p.previous)) {
+        val r = navi.route(p.target, p.previous)
+        if (pending !== p) return // the user closed the dialog (or started another) while the navigation was answering
+        _guide.value = when (r) {
             is RouteOutcome.Confirmed -> { bind(p, r.binding, guiding = true); pending = null; Guide.Done(Msg(R.string.guide_started, r.binding.name)) }
             is RouteOutcome.Different -> Guide.ConfirmPlace(r.binding, p.target.name, p.target.latE7?.let { lat -> metres(lat, p.target.lonE7!!, r.binding.latE7, r.binding.lonE7).toInt() } ?: -1)
             RouteOutcome.NoAnswer -> Guide.Failed(Msg(R.string.guide_no_answer), canSearch = p.placeRef != null)
@@ -286,8 +298,11 @@ class TripsViewModel(
 
     private suspend fun checkHome() {
         val home = navi.homeBookmark()
-        _guide.value = if (home != null) Guide.ConfirmHome(home) else {
+        _guide.value = if (home != null) {
+            Guide.ConfirmHome(home)
+        } else {
             navi.openAddHome()
+            pending = null // the user adds a home there and taps "내비 '집' 불러오기" again; don't reopen it on every resume
             Guide.Failed(Msg(R.string.guide_no_home_bookmark), false)
         }
     }
@@ -323,7 +338,7 @@ class TripsViewModel(
             }
             val est = navi.estimate(target) ?: return@launch run { reload(); _guide.value = Guide.Failed(Msg(R.string.estimate_failed, target.name), false) }
             val now = nowMs()
-            _here.value = _here.value + (localId to HereEstimate(target.name, stepKey(step), est.minutes, est.metres, est.socAtDest, now))
+            _here.value = _here.value + (localId to HereEstimate(target.name, stepKey(day, step), est.minutes, est.metres, est.socAtDest, now))
             legStartingHere(t, day, here.latE7, here.lonE7)?.let { key ->
                 update(localId) { it.copy(overlay = it.overlay.copy(legEstimates = it.overlay.legEstimates + (key to LegEstimate(est.minutes, est.metres, now)))) }
             }

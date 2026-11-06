@@ -57,9 +57,11 @@ object ImportDecision {
             lat == null || lon == null || metres(lat, lon, b.latE7, b.lonE7) <= 150.0
         }
         val visits = incoming.visits.map { it.visitId }.toSet()
+        // Places that still exist but whose confirmed location no longer matches the new plan: their car-side estimates and guiding are stale too.
+        val moved = overlay.poiBindings.keys.filter { it in places && it !in bindings }.toSet()
         val known = places.keys + LegKeys.HOME + LegKeys.ORIGIN
-        val estimates = overlay.legEstimates.filterKeys { key -> key.split('>').let { it.size == 2 && it.all(known::contains) } }
-        val guiding = overlay.guiding?.takeIf { g -> (g.visitId == null || g.visitId in visits) && (g.placeRef == null || g.placeRef in places) }
+        val estimates = overlay.legEstimates.filterKeys { key -> key.split('>').let { ends -> ends.size == 2 && ends.all(known::contains) && ends.none { it in moved } } }
+        val guiding = overlay.guiding?.takeIf { g -> (g.visitId == null || g.visitId in visits) && (g.placeRef == null || (g.placeRef in places && g.placeRef !in moved)) }
         return overlay.copy(
             poiBindings = bindings,
             visited = overlay.visited.filter { it in visits }.toSet(),

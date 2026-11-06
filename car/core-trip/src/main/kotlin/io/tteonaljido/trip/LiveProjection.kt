@@ -7,6 +7,9 @@ package io.tteonaljido.trip
  */
 enum class Punctuality { ON_TIME, TIGHT, LATE, NO_DEADLINE, UNKNOWN }
 
+/** Which deadline the status is measured against. */
+enum class DeadlineKind { FIXED, END_BY, NONE }
+
 /** Where the first leg's time came from. */
 enum class Basis { NAVI_LIVE, FROM_HERE, PLAN, NONE }
 
@@ -29,6 +32,9 @@ data class Projection(
     val fixed: FixedCheck?,
     val endExpected: Int?,
     val endBy: Int?,
+    /** The binding deadline (the more urgent of the next fixed stop and the day's return-by time) and its slack. */
+    val deadlineKind: DeadlineKind,
+    val deadlineSlack: Int?,
     val status: Punctuality,
     /** A leg had to be bridged across skipped stops (sum of the legs through them: an upper bound). */
     val approximate: Boolean,
@@ -71,7 +77,8 @@ object LiveProjection {
         if (remaining.isEmpty()) {
             val end = first?.let { now + it }
             val slack = if (endBy != null && end != null) endBy - end else null
-            return Projection(dayIndex, null, end, basis, emptyList(), null, null, end, endBy, status(endBy != null, slack), approximate, null)
+            val kind = if (endBy != null) DeadlineKind.END_BY else DeadlineKind.NONE
+            return Projection(dayIndex, null, end, basis, emptyList(), null, null, end, endBy, kind, slack, status(endBy != null, slack), approximate, null)
         }
 
         val items = remaining.mapIndexed { i, idx -> visits.getValue(order[idx]) to (if (i == 0) first else legs(remaining[i - 1], idx)) }
@@ -88,13 +95,27 @@ object LiveProjection {
             val ready = stops[fixedPos].arrive?.plus(v.prepMinutes)
             FixedCheck(v.visitId, f, ready, ready?.let { f - it })
         }
-        val status = when {
-            fixed != null -> status(true, fixed.slack)
-            endBy != null -> status(true, endExpected?.let { endBy - it })
-            else -> Punctuality.NO_DEADLINE
+        // Both a fixed stop and a return-by time can apply; the nearer-to-late one is what the driver is shown.
+        val endSlack = if (endBy != null) endExpected?.let { endBy - it } else null
+        val (deadlineKind, deadlineSlack) = when {
+            fixed != null && endBy != null -> {
+                val f = fixed.slack
+                val e = endSlack
+                when {
+                    f != null && e != null -> if (e < f) DeadlineKind.END_BY to e else DeadlineKind.FIXED to f
+                    f != null -> DeadlineKind.FIXED to f
+                    e != null -> DeadlineKind.END_BY to e
+                    else -> DeadlineKind.FIXED to null
+                }
+            }
+            fixed != null -> DeadlineKind.FIXED to fixed.slack
+            endBy != null -> DeadlineKind.END_BY to endSlack
+            else -> DeadlineKind.NONE to null
         }
+        val status = status(deadlineKind != DeadlineKind.NONE, deadlineSlack)
         val skip = if (status != Punctuality.LATE) null else {
-            val late = -(fixed?.slack ?: endExpected?.let { endBy!! - it } ?: 0)
+            val late = -(deadlineSlack ?: 0)
+            // Only optional stops before the fixed one (if any) help; a return-by deadline lets any optional stop help.
             val before = if (fixedPos >= 0) items.take(fixedPos) else items
             before.map { it.first }
                 .filter { it.importance == Importance.OPTIONAL && it.fixed == null }
@@ -102,7 +123,7 @@ object LiveProjection {
                 .filter { it.saves >= late }
                 .minByOrNull { it.saves }
         }
-        return Projection(dayIndex, order[firstIdx], stops.first().arrive, basis, stops, vsPlan, fixed, endExpected, endBy, status, approximate, skip)
+        return Projection(dayIndex, order[firstIdx], stops.first().arrive, basis, stops, vsPlan, fixed, endExpected, endBy, deadlineKind, deadlineSlack, status, approximate, skip)
     }
 
     private fun status(hasDeadline: Boolean, slack: Int?): Punctuality = when {
