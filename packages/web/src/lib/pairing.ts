@@ -11,6 +11,7 @@ import {
   fromB64url,
   generateKeyPair,
   importPublicRaw,
+  parseTransfer,
   PROTOCOL,
   type QrLink,
   type SessionView,
@@ -23,7 +24,7 @@ import { toTransfer, type TripDoc } from './trips';
 /** Phone side of one handoff. Every network step is safe to repeat after a reload or a dropped connection. */
 export class ApiError extends Error {
   constructor(
-    readonly code: ErrorCode | 'NETWORK' | 'FINGERPRINT' | 'UNSUPPORTED_SCHEMA' | 'SEARCH_UNAVAILABLE',
+    readonly code: ErrorCode | 'NETWORK' | 'FINGERPRINT' | 'UNSUPPORTED_SCHEMA' | 'SEARCH_UNAVAILABLE' | 'INVALID_LOCAL',
     readonly status = 0,
   ) {
     super(code);
@@ -111,6 +112,9 @@ export async function send(rec: PairingRecord, doc: TripDoc, includeHome: boolea
   const sameChoice = rec.sealed && rec.tripId === doc.tripId && rec.revision === doc.revision && rec.includeHome === includeHome;
   if (!sameChoice) {
     const transfer = await toTransfer(doc, includeHome);
+    // The same check the car runs on arrival, done here so a bad trip is caught before it leaves the phone.
+    const checked = await parseTransfer(JSON.stringify(transfer));
+    if (!checked.ok) throw new ApiError('INVALID_LOCAL');
     const plain = utf8(canonicalJson(transfer));
     // Same limit the car and the relay apply, checked here so the user hears it before anything is sent.
     if (plain.byteLength > PROTOCOL.limits.maxPlaintextBytes) throw new ApiError('PAYLOAD_TOO_LARGE', 413);

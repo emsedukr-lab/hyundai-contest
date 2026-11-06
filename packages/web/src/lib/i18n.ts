@@ -65,6 +65,7 @@ const ko = {
   'home.sampleAdded': '강릉 3박 4일 샘플을 추가했어요. 좌표는 시연용 근사값이에요.',
   'home.imported': '여행 {n}개를 가져왔어요',
   'home.notBackup': '떠날지도 백업 파일이 아니에요',
+  'home.import.overwrite': '같은 여행 {n}개를 백업 내용으로 덮어써요. 계속할까요?',
   'home.backupFileName': '떠날지도-백업-{date}.json',
   'home.empty.description': '새 여행을 만들거나 샘플 여행으로 먼저 둘러보세요.',
   'home.newTrip': '새 여행',
@@ -116,6 +117,7 @@ const ko = {
   'connect.error.applying': '차량에서 이미 저장하는 중이라 취소할 수 없어요. 차량 화면을 확인해 주세요.',
   'connect.error.invalidState': '지금 단계에서는 할 수 없는 작업이에요. 상태를 새로 확인해 주세요.',
   'connect.error.tooLarge': '여행이 너무 커서 보낼 수 없어요. 장소 수를 줄인 뒤 다시 시도해 주세요.',
+  'connect.error.invalidLocal': '여행 내용에 문제가 있어 보낼 수 없어요. 이름과 일정을 확인해 주세요.',
   'connect.error.unknown': '문제가 생겼어요. 다시 시도해 주세요.',
   'connect.error.recordGone': '연결 기록이 이미 정리됐어요. 차량 화면에서 결과를 확인해 주세요.',
   'connect.result.importedNew': '차량에 새 여행으로 불러왔어요',
@@ -290,6 +292,8 @@ const ko = {
   'visit.opens': '여는 시각',
   'visit.closes': '닫는 시각',
   'visit.delete': '장소 삭제',
+  'visit.delete.confirm': '이 장소와 일정을 삭제할까요?',
+  'visit.delete.confirmFixed': '{time} 고정 일정이 있는 장소예요. 삭제할까요?',
 
   // editor/DaysSection.tsx
   'days.title': '일차별 일정',
@@ -403,6 +407,7 @@ const en: Record<Key, string> = {
   'home.sampleAdded': 'Added a 3-night Gangneung sample trip. Its coordinates are approximate, for demo use.',
   'home.imported': 'Imported {n} {n|trip|trips}',
   'home.notBackup': "This isn't a Tteonaljido backup file",
+  'home.import.overwrite': 'This will overwrite {n} existing {n|trip|trips} with the backup. Continue?',
   'home.backupFileName': 'tteonaljido-backup-{date}.json',
   'home.empty.description': 'Create a new trip, or try a sample trip first.',
   'home.newTrip': 'New trip',
@@ -456,6 +461,7 @@ const en: Record<Key, string> = {
   'connect.error.applying': "The car is already saving the trip, so it can't be canceled. Check the car screen.",
   'connect.error.invalidState': "That can't be done at this step. Refresh the status.",
   'connect.error.tooLarge': 'This trip is too large to send. Remove some places and try again.',
+  'connect.error.invalidLocal': "This trip can't be sent as is. Check the name and the schedule.",
   'connect.error.unknown': 'Something went wrong. Try again.',
   'connect.error.recordGone': 'This connection record has already been cleared. Check the result on the car screen.',
   'connect.result.importedNew': 'Imported into the car as a new trip',
@@ -633,6 +639,8 @@ const en: Record<Key, string> = {
   'visit.opens': 'Opens',
   'visit.closes': 'Closes',
   'visit.delete': 'Delete place',
+  'visit.delete.confirm': 'Delete this place and its visit?',
+  'visit.delete.confirmFixed': 'This place has a {time} fixed time. Delete it?',
 
   // editor/DaysSection.tsx
   'days.title': 'Day by day',

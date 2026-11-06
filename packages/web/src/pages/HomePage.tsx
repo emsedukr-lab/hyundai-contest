@@ -43,7 +43,11 @@ export function HomePage() {
   const importFile = async (file: File) => {
     try {
       const data = JSON.parse(await file.text()) as { format?: string; trips?: TripDoc[] };
-      if (data.format !== 'tteonaljido-backup' || !Array.isArray(data.trips)) throw new Error();
+      if (data.format !== 'tteonaljido-backup' || !Array.isArray(data.trips)) throw new Error('not a backup');
+      // A backup replaces trips with the same id; warn before overwriting any.
+      const existing = new Set((docs ?? []).map((d) => d.tripId));
+      const overwrites = data.trips.filter((d) => existing.has(d.tripId)).length;
+      if (overwrites > 0 && !window.confirm(t('home.import.overwrite', { n: overwrites }))) return;
       for (const d of data.trips) await trips.put(await newDoc({ ...d.plan, revision: d.revision, updatedAt: d.updatedAt }, d.home));
       setMessage(t('home.imported', { n: data.trips.length }));
       await reload();

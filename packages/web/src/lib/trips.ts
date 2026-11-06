@@ -253,6 +253,22 @@ export const updatePlace = (plan: Trip, placeRef: string, patch: Partial<Place>)
   places: plan.places.map((p) => (p.placeRef === placeRef ? { ...p, ...patch } : p)),
 });
 
+/** Changes a place's category and keeps its visit in step: lodging has no visit, every other kind has one. */
+export function changeCategory(plan: Trip, placeRef: string, category: Place['category']): Trip {
+  let next = updatePlace(plan, placeRef, { category });
+  const hasVisit = plan.visits.some((v) => v.placeRef === placeRef);
+  if (category === 'LODGING' && hasVisit) {
+    for (const v of plan.visits.filter((v) => v.placeRef === placeRef)) next = unassign(next, v.visitId);
+    next = { ...next, visits: next.visits.filter((v) => v.placeRef !== placeRef) };
+  } else if (category !== 'LODGING' && !hasVisit) {
+    next = {
+      ...next,
+      visits: [...next.visits, { visitId: newRef('v'), placeRef, stayMinutes: 60, prepMinutes: 10, importance: 'NORMAL', desiredTime: null, fixed: null, dateFlexible: true, timeFlexible: true, unassignedReason: 'NOT_SCHEDULED_YET' }],
+    };
+  }
+  return next;
+}
+
 /* ---------- read helpers ---------- */
 
 export const placeOf = (plan: Trip, ref: string) => plan.places.find((p) => p.placeRef === ref);

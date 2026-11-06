@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { parseTransfer, sampleTrip, type Trip } from '@tteonaljido/shared';
-import { addPlace, assign, emptyPlan, move, newDoc, planWarnings, relinkLegs, rememberLegs, removePlace, savePlan, setDepart, setEndBy, setLeg, setLodging, setPeriod, toTransfer, unassign, type LegBook } from './trips';
+import { addPlace, assign, changeCategory, emptyPlan, move, newDoc, planWarnings, relinkLegs, rememberLegs, removePlace, savePlan, setDepart, setEndBy, setLeg, setLodging, setPeriod, toTransfer, unassign, type LegBook } from './trips';
 
 // The warning assertions below check the Korean copy; jsdom reports navigator.language as en-US.
 vi.hoisted(() => Object.defineProperty(navigator, 'language', { value: 'ko-KR', configurable: true }));
@@ -178,5 +178,18 @@ describe('travel times before lodging is set', () => {
     expect(day(typed, 1).legs[1]?.minutes).toBe(30);
     const renamed = relinkLegs(typed, { ...typed, name: '강릉' }, book);
     expect(day(renamed, 1).legs[1]?.minutes).toBe(30);
+  });
+});
+
+describe('changing a place category keeps the visit in sync', () => {
+  it('a non-lodging place gains a visit, a lodging place loses it', () => {
+    let t = sampleTrip();
+    const n0 = t.visits.length;
+    t = changeCategory(t, 'skybay', 'FOOD'); // skybay is lodging (no visit) → gains one
+    expect(t.visits.filter((v) => v.placeRef === 'skybay').length).toBe(1);
+    expect(t.visits.length).toBe(n0 + 1);
+    t = changeCategory(t, 'cheolttuk', 'LODGING'); // a food place → loses its visit, off its day
+    expect(t.visits.some((v) => v.placeRef === 'cheolttuk')).toBe(false);
+    expect(t.days.every((d) => d.visitOrder.every((id) => t.visits.some((v) => v.visitId === id)))).toBe(true);
   });
 });

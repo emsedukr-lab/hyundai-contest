@@ -9,9 +9,10 @@ import { HStack, VStack } from '@astryxdesign/core/Stack';
 import { Switch } from '@astryxdesign/core/Switch';
 import { Text } from '@astryxdesign/core/Text';
 import { TimeInput } from '@astryxdesign/core/TimeInput';
+import { useState } from 'react';
 import type { OpeningHours, Place, Trip, Visit } from '@tteonaljido/shared';
 import { t } from '../lib/i18n';
-import { removePlace, updatePlace, updateVisit } from '../lib/trips';
+import { changeCategory, removePlace, updatePlace, updateVisit } from '../lib/trips';
 import { CATEGORY_OPTIONS } from './PlaceSearch';
 
 type ISOTime = Parameters<NonNullable<Parameters<typeof TimeInput>[0]['onChange']>>[0];
@@ -25,6 +26,7 @@ export function VisitDialog({ plan, placeRef, onChange, onClose }: { plan: Trip;
   const place = plan.places.find((p) => p.placeRef === placeRef);
   const visit = plan.visits.find((v) => v.placeRef === placeRef);
   if (!place) return null;
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const setVisit = (patch: Partial<Visit>) => visit && onChange(updateVisit(plan, visit.visitId, patch));
   const setPlace = (patch: Partial<Place>) => onChange(updatePlace(plan, place.placeRef, patch));
   const hours = place.hours;
@@ -42,7 +44,7 @@ export function VisitDialog({ plan, placeRef, onChange, onClose }: { plan: Trip;
       <DialogHeader title={place.name} subtitle={place.address} onOpenChange={(o) => !o && onClose()} />
       <VStack gap={4}>
         <FormLayout>
-          <Selector label={t('common.type')} options={CATEGORY_OPTIONS} value={place.category} onChange={(v) => setPlace({ category: v as Place['category'] })} />
+          <Selector label={t('common.type')} options={CATEGORY_OPTIONS} value={place.category} onChange={(v) => onChange(changeCategory(plan, place.placeRef, v as Place['category']))} />
           {visit ? (
             <>
               <NumberInput label={t('visit.stay')} value={visit.stayMinutes} onChange={(v) => setVisit({ stayMinutes: Math.max(0, Math.min(720, Math.round(v))) })} step={15} isIntegerOnly />
@@ -101,17 +103,29 @@ export function VisitDialog({ plan, placeRef, onChange, onClose }: { plan: Trip;
             </CheckboxList>
           )}
         </FormLayout>
-        <HStack gap={2} hAlign="between">
-          <Button
-            label={t('visit.delete')}
-            variant="destructive"
-            onClick={() => {
-              onChange(removePlace(plan, place.placeRef));
-              onClose();
-            }}
-          />
-          <Button label={t('common.close')} variant="primary" onClick={onClose} />
-        </HStack>
+        {confirmDelete ? (
+          <VStack gap={2}>
+            <Text type="supporting" color="secondary">
+              {visit?.fixed ? t('visit.delete.confirmFixed', { time: visit.fixed.time }) : t('visit.delete.confirm')}
+            </Text>
+            <HStack gap={2} hAlign="between">
+              <Button
+                label={t('visit.delete')}
+                variant="destructive"
+                onClick={() => {
+                  onChange(removePlace(plan, place.placeRef));
+                  onClose();
+                }}
+              />
+              <Button label={t('common.cancel')} variant="secondary" onClick={() => setConfirmDelete(false)} />
+            </HStack>
+          </VStack>
+        ) : (
+          <HStack gap={2} hAlign="between">
+            <Button label={t('visit.delete')} variant="destructive" onClick={() => setConfirmDelete(true)} />
+            <Button label={t('common.close')} variant="primary" onClick={onClose} />
+          </HStack>
+        )}
       </VStack>
     </Dialog>
   );

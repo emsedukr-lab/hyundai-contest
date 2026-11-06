@@ -40,6 +40,7 @@ const ERROR_TEXT: Record<string, string> = {
   APPLYING: t('connect.error.applying'),
   INVALID_STATE: t('connect.error.invalidState'),
   PAYLOAD_TOO_LARGE: t('connect.error.tooLarge'),
+  INVALID_LOCAL: t('connect.error.invalidLocal'),
 };
 
 const RESULT_TEXT: Record<string, string> = {
@@ -94,6 +95,7 @@ export function ConnectPage() {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [view, setView] = useState<SessionView | null>(null);
+  const [dead, setDead] = useState(false); // the session is gone (404/401): stop polling
   const scanSecret = useRef<string | null>(null);
 
   const doc = useMemo(() => docs.find((d) => d.tripId === picked) ?? null, [docs, picked]);
@@ -141,8 +143,8 @@ export function ConnectPage() {
       setErr(null);
       if (isTerminal(v.state)) await finish(rec, `${v.state}:${v.resultCode ?? v.expireReason ?? v.cancelReason ?? ''}`);
     } catch (e) {
-      if (e instanceof ApiError && e.code === 'NOT_FOUND') {
-        setView((prev) => prev ?? null);
+      if (e instanceof ApiError && (e.code === 'NOT_FOUND' || e.code === 'UNAUTHORIZED')) {
+        setDead(true); // the session is gone or no longer ours; there is nothing left to poll
         setErr(t('connect.error.recordGone'));
         await pairings.remove(rec.sid);
       } else fail(e);
@@ -151,12 +153,17 @@ export function ConnectPage() {
 
   // Poll only while the page is visible and the session can still change.
   useEffect(() => {
-    if (!rec?.mobileToken || stage === 'intro' || stage === 'loading') return;
+    if (!rec?.mobileToken || dead || stage === 'intro' || stage === 'loading') return;
     if (view && isTerminal(view.state)) return;
     void refresh();
     const t = window.setInterval(() => document.visibilityState === 'visible' && void refresh(), 2000);
     return () => window.clearInterval(t);
-  }, [rec, stage, view?.state, refresh]);
+  }, [rec, stage, view?.state, dead, refresh]);
+
+  // The car cancelled or the session expired while the user was still choosing: show the real outcome, don't let them send into a dead session.
+  useEffect(() => {
+    if (view && isTerminal(view.state) && stage !== 'status') setStage('status');
+  }, [view?.state]);
 
   const doClaim = async () => {
     if (!rec || !scanSecret.current) return;
