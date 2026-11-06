@@ -9,19 +9,36 @@ import { List, ListItem } from '@astryxdesign/core/List';
 import { HStack, VStack } from '@astryxdesign/core/Stack';
 import { Heading, Text } from '@astryxdesign/core/Text';
 import { sampleTrip, type Trip } from '@tteonaljido/shared';
-import { trips } from '../lib/db';
-import { periodLabel } from '../lib/format';
+import { sendLog, trips, type SendLogEntry } from '../lib/db';
+import { dateLabel, periodLabel } from '../lib/format';
 import { t } from '../lib/i18n';
 import { navigate } from '../lib/router';
 import { newDoc, nightsLabel, nowIso, unassignedVisits, type TripDoc } from '../lib/trips';
 
 export function HomePage() {
   const [docs, setDocs] = useState<TripDoc[] | null>(null);
+  const [lastSends, setLastSends] = useState<Record<string, SendLogEntry>>({});
   const [message, setMessage] = useState<string | null>(null);
   const [showImport, setShowImport] = useState(false);
 
-  const reload = () => trips.all().then(setDocs);
+  const reload = async () => {
+    const all = await trips.all();
+    setDocs(all);
+    // The most recent send per trip, so a card can show "last sent vN · date".
+    const latest: Record<string, SendLogEntry> = {};
+    for (const d of all) {
+      const log = await sendLog.forTrip(d.tripId);
+      const newest = log.reduce<SendLogEntry | null>((a, b) => (a && a.at >= b.at ? a : b), null);
+      if (newest) latest[d.tripId] = newest;
+    }
+    setLastSends(latest);
+  };
   useEffect(() => void reload(), []);
+
+  const localDate = (at: number) => {
+    const d = new Date(at);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  };
 
   const addSample = async () => {
     const plan: Trip = { ...sampleTrip(nowIso()), tripId: crypto.randomUUID() };
@@ -90,7 +107,10 @@ export function HomePage() {
                   <ListItem
                     key={d.tripId}
                     label={d.plan.name}
-                    description={t('common.tripSummary', { period: periodLabel(d.plan.startDate, d.plan.endDate), nights: nightsLabel(d.plan), places: d.plan.places.length })}
+                    description={
+                      t('common.tripSummary', { period: periodLabel(d.plan.startDate, d.plan.endDate), nights: nightsLabel(d.plan), places: d.plan.places.length }) +
+                      (lastSends[d.tripId] ? ` · ${t('home.lastSend', { version: lastSends[d.tripId].revision, date: dateLabel(localDate(lastSends[d.tripId].at)) })}` : '')
+                    }
                     endContent={
                       <HStack gap={1}>
                         {unassignedVisits(d.plan).length > 0 && <Badge variant="warning" label={t('home.unassignedBadge', { n: unassignedVisits(d.plan).length })} />}

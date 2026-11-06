@@ -358,6 +358,18 @@ export function ConnectPage() {
                 {t('connect.approve.targetValue', { code: rec.confirmCode ? codeLabel(rec.confirmCode) : '', version: rec.carAppVersion ?? '' })}
               </MetadataListItem>
             </MetadataList>
+            {(() => {
+              // The conflicts the car would also flag — shown once more right before sending, so nothing surprises on arrival.
+              const warnings = planWarnings(doc.plan, doc.home).filter((w) => w.level === 'warning');
+              return warnings.length === 0 ? null : (
+                <VStack gap={1}>
+                  <Text type="label">{t('connect.approve.conflicts', { n: warnings.length })}</Text>
+                  {warnings.map((w, n) => (
+                    <Banner key={n} status="warning" title={w.text} />
+                  ))}
+                </VStack>
+              );
+            })()}
           </VStack>
         ) : null;
       case 'status':

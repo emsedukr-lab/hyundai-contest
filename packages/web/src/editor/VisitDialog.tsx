@@ -1,5 +1,7 @@
 import { Button } from '@astryxdesign/core/Button';
+import type { ISODateString } from '@astryxdesign/core/Calendar';
 import { CheckboxList, CheckboxListItem } from '@astryxdesign/core/CheckboxList';
+import { DateInput } from '@astryxdesign/core/DateInput';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
 import { NumberInput } from '@astryxdesign/core/NumberInput';
@@ -9,8 +11,10 @@ import { HStack, VStack } from '@astryxdesign/core/Stack';
 import { Switch } from '@astryxdesign/core/Switch';
 import { Text } from '@astryxdesign/core/Text';
 import { TimeInput } from '@astryxdesign/core/TimeInput';
+import { Token } from '@astryxdesign/core/Token';
 import { useState } from 'react';
 import type { OpeningHours, Place, Trip, Visit } from '@tteonaljido/shared';
+import { dateLabel } from '../lib/format';
 import { t } from '../lib/i18n';
 import { changeCategory, removePlace, updatePlace, updateVisit } from '../lib/trips';
 import { CATEGORY_OPTIONS } from './PlaceSearch';
@@ -27,10 +31,14 @@ export function VisitDialog({ plan, placeRef, onChange, onClose }: { plan: Trip;
   const visit = plan.visits.find((v) => v.placeRef === placeRef);
   if (!place) return null;
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [pickDate, setPickDate] = useState<ISODateString | undefined>(undefined);
   const setVisit = (patch: Partial<Visit>) => visit && onChange(updateVisit(plan, visit.visitId, patch));
   const setPlace = (patch: Partial<Place>) => onChange(updatePlace(plan, place.placeRef, patch));
   const hours = place.hours;
   const daily = hours.status === 'USER_ENTERED' ? hours.weekly[0] : null;
+  const closedDates = hours.status === 'USER_ENTERED' ? hours.closedDates : [];
+  // Keeps the weekly hours; only the closed-date list changes (deduped, sorted, capped as the schema allows).
+  const setClosedDates = (dates: string[]) => hours.status === 'USER_ENTERED' && setPlace({ hours: { ...hours, closedDates: [...new Set(dates)].sort().slice(0, 31) } });
   // One opening time for every open weekday; days left unticked are closed (the car flags a visit on them).
   const openDays = hours.status === 'USER_ENTERED' ? hours.weekly.map((w) => String(w.weekday)) : ALL_DAYS;
   const setHours = (open: string, close: string, days: string[]) => {
@@ -101,6 +109,30 @@ export function VisitDialog({ plan, placeRef, onChange, onClose }: { plan: Trip;
                 <CheckboxListItem key={key} value={ALL_DAYS[i]} label={t(key)} />
               ))}
             </CheckboxList>
+          )}
+          {daily && (
+            <VStack gap={2}>
+              <DateInput
+                label={t('visit.closedDates')}
+                description={t('visit.closedDates.detail')}
+                value={pickDate}
+                min={plan.startDate as ISODateString}
+                max={plan.endDate as ISODateString}
+                isOptional
+                hasClear
+                onChange={(v) => {
+                  if (v && closedDates.length < 31) setClosedDates([...closedDates, v]);
+                  setPickDate(undefined);
+                }}
+              />
+              {closedDates.length > 0 && (
+                <HStack gap={1} wrap="wrap">
+                  {closedDates.map((d) => (
+                    <Token key={d} label={dateLabel(d)} onRemove={() => setClosedDates(closedDates.filter((x) => x !== d))} />
+                  ))}
+                </HStack>
+              )}
+            </VStack>
           )}
         </FormLayout>
         {confirmDelete ? (

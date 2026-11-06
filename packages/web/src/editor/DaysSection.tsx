@@ -98,6 +98,8 @@ export function DaysSection({ plan, onChange, onOpenPlace, onError }: { plan: Tr
                   <Text type="label">{`${k + 1}. ${p.name}`}</Text>
                   {v.fixed && <Badge variant="info" label={t('common.fixedAt', { time: v.fixed.time })} />}
                   {v.importance === 'MUST' && <Badge variant="warning" label={t('common.must')} />}
+                  {!v.fixed && !v.timeFlexible && <Badge variant="neutral" label={t('days.timeFirm')} />}
+                  {!v.dateFlexible && <Badge variant="neutral" label={t('days.dateFirm')} />}
                   {conflicts.some((x) => x.visitId === id) && <Badge variant="error" label={t('days.conflict')} />}
                 </HStack>
                 <Text type="supporting">{timeLine(id)}</Text>
