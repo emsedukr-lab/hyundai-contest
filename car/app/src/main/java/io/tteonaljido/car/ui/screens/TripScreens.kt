@@ -2,7 +2,9 @@ package io.tteonaljido.car.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
@@ -100,7 +102,8 @@ private fun tripTitle(t: LocalTrip): String = if (t.meta.copy) t.plan.name + str
 /** Emulator demo clock: always visible while on, so a recorded demo never passes for real time. */
 @Composable
 private fun DemoClockLine(now: Long) {
-    val label = java.time.Instant.ofEpochMilli(now).atZone(java.time.ZoneId.systemDefault()).let { String.format(Locale.ROOT, "%d/%d %02d:%02d", it.monthValue, it.dayOfMonth, it.hour, it.minute) }
+    // Shown in the demo's own zone (Asia/Seoul, the sample trip's zone), not the host's, so the banner matches the demo time.
+    val label = java.time.Instant.ofEpochMilli(now).atZone(java.time.ZoneId.of("Asia/Seoul")).let { String.format(Locale.ROOT, "%d/%d %02d:%02d", it.monthValue, it.dayOfMonth, it.hour, it.minute) }
     StatusLine(stringResource(R.string.demo_clock_banner, label), Tone.INFO)
 }
 
@@ -137,7 +140,7 @@ fun TripDetailScreen(vm: TripsViewModel, localId: String, drive: DriveState, dem
                 PleosButton(stringResource(R.string.delete_trip), { confirmDelete = true }, type = ButtonType.SECONDARY, size = ButtonSize.SMALL, tag = "pastDelete")
             }
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             t.plan.days.forEach { d ->
                 PleosButton(stringResource(R.string.day_n, d.dayIndex), { day = d.dayIndex }, type = if (d.dayIndex == day) ButtonType.PRIMARY else ButtonType.SECONDARY, size = ButtonSize.SMALL, tag = "day${d.dayIndex}")
             }
@@ -306,16 +309,18 @@ private fun NextCard(vm: TripsViewModel, t: LocalTrip, day: Int, live: LiveView?
         val skip = live?.projection?.skip
         skip?.let { s -> StatusLine(stringResource(R.string.skip_suggest, TripValidator.placeName(t.plan, t.plan.visits.first { it.visitId == s.visitId }.placeRef)), Tone.WARNING) }
         val skippedToday = t.plan.days[day - 1].visitOrder.filter { it in t.overlay.skipped }
-        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+        // Marking an arrival or starting from here only makes sense for the day you are on.
+        val isToday = vm.todayIndex(t) == day
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             PleosButton(stringResource(R.string.guide_next), { vm.guideNext(t.localId, day) }, enabled = step.target != null, tag = "guide")
-            (step.target as? Target.Stop)?.let { s -> PleosButton(stringResource(R.string.mark_arrived), { vm.markVisited(t.localId, s.visitId) }, type = ButtonType.SECONDARY, tag = "visited") }
-            PleosButton(stringResource(R.string.depart_here), { vm.departHere(t.localId, day) }, type = ButtonType.SECONDARY, tag = "departHere")
+            (step.target as? Target.Stop)?.let { s -> PleosButton(stringResource(R.string.mark_arrived), { vm.markVisited(t.localId, s.visitId) }, type = ButtonType.SECONDARY, enabled = isToday, tag = "visited") }
+            PleosButton(stringResource(R.string.depart_here), { vm.departHere(t.localId, day) }, type = ButtonType.SECONDARY, enabled = isToday, tag = "departHere")
         }
         if (skip != null || arrival?.visitId != null || skippedToday.isNotEmpty() || lowSoc) {
-            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 skip?.let { s -> PleosButton(stringResource(R.string.skip), { vm.skip(t.localId, s.visitId) }, size = ButtonSize.SMALL, tag = "skip") }
                 arrival?.visitId?.let { id -> PleosButton(stringResource(R.string.undo_arrival), { vm.undoVisited(t.localId, id) }, type = ButtonType.SECONDARY, size = ButtonSize.SMALL, tag = "undoArrival") }
-                skippedToday.lastOrNull()?.let { id -> PleosButton(stringResource(R.string.unskip, TripValidator.placeName(t.plan, t.plan.visits.first { it.visitId == id }.placeRef)), { vm.unskip(t.localId, id) }, type = ButtonType.SECONDARY, size = ButtonSize.SMALL, tag = "unskip") }
+                skippedToday.lastOrNull()?.let { PleosButton(stringResource(R.string.unskip_last), { vm.unskip(t.localId, it) }, type = ButtonType.SECONDARY, size = ButtonSize.SMALL, tag = "unskip") }
                 if (lowSoc) PleosButton(stringResource(R.string.nearby_chargers), vm::openChargers, type = ButtonType.SECONDARY, size = ButtonSize.SMALL, tag = "chargers")
             }
         }

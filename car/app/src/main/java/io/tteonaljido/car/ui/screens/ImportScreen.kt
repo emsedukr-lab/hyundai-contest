@@ -48,6 +48,7 @@ private val CHOICE_LABEL = mapOf(
     ImportChoice.IMPORT_NEW to R.string.choice_import,
     ImportChoice.UPDATE to R.string.choice_update,
     ImportChoice.SAVE_COPY to R.string.choice_copy,
+    ImportChoice.ADD_HOME to R.string.choice_add_home,
     ImportChoice.ACKNOWLEDGE_SAME to R.string.choice_ack,
     ImportChoice.CANCEL to R.string.choice_cancel,
 )
@@ -56,6 +57,7 @@ private val RESULT_TEXT = mapOf(
     "IMPORTED_NEW" to R.string.result_imported_new,
     "UPDATED" to R.string.result_updated,
     "SAVED_AS_COPY" to R.string.result_saved_as_copy,
+    "HOME_ADDED" to R.string.result_home_added,
     "ALREADY_IMPORTED" to R.string.result_already_imported,
     "USER_DECLINED" to R.string.result_user_declined,
 )

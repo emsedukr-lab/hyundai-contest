@@ -152,11 +152,13 @@
     <string name="choice_import">Import</string>
     <string name="choice_update">Update to new version</string>
     <string name="choice_copy">Save as new trip</string>
+    <string name="choice_add_home">Add home address</string>
     <string name="choice_ack">OK</string>
     <string name="choice_cancel">Don\'t import</string>
     <string name="result_imported_new">Imported as a new trip</string>
     <string name="result_updated">Updated the trip to the new version</string>
     <string name="result_saved_as_copy">Saved as a new trip (copy)</string>
+    <string name="result_home_added">Added the home address</string>
     <string name="result_already_imported">This version is already here · nothing changed</string>
     <string name="result_user_declined">Not imported · your phone was told</string>
     <string name="result_done">Done</string>
@@ -187,6 +189,7 @@
     <string name="change_order">Day %1$s order changed</string>
     <string name="change_lodging">Day %1$s lodging changed</string>
     <string name="change_endpoints">Start or return changed</string>
+    <string name="change_home_added">Home address added</string>
     <string name="change_details">Times or settings changed</string>
 
     <!-- Re-check findings (TripValidator.Issue codes) -->
@@ -259,4 +262,5 @@
     <string name="skip_suggest">Optional stop \'%1$s\' · skipping it keeps you on time</string>
     <string name="leg_hm">"    ↓ %1$d h %2$d min drive"</string>
     <string name="leg_navi_hm">"    ↓ %1$d h %2$d min drive (navigation estimate)"</string>
+    <string name="unskip_last">Restore skipped stop</string>
 </resources>

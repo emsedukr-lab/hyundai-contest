@@ -113,6 +113,28 @@ class TripRulesTest {
         assertEquals("ALREADY_IMPORTED", r.resultCode)
     }
 
+    @Test fun sameRevisionWithNewHomeOffersAddHomeAndFillsOnlyTheHome() {
+        val withHome = sample.copy(home = Home("서울", 375_662_952, 1_269_779_451))
+        val saved = stored.copy(overlay = CarOverlay(visited = setOf("v1")))
+        val d = ImportDecision.decide(withHome, listOf(saved))
+        assertEquals(ImportCase.SAME, d.case)
+        assertTrue(ImportChoice.ADD_HOME in d.choices)
+        assertTrue(d.changes.any { it.code == "HOME_ADDED" })
+        val r = ImportDecision.apply(ImportChoice.ADD_HOME, withHome, d, "L9", 7)
+        assertEquals("HOME_ADDED", r.resultCode)
+        assertEquals(withHome.home, r.trip!!.plan.home)
+        assertEquals(saved.overlay, r.trip!!.overlay)            // overlay untouched
+        assertEquals(saved.meta.revision, r.trip!!.meta.revision) // revision untouched
+    }
+
+    @Test fun sameRevisionWhenHomeAlreadyKnownJustAcknowledges() {
+        val withHome = sample.copy(home = Home("서울", 375_662_952, 1_269_779_451))
+        val saved = ImportDecision.apply(ImportChoice.IMPORT_NEW, withHome, ImportDecision.decide(withHome, emptyList()), "LH", 0).trip!!
+        val d = ImportDecision.decide(withHome, listOf(saved))
+        assertEquals(ImportCase.SAME, d.case)
+        assertFalse(ImportChoice.ADD_HOME in d.choices)
+    }
+
     @Test fun newerRevisionOffersUpdateCopyOrCancelAndListsChanges() {
         val newer = sample.copy(revision = 2, name = "강릉 바다 여행")
         val d = ImportDecision.decide(newer, listOf(stored))

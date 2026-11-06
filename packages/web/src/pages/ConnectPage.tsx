@@ -47,6 +47,7 @@ const RESULT_TEXT: Record<string, string> = {
   IMPORTED_NEW: t('connect.result.importedNew'),
   UPDATED: t('connect.result.updated'),
   SAVED_AS_COPY: t('connect.result.savedAsCopy'),
+  HOME_ADDED: t('connect.result.homeAdded'),
   ALREADY_IMPORTED: t('connect.result.alreadyImported'),
   USER_DECLINED: t('connect.result.userDeclined'),
   INVALID_PAYLOAD: t('connect.result.invalidPayload'),

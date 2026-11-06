@@ -54,6 +54,7 @@ private val CHANGE = mapOf(
     "ORDER" to R.string.change_order,
     "LODGING" to R.string.change_lodging,
     "ENDPOINTS" to R.string.change_endpoints,
+    "HOME_ADDED" to R.string.change_home_added,
     "DETAILS" to R.string.change_details,
 )
 

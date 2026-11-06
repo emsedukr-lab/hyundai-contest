@@ -6,7 +6,7 @@ package io.tteonaljido.trip
  */
 enum class ImportCase { NEW, SAME, NEWER, OLDER, DIVERGED }
 
-enum class ImportChoice { IMPORT_NEW, UPDATE, SAVE_COPY, ACKNOWLEDGE_SAME, CANCEL }
+enum class ImportChoice { IMPORT_NEW, UPDATE, SAVE_COPY, ACKNOWLEDGE_SAME, ADD_HOME, CANCEL }
 
 /** One line of an update summary; `text` is Korean, apps localize from `code` + `args` (strings `change_<code>`). */
 data class Change(val code: String, val text: String, val args: List<String> = emptyList())
@@ -21,8 +21,15 @@ object ImportDecision {
             ?: return Decision(ImportCase.NEW, null, listOf(ImportChoice.IMPORT_NEW, ImportChoice.CANCEL))
         val hash = PlanHash.of(incoming)
         return when {
-            incoming.revision == existing.meta.revision && hash == existing.meta.planHash ->
-                Decision(ImportCase.SAME, existing, listOf(ImportChoice.ACKNOWLEDGE_SAME))
+            incoming.revision == existing.meta.revision && hash == existing.meta.planHash -> {
+                // Home is left out of the hash, so sharing a home address later arrives as an identical resend.
+                // When the stored plan still has no home, offer to fill just that in — nothing else changes.
+                val addHome = incoming.home != null && existing.plan.home == null
+                if (addHome)
+                    Decision(ImportCase.SAME, existing, listOf(ImportChoice.ADD_HOME, ImportChoice.ACKNOWLEDGE_SAME), listOf(Change("HOME_ADDED", "집 주소 추가")))
+                else
+                    Decision(ImportCase.SAME, existing, listOf(ImportChoice.ACKNOWLEDGE_SAME))
+            }
             incoming.revision > existing.meta.revision ->
                 Decision(ImportCase.NEWER, existing, listOf(ImportChoice.UPDATE, ImportChoice.SAVE_COPY, ImportChoice.CANCEL), changes(existing.plan, incoming))
             incoming.revision < existing.meta.revision ->
@@ -42,6 +49,11 @@ object ImportDecision {
             }
             // The plan is stored exactly as sent; "copy" is metadata and screens add the suffix in the UI language.
             ImportChoice.SAVE_COPY -> Applied(LocalTrip(newId, incoming, CarOverlay(), meta(null, copy = true)), "SAVED_AS_COPY")
+            // Only the home address is filled in; the plan, overlay and hash (which excludes home) are otherwise untouched.
+            ImportChoice.ADD_HOME -> {
+                val old = decision.existing!!
+                Applied(old.copy(plan = old.plan.copy(home = incoming.home), meta = old.meta.copy(importedAt = now)), "HOME_ADDED")
+            }
             ImportChoice.ACKNOWLEDGE_SAME -> Applied(null, "ALREADY_IMPORTED")
             ImportChoice.CANCEL -> Applied(null, "USER_DECLINED")
         }

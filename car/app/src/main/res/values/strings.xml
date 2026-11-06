@@ -152,11 +152,13 @@
     <string name="choice_import">불러오기</string>
     <string name="choice_update">최신 버전으로 업데이트</string>
     <string name="choice_copy">새 여행으로 저장</string>
+    <string name="choice_add_home">집 주소 추가</string>
     <string name="choice_ack">확인</string>
     <string name="choice_cancel">불러오지 않기</string>
     <string name="result_imported_new">새 여행으로 불러왔어요</string>
     <string name="result_updated">같은 여행을 최신 버전으로 업데이트했어요</string>
     <string name="result_saved_as_copy">새 여행(사본)으로 저장했어요</string>
+    <string name="result_home_added">집 주소를 추가했어요</string>
     <string name="result_already_imported">이미 같은 버전이 있어요 · 바뀐 것은 없어요</string>
     <string name="result_user_declined">불러오지 않았어요 · 휴대폰에도 알렸어요</string>
     <string name="result_done">완료했어요</string>
@@ -187,6 +189,7 @@
     <string name="change_order">%1$s일차 순서 변경</string>
     <string name="change_lodging">%1$s일차 숙소 변경</string>
     <string name="change_endpoints">출발·귀가 설정 변경</string>
+    <string name="change_home_added">집 주소 추가</string>
     <string name="change_details">세부 시간·설정 변경</string>
 
     <!-- Re-check findings (TripValidator.Issue codes) -->
@@ -259,4 +262,5 @@
     <string name="skip_suggest">선택 일정 \'%1$s\' · 건너뛰면 예약 시각에 맞출 수 있어요</string>
     <string name="leg_hm">"    ↓ 이동 %1$d시간 %2$d분"</string>
     <string name="leg_navi_hm">"    ↓ 이동 %1$d시간 %2$d분 (내비 예상)"</string>
+    <string name="unskip_last">건너뛴 곳 되돌리기</string>
 </resources>
