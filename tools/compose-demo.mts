@@ -78,7 +78,7 @@ const frameHtml = `<style>${css}
 <div class="slot" style="left:${PHONE.x - 4}px; top:${PHONE.y - 4}px; width:${PHONE.w + 8}px; height:${PHONE.h + 8}px"></div>`;
 
 const captionHtml = (text: string) => {
-  const m = text.match(/^([①-⑩])\s*(.*)$/);
+  const m = text.match(/^([①-⑳])\s*(.*)$/);
   const badge = m ? `<b>${m[1]}</b>` : '';
   const body = (m ? m[2] : text).replace(/ · /g, '<i> · </i>');
   return `<style>${css}

@@ -47,15 +47,16 @@ interface Roi { x: number; y: number; w: number; h: number }
 interface Scene { anchor: string; until: string; title: string; sub: string; car?: Roi; phone?: { y: number; h: number }; skipStart?: number; weight?: number }
 const FULL_PHONE = { y: 0, h: 1688 };
 const SCENES: Scene[] = [
-  { anchor: '휴대폰에서 짠', until: '①', phone: FULL_PHONE, title: '여행은 휴대폰에서\n다 짰는데', sub: '차에 타면 목적지를 또 하나씩 입력?', weight: 0.8 },
-  { anchor: '①', until: '②', car: CAR_APP, title: '차 화면에 QR 한 번', sub: '주차 중에만 · 5분 동안 한 번만 쓰는 QR', skipStart: 0.5 },
-  { anchor: '②', until: '③', phone: FULL_PHONE, title: '휴대폰 카메라로 스캔', sub: '앱 설치도, 로그인도 없어요' },
-  { anchor: '③', until: '④', car: { x: 860, y: 180, w: 900, h: 360 }, phone: { y: 220, h: 600 }, title: '두 화면 코드가 같으면\n내 차 맞아요', sub: '종단간 암호화 · 서버도 내용을 볼 수 없어요' },
-  { anchor: '④', until: '⑤', phone: FULL_PHONE, title: '보낼 여행 하나만 골라요', sub: '집 주소는 기본으로 보내지 않아요', weight: 0.7 },
-  { anchor: '⑤', until: '⑦', car: CAR_APP, title: '차가 일정을 다시 검사', sub: '예약 시각 · 숙소 · 이동시간 확인 필요를 표시' },
-  { anchor: '⑦', until: '⑧', car: { x: 860, y: 170, w: 1300, h: 560 }, phone: { y: 160, h: 560 }, title: '차에서 한 번 더 승인하면 끝', sub: '휴대폰에도 바로 「적용됨」' },
-  { anchor: '⑨', until: '⑩', car: CAR_APP, title: '일차별 일정 · 숙소 ·\n다음 목적지', sub: '여행 계획은 그대로, 차에서는 보기만', weight: 0.8 },
-  { anchor: '⑩', until: '떠날지도', car: CAR_APP, title: '버튼 하나로 내비 안내', sub: '현대자동차그룹 내비게이션이 경로를 안내해요' },
+  { anchor: '휴대폰에서 짠', until: '①', phone: FULL_PHONE, title: '여행은 휴대폰에서\n다 짰는데', sub: '차에 타면 목적지를 또 하나씩 입력?', weight: 0.7 },
+  { anchor: '①', until: '②', car: CAR_APP, title: '차 화면에 QR 한 번', sub: '주차 중에만 · 5분 동안 한 번만 쓰는 QR', skipStart: 0.5, weight: 0.7 },
+  { anchor: '②', until: '③', phone: FULL_PHONE, title: '휴대폰 카메라로 스캔', sub: '앱 설치도, 로그인도 없어요', weight: 0.7 },
+  { anchor: '③', until: '④', car: { x: 860, y: 180, w: 900, h: 360 }, phone: { y: 220, h: 600 }, title: '두 화면 코드가 같으면\n내 차 맞아요', sub: '종단간 암호화 · 서버도 내용을 볼 수 없어요', weight: 0.8 },
+  { anchor: '⑤', until: '⑦', car: CAR_APP, title: '차가 일정을 다시 검사', sub: '예약 시각 · 숙소 · 이동시간 확인 필요를 표시', weight: 0.8 },
+  { anchor: '⑦', until: '⑧', car: { x: 860, y: 170, w: 1300, h: 560 }, phone: { y: 160, h: 560 }, title: '차에서 한 번 더 승인하면 끝', sub: '휴대폰에도 바로 「적용됨」', weight: 0.7 },
+  { anchor: '⑨', until: '⑩', car: CAR_APP, title: '여기서 출발하면\n내비가 시간·배터리 예상', sub: '비어 있던 이동시간이 채워져요' },
+  { anchor: '⑪', until: '⑫', car: CAR_APP, title: '버튼 하나로 내비 안내', sub: '현대자동차그룹 내비게이션이 경로를 안내해요', weight: 0.8 },
+  { anchor: '⑫', until: '⑭', car: CAR_APP, title: '늦을 것 같으면\n먼저 알려 줘요', sub: '내비 남은 시간으로 다시 계산 · 선택 일정 건너뛰기 제안' },
+  { anchor: '⑭', until: '떠날지도', car: CAR_APP, title: '도착하면 자동으로 방문 표시', sub: '내비 도착 알림 연동 (에뮬레이터는 시연 신호)', weight: 0.7 },
 ];
 
 const capAt = (prefix: string) => {
@@ -132,7 +133,7 @@ const endHtml = `<style>${css}
   .s { margin-top: 40px; font-size: 34px; color: #9aa0aa; line-height: 1.5; }
   .bar { width: 120px; height: 8px; background: #276ef1; margin: 46px auto 0; border-radius: 4px; }
 </style><div class="c"><div class="n">떠날지도</div><div class="t">휴대폰에서 짠 여행을<br>QR 한 번으로 차에</div><div class="bar"></div>
-<div class="s">Pleos Connect 차량용 앱<br>계정 연결 없음 · 주행 중엔 QR·승인 화면을 숨겨요</div></div>`;
+<div class="s">Pleos Connect 차량용 앱<br>계정 연결 없음 · 내비 남은 시간으로 예약 시각을 지켜요</div></div>`;
 
 const browser = await chromium.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true });
 const page = await browser.newPage({ viewport: { width: W, height: H } });

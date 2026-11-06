@@ -232,14 +232,31 @@ try {
   await page.getByText('차량에 이미 같은 버전이 있어요').waitFor();
   await sleep(3500);
 
-  caption('⑨ 일차별 일정·숙소와 「다음 목적지」 · 여행 수는 그대로 1개');
+  caption('⑨ 출발 전 [여기서 출발] · 내비가 현재 위치에서 예상 시간과 도착 시 배터리를 알려 주고 비어 있던 첫 구간을 채워요');
   tap(await waitFor(byTag('여행 보기'), 'open trip'));
   await waitFor(byText('다음 목적지'), 'detail');
-  await sleep(1500);
-  tap(await waitFor(byTag('day2'), 'day 2'));
+  await sleep(2500);
+  tap(await waitFor(byTag('departHere'), 'depart here'));
+  await waiting('navi estimate', () => waitFor(byText('내비 예상'), 'estimate', 20_000));
+  await sleep(4000);
+  tap(await waitFor(byTag('확인'), 'dismiss estimate'));
+  await sleep(4500);
+  sample('여기서 출발');
+
+  // Emulator-only demo clock (Settings → demo card) to the trip's day 2, 09:00; trimmed from the video as a wait.
+  await waiting('demo clock', async () => {
+    tap(await waitFor(byTag('목록'), 'to list'));
+    tap(await waitFor(byTag('settings'), 'settings'));
+    tap(await waitFor(byTag('demoClock'), 'demo clock'));
+    await sleep(800);
+    tap(await waitFor(byTag('목록'), 'back from settings'));
+    tap(await waitFor(byText('강릉 3박 4일'), 'open trip'));
+    await waitFor(byText('시연 시각'), 'demo clock line');
+  });
+  caption('⑩ 여행 당일(시연 시각 11/21 09:00) · 지금 출발하면 13:00 예약까지 여유가 얼마인지 바로 보여요');
   await sleep(4500);
   sample('여행 상세');
-  caption('⑩ 「다음 목적지 안내」 → 현대자동차그룹 내비게이션이 경로 안내를 시작해요');
+  caption('⑪ 「다음 목적지 안내」 → 현대자동차그룹 내비게이션이 경로 안내를 시작해요');
   tap(await waitFor(byTag('guide'), 'guide'));
   await sleep(2000);
   const replace = ui().find((n) => n.desc === '바꾸기');
@@ -247,12 +264,35 @@ try {
     log('replace current route');
     tap(replace);
   }
-  await sleep(7000); // the navigation may come to the front with the new route
+  await sleep(7000); // the navigation comes to the front with the new route
   sh(`am start --user 10 -n ${PKG}/.MainActivity`);
-  caption('⑩ 요청만 하고 끝내지 않고, 내비가 확정한 목적지를 확인한 뒤 「안내 시작」을 알려요');
   await waiting('navigation confirm', () => waitFor(byText('안내를 시작했어요'), 'guidance confirmed', 45_000));
-  await sleep(4500);
-  caption('떠날지도 · 한 번만 가져오고 계정 연결은 없어요 · 주행 중에는 QR·승인 화면을 숨겨요');
+  await sleep(2500);
+  tap(await waitFor(byTag('확인'), 'dismiss guide'));
+  caption('⑫ 내비 남은 시간으로 다시 계산 · 늦을 것 같으면 선택 일정 건너뛰기를 제안해요 (에뮬레이터 위치 성남 기준)');
+  await waitFor(byText('늦을 수 있어요'), 'late status', 15_000).catch(() => log('not late with the current traffic'));
+  await sleep(5500);
+  const skip = ui().find((n) => n.desc === 'skip');
+  if (skip) {
+    tap(skip);
+    caption('⑬ 건너뛰어도 계획은 그대로 · 다음 목적지가 예약 식당으로 바뀌고 언제든 되돌릴 수 있어요');
+    await sleep(5000);
+    tap(await waitFor(byTag('unskip'), 'unskip'));
+    await sleep(1500);
+  }
+  // The emulator's navigation never moves, so its arrival event is stood in for by the labelled demo signal.
+  await waiting('demo arrival', async () => {
+    tap(await waitFor(byTag('목록'), 'to list 2'));
+    tap(await waitFor(byTag('settings'), 'settings 2'));
+    tap(await waitFor(byTag('demoArrive'), 'demo arrive'));
+    await sleep(800);
+    tap(await waitFor(byTag('목록'), 'back from settings 2'));
+    tap(await waitFor(byText('강릉 3박 4일'), 'open trip 2'));
+    await waitFor(byText('시연 신호로 표시'), 'arrival note');
+  });
+  caption('⑭ 내비가 도착을 알리면 방문함으로 표시해요 · 에뮬레이터는 움직이지 않아 시연 신호로 보여 줘요');
+  await sleep(5000);
+  caption('떠날지도 · 한 번만 가져오고 계정 연결은 없어요 · 주행 중에는 다음 목적지와 상태 한 줄만 보여요');
   await sleep(5000);
 } catch (e) {
   failure = e instanceof Error ? e.message : String(e);
@@ -270,6 +310,19 @@ try {
 }
 const total = (Date.now() - t0) / 1000;
 segments.forEach((s, i) => adb('pull', s.file, `${work}car_${i}.mp4`));
+// One continuous car clip: each segment holds its last frame across the short gap before the next one starts.
+const durationOf = (f: string) => Number(execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', f]).toString().trim());
+const carClip = (() => {
+  if (segments.length === 1) return 'car_0.mp4';
+  const parts = segments.map((s, i) => {
+    const next = segments[i + 1];
+    const gap = next ? Math.max(0, next.at - (s.at + durationOf(`${work}car_${i}.mp4`))) : 0;
+    return `[${i}:v]fps=30${gap > 0 ? `,tpad=stop_mode=clone:stop_duration=${gap.toFixed(3)}` : ''}[s${i}]`;
+  });
+  const graph = `${parts.join(';')};${segments.map((_, i) => `[s${i}]`).join('')}concat=n=${segments.length}:v=1:a=0[v]`;
+  execFileSync('ffmpeg', ['-v', 'error', '-y', ...segments.flatMap((_, i) => ['-i', `${work}car_${i}.mp4`]), '-filter_complex', graph, '-map', '[v]', '-c:v', 'libx264', '-crf', '18', '-preset', 'veryfast', `${work}car_all.mp4`]);
+  return 'car_all.mp4';
+})();
 // Constant 30 fps clip: output frame n shows the latest screenshot taken by phoneStart + n/30. Built as a numbered
 // symlink sequence because concat-demuxer durations get rounded per frame and drift by seconds over a take.
 const phoneStart = phoneFrames[0].at;
@@ -280,6 +333,6 @@ for (let n = 0, j = 0; phoneStart + n / 30 < total; n++) {
   symlinkSync(`${work}${phoneFrames[j].file}`, `${work}phone_seq/${String(n).padStart(5, '0')}.jpg`);
 }
 execFileSync('ffmpeg', ['-v', 'error', '-y', '-framerate', '30', '-i', `${work}phone_seq/%05d.jpg`, '-vf', 'scale=780:1688:force_original_aspect_ratio=decrease,pad=780:1688:0:0:white', '-c:v', 'libx264', '-crf', '16', '-pix_fmt', 'yuv420p', `${work}phone.mp4`]);
-writeFileSync(`${work}timeline.json`, JSON.stringify({ failure, total, phoneStart, segments: segments.map((s, i) => ({ file: `car_${i}.mp4`, at: s.at })), captions, waits, perf }, null, 2));
+writeFileSync(`${work}timeline.json`, JSON.stringify({ failure, total, phoneStart, segments: [{ file: carClip, at: segments[0].at }], rawSegments: segments.map((s, i) => ({ file: `car_${i}.mp4`, at: s.at })), captions, waits, perf }, null, 2));
 console.log(JSON.stringify({ failure, total, perf }, null, 1));
 if (failure) process.exitCode = 1;
