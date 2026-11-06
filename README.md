@@ -49,8 +49,8 @@ adb shell am start --user 10 -n io.tteonaljido.car/.MainActivity   # 사용자 �
 자동 시험:
 
 ```sh
-npm test                                              # shared 43 · worker 12 · web 17
-(cd car && ./gradlew test)                            # Kotlin 44
+npm test                                              # shared 50 · worker 15 · web 26
+(cd car && ./gradlew test)                            # Kotlin 71
 npx tsx tools/pairing-smoke.mts http://localhost:8787 # 서버 흐름
 npx tsx tools/e2e-mobile.mts                          # Chrome 휴대폰 + 가짜 차량
 npx tsx tools/e2e-car.mts emulator-5580               # 에뮬레이터 차량 앱(dev debug) + Chrome 휴대폰
