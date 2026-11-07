@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>떠날지도 파이프라인 한 장 요약</title>
+<style>
+  @page { size: A4; margin: 0; }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  :root {
+    --ink: #17202e; --muted: #5a6472; --line: #dfe3ea;
+    --accent: #2563eb; --accent-soft: #eaf0fe; --bg-soft: #f7f8fa;
+  }
+  html, body { width: 210mm; height: 297mm; }
+  body {
+    font-family: "Apple SD Gothic Neo", "Pretendard", "Malgun Gothic", "Noto Sans KR", sans-serif;
+    color: var(--ink); background: #fff;
+    padding: 16mm 15mm 13mm;
+    display: flex; flex-direction: column;
+    line-height: 1.4; -webkit-font-smoothing: antialiased;
+  }
+  header { border-bottom: 2.5px solid var(--ink); padding-bottom: 4.5mm; margin-bottom: 6mm; }
+  .brandrow { display: flex; align-items: baseline; gap: 3.5mm; }
+  h1 { font-size: 24pt; font-weight: 800; letter-spacing: -0.02em; }
+  .pill { font-size: 9.5pt; font-weight: 700; color: var(--accent); background: var(--accent-soft);
+          padding: 1.2mm 3mm; border-radius: 99px; }
+  .tagline { font-size: 12.5pt; color: var(--ink); margin-top: 3mm; font-weight: 600; }
+  .intro { font-size: 10pt; color: var(--muted); margin-top: 1.8mm; }
+
+  .flow { display: flex; flex-direction: column; gap: 0; margin-top: 1mm; }
+  .step { display: grid; grid-template-columns: 13mm 1fr; column-gap: 5mm; position: relative; padding: 4mm 0; }
+  .step:not(:last-child)::after {
+    content: ""; position: absolute; left: 6.5mm; top: 15mm; bottom: -1mm;
+    width: 2px; background: var(--line);
+  }
+  .num {
+    width: 13mm; height: 13mm; border-radius: 50%;
+    background: var(--accent); color: #fff; font-size: 15pt; font-weight: 800;
+    display: flex; align-items: center; justify-content: center; z-index: 1;
+  }
+  .step-title { font-size: 13.5pt; font-weight: 800; letter-spacing: -0.01em; }
+  .step-desc { font-size: 10.3pt; color: var(--muted); margin-top: 1.4mm; }
+  .step-desc b { color: var(--ink); font-weight: 700; }
+
+  .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 5mm; margin-top: 8mm; }
+  .card { background: var(--bg-soft); border: 1px solid var(--line); border-radius: 3mm; padding: 4.5mm 5mm; }
+  .card h3 { font-size: 11pt; font-weight: 800; color: var(--accent); margin-bottom: 2mm; }
+  .card p { font-size: 9.6pt; color: var(--muted); line-height: 1.45; }
+
+  footer { margin-top: auto; padding-top: 4mm; border-top: 1px solid var(--line);
+           font-size: 8.3pt; color: #8a93a0; display: flex; justify-content: space-between; }
+</style>
+</head>
+<body>
+  <header>
+    <div class="brandrow">
+      <h1>떠날지도 — 어떻게 작동하나요?</h1>
+      <span class="pill">한 장 요약</span>
+    </div>
+    <div class="tagline">휴대폰에서 짠 여행을, 차에 타서 QR 한 번으로 안전하게 옮기고, 내비가 하루를 챙겨 줍니다.</div>
+    <div class="intro">앱 설치도, 계정 가입도 없습니다. 실제로는 아래 여섯 단계로 흘러갑니다.</div>
+  </header>
+
+  <div class="flow">
+    <div class="step">
+      <div class="num">1</div>
+      <div>
+        <div class="step-title">휴대폰에서 여행을 짜요</div>
+        <div class="step-desc">브라우저로 갈 곳·순서·예약 시각·숙소·문 여는 시간을 정합니다. 만든 여행은 <b>휴대폰 안에만</b> 저장돼요.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="num">2</div>
+      <div>
+        <div class="step-title">차 화면에 QR이 떠요</div>
+        <div class="step-desc">주차한 채 '불러오기'를 누르면 일회용 QR이 나옵니다(<b>5분 동안 한 번</b>). QR 자체엔 여행 내용도 개인정보도 없어요.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="num">3</div>
+      <div>
+        <div class="step-title">스캔하고 숫자를 맞춰요</div>
+        <div class="step-desc">휴대폰 카메라로 QR을 찍고, 두 화면에 뜬 <b>6자리 숫자가 같은지</b> 봅니다. 엉뚱한 차로 가거나 누가 가로채는 걸 막는 단계예요.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="num">4</div>
+      <div>
+        <div class="step-title">잠가서 보내요</div>
+        <div class="step-desc">고른 여행 하나만 내용을 <b>자물쇠로 잠가(암호화)</b> 보냅니다. 중간을 거치는 서버도 내용을 열어볼 수 없어요. 집 주소는 동의할 때만 함께 보내요.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="num">5</div>
+      <div>
+        <div class="step-title">차가 확인하고 불러와요</div>
+        <div class="step-desc">차가 일정을 다시 점검합니다 — 예약에 늦지 않는지, 이동시간이 빠지지 않았는지, 문 여는 시간인지. <b>사람이 한 번 더 승인</b>해야 들어오고, 원래 계획은 바꾸지 않아요.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="num">6</div>
+      <div>
+        <div class="step-title">내비가 하루를 챙겨요</div>
+        <div class="step-desc">버튼 한 번으로 다음 장소를 내비가 안내합니다. 남은 시간으로 <b>"예약까지 여유 46분"</b>처럼 알려 주고, 늦을 것 같으면 덜 중요한 곳을 건너뛰자고 제안해요. 도착하면 자동으로 체크됩니다.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cards">
+    <div class="card">
+      <h3>운전 중에는 더 단순하게</h3>
+      <p>차가 움직이면 화면이 '다음 목적지'와 상태 한 줄로 바뀌고 조작이 막혀요. 주차하면 하던 일이 이어집니다.</p>
+    </div>
+    <div class="card">
+      <h3>개인정보는 최소한으로</h3>
+      <p>계정이 없어요. 여행은 '한 번만' 옮기고, 전달이 끝나면 서버에서 곧바로 지워집니다. 휴대폰과 차가 계속 연결되지도 않아요.</p>
+    </div>
+  </div>
+
+  <footer>
+    <span>떠날지도 · 현대자동차그룹 차량용 앱 공모전 출품작</span>
+    <span>작동 원리 한 장 요약</span>
+  </footer>
+</body>
+</html>
