@@ -108,6 +108,7 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("com.google.zxing:core:3.5.4")
     implementation("ai.pleos.playground:NaviHelper:3.0.5")
+    implementation("ai.pleos.playground:Vehicle:2.3.2") // read-only energy/fuel/range (CAR_ENERGY); phase-2 adapter, real-car verified
 
     testImplementation("junit:junit:4.13.2")
     testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")

@@ -76,6 +76,8 @@ class TripsViewModel(
     clockOffset: StateFlow<Long>,
     private val homeLabel: String,
     private val bookmarkLabel: String,
+    /** Real-car energy reading (Vehicle SDK adapter); null off-car (emulator demo seed drives it instead). */
+    private val energyReader: (suspend () -> EnergyState?)? = null,
 ) : ViewModel() {
     private val _trips = MutableStateFlow<List<LocalTrip>>(emptyList())
     val trips: StateFlow<List<LocalTrip>> = _trips
@@ -112,6 +114,16 @@ class TripsViewModel(
                 _now.value = nowMs()
                 // Push events cover route start/stop; while guiding, refresh the remaining time as a fallback.
                 if (navi.live.value?.guiding == true) navi.refreshLive()
+            }
+        }
+        // Real-car only: poll the Vehicle SDK for energy (SOC/fuel/range) to drive charge/refuel advice. Off-car this is
+        // null, so the emulator demo seed is left untouched.
+        energyReader?.let { reader ->
+            viewModelScope.launch {
+                while (true) {
+                    if (visible) runCatching { setEnergy(reader()) }
+                    delay(60_000)
+                }
             }
         }
     }

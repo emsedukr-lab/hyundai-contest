@@ -17,6 +17,7 @@ import io.tteonaljido.car.storage.SecureBox
 import io.tteonaljido.car.storage.SessionStore
 import io.tteonaljido.car.storage.TripRepository
 import io.tteonaljido.car.storage.TripStore
+import io.tteonaljido.car.vehicle.PleosEnergySignals
 import io.tteonaljido.trip.LocalTrip
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -40,6 +41,10 @@ class Container(private val app: Application) : TripStore {
     val sessions = SessionStore(app.filesDir, box)
     val client = PairingClient(BuildConfig.API_BASE)
     val navi: NaviGateway = if (isAutomotive) PleosNaviGateway(app) else OfflineNaviGateway()
+
+    /** Read-only energy (SOC/fuel/range) for charge·refuel advice; only on a real car (the emulator can't inject signals). */
+    private val energySignals: PleosEnergySignals? = if (isAutomotive) PleosEnergySignals(app).also { it.start() } else null
+    suspend fun readEnergy(): EnergyState? = energySignals?.read()
 
     /** Demo mode (emulator only) uses a separate store and an in-app driving switch. */
     val demo = MutableStateFlow(false)

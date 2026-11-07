@@ -47,7 +47,7 @@ class MainActivity : ComponentActivity() {
                 val autoArrive by c.autoArrive.collectAsState()
                 val trips: TripsViewModel = viewModel(
                     key = "trips-$demo",
-                    factory = viewModelFactory { initializer { TripsViewModel(c::trips, c::updateTrip, c::deleteTrip, c::deleteAllTrips, c.navi, c.tracker, c::nowMs, c.clockOffset, getString(R.string.home), getString(R.string.home_bookmark)) } },
+                    factory = viewModelFactory { initializer { TripsViewModel(c::trips, c::updateTrip, c::deleteTrip, c::deleteAllTrips, c.navi, c.tracker, c::nowMs, c.clockOffset, getString(R.string.home), getString(R.string.home_bookmark), energyReader = if (c.isAutomotive) suspend { c.readEnergy() } else null) } },
                 )
                 tripsVm = trips
                 val import: ImportViewModel = viewModel(

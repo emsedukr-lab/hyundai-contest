@@ -3,6 +3,8 @@
     <uses-permission android:name="pleos.car.permission.NAVI_ROUTE" />
     <uses-permission android:name="pleos.car.permission.NAVI_ROUTE_SEARCH" />
     <uses-permission android:name="pleos.car.permission.NAVI_CUSTOM_MAP" />
+    <!-- 조회 전용: EV SOC·연료%·주행가능거리 읽기(충전·주유 권장). 제어 권한(CONTROL_CAR_*)은 선언하지 않음. -->
+    <uses-permission android:name="pleos.car.permission.CAR_ENERGY" />
     <uses-feature android:name="android.hardware.type.automotive" android:required="false" />
     <application
         android:name=".App"
