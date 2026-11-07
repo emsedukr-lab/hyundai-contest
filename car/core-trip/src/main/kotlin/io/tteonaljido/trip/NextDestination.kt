@@ -20,11 +20,21 @@ object NextDestination {
         return if (n in 1..trip.days.size) n.toInt() else null
     }
 
-    /** Today's remaining stops in guidance order: unvisited and unskipped, with deferred stops moved to the tail (stable). */
-    fun upcoming(trip: Trip, overlay: CarOverlay, dayIndex: Int): List<String> =
-        trip.days[dayIndex - 1].visitOrder
-            .filter { it !in overlay.visited && it !in overlay.skipped }
+    /**
+     * Today's remaining stops in guidance order: unvisited and unskipped, with "do later today" stops at the tail. A stop
+     * moved to another day ([CarOverlay.deferredTo]) drops out of its own day; a stop moved INTO this day is appended at
+     * the tail (its time is unknown — no plan leg leads to it). With no deferral this is just the plan's order.
+     */
+    fun upcoming(trip: Trip, overlay: CarOverlay, dayIndex: Int): List<String> {
+        val own = trip.days[dayIndex - 1].visitOrder
+            .filter { it !in overlay.visited && it !in overlay.skipped && it !in overlay.deferredTo }
             .sortedBy { if (it in overlay.deferred) 1 else 0 }
+        val valid = trip.visits.mapTo(HashSet()) { it.visitId }
+        val injected = overlay.deferredTo
+            .filter { (id, d) -> d == dayIndex && id !in overlay.visited && id !in overlay.skipped && id in valid }
+            .keys.sorted()
+        return own + injected
+    }
 
     /** First stop of the given day neither visited nor skipped (deferred stops go to the tail); then that night's lodging, or the final destination on the last day. */
     fun of(trip: Trip, overlay: CarOverlay, dayIndex: Int): NextStep {

@@ -272,6 +272,9 @@
     <string name="defer_back">Do later</string>
     <string name="undefer_last">Restore moved stop</string>
     <string name="stop_deferred">" · Moved later"</string>
+    <string name="defer_to_day">Move to day %1$s</string>
+    <string name="undefer_day">Undo day move</string>
+    <string name="stop_deferred_to">" · Moved to day %1$s"</string>
     <string name="guide_today">Send today\'s route</string>
     <string name="guide_today_working">Sending %1$s stops to the navigation…</string>
     <string name="guide_today_done">Loaded %1$s stops into the navigation</string>

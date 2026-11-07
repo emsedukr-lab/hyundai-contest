@@ -59,14 +59,20 @@ object LiveProjection {
         val order = day.visitOrder
         val visits = trip.visits.associateBy { it.visitId }
         // Deferred stops stay in the plan but are re-timed at the tail of today's remaining order (stable sort keeps
-        // the plan's relative order within each group). With no deferral this is a no-op, so existing behaviour is unchanged.
+        // the plan's relative order within each group). A stop moved to another day drops out here; a stop moved INTO
+        // this day is appended as [injected] below. With no deferral this is a no-op, so existing behaviour is unchanged.
         val remaining = order.indices
-            .filter { order[it] !in overlay.visited && order[it] !in overlay.skipped }
+            .filter { order[it] !in overlay.visited && order[it] !in overlay.skipped && order[it] !in overlay.deferredTo }
             .sortedBy { if (order[it] in overlay.deferred) 1 else 0 }
+        // Stops moved into this day from another day (deferredTo → this dayIndex): shown at the tail, time unknown
+        // (no plan leg reaches them), ordered deterministically by visitId.
+        val injected = overlay.deferredTo
+            .filter { (id, d) -> d == dayIndex && id !in overlay.visited && id !in overlay.skipped && visits.containsKey(id) }
+            .keys.sorted().map { visits.getValue(it) }
         val firstIdx = remaining.firstOrNull() ?: order.size
         // Position the car leaves from: the last visited stop before the next one (−1 = the day's start).
         val from = order.indices.lastOrNull { it < firstIdx && order[it] in overlay.visited } ?: -1
-        var approximate = false
+        var approximate = injected.isNotEmpty()
         // Plan legs from position a to position b (stop indices; −1 start, order.size end), through any stops in between.
         // A deferred stop can sit at a lower index than the stop before it in the re-timed order (b ≤ a); the plan has no
         // leg for that jump, so the chain is reported as unknown from there (honest "확인 필요" for the later, moved stops).
@@ -77,7 +83,9 @@ object LiveProjection {
             if (b - a > 1) approximate = true
             return sum
         }
-        val first = naviRemaining ?: hereToNext ?: legs(from, firstIdx)
+        // When the only stops left are injected (moved in from another day), the next stop has no plan leg → no "first".
+        // Otherwise unchanged: with own stops it is the leg to the next one; with none left at all it is the leg to the day's end.
+        val first = if (remaining.isEmpty() && injected.isNotEmpty()) null else (naviRemaining ?: hereToNext ?: legs(from, firstIdx))
         val basis = when {
             naviRemaining != null -> Basis.NAVI_LIVE
             hereToNext != null -> Basis.FROM_HERE
@@ -86,14 +94,16 @@ object LiveProjection {
         }
         val endBy = day.endBy?.let(TripValidator::minutes)
 
-        if (remaining.isEmpty()) {
+        if (remaining.isEmpty() && injected.isEmpty()) {
             val end = first?.let { now + it }
             val slack = if (endBy != null && end != null) endBy - end else null
             val kind = if (endBy != null) DeadlineKind.END_BY else DeadlineKind.NONE
             return Projection(dayIndex, null, end, basis, emptyList(), null, null, end, endBy, kind, slack, status(endBy != null, slack), approximate, null)
         }
 
-        val items = remaining.mapIndexed { i, idx -> visits.getValue(order[idx]) to (if (i == 0) first else legs(remaining[i - 1], idx)) }
+        // This day's own stops (plan legs) followed by any injected cross-day stops (unknown legs, at the tail).
+        val items = remaining.mapIndexed { i, idx -> visits.getValue(order[idx]) to (if (i == 0) first else legs(remaining[i - 1], idx)) } +
+            injected.map { it to null as Int? }
         // Measured parking buffer / stay tendency (car-only input). Empty records → buffer 0 and mult 1.0, so the plan's
         // own timeline is unchanged; it activates once this trip has measurements. Never edits the plan.
         val places = trip.places.associateBy { it.placeRef }
@@ -102,9 +112,10 @@ object LiveProjection {
         val buffers: List<Int> = if (overlay.visitRecords.isEmpty()) List(items.size) { 0 }
             else items.map { (v, _) -> ParkingBufferPolicy.buffer(overlay.visitRecords, places[v.placeRef]?.category ?: PlaceCategory.OTHER, isWeekend, beforeFixed = v.fixed != null) }
         val stops = TripValidator.walk(now, items, { buffers.getOrElse(it) { 0 } }, stayMult)
-        val tail = legs(remaining.last(), order.size)
+        val tail = if (remaining.isEmpty()) null else legs(remaining.last(), order.size)
         val endExpected = stops.last().end?.let { e -> tail?.let { e + it } }
-        val plannedArrive = TripValidator.timeline(trip, dayIndex, overlay).firstOrNull { it.visitId == order[firstIdx] }?.arrive
+        val nextVisitId = items.firstOrNull()?.first?.visitId
+        val plannedArrive = if (remaining.isEmpty()) null else TripValidator.timeline(trip, dayIndex, overlay).firstOrNull { it.visitId == order[firstIdx] }?.arrive
         val vsPlan = stops.first().arrive?.let { a -> plannedArrive?.let { a - it } }
 
         val fixedPos = items.indexOfFirst { it.first.fixed != null }
@@ -144,7 +155,7 @@ object LiveProjection {
         }
         val skip = lateCand?.let { SkipSuggestion(it.first, it.second) }
         val defer = lateCand?.let { DeferSuggestion(it.first, it.second) }
-        return Projection(dayIndex, order[firstIdx], stops.first().arrive, basis, stops, vsPlan, fixed, endExpected, endBy, deadlineKind, deadlineSlack, status, approximate, skip, defer)
+        return Projection(dayIndex, nextVisitId, stops.first().arrive, basis, stops, vsPlan, fixed, endExpected, endBy, deadlineKind, deadlineSlack, status, approximate, skip, defer)
     }
 
     private fun status(hasDeadline: Boolean, slack: Int?): Punctuality = when {

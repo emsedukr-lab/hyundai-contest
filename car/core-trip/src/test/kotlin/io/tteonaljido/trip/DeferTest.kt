@@ -64,6 +64,28 @@ class DeferTest {
         assertEquals(listOf("v6", "v7"), NextDestination.upcoming(sample, CarOverlay(visited = setOf("v4"), skipped = setOf("v5")), 2))
     }
 
+    @Test fun deferToAnotherDayLeavesTheOriginDayAndJoinsTheTargetDay() {
+        val o = CarOverlay(deferredTo = mapOf("v4" to 3))
+        // Origin day (2): v4 is gone, the reservation v5 leads.
+        val d2 = LiveProjection.project(sample, o, 2, m("09:00"))
+        assertEquals("v5", d2.nextVisitId)
+        assertFalse(d2.stops.any { it.visitId == "v4" })
+        assertFalse("v4" in NextDestination.upcoming(sample, o, 2))
+        // Target day (3): v4 shows at the tail, with unknown time (no plan leg reaches it).
+        val d3 = LiveProjection.project(sample, o, 3, m("09:00"))
+        assertEquals("v4", d3.stops.last().visitId)
+        assertNull(d3.stops.last().arrive)
+        assertTrue(d3.approximate)
+        assertEquals("v4", NextDestination.upcoming(sample, o, 3).last())
+    }
+
+    @Test fun undoneDayMoveRestoresTheOriginDay() {
+        val moved = CarOverlay(deferredTo = mapOf("v4" to 3))
+        val restored = moved.copy(deferredTo = emptyMap())
+        assertEquals("v4", NextDestination.upcoming(sample, restored, 2).first()) // back on day 2 in its place
+        assertFalse("v4" in NextDestination.upcoming(sample, restored, 3))
+    }
+
     @Test fun emptyDeferredLeavesTheProjectionUnchanged() {
         val base = LiveProjection.project(lakeOptional, CarOverlay(), 2, m("08:00"), naviRemaining = 134)
         val same = LiveProjection.project(lakeOptional, CarOverlay(deferred = emptySet()), 2, m("08:00"), naviRemaining = 134)

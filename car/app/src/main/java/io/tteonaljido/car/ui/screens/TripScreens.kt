@@ -281,6 +281,7 @@ private fun DayPlan(t: LocalTrip, day: Int, live: LiveView?) {
                     id in t.overlay.skipped -> stringResource(R.string.stop_skipped)
                     id in t.overlay.visited && visitedAt != null -> stringResource(R.string.stop_visited_at, visitedAt)
                     id in t.overlay.visited -> stringResource(R.string.stop_visited)
+                    id in t.overlay.deferredTo -> stringResource(R.string.stop_deferred_to, t.overlay.deferredTo.getValue(id).toString())
                     id in t.overlay.deferred -> stringResource(R.string.stop_deferred)
                     else -> ""
                 }
@@ -338,6 +339,8 @@ private fun NextCard(vm: TripsViewModel, t: LocalTrip, day: Int, live: LiveView?
         skip?.let { s -> StatusLine(stringResource(R.string.skip_suggest, TripValidator.placeName(t.plan, t.plan.visits.first { it.visitId == s.visitId }.placeRef)), Tone.WARNING) }
         val skippedToday = t.plan.days[day - 1].visitOrder.filter { it in t.overlay.skipped }
         val deferredToday = t.plan.days[day - 1].visitOrder.filter { it in t.overlay.deferred }
+        val deferredAway = t.plan.days[day - 1].visitOrder.filter { it in t.overlay.deferredTo }
+        val nextDay = if (day < t.plan.days.size) day + 1 else null
         // Marking an arrival or starting from here only makes sense for the day you are on.
         val isToday = vm.todayIndex(t) == day
         FlowRow(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -347,13 +350,15 @@ private fun NextCard(vm: TripsViewModel, t: LocalTrip, day: Int, live: LiveView?
             PleosButton(stringResource(R.string.depart_here), { vm.departHere(t.localId, day) }, type = ButtonType.SECONDARY, enabled = isToday, tag = "departHere")
             if (t.overlay.originFor(day) != null) PleosButton(stringResource(R.string.undo_depart), { vm.undoDepartHere(t.localId, day) }, type = ButtonType.SECONDARY, tag = "undoDepart")
         }
-        if (skip != null || defer != null || arrival?.visitId != null || skippedToday.isNotEmpty() || deferredToday.isNotEmpty() || lowSoc) {
+        if (skip != null || defer != null || arrival?.visitId != null || skippedToday.isNotEmpty() || deferredToday.isNotEmpty() || deferredAway.isNotEmpty() || lowSoc) {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 skip?.let { s -> PleosButton(stringResource(R.string.skip), { vm.skip(t.localId, s.visitId) }, size = ButtonSize.SMALL, tag = "skip") }
                 defer?.let { s -> PleosButton(stringResource(R.string.defer_back), { vm.defer(t.localId, s.visitId) }, type = ButtonType.SECONDARY, size = ButtonSize.SMALL, tag = "defer") }
+                if (defer != null && nextDay != null) PleosButton(stringResource(R.string.defer_to_day, nextDay.toString()), { vm.deferToDay(t.localId, defer.visitId, nextDay) }, type = ButtonType.SECONDARY, size = ButtonSize.SMALL, tag = "deferDay")
                 arrival?.visitId?.let { id -> PleosButton(stringResource(R.string.undo_arrival), { vm.undoVisited(t.localId, id) }, type = ButtonType.SECONDARY, size = ButtonSize.SMALL, tag = "undoArrival") }
                 skippedToday.lastOrNull()?.let { PleosButton(stringResource(R.string.unskip_last), { vm.unskip(t.localId, it) }, type = ButtonType.SECONDARY, size = ButtonSize.SMALL, tag = "unskip") }
                 deferredToday.lastOrNull()?.let { PleosButton(stringResource(R.string.undefer_last), { vm.undefer(t.localId, it) }, type = ButtonType.SECONDARY, size = ButtonSize.SMALL, tag = "undefer") }
+                deferredAway.lastOrNull()?.let { PleosButton(stringResource(R.string.undefer_day), { vm.undeferDay(t.localId, it) }, type = ButtonType.SECONDARY, size = ButtonSize.SMALL, tag = "undeferDay") }
                 if (lowSoc) PleosButton(stringResource(R.string.nearby_chargers), vm::openChargers, type = ButtonType.SECONDARY, size = ButtonSize.SMALL, tag = "chargers")
             }
         }
