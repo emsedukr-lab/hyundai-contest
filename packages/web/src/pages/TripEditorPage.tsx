@@ -19,6 +19,7 @@ import { TimeInput } from '@astryxdesign/core/TimeInput';
 import type { Endpoint, Home, Trip, Visit } from '@tteonaljido/shared';
 import { DaysSection } from '../editor/DaysSection';
 import { CATEGORY_LABEL, PlaceSearch } from '../editor/PlaceSearch';
+import { RecommendDialog } from '../editor/RecommendDialog';
 import { VisitDialog } from '../editor/VisitDialog';
 import { trips } from '../lib/db';
 import { t } from '../lib/i18n';
@@ -40,6 +41,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [recommending, setRecommending] = useState(false);
   /** Travel times typed this session by pair of places, so reordering does not throw them away. */
   const book = useRef<LegBook>(new Map());
 
@@ -198,6 +200,9 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
             </VStack>
 
             <Divider />
+            <HStack hAlign="end">
+              <Button label={t('recommend.button')} variant="secondary" size="sm" onClick={() => setRecommending(true)} />
+            </HStack>
             <DaysSection plan={plan} onChange={edit} onOpenPlace={setOpenPlace} onError={setError} />
 
             {unassignedVisits(plan).length > 0 && (
@@ -239,6 +244,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
             {tripId && <Button label={t('editor.delete')} variant="destructive" size="sm" onClick={() => setConfirmDelete(true)} />}
           </VStack>
           <VisitDialog plan={plan} placeRef={openPlace} onChange={edit} onClose={() => setOpenPlace(null)} />
+          <RecommendDialog isOpen={recommending} plan={plan} home={home} book={book.current} onApply={edit} onClose={() => setRecommending(false)} />
           <AlertDialog
             isOpen={confirmDelete}
             onOpenChange={setConfirmDelete}
