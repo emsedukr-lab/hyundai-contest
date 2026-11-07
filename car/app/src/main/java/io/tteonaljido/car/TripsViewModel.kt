@@ -25,7 +25,9 @@ import io.tteonaljido.trip.Place
 import io.tteonaljido.trip.PlaceMatch
 import io.tteonaljido.trip.Projection
 import io.tteonaljido.trip.Target
+import io.tteonaljido.trip.PlaceCategory
 import io.tteonaljido.trip.VisitHow
+import io.tteonaljido.trip.VisitRecord
 import io.tteonaljido.trip.VisitStamp
 import io.tteonaljido.trip.metres
 import io.tteonaljido.trip.zoneOrUtc
@@ -142,6 +144,31 @@ class TripsViewModel(
     /** Move a stop to another day (visitId → target dayIndex); the plan is unchanged. Clears any same-day defer and a guiding binding to it. */
     fun deferToDay(id: String, visitId: String, day: Int) = edit(id) { it.copy(overlay = it.overlay.copy(deferredTo = it.overlay.deferredTo + (visitId to day), deferred = it.overlay.deferred - visitId, guiding = it.overlay.guiding?.takeIf { g -> g.visitId != visitId })) }
     fun undeferDay(id: String, visitId: String) = edit(id) { it.copy(overlay = it.overlay.copy(deferredTo = it.overlay.deferredTo - visitId)) }
+    /**
+     * Emulator demo only: inject one confirmed parking/stay measurement on the first trip's first stop so the "차량 신호"
+     * badge is visible without real vehicle signals (the emulator can't inject them). Writes only to the overlay.
+     */
+    fun seedDemoVisitRecord() {
+        val t = _trips.value.firstOrNull() ?: return
+        val day = t.plan.days.firstOrNull() ?: return
+        val visitId = day.visitOrder.firstOrNull() ?: return
+        val v = t.plan.visits.firstOrNull { it.visitId == visitId } ?: return
+        val category = t.plan.places.firstOrNull { it.placeRef == v.placeRef }?.category ?: PlaceCategory.SIGHT
+        val now = nowMs()
+        val rec = VisitRecord(
+            tripId = t.plan.tripId, dayIndex = day.dayIndex, placeId = v.placeRef, category = category, isWeekend = false,
+            tArrive = now, tParked = now + 8 * 60_000L, tOff = now + 9 * 60_000L,
+            tOn = now + (8 + v.stayMinutes) * 60_000L, tDepart = now + (8 + v.stayMinutes) * 60_000L,
+        )
+        edit(t.localId) { lt ->
+            lt.copy(overlay = lt.overlay.copy(
+                visited = lt.overlay.visited + visitId,
+                visitedAt = lt.overlay.visitedAt + (visitId to VisitStamp(now, VisitHow.DEMO_SIGNAL)),
+                visitRecords = lt.overlay.visitRecords.filter { it.placeId != v.placeRef || it.dayIndex != day.dayIndex } + rec,
+            ))
+        }
+    }
+
     fun dismissArrival() = tracker.dismiss()
     fun dismissGuide() { _guide.value = Guide.Idle; pending = null }
     fun openChargers() = navi.openNearbyChargers()
