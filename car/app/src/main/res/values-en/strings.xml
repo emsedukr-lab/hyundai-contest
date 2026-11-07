@@ -278,6 +278,12 @@
     <string name="guide_today">Send today\'s route</string>
     <string name="guide_today_working">Sending %1$s stops to the navigation…</string>
     <string name="guide_today_done">Loaded %1$s stops into the navigation</string>
+    <string name="energy_fast">Fast-charge at the next stop · %1$d%% left</string>
+    <string name="energy_slow">Slow-charge overnight at the stay · %1$d%% left</string>
+    <string name="energy_refuel">Refuel soon · %1$d%% left · check a cheaper station</string>
+    <string name="find_fuel">Find a gas station</string>
+    <string name="demo_energy_ev">EV 18%% sample</string>
+    <string name="demo_energy_ice">Fuel 25%% sample</string>
     <string name="measured_parking">Car signal: park &amp; exit +%1$s min · stay %2$s min</string>
     <string name="measured_dropoff">Car signal: drop-off only (0 min stay)</string>
     <string name="demo_seed_visit">Sample measurement</string>

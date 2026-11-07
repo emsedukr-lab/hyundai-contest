@@ -99,6 +99,16 @@ class DeferTest {
         assertTrue(r.visitRecords.isEmpty()) // the removed place's measurement is dropped
     }
 
+    @Test fun lowEvSocSurfacesAChargeAdvisoryInTheProjection() {
+        val p = LiveProjection.project(sample, CarOverlay(), 2, m("09:00"), naviRemaining = 134, vehicleKind = VehicleKind.EV, energyPercent = 15)
+        assertEquals(EnergyAction.FAST_CHARGE, p.energy?.action)
+    }
+
+    @Test fun defaultVehicleKindLeavesEnergyNull() {
+        val p = LiveProjection.project(sample, CarOverlay(), 2, m("09:00"), naviRemaining = 134)
+        assertNull(p.energy)
+    }
+
     @Test fun emptyDeferredLeavesTheProjectionUnchanged() {
         val base = LiveProjection.project(lakeOptional, CarOverlay(), 2, m("08:00"), naviRemaining = 134)
         val same = LiveProjection.project(lakeOptional, CarOverlay(deferred = emptySet()), 2, m("08:00"), naviRemaining = 134)

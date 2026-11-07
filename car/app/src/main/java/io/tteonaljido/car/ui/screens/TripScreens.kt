@@ -117,13 +117,14 @@ fun TripDetailScreen(vm: TripsViewModel, localId: String, drive: DriveState, dem
     val naviLive by vm.naviLive.collectAsState()
     val here by vm.here.collectAsState()
     val arrival by vm.lastArrival.collectAsState()
+    val energy by vm.energy.collectAsState()
     val t = trips.firstOrNull { it.localId == localId } ?: return onBack()
     var day by remember(localId) { mutableIntStateOf(vm.todayIndex(t) ?: 1) }
     var confirmDelete by remember { mutableStateOf(false) }
     val secondary = colorResource(R.color.pleos_text_dark_secondary)
     val todayDate = vm.today(t, now)
     val report = remember(t, todayDate) { TripValidator.validate(t.plan, t.overlay, todayDate) }
-    val live = remember(t, day, now, naviLive, here) { vm.live(t, day, now, naviLive, here) }
+    val live = remember(t, day, now, naviLive, here, energy) { vm.live(t, day, now, naviLive, here) }
 
     Screen {
         PleosHeader(tripTitle(t), stringResource(R.string.detail_subtitle, periodLabel(t.plan), nightsLabel(t.plan), t.meta.revision)) {
@@ -345,6 +346,19 @@ private fun NextCard(vm: TripsViewModel, t: LocalTrip, day: Int, live: LiveView?
         val defer = live?.projection?.defer
         // Skip and defer point at the same optional stop; show one banner naming it, then offer both choices.
         skip?.let { s -> StatusLine(stringResource(R.string.skip_suggest, TripValidator.placeName(t.plan, t.plan.visits.first { it.visitId == s.visitId }.placeRef)), Tone.WARNING) }
+        // 충전·주유 권장 (EV fast/slow, ICE refuel) from the car's energy reading; the nav screen shows prices/types.
+        val energy = live?.projection?.energy
+        energy?.let { e ->
+            val pct = e.energyPercent ?: 0
+            StatusLine(
+                when (e.action) {
+                    io.tteonaljido.trip.EnergyAction.FAST_CHARGE -> stringResource(R.string.energy_fast, pct)
+                    io.tteonaljido.trip.EnergyAction.SLOW_CHARGE -> stringResource(R.string.energy_slow, pct)
+                    io.tteonaljido.trip.EnergyAction.REFUEL -> stringResource(R.string.energy_refuel, pct)
+                },
+                Tone.WARNING,
+            )
+        }
         val skippedToday = t.plan.days[day - 1].visitOrder.filter { it in t.overlay.skipped }
         val deferredToday = t.plan.days[day - 1].visitOrder.filter { it in t.overlay.deferred }
         val deferredAway = t.plan.days[day - 1].visitOrder.filter { it in t.overlay.deferredTo }
@@ -358,7 +372,7 @@ private fun NextCard(vm: TripsViewModel, t: LocalTrip, day: Int, live: LiveView?
             PleosButton(stringResource(R.string.depart_here), { vm.departHere(t.localId, day) }, type = ButtonType.SECONDARY, enabled = isToday, tag = "departHere")
             if (t.overlay.originFor(day) != null) PleosButton(stringResource(R.string.undo_depart), { vm.undoDepartHere(t.localId, day) }, type = ButtonType.SECONDARY, tag = "undoDepart")
         }
-        if (skip != null || defer != null || arrival?.visitId != null || skippedToday.isNotEmpty() || deferredToday.isNotEmpty() || deferredAway.isNotEmpty() || lowSoc) {
+        if (skip != null || defer != null || energy != null || arrival?.visitId != null || skippedToday.isNotEmpty() || deferredToday.isNotEmpty() || deferredAway.isNotEmpty() || lowSoc) {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 skip?.let { s -> PleosButton(stringResource(R.string.skip), { vm.skip(t.localId, s.visitId) }, size = ButtonSize.SMALL, tag = "skip") }
                 defer?.let { s -> PleosButton(stringResource(R.string.defer_back), { vm.defer(t.localId, s.visitId) }, type = ButtonType.SECONDARY, size = ButtonSize.SMALL, tag = "defer") }
@@ -367,7 +381,11 @@ private fun NextCard(vm: TripsViewModel, t: LocalTrip, day: Int, live: LiveView?
                 skippedToday.lastOrNull()?.let { PleosButton(stringResource(R.string.unskip_last), { vm.unskip(t.localId, it) }, type = ButtonType.SECONDARY, size = ButtonSize.SMALL, tag = "unskip") }
                 deferredToday.lastOrNull()?.let { PleosButton(stringResource(R.string.undefer_last), { vm.undefer(t.localId, it) }, type = ButtonType.SECONDARY, size = ButtonSize.SMALL, tag = "undefer") }
                 deferredAway.lastOrNull()?.let { PleosButton(stringResource(R.string.undefer_day), { vm.undeferDay(t.localId, it) }, type = ButtonType.SECONDARY, size = ButtonSize.SMALL, tag = "undeferDay") }
-                if (lowSoc) PleosButton(stringResource(R.string.nearby_chargers), vm::openChargers, type = ButtonType.SECONDARY, size = ButtonSize.SMALL, tag = "chargers")
+                energy?.let { e ->
+                    val refuel = e.action == io.tteonaljido.trip.EnergyAction.REFUEL
+                    PleosButton(stringResource(if (refuel) R.string.find_fuel else R.string.nearby_chargers), { if (refuel) vm.openFuelSearch() else vm.openChargers() }, type = ButtonType.SECONDARY, size = ButtonSize.SMALL, tag = "energy")
+                }
+                if (lowSoc && energy == null) PleosButton(stringResource(R.string.nearby_chargers), vm::openChargers, type = ButtonType.SECONDARY, size = ButtonSize.SMALL, tag = "chargers")
             }
         }
     }
@@ -457,6 +475,10 @@ fun SettingsScreen(
                     Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                         PleosButton(stringResource(R.string.presend_demo), { presend = true }, type = ButtonType.SECONDARY, tag = "presend")
                         PleosButton(stringResource(R.string.demo_seed_visit), vm::seedDemoVisitRecord, type = ButtonType.SECONDARY, tag = "seedVisit")
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                        PleosButton(stringResource(R.string.demo_energy_ev), { vm.seedDemoEnergy(io.tteonaljido.trip.VehicleKind.EV, 18, 250) }, type = ButtonType.SECONDARY, tag = "seedEvEnergy")
+                        PleosButton(stringResource(R.string.demo_energy_ice), { vm.seedDemoEnergy(io.tteonaljido.trip.VehicleKind.ICE, 25, null) }, type = ButtonType.SECONDARY, tag = "seedIceEnergy")
                     }
                 }
             }

@@ -278,6 +278,12 @@
     <string name="guide_today">오늘 경로 전송</string>
     <string name="guide_today_working">오늘 경로 %1$s곳을 내비로 보내는 중…</string>
     <string name="guide_today_done">오늘 경로 %1$s곳을 내비에 올렸어요</string>
+    <string name="energy_fast">다음 정류장에서 급속 충전 권장 · 잔량 %1$d%%</string>
+    <string name="energy_slow">숙소에서 완속 충전 권장 · 잔량 %1$d%%</string>
+    <string name="energy_refuel">주유 권장 · 잔량 %1$d%% · 저렴한 주유소를 확인하세요</string>
+    <string name="find_fuel">주유소 찾기</string>
+    <string name="demo_energy_ev">EV 18%% 예시</string>
+    <string name="demo_energy_ice">주유 25%% 예시</string>
     <string name="measured_parking">차량 신호: 주차·하차 +%1$s분 · 체류 %2$s분</string>
     <string name="measured_dropoff">차량 신호: 하차만 (체류 0분)</string>
     <string name="demo_seed_visit">체류 측정 예시</string>

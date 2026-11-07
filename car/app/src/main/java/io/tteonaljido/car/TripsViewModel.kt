@@ -26,6 +26,7 @@ import io.tteonaljido.trip.PlaceMatch
 import io.tteonaljido.trip.Projection
 import io.tteonaljido.trip.Target
 import io.tteonaljido.trip.PlaceCategory
+import io.tteonaljido.trip.VehicleKind
 import io.tteonaljido.trip.VisitHow
 import io.tteonaljido.trip.VisitRecord
 import io.tteonaljido.trip.VisitStamp
@@ -57,6 +58,9 @@ data class HereEstimate(val target: String, val targetKey: String, val minutes: 
 /** The live view of today: the projection plus what the navigation is doing. */
 data class LiveView(val projection: Projection, val naviElsewhere: String?, val here: HereEstimate?)
 
+/** The car's current energy reading for charge/refuel advice (SOC for EV/PHEV, fuel % for ICE). Phase-1: demo-seeded; phase-2: from the Vehicle SDK. */
+data class EnergyState(val kind: VehicleKind, val percent: Int?, val rangeKm: Int?)
+
 /**
  * `homeLabel`/`bookmarkLabel` are the localized words for home, used as the navigation place name and in messages.
  * `update` is the app's single write path; `nowMs` is the app clock (shifted only by the emulator demo clock).
@@ -86,6 +90,9 @@ class TripsViewModel(
     val lastArrival: StateFlow<ArrivalNote?> = tracker.lastArrival
     private val _here = MutableStateFlow<Map<String, HereEstimate>>(emptyMap())
     val here: StateFlow<Map<String, HereEstimate>> = _here
+    /** Current energy reading driving charge/refuel advice. Null = unknown (no advisory). Phase-1 demo-seeded; phase-2 from the Vehicle SDK. */
+    private val _energy = MutableStateFlow<EnergyState?>(null)
+    val energy: StateFlow<EnergyState?> = _energy
 
     private data class Pending(val localId: String, val placeRef: String?, val target: RouteTarget, val kind: Kind, val previous: NaviBinding? = null, val dayIndex: Int = 0, val visitId: String? = null)
     private enum class Kind { ROUTE, SEARCH, HOME }
@@ -169,9 +176,16 @@ class TripsViewModel(
         }
     }
 
+    /** Emulator demo only: set a sample energy reading so the charge/refuel advisory is visible without real signals. */
+    fun seedDemoEnergy(kind: VehicleKind, percent: Int?, rangeKm: Int?) { _energy.value = EnergyState(kind, percent, rangeKm) }
+    /** Phase-2 entry point: the Vehicle SDK adapter pushes real energy readings here (same shape as the demo seed). */
+    fun setEnergy(state: EnergyState?) { _energy.value = state }
+
     fun dismissArrival() = tracker.dismiss()
     fun dismissGuide() { _guide.value = Guide.Idle; pending = null }
     fun openChargers() = navi.openNearbyChargers()
+    /** ICE refuel: open the navigation's own station search (which shows the OEM fuel prices), near the route. */
+    fun openFuelSearch() = navi.openSearch("주유소")
 
     fun today(t: LocalTrip, now: Long = _now.value): LocalDate = Instant.ofEpochMilli(now).atZone(t.plan.zoneOrUtc()).toLocalDate()
     /** Which day of the trip "now" falls on. A 4-hour grace keeps it on the current day just past midnight (still driving to that night's lodging). */
@@ -221,7 +235,12 @@ class TripsViewModel(
         val h = hereFor(t, day, now, here)
         // The navigation's remaining time is only trusted while it is fresh (it slides later each tick once pushes stop).
         val fresh = live != null && System.currentTimeMillis() - live.at < 120_000L
-        val p = LiveProjection.project(t.plan, t.overlay, day, minuteOfDay(t, now), if (guidingThere && fresh) live!!.remainMinutes else null, h?.minutes)
+        val e = _energy.value
+        val p = LiveProjection.project(
+            t.plan, t.overlay, day, minuteOfDay(t, now),
+            if (guidingThere && fresh) live!!.remainMinutes else null, h?.minutes,
+            vehicleKind = e?.kind ?: VehicleKind.UNKNOWN, energyPercent = e?.percent, rangeKm = e?.rangeKm,
+        )
         // A destination the car already reached (the navigation may keep it after arriving) is not "elsewhere".
         val stale = live?.destLatE7 != null && live.destLonE7 != null && t.plan.days[day - 1].visitOrder.filter { it in t.overlay.visited }.any { id ->
             val ref = t.plan.visits.first { it.visitId == id }.placeRef

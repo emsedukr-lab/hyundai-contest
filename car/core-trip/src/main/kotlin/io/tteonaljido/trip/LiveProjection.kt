@@ -44,6 +44,8 @@ data class Projection(
     val skip: SkipSuggestion?,
     /** Same candidate as [skip] when late, offered as "do it later" instead of dropping it. Null when nothing helps. */
     val defer: DeferSuggestion? = null,
+    /** Charge/refuel recommendation from the car's energy reading + the day's remaining distance; null when none applies. */
+    val energy: EnergyAdvisory? = null,
 )
 
 object LiveProjection {
@@ -54,7 +56,17 @@ object LiveProjection {
      * `now` is the minute of day. `naviRemaining` is the navigation's remaining time to the next stop (only when it is
      * guiding to that same place); `hereToNext` is a one-off estimate from the car's position (`requestTrip`).
      */
-    fun project(trip: Trip, overlay: CarOverlay, dayIndex: Int, now: Int, naviRemaining: Int? = null, hereToNext: Int? = null): Projection {
+    fun project(
+        trip: Trip,
+        overlay: CarOverlay,
+        dayIndex: Int,
+        now: Int,
+        naviRemaining: Int? = null,
+        hereToNext: Int? = null,
+        vehicleKind: VehicleKind = VehicleKind.UNKNOWN,
+        energyPercent: Int? = null,
+        rangeKm: Int? = null,
+    ): Projection {
         val day = trip.days[dayIndex - 1]
         val order = day.visitOrder
         val visits = trip.visits.associateBy { it.visitId }
@@ -155,7 +167,17 @@ object LiveProjection {
         }
         val skip = lateCand?.let { SkipSuggestion(it.first, it.second) }
         val defer = lateCand?.let { DeferSuggestion(it.first, it.second) }
-        return Projection(dayIndex, nextVisitId, stops.first().arrive, basis, stops, vsPlan, fixed, endExpected, endBy, deadlineKind, deadlineSlack, status, approximate, skip, defer)
+        // 충전·주유 권장: rough remaining-day distance (km) from the remaining stops' coordinates (+ the day's end anchor).
+        val remainKm = run {
+            fun coord(ref: String?) = ref?.let { r -> places[r] }?.takeIf { it.latE7 != null && it.lonE7 != null }?.let { it.latE7!! to it.lonE7!! }
+            val pts = remaining.mapNotNull { coord(visits.getValue(order[it]).placeRef) }.toMutableList()
+            val endRef = if (dayIndex == trip.days.size) (trip.finalDestination as? Endpoint.AtPlace)?.placeRef else day.lodgingPlaceRef
+            coord(endRef)?.let { pts.add(it) }
+            if (pts.size < 2) null else (1 until pts.size).sumOf { metres(pts[it - 1].first, pts[it - 1].second, pts[it].first, pts[it].second) }.let { (it / 1000).toInt() }
+        }
+        val lodgingAhead = dayIndex != trip.days.size && day.lodgingPlaceRef != null
+        val energy = EnergyPolicy.advise(vehicleKind, energyPercent, rangeKm, remainKm, lodgingAhead)
+        return Projection(dayIndex, nextVisitId, stops.first().arrive, basis, stops, vsPlan, fixed, endExpected, endBy, deadlineKind, deadlineSlack, status, approximate, skip, defer, energy)
     }
 
     private fun status(hasDeadline: Boolean, slack: Int?): Punctuality = when {
