@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- English. Same keys and order as values/strings.xml (Korean). -->
 <resources>
-    <string name="app_name">Tteonaljido</string>
+    <string name="app_name">The Naljido</string>
 
     <!-- Common -->
     <string name="close">Close</string>
@@ -113,7 +113,7 @@
     <string name="demo_driving_on">Simulate driving</string>
     <string name="demo_driving_off">Stop driving simulation</string>
     <string name="about">About</string>
-    <string name="about_body">Tteonaljido %1$s · relay %2$s</string>
+    <string name="about_body">The Naljido %1$s · relay %2$s</string>
 
     <!-- Import (spec 24-6) -->
     <string name="import_title">Import trip from phone</string>

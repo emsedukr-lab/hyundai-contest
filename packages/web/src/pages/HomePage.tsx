@@ -10,6 +10,7 @@ import { HStack, VStack } from '@astryxdesign/core/Stack';
 import { Heading, Text } from '@astryxdesign/core/Text';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { sampleTrip, type Home, type Trip } from '@tteonaljido/shared';
+import { InstallHint } from '../components/InstallHint';
 import { sendLog, trips, type SendLogEntry } from '../lib/db';
 import { dateLabel, periodLabel } from '../lib/format';
 import { t } from '../lib/i18n';
@@ -115,18 +116,22 @@ export function HomePage() {
       content={
         <LayoutContent>
           <VStack gap={4}>
+            <InstallHint />
             {message && <Banner status="info" title={message} isDismissable onDismiss={() => setMessage(null)} />}
             {docs !== null && docs.length === 0 ? (
-              <EmptyState
-                title={t('common.noTrips')}
-                description={t('home.empty.description')}
-                actions={
-                  <HStack gap={2}>
-                    <Button label={t('home.newTrip')} variant="primary" onClick={() => navigate('/trips/new')} />
-                    <Button label={t('common.addSample')} variant="secondary" onClick={addSample} />
-                  </HStack>
-                }
-              />
+              <VStack gap={3}>
+                <EmptyState
+                  title={t('common.noTrips')}
+                  description={t('home.empty.description')}
+                  actions={
+                    <HStack gap={2}>
+                      <Button label={t('home.newTrip')} variant="primary" onClick={() => navigate('/trips/new')} />
+                      <Button label={t('common.addSample')} variant="secondary" onClick={addSample} />
+                    </HStack>
+                  }
+                />
+                <Banner status="info" title={t('home.shareHint')} />
+              </VStack>
             ) : (
               <List hasDividers header={<Text type="label">{t('home.myTrips')}</Text>}>
                 {(docs ?? []).map((d) => (

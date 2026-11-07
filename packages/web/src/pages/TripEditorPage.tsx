@@ -192,13 +192,19 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
             <VStack gap={3}>
               <Heading level={2}>{t('editor.places')}</Heading>
               <PlaceSearch onPick={(p) => edit(addPlace(plan, p))} />
-              <List hasDividers header={<Text type="label">{t('editor.places.all', { n: plan.places.length })}</Text>}>
-                {plan.places.map((p) => {
-                  const v = plan.visits.find((x) => x.placeRef === p.placeRef);
-                  const where = v ? (v.unassignedReason ? t('common.unassigned') : t('common.day', { day: String(plan.days.find((d) => d.visitOrder.includes(v.visitId))?.dayIndex) })) : t('common.lodging');
-                  return <ListItem key={p.placeRef} label={p.name} description={`${CATEGORY_LABEL[p.category]} · ${where}${v?.fixed ? ` · ${t('common.fixedAt', { time: v.fixed.time })}` : ''}`} onClick={() => setOpenPlace(p.placeRef)} />;
-                })}
-              </List>
+              {plan.places.length === 0 ? (
+                <Text type="supporting" color="secondary">
+                  {t('editor.firstPlace')}
+                </Text>
+              ) : (
+                <List hasDividers header={<Text type="label">{t('editor.places.all', { n: plan.places.length })}</Text>}>
+                  {plan.places.map((p) => {
+                    const v = plan.visits.find((x) => x.placeRef === p.placeRef);
+                    const where = v ? (v.unassignedReason ? t('common.unassigned') : t('common.day', { day: String(plan.days.find((d) => d.visitOrder.includes(v.visitId))?.dayIndex) })) : t('common.lodging');
+                    return <ListItem key={p.placeRef} label={p.name} description={`${CATEGORY_LABEL[p.category]} · ${where}${v?.fixed ? ` · ${t('common.fixedAt', { time: v.fixed.time })}` : ''}`} onClick={() => setOpenPlace(p.placeRef)} />;
+                  })}
+                </List>
+              )}
             </VStack>
 
             <Divider />
