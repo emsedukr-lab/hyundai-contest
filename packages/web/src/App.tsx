@@ -1,3 +1,4 @@
+import { AddSharedPlacePage } from './pages/AddSharedPlacePage';
 import { ConnectPage } from './pages/ConnectPage';
 import { HomePage } from './pages/HomePage';
 import { PrivacyPage } from './pages/PrivacyPage';
@@ -8,6 +9,7 @@ export default function App() {
   const path = usePath();
   if (path === '/c') return <ConnectPage />;
   if (path === '/privacy') return <PrivacyPage />;
+  if (path === '/add') return <AddSharedPlacePage />;
   if (path === '/trips/new') return <TripEditorPage tripId={null} />;
   const m = path.match(/^\/trips\/([0-9a-f-]{36})$/);
   if (m) return <TripEditorPage tripId={m[1]} />;
