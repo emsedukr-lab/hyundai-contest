@@ -8,11 +8,13 @@ import { Layout, LayoutContent, LayoutFooter, LayoutHeader } from '@astryxdesign
 import { List, ListItem } from '@astryxdesign/core/List';
 import { HStack, VStack } from '@astryxdesign/core/Stack';
 import { Heading, Text } from '@astryxdesign/core/Text';
+import { TextInput } from '@astryxdesign/core/TextInput';
 import { sampleTrip, type Home, type Trip } from '@tteonaljido/shared';
 import { sendLog, trips, type SendLogEntry } from '../lib/db';
 import { dateLabel, periodLabel } from '../lib/format';
 import { t } from '../lib/i18n';
 import { navigate } from '../lib/router';
+import { docFromShare, importShare, isShareFile } from '../lib/share';
 import { newDoc, nightsLabel, nowIso, unassignedVisits, type TripDoc } from '../lib/trips';
 
 export function HomePage() {
@@ -20,6 +22,9 @@ export function HomePage() {
   const [lastSends, setLastSends] = useState<Record<string, SendLogEntry>>({});
   const [message, setMessage] = useState<string | null>(null);
   const [showImport, setShowImport] = useState(false);
+  // A friend's encrypted share needs a passcode; hold the file text until it is entered.
+  const [shareText, setShareText] = useState<string | null>(null);
+  const [sharePass, setSharePass] = useState('');
 
   const reload = async () => {
     const all = await trips.all();
@@ -60,8 +65,16 @@ export function HomePage() {
   };
 
   const importFile = async (file: File) => {
+    const text = await file.text();
+    // A friend's share is encrypted: hold it and ask for the passcode instead of importing immediately.
+    if (isShareFile(text)) {
+      setShareText(text);
+      setSharePass('');
+      setShowImport(false);
+      return;
+    }
     try {
-      const data = JSON.parse(await file.text()) as { format?: string; trips?: TripDoc[] };
+      const data = JSON.parse(text) as { format?: string; trips?: TripDoc[] };
       if (data.format !== 'tteonaljido-backup' || !Array.isArray(data.trips)) throw new Error('not a backup');
       // A backup replaces trips with the same id; warn before overwriting any.
       const existing = new Set((docs ?? []).map((d) => d.tripId));
@@ -73,6 +86,17 @@ export function HomePage() {
     } catch {
       setMessage(t('home.notBackup'));
     }
+  };
+
+  const importSharedTrip = async () => {
+    if (!shareText) return;
+    const r = await importShare(shareText, sharePass.trim());
+    if (!r.ok) return setMessage(t(r.reason === 'passcode' ? 'share.wrongPass' : 'share.invalid'));
+    await trips.put(await docFromShare(r.transfer));
+    setShareText(null);
+    setSharePass('');
+    setMessage(t('share.received'));
+    await reload();
   };
 
   return (
@@ -144,6 +168,16 @@ export function HomePage() {
                 }}
                 description={t('home.backupFile.description')}
               />
+            )}
+            {shareText && (
+              <VStack gap={2}>
+                <Banner status="info" title={t('share.importTitle')} description={t('share.importHint')} />
+                <TextInput label={t('share.passcode')} value={sharePass} inputMode="numeric" onChange={setSharePass} />
+                <HStack gap={2}>
+                  <Button label={t('share.importAction')} variant="primary" size="sm" isDisabled={sharePass.trim().length < 4} onClick={importSharedTrip} />
+                  <Button label={t('common.cancel')} variant="ghost" size="sm" onClick={() => setShareText(null)} />
+                </HStack>
+              </VStack>
             )}
           </VStack>
         </LayoutContent>
