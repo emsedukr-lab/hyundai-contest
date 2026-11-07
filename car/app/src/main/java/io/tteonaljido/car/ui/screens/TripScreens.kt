@@ -416,6 +416,7 @@ fun SettingsScreen(
     onBack: () -> Unit,
 ) {
     var confirm by remember { mutableStateOf(false) }
+    var presend by remember { mutableStateOf(false) }
     val secondary = colorResource(R.color.pleos_text_dark_secondary)
     Screen {
         PleosHeader(stringResource(R.string.settings)) { PleosButton(stringResource(R.string.list), onBack, type = ButtonType.SECONDARY, size = ButtonSize.SMALL) }
@@ -444,6 +445,7 @@ fun SettingsScreen(
                     Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                         PleosButton(stringResource(if (demoClock) R.string.demo_clock_off else R.string.demo_clock_on), { onDemoClock(!demoClock) }, type = ButtonType.SECONDARY, tag = "demoClock")
                         PleosButton(stringResource(R.string.demo_arrive), onDemoArrive, type = ButtonType.SECONDARY, tag = "demoArrive")
+                        PleosButton(stringResource(R.string.presend_demo), { presend = true }, type = ButtonType.SECONDARY, tag = "presend")
                     }
                 }
             }
@@ -456,5 +458,8 @@ fun SettingsScreen(
     if (confirm) PleosSystemPopup(
         stringResource(R.string.delete_all_title), stringResource(R.string.delete_all_body), stringResource(R.string.delete), { confirm = false; vm.deleteAll() },
         cancel = stringResource(R.string.cancel), onCancel = { confirm = false },
+    )
+    if (presend) PleosSystemPopup(
+        stringResource(R.string.presend_demo_title), stringResource(R.string.presend_demo_body), stringResource(R.string.confirm), { presend = false },
     )
 }

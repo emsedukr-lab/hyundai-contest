@@ -278,4 +278,7 @@
     <string name="guide_today">오늘 경로 전송</string>
     <string name="guide_today_working">오늘 경로 %1$s곳을 내비로 보내는 중…</string>
     <string name="guide_today_done">오늘 경로 %1$s곳을 내비에 올렸어요</string>
+    <string name="presend_demo">사전 전송 (시연)</string>
+    <string name="presend_demo_title">사전 전송 (시연)</string>
+    <string name="presend_demo_body">휴대폰에서 미리 짠 하루 경로를 차량 내비에 올리는 동작을 시연해요. 실제 계정 기반 \'다음 시동 때 자동 전송\'은 인프라가 없어 구현하지 않았고, 차량의 \'오늘 경로 전송\'이 실제 묶음 전송입니다.</string>
 </resources>

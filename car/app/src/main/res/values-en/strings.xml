@@ -278,4 +278,7 @@
     <string name="guide_today">Send today\'s route</string>
     <string name="guide_today_working">Sending %1$s stops to the navigation…</string>
     <string name="guide_today_done">Loaded %1$s stops into the navigation</string>
+    <string name="presend_demo">Pre-send (demo)</string>
+    <string name="presend_demo_title">Pre-send (demo)</string>
+    <string name="presend_demo_body">Demonstrates pushing a day\'s pre-planned route to the car navigation. Account-based "auto send on next start" isn\'t built (no infrastructure); the car\'s "Send today\'s route" is the real bundle send.</string>
 </resources>
