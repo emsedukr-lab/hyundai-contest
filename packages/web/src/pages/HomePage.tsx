@@ -8,7 +8,7 @@ import { Layout, LayoutContent, LayoutFooter, LayoutHeader } from '@astryxdesign
 import { List, ListItem } from '@astryxdesign/core/List';
 import { HStack, VStack } from '@astryxdesign/core/Stack';
 import { Heading, Text } from '@astryxdesign/core/Text';
-import { sampleTrip, type Trip } from '@tteonaljido/shared';
+import { sampleTrip, type Home, type Trip } from '@tteonaljido/shared';
 import { sendLog, trips, type SendLogEntry } from '../lib/db';
 import { dateLabel, periodLabel } from '../lib/format';
 import { t } from '../lib/i18n';
@@ -42,7 +42,9 @@ export function HomePage() {
 
   const addSample = async () => {
     const plan: Trip = { ...sampleTrip(nowIso()), tripId: crypto.randomUUID() };
-    await trips.put(await newDoc(plan));
+    // 임시 데모용 '집' = 세종시청(좌표는 근사값). 편집기의 '집' 항목에서 언제든 바꾸거나 지울 수 있어요.
+    const home: Home = { address: '세종특별자치시 한누리대로 2130 (세종시청)', latE7: 364801000, lonE7: 1272887000 };
+    await trips.put(await newDoc(plan, home));
     setMessage(t('home.sampleAdded'));
     await reload();
   };
