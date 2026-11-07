@@ -67,6 +67,10 @@ data class CarOverlay(
     val legEstimates: Map<String, LegEstimate> = emptyMap(),
     /** What this app last handed to the navigation, so its arrival event can be matched to a stop. */
     val guiding: GuidingTarget? = null,
+    /** Confirmed parking/stay measurements for this trip (local only; deleted with the trip). */
+    val visitRecords: List<VisitRecord> = emptyList(),
+    /** An in-progress measurement (e.g. AWAY while the car is off), persisted so it resumes on the next launch. */
+    val visitProgress: VisitProgress? = null,
 )
 
 @Serializable
