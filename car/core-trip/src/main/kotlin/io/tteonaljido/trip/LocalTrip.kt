@@ -63,6 +63,8 @@ data class CarOverlay(
     val visitedAt: Map<String, VisitStamp> = emptyMap(),
     /** Stops the driver chose to skip in the car; the plan itself is unchanged. */
     val skipped: Set<String> = emptySet(),
+    /** Stops the driver chose to do later today (moved to the tail of the day's remaining order); the plan itself is unchanged. */
+    val deferred: Set<String> = emptySet(),
     /** Travel times measured by the car's navigation, keyed by [LegKeys] ("from>to"). Used only where the plan has none. */
     val legEstimates: Map<String, LegEstimate> = emptyMap(),
     /** What this app last handed to the navigation, so its arrival event can be matched to a stop. */

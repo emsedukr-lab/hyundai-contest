@@ -269,4 +269,7 @@
     <string name="leg_hm">"    ↓ %1$d h %2$d min drive"</string>
     <string name="leg_navi_hm">"    ↓ %1$d h %2$d min drive (navigation estimate)"</string>
     <string name="unskip_last">Restore skipped stop</string>
+    <string name="defer_back">Do later</string>
+    <string name="undefer_last">Restore moved stop</string>
+    <string name="stop_deferred">" · Moved later"</string>
 </resources>

@@ -136,6 +136,9 @@ class TripsViewModel(
 
     fun skip(id: String, visitId: String) = edit(id) { it.copy(overlay = it.overlay.copy(skipped = it.overlay.skipped + visitId, guiding = it.overlay.guiding?.takeIf { g -> g.visitId != visitId })) }
     fun unskip(id: String, visitId: String) = edit(id) { it.copy(overlay = it.overlay.copy(skipped = it.overlay.skipped - visitId)) }
+    /** Move an optional stop to later today (tail of the day); the plan is unchanged. If the car was guiding to it, that binding is cleared. */
+    fun defer(id: String, visitId: String) = edit(id) { it.copy(overlay = it.overlay.copy(deferred = it.overlay.deferred + visitId, guiding = it.overlay.guiding?.takeIf { g -> g.visitId != visitId })) }
+    fun undefer(id: String, visitId: String) = edit(id) { it.copy(overlay = it.overlay.copy(deferred = it.overlay.deferred - visitId)) }
     fun dismissArrival() = tracker.dismiss()
     fun dismissGuide() { _guide.value = Guide.Idle; pending = null }
     fun openChargers() = navi.openNearbyChargers()

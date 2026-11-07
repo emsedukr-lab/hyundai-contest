@@ -269,4 +269,7 @@
     <string name="leg_hm">"    ↓ 이동 %1$d시간 %2$d분"</string>
     <string name="leg_navi_hm">"    ↓ 이동 %1$d시간 %2$d분 (내비 예상)"</string>
     <string name="unskip_last">건너뛴 곳 되돌리기</string>
+    <string name="defer_back">뒤로 미루기</string>
+    <string name="undefer_last">미룬 곳 되돌리기</string>
+    <string name="stop_deferred">" · 뒤로 미룸"</string>
 </resources>

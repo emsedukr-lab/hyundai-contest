@@ -19,6 +19,9 @@ data class FixedCheck(val visitId: String, val fixed: Int, val ready: Int?, val 
 /** Skipping this optional stop saves at least `saves` minutes (its prep + stay; the drive saved is not counted). */
 data class SkipSuggestion(val visitId: String, val saves: Int)
 
+/** Doing this optional stop later (moved after the day's fixed stop) frees the same `saves` minutes before the deadline — but the stop still happens, at the tail of the day. */
+data class DeferSuggestion(val visitId: String, val saves: Int)
+
 data class Projection(
     val dayIndex: Int,
     /** Null when every stop is done and the car heads to the night's lodging or the final destination. */
@@ -39,6 +42,8 @@ data class Projection(
     /** A leg had to be bridged across skipped stops (sum of the legs through them: an upper bound). */
     val approximate: Boolean,
     val skip: SkipSuggestion?,
+    /** Same candidate as [skip] when late, offered as "do it later" instead of dropping it. Null when nothing helps. */
+    val defer: DeferSuggestion? = null,
 )
 
 object LiveProjection {
@@ -53,13 +58,20 @@ object LiveProjection {
         val day = trip.days[dayIndex - 1]
         val order = day.visitOrder
         val visits = trip.visits.associateBy { it.visitId }
-        val remaining = order.indices.filter { order[it] !in overlay.visited && order[it] !in overlay.skipped }
+        // Deferred stops stay in the plan but are re-timed at the tail of today's remaining order (stable sort keeps
+        // the plan's relative order within each group). With no deferral this is a no-op, so existing behaviour is unchanged.
+        val remaining = order.indices
+            .filter { order[it] !in overlay.visited && order[it] !in overlay.skipped }
+            .sortedBy { if (order[it] in overlay.deferred) 1 else 0 }
         val firstIdx = remaining.firstOrNull() ?: order.size
         // Position the car leaves from: the last visited stop before the next one (−1 = the day's start).
         val from = order.indices.lastOrNull { it < firstIdx && order[it] in overlay.visited } ?: -1
         var approximate = false
         // Plan legs from position a to position b (stop indices; −1 start, order.size end), through any stops in between.
+        // A deferred stop can sit at a lower index than the stop before it in the re-timed order (b ≤ a); the plan has no
+        // leg for that jump, so the chain is reported as unknown from there (honest "확인 필요" for the later, moved stops).
         fun legs(a: Int, b: Int): Int? {
+            if (b <= a) { approximate = true; return null }
             var sum = 0
             for (k in (a + 1)..b) sum += (TripValidator.leg(trip, overlay, dayIndex, k) ?: return null).minutes
             if (b - a > 1) approximate = true
@@ -120,15 +132,19 @@ object LiveProjection {
             else -> DeadlineKind.NONE to null
         }
         val status = status(deadlineKind != DeadlineKind.NONE, deadlineSlack)
-        val skip = if (status != Punctuality.LATE) null else {
+        // The best optional stop to shed before the deadline (already-deferred stops sit at the tail, so they are never
+        // re-suggested). The same candidate can be either skipped (dropped) or deferred (done later) — the driver chooses.
+        val lateCand: Pair<String, Int>? = if (status != Punctuality.LATE) null else {
             val late = -(deadlineSlack ?: 0)
             // Only optional stops before the fixed one (if any) help; a return-by deadline lets any optional stop help.
             val before = if (fixedPos >= 0) items.take(fixedPos) else items
             before.mapIndexedNotNull { i, (v, _) ->
-                if (v.importance == Importance.OPTIONAL && v.fixed == null) SkipSuggestion(v.visitId, v.prepMinutes + Math.round(v.stayMinutes * stayMult).toInt() + buffers.getOrElse(i) { 0 }) else null
-            }.filter { it.saves >= late }.minByOrNull { it.saves }
+                if (v.importance == Importance.OPTIONAL && v.fixed == null) (v.visitId to (v.prepMinutes + Math.round(v.stayMinutes * stayMult).toInt() + buffers.getOrElse(i) { 0 })) else null
+            }.filter { it.second >= late }.minByOrNull { it.second }
         }
-        return Projection(dayIndex, order[firstIdx], stops.first().arrive, basis, stops, vsPlan, fixed, endExpected, endBy, deadlineKind, deadlineSlack, status, approximate, skip)
+        val skip = lateCand?.let { SkipSuggestion(it.first, it.second) }
+        val defer = lateCand?.let { DeferSuggestion(it.first, it.second) }
+        return Projection(dayIndex, order[firstIdx], stops.first().arrive, basis, stops, vsPlan, fixed, endExpected, endBy, deadlineKind, deadlineSlack, status, approximate, skip, defer)
     }
 
     private fun status(hasDeadline: Boolean, slack: Int?): Punctuality = when {
