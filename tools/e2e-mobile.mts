@@ -120,6 +120,30 @@ try {
   await bare.getByText('이 브라우저에서는 연결할 수 없어요').waitFor();
   check(new URL(bare.url()).hash === '', 'without WebCrypto the secret is still removed from the address bar');
   await noCrypto.close();
+
+  // M11/M12 features (independent of the pairing flow): place-share intake and friend-share.
+  const m = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, locale: 'ko-KR', isMobile: true, hasTouch: true });
+  const mp = await m.newPage();
+  await mp.goto(base);
+  await mp.getByRole('button', { name: /샘플/ }).first().click();
+  await mp.getByText('강릉 3박 4일').first().waitFor();
+  // Place-share intake: a map app shares a place to /add?title=…
+  await mp.goto(`${base}/add?title=${encodeURIComponent('경포호')}`);
+  await mp.getByText('장소 추가').waitFor();
+  check((await mp.getByText("'경포호'", { exact: false }).count()) > 0, 'shared place name shown on /add');
+  await shot(mp, '09-add-shared');
+  // Friend-share dialog: encrypted file, home excluded, 6-digit passcode.
+  const tripId = (await mp.evaluate(
+    () => new Promise<string>((res) => { const r = indexedDB.open('tteonaljido'); r.onsuccess = () => { const tx = r.result.transaction('trips').objectStore('trips').getAllKeys(); tx.onsuccess = () => res(String(tx.result[0])); }; }),
+  )) as string;
+  await mp.goto(`${base}/trips/${tripId}`);
+  await mp.getByRole('button', { name: '친구에게 공유' }).click();
+  await mp.getByText('친구에게 여행 공유').waitFor();
+  check((await mp.getByText('집 주소는 공유되지 않아요').count()) > 0, 'friend-share excludes the home address');
+  check((await mp.getByText(/^\d{6}$/).count()) > 0, 'friend-share shows a 6-digit passcode');
+  await shot(mp, '10-share');
+  await m.close();
+
   console.log('mobile E2E passed');
 } finally {
   await browser.close();

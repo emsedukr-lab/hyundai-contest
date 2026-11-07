@@ -171,6 +171,16 @@ try {
   await click(page3, '연결하고 확인 코드 보기');
   await page3.getByText('이미 사용된 QR이에요', { exact: false }).waitFor();
   check(await page3.getByText('이미 사용된 QR이에요', { exact: false }).isVisible(), 'a used QR cannot be claimed again');
+
+  /* ---------- round 4: M12 — bundle send on the trip's own day (defer/pre-send are unit-tested + manual) ---------- */
+  // Put the demo clock on day 2 (2026-11-21) so the live "오늘 경로 전송" (multi-stop send) surfaces for that day.
+  sh(`am start --user ${USER} -n ${PKG}/.MainActivity --ez demo true --ez demoDriving false --es demoNow 2026-11-21T09:00`);
+  tap(await waitFor(byText('강릉 3박 4일'), 'open trip on day 2'));
+  await waitFor(byText('다음 목적지'), 'trip detail (today)');
+  carShot('09-bundle-send');
+  check(byTag('guideToday')(ui()), 'car shows "오늘 경로 전송" (bundle send) on a day with ≥2 upcoming stops');
+  sh('input keyevent KEYCODE_BACK');
+
   console.log('car E2E passed');
 } finally {
   demo(false);
