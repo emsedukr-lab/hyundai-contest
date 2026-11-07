@@ -20,14 +20,17 @@ object NextDestination {
         return if (n in 1..trip.days.size) n.toInt() else null
     }
 
+    /** Today's remaining stops in guidance order: unvisited and unskipped, with deferred stops moved to the tail (stable). */
+    fun upcoming(trip: Trip, overlay: CarOverlay, dayIndex: Int): List<String> =
+        trip.days[dayIndex - 1].visitOrder
+            .filter { it !in overlay.visited && it !in overlay.skipped }
+            .sortedBy { if (it in overlay.deferred) 1 else 0 }
+
     /** First stop of the given day neither visited nor skipped (deferred stops go to the tail); then that night's lodging, or the final destination on the last day. */
     fun of(trip: Trip, overlay: CarOverlay, dayIndex: Int): NextStep {
         val day = trip.days[dayIndex - 1]
         val places = trip.places.associateBy { it.placeRef }
-        val stop = day.visitOrder
-            .filter { it !in overlay.visited && it !in overlay.skipped }
-            .sortedBy { if (it in overlay.deferred) 1 else 0 }
-            .firstOrNull()
+        val stop = upcoming(trip, overlay, dayIndex).firstOrNull()
         if (stop != null) {
             val v = trip.visits.first { it.visitId == stop }
             val p = places.getValue(v.placeRef)

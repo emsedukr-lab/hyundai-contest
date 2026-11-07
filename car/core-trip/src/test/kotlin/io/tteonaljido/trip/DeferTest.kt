@@ -57,6 +57,13 @@ class DeferTest {
         assertEquals("v5", (step.target as Target.Stop).visitId)
     }
 
+    @Test fun upcomingOrdersRemainingStopsWithDeferredAtTheTail() {
+        // Day 2 is v4,v5,v6,v7 in order; the bundle-send (guideToday) reads this list.
+        assertEquals(listOf("v4", "v5", "v6", "v7"), NextDestination.upcoming(sample, CarOverlay(), 2))
+        assertEquals(listOf("v5", "v6", "v7", "v4"), NextDestination.upcoming(sample, CarOverlay(deferred = setOf("v4")), 2))
+        assertEquals(listOf("v6", "v7"), NextDestination.upcoming(sample, CarOverlay(visited = setOf("v4"), skipped = setOf("v5")), 2))
+    }
+
     @Test fun emptyDeferredLeavesTheProjectionUnchanged() {
         val base = LiveProjection.project(lakeOptional, CarOverlay(), 2, m("08:00"), naviRemaining = 134)
         val same = LiveProjection.project(lakeOptional, CarOverlay(deferred = emptySet()), 2, m("08:00"), naviRemaining = 134)

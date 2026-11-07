@@ -272,4 +272,7 @@
     <string name="defer_back">뒤로 미루기</string>
     <string name="undefer_last">미룬 곳 되돌리기</string>
     <string name="stop_deferred">" · 뒤로 미룸"</string>
+    <string name="guide_today">오늘 경로 전송</string>
+    <string name="guide_today_working">오늘 경로 %1$s곳을 내비로 보내는 중…</string>
+    <string name="guide_today_done">오늘 경로 %1$s곳을 내비에 올렸어요</string>
 </resources>

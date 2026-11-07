@@ -305,6 +305,12 @@ private fun DayPlan(t: LocalTrip, day: Int, live: LiveView?) {
 @Composable
 private fun NextCard(vm: TripsViewModel, t: LocalTrip, day: Int, live: LiveView?, here: HereEstimate?, arrival: ArrivalNote?) {
     val step = remember(t, day) { NextDestination.of(t.plan, t.overlay, day) }
+    // "오늘 경로 전송" needs at least two upcoming stops with coordinates (destination + ≥1 waypoint).
+    val canBundle = remember(t, day) {
+        NextDestination.upcoming(t.plan, t.overlay, day).count { id ->
+            t.plan.visits.firstOrNull { it.visitId == id }?.placeRef?.let { ref -> t.plan.places.firstOrNull { it.placeRef == ref }?.latE7 } != null
+        } >= 2
+    }
     val secondary = colorResource(R.color.pleos_text_dark_secondary)
     val home = stringResource(R.string.home)
     val label = when (val tg = step.target) {
@@ -336,6 +342,7 @@ private fun NextCard(vm: TripsViewModel, t: LocalTrip, day: Int, live: LiveView?
         val isToday = vm.todayIndex(t) == day
         FlowRow(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             PleosButton(stringResource(R.string.guide_next), { vm.guideNext(t.localId, day) }, enabled = step.target != null, tag = "guide")
+            if (canBundle) PleosButton(stringResource(R.string.guide_today), { vm.guideToday(t.localId, day) }, type = ButtonType.SECONDARY, tag = "guideToday")
             (step.target as? Target.Stop)?.let { s -> PleosButton(stringResource(R.string.mark_arrived), { vm.markVisited(t.localId, s.visitId) }, type = ButtonType.SECONDARY, enabled = isToday, tag = "visited") }
             PleosButton(stringResource(R.string.depart_here), { vm.departHere(t.localId, day) }, type = ButtonType.SECONDARY, enabled = isToday, tag = "departHere")
             if (t.overlay.originFor(day) != null) PleosButton(stringResource(R.string.undo_depart), { vm.undoDepartHere(t.localId, day) }, type = ButtonType.SECONDARY, tag = "undoDepart")

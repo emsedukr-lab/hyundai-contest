@@ -232,6 +232,32 @@ class TripsViewModel(
         }
     }
 
+    /**
+     * Load today's remaining route (up to the next three stops with coordinates) into the navigation in one request —
+     * the planned route "sent" to the nav. Parked, explicit tap only. It does not touch arrival tracking or the live
+     * projection; the per-stop '다음 목적지 안내' stays for precise ETA and auto-arrival. Fewer than two routable stops
+     * fall back to the single-stop flow.
+     */
+    fun guideToday(localId: String, dayIndex: Int) {
+        val t = trip(localId) ?: return
+        val targets = NextDestination.upcoming(t.plan, t.overlay, dayIndex).mapNotNull { id ->
+            val v = t.plan.visits.first { it.visitId == id }
+            val p = t.plan.places.first { it.placeRef == v.placeRef }
+            if (p.latE7 == null) null else placeTarget(t, p)
+        }.take(3)
+        if (targets.size < 2) return guideNext(localId, dayIndex)
+        val dest = targets.last()
+        val waypoints = targets.dropLast(1)
+        viewModelScope.launch {
+            _guide.value = Guide.Working(Msg(R.string.guide_today_working, targets.size.toString()))
+            _guide.value = when (val r = navi.routeTrip(dest, waypoints)) {
+                is RouteOutcome.Confirmed, is RouteOutcome.Different -> Guide.Done(Msg(R.string.guide_today_done, targets.size.toString()))
+                RouteOutcome.NoAnswer -> Guide.Failed(Msg(R.string.guide_no_answer), false)
+                is RouteOutcome.Unavailable -> Guide.Failed(Msg(r.reason), false)
+            }
+        }
+    }
+
     fun confirmReplace() = viewModelScope.launch { route() }
 
     private suspend fun route() {

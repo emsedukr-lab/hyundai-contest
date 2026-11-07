@@ -3,13 +3,16 @@ package io.tteonaljido.car.navi
 import ai.pleos.playground.navi.constants.BookmarkType
 import ai.pleos.playground.navi.constants.NaviErrorCode
 import ai.pleos.playground.navi.constants.NavigationStatus
+import ai.pleos.playground.navi.constants.WaypointIndex
 import ai.pleos.playground.navi.data.BookmarkInfo
 import ai.pleos.playground.navi.data.CurrentLocationInfo
 import ai.pleos.playground.navi.data.DestinationArrivedInfo
 import ai.pleos.playground.navi.data.DestinationInfo
 import ai.pleos.playground.navi.data.DrivingInfo
 import ai.pleos.playground.navi.data.NavigationScreenRequest
+import ai.pleos.playground.navi.data.RequestWaypointInfo
 import ai.pleos.playground.navi.data.RouteInfo
+import ai.pleos.playground.navi.data.RouteWithWaypointsRequest
 import ai.pleos.playground.navi.data.RouteStartInfo
 import ai.pleos.playground.navi.data.TripInfo
 import ai.pleos.playground.navi.data.TripRequest
@@ -78,6 +81,8 @@ interface NaviGateway {
     suspend fun homeBookmark(): NaviBinding?
     /** `previous` is the destination before the request, so an unchanged old route is not mistaken for the answer. */
     suspend fun route(target: RouteTarget, previous: NaviBinding? = null): RouteOutcome
+    /** Load the day's route in one request: the final stop is the destination, earlier stops are waypoints (the nav takes at most two: FIRST, SECOND). Confirmation matches the final destination, like [route]. Explicit parked tap only. */
+    suspend fun routeTrip(dest: RouteTarget, waypoints: List<RouteTarget>, previous: NaviBinding? = null): RouteOutcome
     suspend fun currentLocation(): HereLocation?
     suspend fun estimate(target: RouteTarget): NaviEstimate?
     fun refreshLive()
@@ -209,6 +214,11 @@ class PleosNaviGateway(context: Context) : NaviGateway {
         } catch (e: Throwable) {
             return RouteOutcome.Unavailable(io.tteonaljido.car.R.string.navi_rejected)
         }
+        return confirmRoute(target, previous)
+    }
+
+    /** Waits for the navigation to settle, then classifies its own confirmed destination against [target] (shared by [route] and [routeTrip]). */
+    private suspend fun confirmRoute(target: RouteTarget, previous: NaviBinding?): RouteOutcome {
         // The navigation first reports an empty destination, then settles after its route screen.
         // Confirmation is its own answer, not our request: same POI or within 150 m of what we asked for.
         var last: NaviBinding? = null
@@ -217,14 +227,52 @@ class PleosNaviGateway(context: Context) : NaviGateway {
             while (hit == null) {
                 val b = destination(2_500)?.binding()
                 if (b != null && b != previous) last = b
-                if (b != null && PlaceMatch.classify(target.latE7, target.lonE7, target.poiId, b.latE7, b.lonE7, b.poiId) == Match.SAME) hit = b
+                if (b != null && PlaceMatch.classify(target.latE7!!, target.lonE7!!, target.poiId, b.latE7, b.lonE7, b.poiId) == Match.SAME) hit = b
                 else delay(1_500)
             }
             hit
         }
         if (confirmed != null) return RouteOutcome.Confirmed(confirmed)
         val other = last ?: return RouteOutcome.NoAnswer
-        return RouteOutcome.Different(other, PlaceMatch.classify(target.latE7, target.lonE7, target.poiId, other.latE7, other.lonE7, other.poiId))
+        return RouteOutcome.Different(other, PlaceMatch.classify(target.latE7!!, target.lonE7!!, target.poiId, other.latE7, other.lonE7, other.poiId))
+    }
+
+    override suspend fun routeTrip(dest: RouteTarget, waypoints: List<RouteTarget>, previous: NaviBinding?): RouteOutcome {
+        if (_status.value != NaviStatus.CONNECTED) return RouteOutcome.Unavailable(io.tteonaljido.car.R.string.navi_not_connected)
+        val lat = dest.latE7 ?: return RouteOutcome.NoAnswer
+        val lon = dest.lonE7 ?: return RouteOutcome.NoAnswer
+        // The nav takes at most two waypoints (FIRST, SECOND); any beyond that are dropped from this one push.
+        val wps = waypoints.filter { it.latE7 != null && it.lonE7 != null }.take(2).mapIndexed { i, w ->
+            RequestWaypointInfo(
+                latitude = w.latE7!! / 1e7,
+                longitude = w.lonE7!! / 1e7,
+                poiName = w.name,
+                waypointIndex = if (i == 0) WaypointIndex.FIRST else WaypointIndex.SECOND,
+                poiId = w.poiId.orEmpty(),
+                address = w.address,
+                poiSubId = w.poiSubId ?: "0",
+                poiProvider = w.poiProvider.orEmpty(),
+            )
+        }
+        try {
+            navi.requestRouteWithWaypoints(
+                RouteWithWaypointsRequest(
+                    RouteInfo(
+                        latitude = lat / 1e7,
+                        longitude = lon / 1e7,
+                        poiName = dest.name,
+                        poiId = dest.poiId.orEmpty(),
+                        address = dest.address,
+                        poiSubId = dest.poiSubId ?: "0",
+                        poiProvider = dest.poiProvider.orEmpty(),
+                    ),
+                    wps,
+                ),
+            )
+        } catch (e: Throwable) {
+            return RouteOutcome.Unavailable(io.tteonaljido.car.R.string.navi_rejected)
+        }
+        return confirmRoute(dest, previous)
     }
 
     override suspend fun currentLocation(): HereLocation? {
@@ -269,6 +317,7 @@ class OfflineNaviGateway : NaviGateway {
     override suspend fun currentDestination(): NaviBinding? = null
     override suspend fun homeBookmark(): NaviBinding? = null
     override suspend fun route(target: RouteTarget, previous: NaviBinding?): RouteOutcome = RouteOutcome.Unavailable(io.tteonaljido.car.R.string.navi_missing)
+    override suspend fun routeTrip(dest: RouteTarget, waypoints: List<RouteTarget>, previous: NaviBinding?): RouteOutcome = RouteOutcome.Unavailable(io.tteonaljido.car.R.string.navi_missing)
     override suspend fun currentLocation(): HereLocation? = null
     override suspend fun estimate(target: RouteTarget): NaviEstimate? = null
     override fun refreshLive() {}
