@@ -7,7 +7,7 @@ import { Selector } from '@astryxdesign/core/Selector';
 import { Spinner } from '@astryxdesign/core/Spinner';
 import { HStack, VStack } from '@astryxdesign/core/Stack';
 import { Heading, Text } from '@astryxdesign/core/Text';
-import { CATEGORY_LABEL, type NewPlace } from '../editor/PlaceSearch';
+import { CATEGORY_LABEL, PlaceSearch, type NewPlace } from '../editor/PlaceSearch';
 import { trips } from '../lib/db';
 import { t } from '../lib/i18n';
 import { ApiError, searchPlaces, type PlaceHit } from '../lib/pairing';
@@ -119,6 +119,12 @@ export function AddSharedPlacePage() {
                     )}
                     {hits && hits.length === 0 && <Banner status="info" title={t('add.noCandidates')} />}
                     <Button label={t('add.addByName', { name: term.slice(0, 20) })} variant={hits && hits.length > 0 ? 'secondary' : 'primary'} onClick={addByName} />
+                    <VStack gap={1}>
+                      <Text type="label" color="secondary">
+                        {t('add.refine')}
+                      </Text>
+                      <PlaceSearch label={t('add.refine.search')} onPick={(p) => void addTo(p)} />
+                    </VStack>
                   </>
                 )}
               </>
