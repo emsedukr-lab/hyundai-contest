@@ -1,4 +1,7 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
+import { DndContext, KeyboardSensor, PointerSensor, closestCenter, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
+import { SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { Badge } from '@astryxdesign/core/Badge';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
@@ -9,18 +12,39 @@ import { HStack, VStack } from '@astryxdesign/core/Stack';
 import { Tab, TabList } from '@astryxdesign/core/TabList';
 import { Heading, Text } from '@astryxdesign/core/Text';
 import { TimeInput } from '@astryxdesign/core/TimeInput';
-import { dayEnd, dayIssues, hhmm, timeline, type Endpoint, type Trip } from '@tteonaljido/shared';
+import { dayEnd, dayIssues, hhmm, timeline, type Endpoint, type Home, type Trip } from '@tteonaljido/shared';
 import { dateLabel, minutesLabel } from '../lib/format';
 import { t } from '../lib/i18n';
-import { assign, issueText, lodgingPlaces, move, placeOf, setDepart, setEndBy, setLeg, setLodging, unassign, unassignedVisits, visitOf } from '../lib/trips';
+import { assign, issueText, lodgingPlaces, move, moveTo, placeOf, setDepart, setEndBy, setLeg, setLodging, unassign, unassignedVisits, visitOf } from '../lib/trips';
+import { RouteSketch } from './RouteSketch';
 
 type ISOTime = Parameters<NonNullable<Parameters<typeof TimeInput>[0]['onChange']>>[0];
 
 const endpointName = (plan: Trip, e: Endpoint) => (e.kind === 'HOME' ? t('common.home') : (placeOf(plan, e.placeRef)?.name ?? t('common.place')));
 
+/** Wraps a stop card so it can be dragged to reorder (a top-right handle; up/down buttons remain as a fallback). */
+function SortableStop({ id, children }: { id: string; children: ReactNode }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  return (
+    <div ref={setNodeRef} style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1, position: 'relative' }}>
+      <button
+        type="button"
+        aria-label={t('days.drag')}
+        {...attributes}
+        {...listeners}
+        style={{ position: 'absolute', top: 10, right: 10, cursor: 'grab', border: 'none', background: 'transparent', color: 'inherit', fontSize: 18, lineHeight: 1, padding: 4, touchAction: 'none', zIndex: 1 }}>
+        ⠿
+      </button>
+      {children}
+    </div>
+  );
+}
+
 /** Per-day order, travel times, departure and lodging. Edits never move fixed visits on their own. */
-export function DaysSection({ plan, onChange, onOpenPlace, onError }: { plan: Trip; onChange: (p: Trip) => void; onOpenPlace: (ref: string) => void; onError: (m: string) => void }) {
+export function DaysSection({ plan, home, onChange, onOpenPlace, onError }: { plan: Trip; home: Home | null; onChange: (p: Trip) => void; onOpenPlace: (ref: string) => void; onError: (m: string) => void }) {
   const [tab, setTab] = useState('1');
+  const [showSketch, setShowSketch] = useState(false);
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }));
   const day = plan.days.find((d) => String(d.dayIndex) === tab) ?? plan.days[0];
   const i = day.dayIndex - 1;
   const isLast = i === plan.days.length - 1;
@@ -43,6 +67,13 @@ export function DaysSection({ plan, onChange, onOpenPlace, onError }: { plan: Tr
     } catch (e) {
       onError((e as Error).message);
     }
+  };
+  const onDragEnd = (e: DragEndEvent) => {
+    const { active, over } = e;
+    if (!over || active.id === over.id) return;
+    const from = day.visitOrder.indexOf(String(active.id));
+    const to = day.visitOrder.indexOf(String(over.id));
+    if (from >= 0 && to >= 0) safe(() => moveTo(plan, day.dayIndex, from, to));
   };
 
   const leg = (k: number) => (
@@ -85,6 +116,8 @@ export function DaysSection({ plan, onChange, onOpenPlace, onError }: { plan: Tr
       ) : (
         <TimeInput label={t('days.departFrom', { start })} value={(day.departTime ?? undefined) as ISOTime} increment={30} hasClear onChange={(v) => safe(() => setDepart(plan, day.dayIndex, v ? String(v).slice(0, 5) : null))} />
       )}
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+      <SortableContext items={day.visitOrder} strategy={verticalListSortingStrategy}>
       <VStack gap={2}>
         {day.visitOrder.length === 0 && <Text color="secondary">{t('days.empty')}</Text>}
         {day.visitOrder.flatMap((id, k) => {
@@ -92,7 +125,8 @@ export function DaysSection({ plan, onChange, onOpenPlace, onError }: { plan: Tr
           const p = placeOf(plan, v.placeRef)!;
           return [
             leg(k),
-            <Card key={id} padding={3}>
+            <SortableStop key={id} id={id}>
+            <Card padding={3}>
               <VStack gap={1}>
                 <HStack gap={1} vAlign="center" wrap="wrap">
                   <Text type="label">{`${k + 1}. ${p.name}`}</Text>
@@ -113,7 +147,8 @@ export function DaysSection({ plan, onChange, onOpenPlace, onError }: { plan: Tr
                   <Button label={t('days.remove')} size="sm" variant="ghost" onClick={() => safe(() => unassign(plan, id))} />
                 </HStack>
               </VStack>
-            </Card>,
+            </Card>
+            </SortableStop>,
           ];
         })}
         {leg(day.visitOrder.length)}
@@ -127,6 +162,12 @@ export function DaysSection({ plan, onChange, onOpenPlace, onError }: { plan: Tr
           isOptional
           onChange={(v) => safe(() => setEndBy(plan, day.dayIndex, v ? String(v).slice(0, 5) : null))}
         />
+      </VStack>
+      </SortableContext>
+      </DndContext>
+      <VStack gap={2}>
+        <Button label={showSketch ? t('sketch.hide') : t('sketch.title')} size="sm" variant="ghost" onClick={() => setShowSketch((v) => !v)} />
+        {showSketch && <RouteSketch plan={plan} home={home} dayIndex={day.dayIndex} />}
       </VStack>
       {pool.length > 0 && (
         <Selector

@@ -206,7 +206,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
               <Button label={t('share.button')} variant="ghost" size="sm" onClick={() => setSharing(true)} />
               <Button label={t('recommend.button')} variant="secondary" size="sm" onClick={() => setRecommending(true)} />
             </HStack>
-            <DaysSection plan={plan} onChange={edit} onOpenPlace={setOpenPlace} onError={setError} />
+            <DaysSection plan={plan} home={home} onChange={edit} onOpenPlace={setOpenPlace} onError={setError} />
 
             {unassignedVisits(plan).length > 0 && (
               <VStack gap={3}>

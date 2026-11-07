@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { parseTransfer, sampleTrip, type Trip } from '@tteonaljido/shared';
-import { addPlace, assign, changeCategory, emptyPlan, move, newDoc, planWarnings, relinkLegs, rememberLegs, removePlace, savePlan, setDepart, setEndBy, setLeg, setLodging, setPeriod, toTransfer, unassign, type LegBook } from './trips';
+import { addPlace, assign, changeCategory, emptyPlan, move, moveTo, newDoc, planWarnings, relinkLegs, rememberLegs, removePlace, savePlan, setDepart, setEndBy, setLeg, setLodging, setPeriod, toTransfer, unassign, type LegBook } from './trips';
 
 // The warning assertions below check the Korean copy; jsdom reports navigator.language as en-US.
 vi.hoisted(() => Object.defineProperty(navigator, 'language', { value: 'ko-KR', configurable: true }));
@@ -20,6 +20,21 @@ describe('trip edits keep the transfer valid', () => {
     t = setPeriod(t, '2026-11-21', '2026-11-23');
     const doc = await newDoc(t, home);
     expect(await parseTransfer(JSON.stringify(await toTransfer(doc, true)))).toMatchObject({ ok: true });
+  });
+
+  it('moveTo reorders a day to an arbitrary index and clears the affected legs', () => {
+    const base = sampleTrip();
+    const t = moveTo(base, 1, 0, 2); // v1 → end of day 1 (v1,v2,v3 → v2,v3,v1)
+    expect(day(t, 1).visitOrder).toEqual(['v2', 'v3', 'v1']);
+    expect(day(t, 1).legs.every((l) => l === null)).toBe(true); // every leg between the ends is re-checked
+    expect(day(t, 2).visitOrder).toEqual(day(base, 2).visitOrder); // other days untouched
+  });
+
+  it('moveTo is a no-op when from === to or out of range', () => {
+    const base = sampleTrip();
+    expect(day(moveTo(base, 1, 1, 1), 1).visitOrder).toEqual(day(base, 1).visitOrder);
+    expect(day(moveTo(base, 1, 1, 1), 1).legs).toEqual(day(base, 1).legs);
+    expect(day(moveTo(base, 1, 0, 9), 1).visitOrder).toEqual(day(base, 1).visitOrder);
   });
 
   it('removing a stop marks the travel time across the gap unknown', () => {

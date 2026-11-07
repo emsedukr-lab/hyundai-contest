@@ -182,6 +182,20 @@ export function move(plan: Trip, dayIndex: number, k: number, dir: -1 | 1): Trip
   });
 }
 
+/** Moves one stop from index `from` to index `to` (drag-and-drop). Like [move] it clears the legs whose endpoints changed. */
+export function moveTo(plan: Trip, dayIndex: number, from: number, to: number): Trip {
+  return mapDay(plan, dayIndex, (d) => {
+    if (from === to || from < 0 || to < 0 || from >= d.visitOrder.length || to >= d.visitOrder.length) return d;
+    const order = [...d.visitOrder];
+    const [moved] = order.splice(from, 1);
+    order.splice(to, 0, moved);
+    // legs[i] is the leg into position i; everything between the two positions gets new neighbours, so null [lo, hi+1].
+    const lo = Math.min(from, to);
+    const hi = Math.max(from, to);
+    return { ...d, visitOrder: order, legs: d.legs.map((l, i) => (i >= lo && i <= hi + 1 ? null : l)) };
+  });
+}
+
 export const setLeg = (plan: Trip, dayIndex: number, k: number, minutes: number | null): Trip =>
   mapDay(plan, dayIndex, (d) => ({ ...d, legs: d.legs.map((l, i) => (i === k ? (minutes === null ? null : { minutes, source: 'USER_ESTIMATE' }) : l)) }));
 
