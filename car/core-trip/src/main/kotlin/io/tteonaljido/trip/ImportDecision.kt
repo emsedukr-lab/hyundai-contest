@@ -79,6 +79,10 @@ object ImportDecision {
             visited = overlay.visited.filter { it in visits }.toSet(),
             visitedAt = overlay.visitedAt.filterKeys { it in visits },
             skipped = overlay.skipped.filter { it in visits }.toSet(),
+            // Defer state and measured visits for stops/places the new plan no longer has are dropped (stale otherwise).
+            deferred = overlay.deferred.filter { it in visits }.toSet(),
+            deferredTo = overlay.deferredTo.filterKeys { it in visits },
+            visitRecords = overlay.visitRecords.filter { it.placeId in places },
             legEstimates = estimates,
             guiding = guiding,
         )

@@ -86,6 +86,19 @@ class DeferTest {
         assertFalse("v4" in NextDestination.upcoming(sample, restored, 3))
     }
 
+    @Test fun reconcileKeepsExistingDeferAndRecordsButDropsRemovedOnes() {
+        val o = CarOverlay(
+            deferred = setOf("v4"), // still exists in the new plan → kept
+            deferredTo = mapOf("v6" to 3), // v6 removed below → dropped
+            visitRecords = listOf(VisitRecord("t", 2, "mandong", PlaceCategory.FOOD, isWeekend = false, tArrive = 0, tParked = 5 * 60_000L, tDepart = 40 * 60_000L)),
+        )
+        val fewer = sample.copy(places = sample.places.filter { it.placeRef != "mandong" }, visits = sample.visits.filter { it.visitId != "v6" })
+        val r = ImportDecision.reconcile(o, fewer)
+        assertTrue("v4" in r.deferred)
+        assertTrue(r.deferredTo.isEmpty())   // the moved stop's target is dropped with the stop
+        assertTrue(r.visitRecords.isEmpty()) // the removed place's measurement is dropped
+    }
+
     @Test fun emptyDeferredLeavesTheProjectionUnchanged() {
         val base = LiveProjection.project(lakeOptional, CarOverlay(), 2, m("08:00"), naviRemaining = 134)
         val same = LiveProjection.project(lakeOptional, CarOverlay(deferred = emptySet()), 2, m("08:00"), naviRemaining = 134)
