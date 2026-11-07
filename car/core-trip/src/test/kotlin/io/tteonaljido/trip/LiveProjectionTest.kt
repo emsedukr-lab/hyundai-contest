@@ -92,6 +92,24 @@ class LiveProjectionTest {
         assertEquals(Punctuality.LATE, p.status)
     }
 
+    @Test fun measuredParkingBufferAndStayTendencyPushTheScheduleLater() {
+        fun rec(pid: String, parkMin: Int, actualStay: Int) = VisitRecord("t", 2, pid, PlaceCategory.FOOD, isWeekend = false, tArrive = 0, tParked = parkMin * 60_000L, tDepart = (parkMin + actualStay) * 60_000L)
+        // Three FOOD visits parked ~8 min and stayed 1.5× their plan (donghwa 60, mandong 30, umji 60).
+        val recs = listOf(rec("donghwa", 8, 90), rec("mandong", 8, 45), rec("umji", 8, 90))
+        val plain = LiveProjection.project(sample, CarOverlay(visited = setOf("v4")), 2, m("11:15"))
+        val measured = LiveProjection.project(sample, CarOverlay(visited = setOf("v4"), visitRecords = recs), 2, m("11:15"))
+        assertEquals(85, plain.fixed!!.slack) // unchanged baseline (no records)
+        assertTrue("buffer before the fixed stop eats into the slack", measured.fixed!!.slack!! < plain.fixed!!.slack!!)
+        assertTrue("buffer + 1.5× stay push the day's end out", measured.endExpected!! > plain.endExpected!!)
+    }
+
+    @Test fun noVisitRecordsLeavesTheProjectionUnchanged() {
+        // Empty records → buffer 0, stay ×1.0: identical to before the feature (guards the existing behavior).
+        val p = LiveProjection.project(lakeOptional, CarOverlay(), 2, m("08:00"), naviRemaining = 134)
+        assertEquals(m("10:14"), p.arriveNext)
+        assertEquals(46, p.fixed!!.slack)
+    }
+
     /* ---------- leg sources ---------- */
 
     @Test fun planLegWinsOverNaviEstimateAndNaviFillsGaps() {

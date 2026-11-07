@@ -82,7 +82,14 @@ object LiveProjection {
         }
 
         val items = remaining.mapIndexed { i, idx -> visits.getValue(order[idx]) to (if (i == 0) first else legs(remaining[i - 1], idx)) }
-        val stops = TripValidator.walk(now, items)
+        // Measured parking buffer / stay tendency (car-only input). Empty records → buffer 0 and mult 1.0, so the plan's
+        // own timeline is unchanged; it activates once this trip has measurements. Never edits the plan.
+        val places = trip.places.associateBy { it.placeRef }
+        val isWeekend = runCatching { java.time.LocalDate.parse(day.date).dayOfWeek.let { it == java.time.DayOfWeek.SATURDAY || it == java.time.DayOfWeek.SUNDAY } }.getOrDefault(false)
+        val stayMult = StayTendency.of(overlay.visitRecords) { id -> trip.visits.firstOrNull { it.placeRef == id }?.stayMinutes }
+        val buffers: List<Int> = if (overlay.visitRecords.isEmpty()) List(items.size) { 0 }
+            else items.map { (v, _) -> ParkingBufferPolicy.buffer(overlay.visitRecords, places[v.placeRef]?.category ?: PlaceCategory.OTHER, isWeekend, beforeFixed = v.fixed != null) }
+        val stops = TripValidator.walk(now, items, { buffers.getOrElse(it) { 0 } }, stayMult)
         val tail = legs(remaining.last(), order.size)
         val endExpected = stops.last().end?.let { e -> tail?.let { e + it } }
         val plannedArrive = TripValidator.timeline(trip, dayIndex, overlay).firstOrNull { it.visitId == order[firstIdx] }?.arrive
@@ -92,7 +99,7 @@ object LiveProjection {
         val fixed = if (fixedPos < 0) null else {
             val v = items[fixedPos].first
             val f = TripValidator.minutes(v.fixed!!.time)
-            val ready = stops[fixedPos].arrive?.plus(v.prepMinutes)
+            val ready = stops[fixedPos].arrive?.plus(v.prepMinutes + buffers.getOrElse(fixedPos) { 0 })
             FixedCheck(v.visitId, f, ready, ready?.let { f - it })
         }
         // Both a fixed stop and a return-by time can apply; the nearer-to-late one is what the driver is shown.
@@ -117,11 +124,9 @@ object LiveProjection {
             val late = -(deadlineSlack ?: 0)
             // Only optional stops before the fixed one (if any) help; a return-by deadline lets any optional stop help.
             val before = if (fixedPos >= 0) items.take(fixedPos) else items
-            before.map { it.first }
-                .filter { it.importance == Importance.OPTIONAL && it.fixed == null }
-                .map { SkipSuggestion(it.visitId, it.prepMinutes + it.stayMinutes) }
-                .filter { it.saves >= late }
-                .minByOrNull { it.saves }
+            before.mapIndexedNotNull { i, (v, _) ->
+                if (v.importance == Importance.OPTIONAL && v.fixed == null) SkipSuggestion(v.visitId, v.prepMinutes + Math.round(v.stayMinutes * stayMult).toInt() + buffers.getOrElse(i) { 0 }) else null
+            }.filter { it.saves >= late }.minByOrNull { it.saves }
         }
         return Projection(dayIndex, order[firstIdx], stops.first().arrive, basis, stops, vsPlan, fixed, endExpected, endBy, deadlineKind, deadlineSlack, status, approximate, skip)
     }

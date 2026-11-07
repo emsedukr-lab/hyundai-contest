@@ -89,20 +89,22 @@ object TripValidator {
     }
 
     /**
-     * Walks stops from `start`: arrival = clock + leg; a visit starts after prep, and not before its fixed time.
-     * A fixed time restores the chain even after an unknown leg. Shared by the plan check and the live projection.
+     * Walks stops from `start`: arrival = clock + leg; a visit starts after prep (plus a measured parking buffer) and
+     * not before its fixed time; a fixed time restores the chain even after an unknown leg. `bufferAt`/`stayMult`
+     * default to no-op (0 / 1.0) so the plan check and cross-language fixtures are unchanged; only the car's live
+     * projection passes measured values. Shared by the plan check and the live projection.
      */
-    internal fun walk(start: Int?, items: List<Pair<Visit, Int?>>): List<StopTime> {
+    internal fun walk(start: Int?, items: List<Pair<Visit, Int?>>, bufferAt: (Int) -> Int = { 0 }, stayMult: Double = 1.0): List<StopTime> {
         var clock: Int? = start
-        return items.map { (v, leg) ->
+        return items.mapIndexed { i, (v, leg) ->
             val arrive = if (clock != null && leg != null) clock!! + leg else null
             val fixed = v.fixed?.let { minutes(it.time) }
             val begin = when {
-                arrive != null -> maxOf(arrive + v.prepMinutes, fixed ?: 0)
+                arrive != null -> maxOf(arrive + v.prepMinutes + bufferAt(i), fixed ?: 0)
                 fixed != null -> fixed
                 else -> null
             }
-            val end = begin?.plus(v.stayMinutes)
+            val end = begin?.plus(Math.round(v.stayMinutes * stayMult).toInt())
             clock = end
             StopTime(v.visitId, arrive, begin, end)
         }
