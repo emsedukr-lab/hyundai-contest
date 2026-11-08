@@ -589,6 +589,14 @@ const ko = {
   'tl.lodgingMemo': '메모 (호실 등)',
   'tl.checkInAt': '입실 {time}',
   'tl.checkOutAt': '퇴실 {time}',
+  'tl.addLodgingNote': '+ 입실·퇴실 시간, 메모',
+  'tl.editLodgingNote': '입실·퇴실 시간, 메모 수정',
+  'tl.autoLegs': '이동시간 자동 채우기',
+  'tl.autoLegsDone': '카카오 길찾기로 이동시간 {n}구간을 채웠어요',
+  'tl.autoLegsNone': '채울 수 있는 빈 구간이 없어요',
+  'tl.autoLegsOff': '지금은 카카오 길찾기를 쓸 수 없어요',
+  'privacy.route.label': '이동시간 계산',
+  'privacy.route.text': '경로가 바뀐 구간의 출발·도착 좌표만 중계 서버를 거쳐 카카오모빌리티 길찾기로 보내 이동시간을 받아요 · 집을 지나는 구간은 보내지 않고, 저장·기록하지 않아요',
 } as const satisfies Record<string, string>;
 
 export type Key = keyof typeof ko;
@@ -1176,6 +1184,14 @@ const en: Record<Key, string> = {
   'tl.lodgingMemo': 'Memo (room number, etc.)',
   'tl.checkInAt': 'Check-in {time}',
   'tl.checkOutAt': 'Check-out {time}',
+  'tl.addLodgingNote': '+ Check-in/out times, memo',
+  'tl.editLodgingNote': 'Edit check-in/out times, memo',
+  'tl.autoLegs': 'Fill travel times',
+  'tl.autoLegsDone': 'Filled {n} {n|leg|legs} from Kakao directions',
+  'tl.autoLegsNone': 'No empty legs to fill',
+  'tl.autoLegsOff': 'Kakao directions aren\'t available right now',
+  'privacy.route.label': 'Travel times',
+  'privacy.route.text': 'Only the start and end coordinates of legs whose route changed go through our relay to Kakao Mobility directions for a driving time · legs touching home are never sent, and nothing is stored or logged',
 };
 
 /** Both tables, for tests. */

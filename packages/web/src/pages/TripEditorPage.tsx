@@ -24,6 +24,7 @@ import { shortDate } from '../lib/format';
 import { t } from '../lib/i18n';
 import { navigate } from '../lib/router';
 import { cleanNotes, setNote, type TripNotes } from '../lib/notes';
+import { applyRun, emptyRuns, fetchRun, runSignature } from '../lib/routeTimes';
 import { defaultHome } from '../lib/settings';
 import { emptyPlan, newDoc, nightsLabel, nowIso, relinkLegs, rememberLegs, savePlan, unassignedVisits, type LegBook, type TripDoc } from '../lib/trips';
 import '../editor/timeline.css';
@@ -87,6 +88,10 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
   // The latest state for saves that happen outside a render: leaving by browser back (unmount) or the app going away.
   const latest = useRef<{ doc: TripDoc | null; plan: Trip | null; notes: TripNotes; dirty: boolean }>({ doc: null, plan: null, notes: {}, dirty: false });
   latest.current = { doc, plan, notes, dirty };
+  /** Auto travel times: only after the user changed something, each empty stretch asked once, stopped if unavailable. */
+  const edited = useRef(false);
+  const asked = useRef(new Set<string>());
+  const routeOff = useRef(false);
   /** Saves run one after another so two of them never race on the same revision. */
   const queue = useRef<Promise<unknown>>(Promise.resolve());
   const saveNow = (): Promise<TripDoc | null> => {
@@ -160,6 +165,45 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  /**
+   * Fills empty legs from Kakao directions. Automatic after a route change (each stretch once, silent); from the menu it
+   * retries everything and says what happened. Answers land only where the leg is still empty and unchanged.
+   */
+  const fillLegs = async (manual: boolean) => {
+    const cur = latest.current.plan;
+    if (!cur || (!manual && routeOff.current)) return;
+    const runs = emptyRuns(cur).filter((r) => manual || !asked.current.has(runSignature(r)));
+    if (!runs.length) return manual ? setNotice({ tone: 'info', text: t('tl.autoLegsNone') }) : undefined;
+    let filled = 0;
+    for (const run of runs) {
+      asked.current.add(runSignature(run));
+      const minutes = await fetchRun(run);
+      if (!minutes) {
+        routeOff.current = true;
+        if (manual) setNotice({ tone: 'error', text: t('tl.autoLegsOff') });
+        return;
+      }
+      const now = latest.current.plan;
+      if (!now) return;
+      const out = applyRun(now, run, minutes);
+      if (!out.filled) continue;
+      filled += out.filled;
+      rememberLegs(out.plan, book.current);
+      latest.current.plan = out.plan;
+      setPlan(out.plan);
+      setDirty(true);
+    }
+    routeOff.current = false;
+    if (manual) setNotice({ tone: filled ? 'success' : 'info', text: filled ? t('tl.autoLegsDone', { n: filled }) : t('tl.autoLegsNone') });
+  };
+  // After an edit that left legs empty (a stop moved, added or removed; lodging or an end changed), fill them shortly after.
+  useEffect(() => {
+    if (!plan || !edited.current) return;
+    const timer = setTimeout(() => void fillLegs(false), 900);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [plan]);
+
   // Days with something to fix get a dot on their header: a timetable conflict or a night without lodging.
   const attention = useMemo(() => {
     if (!plan) return new Set<number>();
@@ -177,6 +221,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
     rememberLegs(linked, book.current);
     setPlan(linked);
     setDirty(true);
+    edited.current = true;
   };
   const fail = (m: string) => setNotice({ tone: 'error', text: m });
   const notesApi = {
@@ -217,6 +262,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
 
   const menuItems = [
     { label: t('recommend.button'), onClick: () => setRecommending(true) },
+    { label: t('tl.autoLegs'), onClick: () => void fillLegs(true) },
     ...(tripId ? [{ label: t('trip.duplicate'), onClick: () => void duplicate() }] : []),
     { label: t('share.button'), onClick: () => setSharing(true) },
     ...(tripId ? [{ type: 'divider' as const }, { label: t('editor.delete'), variant: 'destructive' as const, onClick: () => setConfirmDelete(true) }] : []),

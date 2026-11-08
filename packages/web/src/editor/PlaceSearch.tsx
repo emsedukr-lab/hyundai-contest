@@ -16,6 +16,7 @@ import { Card } from '../components/toss/Card';
 import { favorites } from '../lib/db';
 import { asNewPlace, favoriteId, toFavorite } from '../lib/favorites';
 import type { FavoritePlace } from '../lib/favorites';
+import { SearchIcon } from '../components/shell/icons';
 import { t } from '../lib/i18n';
 import { ApiError, resolvePlace, searchPlaces, type PlaceHit } from '../lib/pairing';
 import { parsePastedPlace, parsePastedPlaces } from '../lib/placeShare';
@@ -223,7 +224,12 @@ export function PlaceSearch({
         <StackItem size="fill">
           <TextInput label={label} isLabelHidden={isLabelHidden} value={q} onChange={setQ} onEnter={() => run()} placeholder={placeholder ?? t('place.search.placeholder')} hasClear />
         </StackItem>
-        <Button label={t('place.search.action')} variant="secondary" isLoading={busy} onClick={() => run()} />
+        {compact ? (
+          // narrow cards (a night's lodging): an icon keeps the field wide enough to type in
+          <IconButton label={t('place.search.action')} icon={<SearchIcon />} variant="secondary" isLoading={busy} onClick={() => run()} />
+        ) : (
+          <Button label={t('place.search.action')} variant="secondary" isLoading={busy} onClick={() => run()} />
+        )}
       </HStack>
       {note && <Banner status="info" title={note} />}
       {hits && hits.length === 0 && <Banner status="info" title={t('place.search.noResults')} />}

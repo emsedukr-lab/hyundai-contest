@@ -1,6 +1,7 @@
 import { randomId } from '@tteonaljido/shared';
 import { error, json, readJson } from './http';
 import { searchPlaces } from './kakao';
+import { routeDurations } from './route';
 import { resolveShare } from './resolve';
 
 export { PairingSession } from './pairingSession';
@@ -12,6 +13,7 @@ export interface Env {
   RL_CLAIM: RateLimit;
   RL_API: RateLimit;
   RL_SEARCH: RateLimit;
+  RL_ROUTE: RateLimit;
   KAKAO_REST_KEY?: string;
   TTL_QR?: string;
   TTL_UPLOAD?: string;
@@ -56,6 +58,15 @@ export default {
       const body = await readJson<Record<string, unknown>>(req, 1024);
       if (!body || body === 'TOO_LARGE') return error('BAD_REQUEST');
       return searchPlaces(body, env.KAKAO_REST_KEY);
+    }
+
+    if (parts[2] === 'routes' && parts[3] === 'durations') {
+      if (req.method !== 'POST') return error('NOT_FOUND');
+      if (await limited(env.RL_ROUTE, ip)) return error('RATE_LIMITED');
+      // Coordinates of the stops in question only (never home); passed to Kakao Mobility, not stored or logged.
+      const body = await readJson<Record<string, unknown>>(req, 4096);
+      if (!body || body === 'TOO_LARGE') return error('BAD_REQUEST');
+      return routeDurations(body, env.KAKAO_REST_KEY);
     }
 
     if (parts[2] === 'places' && parts[3] === 'resolve') {

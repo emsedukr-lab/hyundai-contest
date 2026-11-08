@@ -424,3 +424,58 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* 여행 정보: a header card (name typed large in place, then the dates) and rail cards without a tap target. */
+.tl-infocard {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 18px 14px;
+  border-radius: var(--radius-container);
+  background: var(--color-background-card);
+}
+.tl-name-input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 0;
+  border-bottom: 1.5px solid transparent;
+  padding: 2px 0 4px;
+  background: transparent;
+  color: var(--color-text-primary);
+  font: inherit;
+  font-size: 22px;
+  line-height: 1.35;
+  font-weight: 700;
+  outline: none;
+}
+.tl-name-input::placeholder {
+  color: var(--color-text-secondary);
+  font-weight: 600;
+}
+.tl-name-input:focus-visible {
+  border-bottom-color: var(--color-accent);
+}
+.tl-card-body {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 14px 14px 16px;
+}
+/* A quiet text action inside a card ("+ 입실·퇴실 시간, 메모"). */
+.tl-textbtn {
+  padding: 4px 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-accent);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.tl-textbtn:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}

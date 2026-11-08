@@ -4,7 +4,7 @@ import { Selector } from '@astryxdesign/core/Selector';
 import { VStack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
 import type { Endpoint, Home, Trip } from '@tteonaljido/shared';
-import { FlagIcon, PencilIcon, PinIcon } from '../components/shell/icons';
+import { PencilIcon } from '../components/shell/icons';
 import { t } from '../lib/i18n';
 import { PRESET_SLOTS, presetLabel, presetPlace } from '../lib/settings';
 import { endpointFromPreset, presetInPlan, setEndpoint, type EndpointSide } from '../lib/trips';
@@ -35,7 +35,7 @@ export function EndpointField({
   label?: string;
   /** Hide the select's visible label when a section title above already says it (kept for screen readers). */
   isLabelHidden?: boolean;
-  /** The concise editor form: no visible label (a start pin or a return flag inside the field says which end), no address or hint lines. */
+  /** The concise editor form: no visible label (the card or sheet around it says which end), no address or hint lines. */
   compact?: boolean;
 }) {
   const [presets] = useState(() => PRESET_SLOTS.filter((s) => s !== 'home').map((slot) => ({ slot, place: presetPlace(slot) })));
@@ -72,14 +72,13 @@ export function EndpointField({
             label={fieldLabel}
             isLabelHidden={isLabelHidden || compact}
             placement="below"
-            startIcon={compact ? <span className="tl-fieldicon">{which === 'origin' ? <PinIcon /> : <FlagIcon />}</span> : undefined}
             options={options}
             value={endpointValue(current)}
             onChange={pick}
           />
         </div>
         <div style={{ flex: 'none' }}>
-          <IconButton label={t('editor.home.openSettings')} icon={<PencilIcon />} variant="secondary" size="md" onClick={onOpenSettings} />
+          <IconButton label={t('editor.home.openSettings')} icon={<PencilIcon />} variant={compact ? 'ghost' : 'secondary'} size="md" onClick={onOpenSettings} />
         </div>
       </div>
       {!compact && address && (

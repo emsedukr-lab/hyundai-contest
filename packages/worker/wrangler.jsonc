@@ -19,7 +19,8 @@
     { "name": "RL_CREATE", "namespace_id": "1001", "simple": { "limit": 10, "period": 60 } },
     { "name": "RL_CLAIM", "namespace_id": "1002", "simple": { "limit": 20, "period": 60 } },
     { "name": "RL_API", "namespace_id": "1003", "simple": { "limit": 120, "period": 60 } },
-    { "name": "RL_SEARCH", "namespace_id": "1004", "simple": { "limit": 30, "period": 60 } }
+    { "name": "RL_SEARCH", "namespace_id": "1004", "simple": { "limit": 30, "period": 60 } },
+    { "name": "RL_ROUTE", "namespace_id": "1005", "simple": { "limit": 30, "period": 60 } }
   ],
   // Off on purpose: request logs would keep URLs and client addresses, and the privacy design promises neither is stored.
   "observability": { "enabled": false }
