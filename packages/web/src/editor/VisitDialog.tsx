@@ -16,7 +16,7 @@ import { useEffect, useState } from 'react';
 import type { OpeningHours, Place, Trip, Visit } from '@tteonaljido/shared';
 import { dateLabel } from '../lib/format';
 import { t } from '../lib/i18n';
-import { changeCategory, removePlace, updatePlace, updateVisit } from '../lib/trips';
+import { changeCategory, isEndpointOnly, removePlace, updatePlace, updateVisit } from '../lib/trips';
 import { CATEGORY_OPTIONS } from './PlaceSearch';
 
 type ISOTime = Parameters<NonNullable<Parameters<typeof TimeInput>[0]['onChange']>>[0];
@@ -93,7 +93,7 @@ export function VisitDialog({ plan, placeRef, onChange, onClose }: { plan: Trip;
             </>
           ) : (
             <Text type="supporting" color="secondary">
-              {t('visit.lodgingNote')}
+              {isEndpointOnly(plan, place.placeRef) ? t('visit.endpointNote') : t('visit.lodgingNote')}
             </Text>
           )}
           <Switch

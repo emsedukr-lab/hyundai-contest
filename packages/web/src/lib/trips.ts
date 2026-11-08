@@ -138,6 +138,53 @@ export function addPlace(plan: Trip, p: Omit<Place, 'placeRef'>, stayMinutes = 6
   return { ...plan, places: [...plan.places, place], visits };
 }
 
+/** A place that is only a start or end point: not lodging and no visit (nobody stops there on the way). */
+export const isEndpointOnly = (plan: Trip, placeRef: string) => {
+  const p = plan.places.find((x) => x.placeRef === placeRef);
+  return !!p && p.category !== 'LODGING' && !plan.visits.some((v) => v.placeRef === placeRef);
+};
+
+/**
+ * Sets the first-day start. A place that existed only to be the old start (endpoint-only, not the final destination
+ * or any night's lodging) is dropped with it, so trying 회사 then 즐겨찾기 doesn't leave stray places behind.
+ */
+export function setOrigin(plan: Trip, origin: Endpoint): Trip {
+  const prev = plan.origin;
+  const next: Trip = { ...plan, origin };
+  if (prev.kind !== 'PLACE' || (origin.kind === 'PLACE' && origin.placeRef === prev.placeRef)) return next;
+  const ref = prev.placeRef;
+  const stillUsed = (next.finalDestination.kind === 'PLACE' && next.finalDestination.placeRef === ref) || next.days.some((d) => d.lodgingPlaceRef === ref);
+  return isEndpointOnly(next, ref) && !stillUsed ? removePlace(next, ref) : next;
+}
+
+/** A saved start place (설정 › 회사, 즐겨찾기): name plus address and coordinates. */
+export type StartPreset = Home & { name: string };
+
+/** The trip's copy of a saved start place, matched by name and coordinates. */
+export const presetInPlan = (plan: Trip, preset: StartPreset) =>
+  plan.places.find((p) => p.latE7 === preset.latE7 && p.lonE7 === preset.lonE7 && p.name === preset.name.slice(0, TRANSFER_LIMITS.nameMax));
+
+/**
+ * Starts the trip from a saved place. The transfer only knows HOME or a place of the trip, so the preset joins the
+ * trip as an endpoint-only place (no visit: it is where the day begins, not a stop) — or the copy already there is reused.
+ */
+export function startFromPreset(plan: Trip, preset: StartPreset): Trip {
+  const same = presetInPlan(plan, preset);
+  if (same) return setOrigin(plan, { kind: 'PLACE', placeRef: same.placeRef });
+  const place: Place = {
+    placeRef: newRef('p'),
+    name: preset.name.slice(0, TRANSFER_LIMITS.nameMax),
+    address: preset.address.slice(0, TRANSFER_LIMITS.addressMax),
+    latE7: preset.latE7,
+    lonE7: preset.lonE7,
+    category: 'OTHER',
+    source: { provider: 'MANUAL', externalId: null },
+    naviPoi: null,
+    hours: { status: 'UNKNOWN' },
+  };
+  return setOrigin({ ...plan, places: [...plan.places, place] }, { kind: 'PLACE', placeRef: place.placeRef });
+}
+
 export function removePlace(plan: Trip, placeRef: string): Trip {
   let next = plan;
   for (const v of plan.visits.filter((v) => v.placeRef === placeRef)) next = unassign(next, v.visitId);

@@ -4,18 +4,18 @@ import { Button } from '@astryxdesign/core/Button';
 import { FileInput } from '@astryxdesign/core/FileInput';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { useInstallPrompt } from '../components/InstallHint';
-import { DownloadIcon, HomeIcon, InfoIcon, PhoneIcon, ShieldIcon, UploadIcon } from '../components/shell/icons';
+import { DownloadIcon, InfoIcon, PhoneIcon, PresetIcon, ShieldIcon, UploadIcon } from '../components/shell/icons';
 import { Row, Section } from '../components/shell/rows';
 import { TabScreen } from '../components/shell/Screens';
 import { trips } from '../lib/db';
 import { t } from '../lib/i18n';
 import { navigate } from '../lib/router';
-import { defaultHome } from '../lib/settings';
+import { PRESET_SLOTS, presetLabel, presetPlace } from '../lib/settings';
 import { docFromShare, importShare, isShareFile } from '../lib/share';
 import { newDoc, nowIso, type TripDoc } from '../lib/trips';
 
 /**
- * 설정 tab: defaults for new trips (the home address), trip data (backup out, backup or a friend's share file in) and
+ * 설정 tab: start places for new trips (집, 회사, 즐겨찾기 1–3), trip data (backup out, backup or a friend's share file in) and
  * the app (install, privacy, about). The import logic is the one that used to sit on the trips screen, moved as-is.
  */
 export function SettingsPage() {
@@ -26,7 +26,7 @@ export function SettingsPage() {
   const [shareText, setShareText] = useState<string | null>(null);
   const [sharePass, setSharePass] = useState('');
   const install = useInstallPrompt();
-  const [home] = useState(defaultHome);
+  const [presets] = useState(() => PRESET_SLOTS.map((slot) => ({ slot, place: presetPlace(slot) })));
 
   const reload = async () => setDocs(await trips.all());
   useEffect(() => void reload(), []);
@@ -84,15 +84,25 @@ export function SettingsPage() {
         </div>
       )}
 
-      <Section title={t('settings.defaults')}>
-        <Row
-          href="/settings/home"
-          onClick={() => navigate('/settings/home')}
-          lead={<HomeIcon />}
-          title={t('common.homeAddress')}
-          subtitle={home ? home.address : t('settings.home.unset')}
-          chevron
-        />
+      {/* Start places for new trips: 집 (the one home every trip shares), 회사, 즐겨찾기 1–3. */}
+      <Section title={t('settings.origins')}>
+        <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+          {presets.map(({ slot, place }) => (
+            <li key={slot}>
+              <Row
+                href={`/settings/place/${slot}`}
+                onClick={() => navigate(`/settings/place/${slot}`)}
+                lead={<PresetIcon slot={slot} />}
+                title={slot === 'home' ? t('common.homeAddress') : presetLabel(slot)}
+                subtitle={!place ? t('settings.home.unset') : slot === 'home' ? place.address : place.name}
+                chevron
+              />
+            </li>
+          ))}
+        </ul>
+        <p className="tn-pad" style={{ margin: '4px 0 0', fontSize: 13, lineHeight: 1.5, color: 'var(--color-text-secondary)' }}>
+          {t('settings.origins.detail')}
+        </p>
       </Section>
 
       <Section title={t('more.data')}>

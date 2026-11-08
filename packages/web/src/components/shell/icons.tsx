@@ -1,4 +1,5 @@
 import type React from 'react';
+import type { PresetSlot } from '../../lib/settings';
 
 /**
  * App-shell icons drawn the Pleos way: 24-unit grid, 1.5 stroke, round caps and joins, painted with currentColor.
@@ -156,3 +157,7 @@ export function StarIcon({ filled }: { filled?: boolean }) {
 }
 /** Home (the home address). */
 export const HomeIcon = () => <Outline d="M4 10.5 12 4l8 6.5V19a1.5 1.5 0 0 1-1.5 1.5H14.5V15h-5v5.5H5.5A1.5 1.5 0 0 1 4 19v-8.5Z" />;
+/** Work (the saved 회사 start place): a briefcase. */
+export const BriefcaseIcon = () => <Outline d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7M4.5 7h15A1.5 1.5 0 0 1 21 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5v-9A1.5 1.5 0 0 1 4.5 7ZM3 12.5h18" />;
+/** The icon for a saved start place: 집 a house, 회사 a briefcase, 즐겨찾기 a star. */
+export const PresetIcon = ({ slot }: { slot: PresetSlot }) => (slot === 'home' ? <HomeIcon /> : slot === 'work' ? <BriefcaseIcon /> : <StarIcon />);

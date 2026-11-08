@@ -1,13 +1,14 @@
 import { AddSharedPlacePage } from './pages/AddSharedPlacePage';
 import { CarPage } from './pages/CarPage';
 import { ConnectPage } from './pages/ConnectPage';
-import { HomeAddressPage } from './pages/HomeAddressPage';
 import { HomePage } from './pages/HomePage';
 import { PlacesPage } from './pages/PlacesPage';
 import { PrivacyPage } from './pages/PrivacyPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { StartPlacePage } from './pages/StartPlacePage';
 import { TripEditorPage } from './pages/TripEditorPage';
 import { usePath } from './lib/router';
+import { isPresetSlot } from './lib/settings';
 
 /**
  * Two kinds of screen (toss.md menu structure): four tab roots that share the floating tab bar, and push screens
@@ -19,7 +20,9 @@ export default function App() {
   // Push screens. The share target (/add) and the car QR (/c#…) land here directly.
   if (path === '/c') return <ConnectPage />;
   if (path === '/privacy') return <PrivacyPage />;
-  if (path === '/settings/home') return <HomeAddressPage />;
+  // 설정 › 출발 장소 › 집·회사·즐겨찾기 1–3 ('/settings/home' was the home address's first address; keep it working).
+  const slot = path === '/settings/home' ? 'home' : path.match(/^\/settings\/place\/([a-z0-9]+)$/)?.[1];
+  if (slot && isPresetSlot(slot)) return <StartPlacePage key={slot} slot={slot} />;
   if (path === '/add') return <AddSharedPlacePage />;
   // Keyed by trip so moving between trips (duplicate, save of a new trip) starts the editor fresh: no unsaved flag,
   // banners, open dialog or travel-time memory carried over from the previous trip.

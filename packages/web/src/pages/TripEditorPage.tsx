@@ -29,8 +29,28 @@ import { VisitDialog } from '../editor/VisitDialog';
 import { trips } from '../lib/db';
 import { t } from '../lib/i18n';
 import { navigate } from '../lib/router';
-import { defaultHome } from '../lib/settings';
-import { REASON_LABEL, addPlace, emptyPlan, newDoc, nightsLabel, nowIso, planWarnings, relinkLegs, rememberLegs, savePlan, setPeriod, unassignedVisits, updateVisit, type LegBook, type TripDoc } from '../lib/trips';
+import { PRESET_SLOTS, defaultHome, presetLabel, presetPlace } from '../lib/settings';
+import {
+  REASON_LABEL,
+  addPlace,
+  emptyPlan,
+  isEndpointOnly,
+  newDoc,
+  nightsLabel,
+  nowIso,
+  planWarnings,
+  presetInPlan,
+  relinkLegs,
+  rememberLegs,
+  savePlan,
+  setOrigin,
+  setPeriod,
+  startFromPreset,
+  unassignedVisits,
+  updateVisit,
+  type LegBook,
+  type TripDoc,
+} from '../lib/trips';
 
 type ISOTime = Parameters<NonNullable<Parameters<typeof TimeInput>[0]['onChange']>>[0];
 type Range = NonNullable<Parameters<typeof DateRangeInput>[0]['value']>;
@@ -45,6 +65,8 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
   const [plan, setPlan] = useState<Trip | null>(null);
   // The one home address, set in 설정 and shared by every trip (route checks, map, recommend, what the car may get).
   const [home] = useState(defaultHome);
+  // Saved start places (설정 › 회사, 즐겨찾기 1–3), read once like home.
+  const [presets] = useState(() => PRESET_SLOTS.filter((s) => s !== 'home').map((slot) => ({ slot, place: presetPlace(slot) })));
   const [dirty, setDirty] = useState(false);
   const [openPlace, setOpenPlace] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -80,6 +102,31 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
     setSaved(null);
   };
   const endpointOptions = [{ value: 'HOME', label: t('common.home') }, ...plan.places.map((p) => ({ value: p.placeRef, label: p.name }))];
+
+  // 출발 장소 (top of 기본): 집 and the saved places first — a saved place already in the trip answers to its place — then
+  // the trip's other places. A slot not set yet is listed but disabled, pointing at 설정.
+  const seen = new Set<string>(['HOME']);
+  const savedStarts = [
+    { value: 'HOME', label: t('common.home'), description: home ? home.address : t('editor.startPlace.homeUnset') },
+    ...presets.flatMap(({ slot, place }) => {
+      if (!place) return [{ value: `preset:${slot}`, label: presetLabel(slot), description: t('settings.home.unset'), disabled: true }];
+      const value = presetInPlan(plan, place)?.placeRef ?? `preset:${slot}`;
+      if (seen.has(value)) return []; // two slots saved as the same place: list it once
+      seen.add(value);
+      return [{ value, label: `${presetLabel(slot)} · ${place.name}`, description: place.address }];
+    }),
+  ];
+  const tripStarts = plan.places.filter((p) => !seen.has(p.placeRef)).map((p) => ({ value: p.placeRef, label: p.name, description: p.address || undefined }));
+  const startOptions = [
+    { type: 'section' as const, title: t('editor.startPlace.saved'), options: savedStarts },
+    ...(tripStarts.length ? [{ type: 'section' as const, title: t('editor.startPlace.tripPlaces'), options: tripStarts }] : []),
+  ];
+  const startAddress = plan.origin.kind === 'HOME' ? (home ? home.address : t('editor.startPlace.homeUnset')) : plan.places.find((p) => p.placeRef === (plan.origin as { placeRef: string }).placeRef)?.address || undefined;
+  const pickStart = (v: string) => {
+    if (v === 'HOME') return edit(setOrigin(plan, { kind: 'HOME' }));
+    const preset = v.startsWith('preset:') ? presets.find((x) => `preset:${x.slot}` === v)?.place : undefined;
+    edit(preset ? startFromPreset(plan, preset) : setOrigin(plan, toEndpoint(v)));
+  };
 
   const save = async () => {
     const next = await savePlan(doc, plan, home);
@@ -153,6 +200,32 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
 
         {tab === 'basics' && (
           <>
+            {/* Where the trip starts, first thing on a new trip: 집·회사·즐겨찾기 1–3 are set once in 설정. */}
+            <Section title={t('editor.startPlace')}>
+              <VStack gap={3}>
+                <VStack gap={1}>
+                  <Selector label={t('editor.startPlace')} isLabelHidden options={startOptions} value={endpointValue(plan.origin)} onChange={pickStart} />
+                  {startAddress && (
+                    <div style={{ wordBreak: 'keep-all' }}>
+                      <Text type="supporting">{startAddress}</Text>
+                    </div>
+                  )}
+                </VStack>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{ flex: '1 1 auto', minWidth: 0, wordBreak: 'keep-all' }}>
+                    {presets.some((x) => !x.place) && (
+                      <Text type="supporting" color="secondary">
+                        {t('editor.startPlace.hint')}
+                      </Text>
+                    )}
+                  </div>
+                  <div style={{ flex: 'none' }}>
+                    <Button label={t('editor.home.openSettings')} variant="secondary" size="sm" onClick={() => leave('/settings')} />
+                  </div>
+                </div>
+              </VStack>
+            </Section>
+
             <Section title={t('editor.basics')}>
               <FormLayout>
                 <TextInput label={t('editor.name')} value={plan.name} onChange={(v) => edit({ ...plan, name: v.slice(0, 60) })} isRequired />
@@ -213,25 +286,10 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
                     />
                   </HStack>
                 )}
-                <Selector label={t('editor.origin')} options={endpointOptions} value={endpointValue(plan.origin)} onChange={(v) => edit({ ...plan, origin: toEndpoint(v) })} />
                 <Selector label={t('editor.finalDestination')} options={endpointOptions} value={endpointValue(plan.finalDestination)} onChange={(v) => edit({ ...plan, finalDestination: toEndpoint(v) })} />
               </FormLayout>
             </Section>
 
-            {/* Home lives in 설정 now: shown here read-only, changed there once for every trip. */}
-            <Section title={t('common.homeAddress')}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ flex: '1 1 auto', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  <Text>{home ? home.address : t('settings.home.unset')}</Text>
-                  <Text type="supporting" color="secondary">
-                    {t('editor.home.fromSettings')}
-                  </Text>
-                </div>
-                <div style={{ flex: 'none' }}>
-                  <Button label={t('editor.home.openSettings')} variant="secondary" size="sm" onClick={() => leave('/settings/home')} />
-                </div>
-              </div>
-            </Section>
           </>
         )}
 
@@ -248,7 +306,13 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
                 <List hasDividers header={<CardListHeader>{t('editor.places.all', { n: plan.places.length })}</CardListHeader>}>
                   {plan.places.map((p) => {
                     const v = plan.visits.find((x) => x.placeRef === p.placeRef);
-                    const where = v ? (v.unassignedReason ? t('common.unassigned') : t('common.day', { day: String(plan.days.find((d) => d.visitOrder.includes(v.visitId))?.dayIndex) })) : t('common.lodging');
+                    const where = v
+                      ? v.unassignedReason
+                        ? t('common.unassigned')
+                        : t('common.day', { day: String(plan.days.find((d) => d.visitOrder.includes(v.visitId))?.dayIndex) })
+                      : isEndpointOnly(plan, p.placeRef)
+                        ? t('editor.places.endpointOnly')
+                        : t('common.lodging');
                     return (
                       <ListItem
                         key={p.placeRef}

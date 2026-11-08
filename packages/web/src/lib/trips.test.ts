@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { parseTransfer, sampleTrip, type Trip } from '@tteonaljido/shared';
-import { addPlace, assign, changeCategory, emptyPlan, move, moveTo, newDoc, planWarnings, relinkLegs, rememberLegs, removePlace, savePlan, setDepart, setEndBy, setLeg, setLodging, setPeriod, toTransfer, unassign, type LegBook } from './trips';
+import { addPlace, assign, changeCategory, emptyPlan, isEndpointOnly, move, moveTo, newDoc, planWarnings, relinkLegs, rememberLegs, removePlace, savePlan, setDepart, setEndBy, setLeg, setLodging, setOrigin, setPeriod, startFromPreset, toTransfer, unassign, type LegBook } from './trips';
 
 // The warning assertions below check the Korean copy; jsdom reports navigator.language as en-US.
 vi.hoisted(() => Object.defineProperty(navigator, 'language', { value: 'ko-KR', configurable: true }));
@@ -206,5 +206,43 @@ describe('changing a place category keeps the visit in sync', () => {
     t = changeCategory(t, 'cheolttuk', 'LODGING'); // a food place → loses its visit, off its day
     expect(t.visits.some((v) => v.placeRef === 'cheolttuk')).toBe(false);
     expect(t.days.every((d) => d.visitOrder.every((id) => t.visits.some((v) => v.visitId === id)))).toBe(true);
+  });
+});
+
+describe('start presets (설정 › 회사·즐겨찾기)', () => {
+  const work = { name: '현대자동차 본사', address: '서울 서초구 헌릉로 12', latE7: 374_634_000, lonE7: 1_270_394_000 };
+  const gym = { name: '양재 체육관', address: '서울 서초구 양재동', latE7: 374_700_000, lonE7: 1_270_300_000 };
+
+  it('a preset joins as an endpoint-only place (no visit) and becomes the start; the transfer stays valid', async () => {
+    const base = sampleTrip();
+    const t = startFromPreset(base, work);
+    const p = t.places.find((x) => x.name === work.name)!;
+    expect(t.origin).toEqual({ kind: 'PLACE', placeRef: p.placeRef });
+    expect(t.visits.some((v) => v.placeRef === p.placeRef)).toBe(false);
+    expect(isEndpointOnly(t, p.placeRef)).toBe(true);
+    expect(t.visits.length).toBe(base.visits.length); // no new unassigned stop
+    expect(await parseTransfer(JSON.stringify(await toTransfer(await newDoc(t, home), true)))).toMatchObject({ ok: true });
+  });
+
+  it('reuses the copy already in the trip instead of adding it twice', () => {
+    const once = startFromPreset(sampleTrip(), work);
+    const twice = startFromPreset(setOrigin(once, { kind: 'HOME' }), work);
+    expect(twice.places.filter((x) => x.name === work.name)).toHaveLength(1);
+  });
+
+  it('switching start drops the old preset place, but keeps it while it is the final destination', () => {
+    const atWork = startFromPreset(sampleTrip(), work);
+    const ref = (atWork.origin as { placeRef: string }).placeRef;
+    expect(startFromPreset(atWork, gym).places.some((x) => x.placeRef === ref)).toBe(false);
+    expect(setOrigin(atWork, { kind: 'HOME' }).places.some((x) => x.placeRef === ref)).toBe(false);
+    const roundTrip = { ...atWork, finalDestination: { kind: 'PLACE' as const, placeRef: ref } };
+    expect(setOrigin(roundTrip, { kind: 'HOME' }).places.some((x) => x.placeRef === ref)).toBe(true);
+  });
+
+  it('never drops a real stop or lodging when the start moves away from it', () => {
+    const base = sampleTrip();
+    const stop = base.visits[0].placeRef;
+    const fromStop = setOrigin(base, { kind: 'PLACE', placeRef: stop });
+    expect(setOrigin(fromStop, { kind: 'HOME' }).places.some((x) => x.placeRef === stop)).toBe(true);
   });
 });
