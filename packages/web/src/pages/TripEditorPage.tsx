@@ -6,6 +6,7 @@ import { Button } from '@astryxdesign/core/Button';
 import { DateRangeInput } from '@astryxdesign/core/DateRangeInput';
 import { Divider } from '@astryxdesign/core/Divider';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
+import { IconButton } from '@astryxdesign/core/IconButton';
 import { Layout, LayoutContent, LayoutFooter, LayoutHeader } from '@astryxdesign/core/Layout';
 import { List, ListItem } from '@astryxdesign/core/List';
 import { NumberInput } from '@astryxdesign/core/NumberInput';
@@ -209,7 +210,28 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
                   {plan.places.map((p) => {
                     const v = plan.visits.find((x) => x.placeRef === p.placeRef);
                     const where = v ? (v.unassignedReason ? t('common.unassigned') : t('common.day', { day: String(plan.days.find((d) => d.visitOrder.includes(v.visitId))?.dayIndex) })) : t('common.lodging');
-                    return <ListItem key={p.placeRef} label={p.name} description={`${CATEGORY_LABEL[p.category]} · ${where}${v?.fixed ? ` · ${t('common.fixedAt', { time: v.fixed.time })}` : ''}`} onClick={() => setOpenPlace(p.placeRef)} />;
+                    return (
+                      <ListItem
+                        key={p.placeRef}
+                        label={p.name}
+                        description={`${CATEGORY_LABEL[p.category]} · ${where}${v?.fixed ? ` · ${t('common.fixedAt', { time: v.fixed.time })}` : ''}`}
+                        endContent={
+                          v ? (
+                            <IconButton
+                              label={v.importance === 'MUST' ? t('visit.must.unset') : t('visit.must.set')}
+                              icon={<span>{v.importance === 'MUST' ? '★' : '☆'}</span>}
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                edit(updateVisit(plan, v.visitId, { importance: v.importance === 'MUST' ? 'NORMAL' : 'MUST' }));
+                              }}
+                            />
+                          ) : undefined
+                        }
+                        onClick={() => setOpenPlace(p.placeRef)}
+                      />
+                    );
                   })}
                 </List>
               )}
