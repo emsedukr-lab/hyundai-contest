@@ -102,6 +102,8 @@ export function ConnectPage() {
   const scanSecret = useRef<string | null>(null);
 
   const doc = useMemo(() => docs.find((d) => d.tripId === picked) ?? null, [docs, picked]);
+  // Home lives in 설정 (one address for every trip); a trip's stored copy is not what gets sent.
+  const home = defaultHome();
   const fail = (e: unknown) => setErr(ERROR_TEXT[e instanceof ApiError ? e.code : 'NETWORK'] ?? t('connect.error.unknown'));
 
   // Read the QR fragment once, then remove it from the address bar and history.
@@ -189,7 +191,7 @@ export function ConnectPage() {
     setBusy(true);
     setErr(null);
     try {
-      setRec(await send(rec, doc, includeHome && !!doc.home));
+      setRec(await send(rec, { ...doc, home }, includeHome && !!home));
       setStage('status');
     } catch (e) {
       fail(e);
@@ -288,7 +290,7 @@ export function ConnectPage() {
             {docs.length === 0 && <Banner status="info" title={t('common.noTrips')} description={t('connect.pick.empty')} />}
             <VStack gap={2}>
               {docs.map((d) => {
-                const warnings = planWarnings(d.plan, d.home).filter((w) => w.level === 'warning').length;
+                const warnings = planWarnings(d.plan, home).filter((w) => w.level === 'warning').length;
                 return (
                   <SelectableCard key={d.tripId} label={d.plan.name} isSelected={picked === d.tripId} onChange={(on) => setPicked(on ? d.tripId : null)}>
                     <VStack gap={1}>
@@ -324,10 +326,10 @@ export function ConnectPage() {
             </VStack>
             <Switch
               label={t('connect.consent.includeHome')}
-              value={includeHome && !!doc.home}
-              isDisabled={!doc.home}
+              value={includeHome && !!home}
+              isDisabled={!home}
               onChange={setIncludeHome}
-              description={doc.home ? t('connect.consent.homeOn', { address: doc.home.address }) : t('connect.consent.noHome')}
+              description={home ? t('connect.consent.homeOn', { address: home.address }) : t('connect.consent.noHome')}
             />
             <Card padding={0}>
               <List hasDividers header={<CardListHeader>{t('connect.consent.sent')}</CardListHeader>}>
@@ -335,7 +337,7 @@ export function ConnectPage() {
                 <ListItem label={t('connect.consent.places', { n: doc.plan.places.length })} description={t('connect.consent.places.detail')} />
                 <ListItem label={t('connect.consent.days')} description={t('connect.consent.days.detail')} />
                 <ListItem label={t('connect.consent.lodging')} description={t('connect.consent.lodging.detail')} />
-                <ListItem label={t('common.homeAddress')} description={includeHome && doc.home ? t('common.included') : t('common.notIncluded')} />
+                <ListItem label={t('common.homeAddress')} description={includeHome && home ? t('common.included') : t('common.notIncluded')} />
               </List>
             </Card>
             <Card padding={0}>
@@ -362,7 +364,7 @@ export function ConnectPage() {
                 <MetadataListItem label={t('connect.approve.places')}>
                   {t('connect.approve.placesValue', { places: doc.plan.places.length, fixed: doc.plan.visits.filter((v) => v.fixed).length, unassigned: unassignedVisits(doc.plan).length })}
                 </MetadataListItem>
-                <MetadataListItem label={t('common.homeAddress')}>{includeHome && doc.home ? t('common.included') : t('common.notIncluded')}</MetadataListItem>
+                <MetadataListItem label={t('common.homeAddress')}>{includeHome && home ? t('common.included') : t('common.notIncluded')}</MetadataListItem>
                 <MetadataListItem label={t('connect.approve.target')}>
                   {t('connect.approve.targetValue', { code: rec.confirmCode ? codeLabel(rec.confirmCode) : '', version: rec.carAppVersion ?? '' })}
                 </MetadataListItem>
@@ -370,7 +372,7 @@ export function ConnectPage() {
             </Card>
             {(() => {
               // The conflicts the car would also flag — shown once more right before sending, so nothing surprises on arrival.
-              const warnings = planWarnings(doc.plan, doc.home).filter((w) => w.level === 'warning');
+              const warnings = planWarnings(doc.plan, home).filter((w) => w.level === 'warning');
               return warnings.length === 0 ? null : (
                 <VStack gap={1}>
                   <Text type="label">{t('connect.approve.conflicts', { n: warnings.length })}</Text>

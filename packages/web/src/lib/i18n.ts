@@ -497,13 +497,14 @@ const ko = {
   'editor.tabs': '편집 구역',
   'editor.more': '더보기',
   'editor.leave.confirm': '저장하지 않은 변경이 있어요 · 나가면 사라져요',
-  'settings.defaults': '새 여행 기본값',
+  'settings.defaults': '내 정보',
   'settings.home.unset': '설정하지 않았어요',
-  'settings.home.description': '여기서 정한 집 주소는 새 여행에 자동으로 들어가요 · 이 휴대폰에만 저장되고, 차로 보낼 때 포함할지는 매번 직접 골라요',
+  'settings.home.description': '여기서 정한 집 주소를 모든 여행이 함께 써요 · 이 휴대폰에만 저장되고, 차로 보낼 때 포함할지는 매번 직접 골라요',
   'settings.home.saved': '집 주소를 저장했어요',
   'settings.home.cleared': '집 주소를 지웠어요',
   'settings.home.change': '다른 주소 검색',
-  'settings.home.apply': '설정한 집 주소 넣기',
+  'editor.home.fromSettings': '모든 여행이 설정의 집 주소를 함께 써요',
+  'editor.home.openSettings': '설정에서 바꾸기',
 } as const satisfies Record<string, string>;
 
 export type Key = keyof typeof ko;
@@ -999,13 +1000,14 @@ const en: Record<Key, string> = {
   'editor.tabs': 'Editor sections',
   'editor.more': 'More actions',
   'editor.leave.confirm': 'You have unsaved changes · they will be lost if you leave',
-  'settings.defaults': 'Defaults for new trips',
+  'settings.defaults': 'About you',
   'settings.home.unset': 'Not set',
-  'settings.home.description': 'The home address set here goes into new trips automatically · it stays on this phone, and you choose whether to send it to the car each time',
+  'settings.home.description': 'Every trip uses the home address set here · it stays on this phone, and you choose whether to send it to the car each time',
   'settings.home.saved': 'Home address saved',
   'settings.home.cleared': 'Home address removed',
   'settings.home.change': 'Search another address',
-  'settings.home.apply': 'Use the home address from Settings',
+  'editor.home.fromSettings': 'Every trip uses the home address from Settings',
+  'editor.home.openSettings': 'Change in Settings',
 };
 
 /** Both tables, for tests. */

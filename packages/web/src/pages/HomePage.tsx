@@ -3,7 +3,7 @@ import { Badge } from '@astryxdesign/core/Badge';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
-import { sampleTrip, type Home, type Trip } from '@tteonaljido/shared';
+import { sampleTrip, type Trip } from '@tteonaljido/shared';
 import { InstallHint } from '../components/InstallHint';
 import { MapIcon } from '../components/shell/icons';
 import { Row, Section } from '../components/shell/rows';
@@ -33,9 +33,7 @@ export function HomePage() {
 
   const addSample = async () => {
     const plan: Trip = { ...sampleTrip(nowIso()), tripId: crypto.randomUUID() };
-    // 임시 데모용 '집' = 세종시청(좌표는 근사값). 편집기의 '집' 항목에서 언제든 바꾸거나 지울 수 있어요.
-    const home: Home = defaultHome() ?? { address: '세종특별자치시 한누리대로 2130 (세종시청)', latE7: 364801000, lonE7: 1272887000 };
-    await trips.put(await newDoc(plan, home));
+    await trips.put(await newDoc(plan, defaultHome())); // home is the one set in 설정 (none → the car uses its navigation HOME)
     setMessage(t('home.sampleAdded'));
     await reload();
   };

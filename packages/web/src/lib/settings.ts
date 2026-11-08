@@ -1,9 +1,9 @@
 import { Home } from '@tteonaljido/shared';
 
 /**
- * The home address set ahead of time in 설정. New trips start with it (the editor's new trip, places collected from a
- * share, samples); an existing trip only gets it when the user applies it in the editor. Like trips it stays in this
- * browser only, and whether it goes to the car is still asked on every send.
+ * The one home address, set in 설정 and shared by every trip: route checks, the map, recommendations and — only when
+ * the user opts in on that send — what the car receives. A trip's stored `home` is just a copy refreshed on save.
+ * Like trips it stays in this browser only.
  *
  * One small value, so it lives in localStorage rather than a new IndexedDB store (a schema bump can stall while
  * another tab holds the old version open). It is validated with the shared transfer schema on every read, so a

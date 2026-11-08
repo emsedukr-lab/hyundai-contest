@@ -102,7 +102,7 @@ export function AddSharedPlacePage() {
     }
     const withPlace = addPlace(doc.plan, place); // appends, so the new place is always last
     const placeRef = withPlace.places[withPlace.places.length - 1].placeRef;
-    const next = await savePlan(doc, withPlace, doc.home);
+    const next = await savePlan(doc, withPlace, defaultHome()); // home comes from 설정
     await trips.put(next);
     return { tripId: next.tripId, placeRef, created, prevDoc, doc: next, place };
   };
@@ -203,7 +203,7 @@ export function AddSharedPlacePage() {
       const without = removePlace(add.doc.plan, add.placeRef);
       const withNew = addPlace(without, place);
       const placeRef = withNew.places[withNew.places.length - 1].placeRef;
-      const next = await savePlan(add.doc, withNew, add.doc.home);
+      const next = await savePlan(add.doc, withNew, defaultHome());
       await trips.put(next);
       const swapped = { ...add, placeRef, doc: next, place };
       setAdd(swapped);

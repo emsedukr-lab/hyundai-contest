@@ -12,12 +12,12 @@ import { NumberInput } from '@astryxdesign/core/NumberInput';
 import { SegmentedControl, SegmentedControlItem } from '@astryxdesign/core/SegmentedControl';
 import { Selector } from '@astryxdesign/core/Selector';
 import { Spinner } from '@astryxdesign/core/Spinner';
-import { HStack, StackItem, VStack } from '@astryxdesign/core/Stack';
+import { HStack, VStack } from '@astryxdesign/core/Stack';
 import { Tab, TabList } from '@astryxdesign/core/TabList';
 import { Heading, Text } from '@astryxdesign/core/Text';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { TimeInput } from '@astryxdesign/core/TimeInput';
-import type { Endpoint, Home, Trip, Visit } from '@tteonaljido/shared';
+import type { Endpoint, Trip, Visit } from '@tteonaljido/shared';
 import { MoreIcon, StarIcon } from '../components/shell/icons';
 import { PushScreen } from '../components/shell/Screens';
 import { Card, CardListHeader, Section } from '../components/toss/Card';
@@ -43,7 +43,8 @@ const toEndpoint = (v: string): Endpoint => (v === 'HOME' ? { kind: 'HOME' } : {
 export function TripEditorPage({ tripId }: { tripId: string | null }) {
   const [doc, setDoc] = useState<TripDoc | null>(null);
   const [plan, setPlan] = useState<Trip | null>(null);
-  const [home, setHome] = useState<Home | null>(null);
+  // The one home address, set in 설정 and shared by every trip (route checks, map, recommend, what the car may get).
+  const [home] = useState(defaultHome);
   const [dirty, setDirty] = useState(false);
   const [openPlace, setOpenPlace] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -59,13 +60,12 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
 
   useEffect(() => {
     void (async () => {
-      const d = tripId ? await trips.get(tripId) : await newDoc(emptyPlan(), defaultHome()); // a new trip starts with the home set in 설정
+      const d = tripId ? await trips.get(tripId) : await newDoc(emptyPlan(), defaultHome());
       if (!d) return navigate('/', true);
       setDoc(d);
       book.current = new Map();
       rememberLegs(d.plan, book.current);
       setPlan(d.plan);
-      setHome(d.home);
     })();
   }, [tripId]);
 
@@ -79,7 +79,6 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
     setDirty(true);
     setSaved(null);
   };
-  const savedHome = defaultHome(); // the home set in 설정, offered to a trip that has none
   const endpointOptions = [{ value: 'HOME', label: t('common.home') }, ...plan.places.map((p) => ({ value: p.placeRef, label: p.name }))];
 
   const save = async () => {
@@ -101,10 +100,10 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
     navigate(`/trips/${nd.tripId}`);
   };
 
-  /** Back to the trips tab; unsaved edits ask first instead of vanishing. */
-  const leave = () => {
+  /** Leave the editor (back to the trips tab, or to 설정 to change home); unsaved edits ask first instead of vanishing. */
+  const leave = (to = '/') => {
     if (dirty && !window.confirm(t('editor.leave.confirm'))) return;
-    navigate('/');
+    navigate(to);
   };
 
   // Secondary actions live in the top bar's menu (toss.md 'menu': opens next to its trigger), keeping one CTA below.
@@ -118,7 +117,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
   return (
     <PushScreen
       title={tripId ? plan.name || t('editor.titleEdit') : t('editor.titleNew')}
-      onBack={leave}
+      onBack={() => leave()}
       actions={
         <>
           <Badge variant="neutral" label={`v${doc.revision}${dirty ? ` · ${t('editor.unsaved')}` : ''}`} />
@@ -219,41 +218,19 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
               </FormLayout>
             </Section>
 
-            <Section title={t('editor.home.title')}>
-              <VStack gap={3}>
-                <Text type="supporting" color="secondary">
-                  {t('editor.home.description')}
-                </Text>
-                {home ? (
-                  <HStack gap={2} vAlign="center">
-                    {/* a long address wraps; the button keeps its size instead of being squeezed to "지…" */}
-                    <StackItem size="fill">
-                      <Text>{home.address}</Text>
-                    </StackItem>
-                    <StackItem size="static">
-                      <Button label={t('editor.home.remove')} variant="ghost" size="sm" onClick={() => (setHome(null), setDirty(true))} />
-                    </StackItem>
-                  </HStack>
-                ) : (
-                  <VStack gap={3}>
-                  {savedHome && (
-                    <div>
-                      <Button label={t('settings.home.apply')} variant="secondary" size="md" onClick={() => (setHome(savedHome), setDirty(true))} />
-                    </div>
-                  )}
-                  <PlaceSearch
-                    label={t('editor.home.search')}
-                    requireCoords
-                    onPick={(p) => {
-                      // Home needs coordinates; without them the car keeps using its navigation HOME.
-                      if (p.latE7 === null || p.lonE7 === null) return setError(t('editor.home.needsSearch'));
-                      setHome({ address: (p.address || p.name).slice(0, 120), latE7: p.latE7, lonE7: p.lonE7 });
-                      setDirty(true);
-                    }}
-                  />
-                  </VStack>
-                )}
-              </VStack>
+            {/* Home lives in 설정 now: shown here read-only, changed there once for every trip. */}
+            <Section title={t('common.homeAddress')}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ flex: '1 1 auto', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <Text>{home ? home.address : t('settings.home.unset')}</Text>
+                  <Text type="supporting" color="secondary">
+                    {t('editor.home.fromSettings')}
+                  </Text>
+                </div>
+                <div style={{ flex: 'none' }}>
+                  <Button label={t('editor.home.openSettings')} variant="secondary" size="sm" onClick={() => leave('/settings/home')} />
+                </div>
+              </div>
             </Section>
           </>
         )}
