@@ -5,7 +5,6 @@ import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
 import { List, ListItem } from '@astryxdesign/core/List';
-import { NumberInput } from '@astryxdesign/core/NumberInput';
 import { Selector } from '@astryxdesign/core/Selector';
 import { HStack, StackItem, VStack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
@@ -16,7 +15,7 @@ import { favorites } from '../lib/db';
 import { asNewPlace, favoriteId, toFavorite } from '../lib/favorites';
 import type { FavoritePlace } from '../lib/favorites';
 import { t } from '../lib/i18n';
-import { ApiError, searchPlaces, type PlaceHit } from '../lib/pairing';
+import { ApiError, resolvePlace, searchPlaces, type PlaceHit } from '../lib/pairing';
 import { parsePastedPlace, parsePastedPlaces } from '../lib/placeShare';
 import { BulkAddDialog } from './BulkAddDialog';
 
@@ -126,6 +125,24 @@ export function PlaceSearch({ onPick, onPickMany, label = t('place.search'), lod
   const runPaste = async () => {
     const terms = parsePastedPlaces(paste);
     if (terms.length === 0) {
+      // No name in the text, but a share link? Ask the server to read the place name from it, then search.
+      const u = parsePastedPlace(paste).url;
+      if (u) {
+        setNote(null);
+        setBusy(true);
+        try {
+          const name = (await resolvePlace(u)).name;
+          setShowPaste(false);
+          setPaste('');
+          setQ(name);
+          await run(name);
+        } catch {
+          setNote(t('place.resolve.failed'));
+        } finally {
+          setBusy(false);
+        }
+        return;
+      }
       setNote(t('place.paste.noName'));
       return;
     }
@@ -229,13 +246,10 @@ export function PlaceSearch({ onPick, onPickMany, label = t('place.search'), lod
 function ManualPlaceDialog({ isOpen, onClose, onSave, lodgingOnly }: { isOpen: boolean; onClose: () => void; onSave: (p: NewPlace) => void; lodgingOnly: boolean }) {
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
-  const [lat, setLat] = useState<number | null>(null);
-  const [lon, setLon] = useState<number | null>(null);
   const [category, setCategory] = useState<Place['category']>(lodgingOnly ? 'LODGING' : 'SIGHT');
-  // Coordinates are optional; when given, both are needed and must be in range.
-  const hasCoords = lat !== null && lon !== null;
-  const valid = name.trim().length > 0 && (lat === null) === (lon === null) && (!hasCoords || (Math.abs(lat!) <= 90 && Math.abs(lon!) <= 180));
+  const valid = name.trim().length > 0;
 
+  // Coordinates are no longer entered by hand — the car finds the exact spot from the name/address in its navigation.
   return (
     <Dialog isOpen={isOpen} onOpenChange={(o) => !o && onClose()} width={480}>
       <DialogHeader title={t('place.manual.title')} onOpenChange={(o) => !o && onClose()} />
@@ -243,13 +257,6 @@ function ManualPlaceDialog({ isOpen, onClose, onSave, lodgingOnly }: { isOpen: b
         <FormLayout>
           <TextInput label={t('place.manual.name')} value={name} onChange={setName} isRequired />
           <TextInput label={t('place.manual.address')} value={address} onChange={setAddress} isOptional />
-          <HStack gap={2}>
-            <NumberInput label={t('place.manual.lat')} value={lat} onChange={(v: number | null) => setLat(v)} step={0.0001} placeholder="37.7955" isOptional hasClear />
-            <NumberInput label={t('place.manual.lon')} value={lon} onChange={(v: number | null) => setLon(v)} step={0.0001} placeholder="128.8975" isOptional hasClear />
-          </HStack>
-          <Text type="supporting" color="secondary">
-            {t('place.manual.coordsHint')}
-          </Text>
           {!lodgingOnly && <Selector label={t('common.type')} options={CATEGORY_OPTIONS} value={category} onChange={(v) => setCategory(v as Place['category'])} />}
         </FormLayout>
         <HStack gap={2} hAlign="end">
@@ -262,8 +269,8 @@ function ManualPlaceDialog({ isOpen, onClose, onSave, lodgingOnly }: { isOpen: b
               onSave({
                 name: name.trim().slice(0, 60),
                 address: address.trim().slice(0, 120),
-                latE7: hasCoords ? Math.round(lat! * 1e7) : null,
-                lonE7: hasCoords ? Math.round(lon! * 1e7) : null,
+                latE7: null,
+                lonE7: null,
                 category,
                 source: { provider: 'MANUAL', externalId: null },
                 naviPoi: null,

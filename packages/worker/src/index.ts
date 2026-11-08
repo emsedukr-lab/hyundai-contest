@@ -1,6 +1,7 @@
 import { randomId } from '@tteonaljido/shared';
 import { error, json, readJson } from './http';
 import { searchPlaces } from './kakao';
+import { resolveShare } from './resolve';
 
 export { PairingSession } from './pairingSession';
 
@@ -55,6 +56,15 @@ export default {
       const body = await readJson<Record<string, unknown>>(req, 1024);
       if (!body || body === 'TOO_LARGE') return error('BAD_REQUEST');
       return searchPlaces(body, env.KAKAO_REST_KEY);
+    }
+
+    if (parts[2] === 'places' && parts[3] === 'resolve') {
+      if (req.method !== 'POST') return error('NOT_FOUND');
+      if (await limited(env.RL_SEARCH, ip)) return error('RATE_LIMITED');
+      // The shared URL travels in the body; the Worker fetches it (allow-listed hosts only) and reads the place name.
+      const body = await readJson<Record<string, unknown>>(req, 2048);
+      if (!body || body === 'TOO_LARGE') return error('BAD_REQUEST');
+      return resolveShare(body);
     }
 
     if (parts[2] !== 'sessions') return error('NOT_FOUND');

@@ -12,8 +12,8 @@ import { InstallHint } from '../components/InstallHint';
 import { CATEGORY_LABEL, PlaceSearch, type NewPlace } from '../editor/PlaceSearch';
 import { trips } from '../lib/db';
 import { t } from '../lib/i18n';
-import { ApiError, searchPlaces, type PlaceHit } from '../lib/pairing';
-import { sharedParamsFromSearch, sharedPlaceTerm } from '../lib/placeShare';
+import { ApiError, resolvePlace, searchPlaces, type PlaceHit } from '../lib/pairing';
+import { sharedParamsFromSearch, sharedPlaceTerm, sharedUrl } from '../lib/placeShare';
 import { navigate } from '../lib/router';
 import { addPlace, emptyPlan, newDoc, removePlace, savePlan, type TripDoc } from '../lib/trips';
 
@@ -120,7 +120,19 @@ export function AddSharedPlacePage() {
     if (ran.current) return;
     ran.current = true;
     void (async () => {
-      if (!term) {
+      // Prefer the shared title; if there's only a link, ask the server to read the place name from it.
+      let name = term;
+      if (!name) {
+        const u = sharedUrl(params);
+        if (u) {
+          try {
+            name = (await resolvePlace(u)).name;
+          } catch {
+            /* resolve failed → fall through to noTerm */
+          }
+        }
+      }
+      if (!name) {
         setStatus('noTerm');
         return;
       }
@@ -128,12 +140,12 @@ export function AddSharedPlacePage() {
       setDocs(all);
       let found: PlaceHit[] = [];
       try {
-        found = await searchPlaces(term);
+        found = await searchPlaces(name);
       } catch (e) {
         if (!(e instanceof ApiError && e.status === 503)) setNote(t('place.search.failed'));
       }
       setHits(found);
-      const place = found[0] ? fromHit(found[0]) : byName(term);
+      const place = found[0] ? fromHit(found[0]) : byName(name);
       const intent: Intent = all[0] ? { existingId: all[0].tripId } : { collection: true };
       setAdd(await doAdd(intent, place));
       setStatus('added');

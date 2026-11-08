@@ -151,3 +151,13 @@ export async function searchPlaces(q: string): Promise<PlaceHit[]> {
   const res = await api<{ results: PlaceHit[] }>('POST', '/places/search', null, { q });
   return res.results;
 }
+
+export interface ResolvedPlace {
+  name: string;
+  address: string;
+}
+
+/** Asks the server to follow a Naver/Kakao share link and read the place name/address from it (throws ApiError on failure). */
+export async function resolvePlace(url: string): Promise<ResolvedPlace> {
+  return api<ResolvedPlace>('POST', '/places/resolve', null, { url });
+}
