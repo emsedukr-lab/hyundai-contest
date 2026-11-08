@@ -3,6 +3,7 @@ import { Layout, LayoutContent, LayoutHeader } from '@astryxdesign/core/Layout';
 import { List, ListItem } from '@astryxdesign/core/List';
 import { HStack, VStack } from '@astryxdesign/core/Stack';
 import { Heading, Text } from '@astryxdesign/core/Text';
+import { Card } from '../components/toss/Card';
 import { t } from '../lib/i18n';
 import { navigate } from '../lib/router';
 
@@ -32,11 +33,13 @@ export function PrivacyPage() {
       content={
         <LayoutContent>
           <VStack gap={4}>
-            <List hasDividers>
-              {ROWS.map(([label, description]) => (
-                <ListItem key={label} label={label} description={description} />
-              ))}
-            </List>
+            <Card pad={0}>
+              <List hasDividers>
+                {ROWS.map(([label, description]) => (
+                  <ListItem key={label} label={label} description={description} />
+                ))}
+              </List>
+            </Card>
             <Text type="supporting" color="secondary">
               {t('privacy.processors')}
             </Text>

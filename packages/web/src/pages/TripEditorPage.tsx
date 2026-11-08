@@ -4,7 +4,6 @@ import { Badge } from '@astryxdesign/core/Badge';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { DateRangeInput } from '@astryxdesign/core/DateRangeInput';
-import { Divider } from '@astryxdesign/core/Divider';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { Layout, LayoutContent, LayoutFooter, LayoutHeader } from '@astryxdesign/core/Layout';
@@ -13,11 +12,12 @@ import { NumberInput } from '@astryxdesign/core/NumberInput';
 import { SegmentedControl, SegmentedControlItem } from '@astryxdesign/core/SegmentedControl';
 import { Selector } from '@astryxdesign/core/Selector';
 import { Spinner } from '@astryxdesign/core/Spinner';
-import { HStack, VStack } from '@astryxdesign/core/Stack';
+import { HStack, StackItem, VStack } from '@astryxdesign/core/Stack';
 import { Heading, Text } from '@astryxdesign/core/Text';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { TimeInput } from '@astryxdesign/core/TimeInput';
 import type { Endpoint, Home, Trip, Visit } from '@tteonaljido/shared';
+import { Card, Section } from '../components/toss/Card';
 import { DaysSection } from '../editor/DaysSection';
 import { CATEGORY_LABEL, PlaceSearch } from '../editor/PlaceSearch';
 import { RecommendDialog } from '../editor/RecommendDialog';
@@ -108,8 +108,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
             {error && <Banner status="error" title={error} isDismissable onDismiss={() => setError(null)} />}
             {saved && <Banner status="success" title={saved} isDismissable onDismiss={() => setSaved(null)} />}
 
-            <VStack gap={3}>
-              <Heading level={2}>{t('editor.basics')}</Heading>
+            <Section title={t('editor.basics')}>
               <FormLayout>
                 <TextInput label={t('editor.name')} value={plan.name} onChange={(v) => edit({ ...plan, name: v.slice(0, 60) })} isRequired />
                 <DateRangeInput
@@ -128,10 +127,9 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
                   }}
                 />
               </FormLayout>
-            </VStack>
+            </Section>
 
-            <VStack gap={3}>
-              <Heading level={2}>{t('editor.route')}</Heading>
+            <Section title={t('editor.route')}>
               <FormLayout>
                 <SegmentedControl
                   label={t('editor.firstDay')}
@@ -173,10 +171,10 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
                 <Selector label={t('editor.origin')} options={endpointOptions} value={endpointValue(plan.origin)} onChange={(v) => edit({ ...plan, origin: toEndpoint(v) })} />
                 <Selector label={t('editor.finalDestination')} options={endpointOptions} value={endpointValue(plan.finalDestination)} onChange={(v) => edit({ ...plan, finalDestination: toEndpoint(v) })} />
               </FormLayout>
-            </VStack>
+            </Section>
 
-            <VStack gap={3}>
-              <Heading level={2}>{t('editor.home.title')}</Heading>
+            <Section title={t('editor.home.title')}>
+              <VStack gap={3}>
               <Text type="supporting" color="secondary">
                 {t('editor.home.description')}
               </Text>
@@ -196,7 +194,8 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
                   }}
                 />
               )}
-            </VStack>
+              </VStack>
+            </Section>
 
             <VStack gap={3}>
               <Heading level={2}>{t('editor.places')}</Heading>
@@ -206,6 +205,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
                   {t('editor.firstPlace')}
                 </Text>
               ) : (
+                <Card pad={0}>
                 <List hasDividers header={<Text type="label">{t('editor.places.all', { n: plan.places.length })}</Text>}>
                   {plan.places.map((p) => {
                     const v = plan.visits.find((x) => x.placeRef === p.placeRef);
@@ -234,10 +234,10 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
                     );
                   })}
                 </List>
+                </Card>
               )}
             </VStack>
 
-            <Divider />
             <HStack hAlign="end" gap={2}>
               <Button label={t('trip.duplicate')} variant="ghost" size="sm" onClick={() => void duplicate()} />
               <Button label={t('share.button')} variant="ghost" size="sm" onClick={() => setSharing(true)} />
@@ -251,6 +251,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
                 <Text type="supporting" color="secondary">
                   {t('editor.unassigned.description')}
                 </Text>
+                <Card pad={0}>
                 <List hasDividers>
                   {unassignedVisits(plan).map((v) => (
                     <ListItem
@@ -269,6 +270,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
                     />
                   ))}
                 </List>
+                </Card>
               </VStack>
             )}
 
@@ -302,9 +304,11 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
       }
       footer={
         <LayoutFooter hasDivider>
-          <HStack gap={2} hAlign="end">
+          <HStack gap={2}>
             <Button label={t('common.close')} variant="secondary" onClick={() => navigate('/')} />
-            <Button label={dirty || !tripId ? t('editor.save') : t('editor.savedState')} variant="primary" isDisabled={!dirty && !!tripId} onClick={save} />
+            <StackItem size="fill">
+              <Button label={dirty || !tripId ? t('editor.save') : t('editor.savedState')} variant="primary" width="100%" isDisabled={!dirty && !!tripId} onClick={save} />
+            </StackItem>
           </HStack>
         </LayoutFooter>
       }

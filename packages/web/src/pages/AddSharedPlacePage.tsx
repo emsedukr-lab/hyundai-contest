@@ -6,8 +6,9 @@ import { Layout, LayoutContent, LayoutHeader } from '@astryxdesign/core/Layout';
 import { List, ListItem } from '@astryxdesign/core/List';
 import { Selector } from '@astryxdesign/core/Selector';
 import { Spinner } from '@astryxdesign/core/Spinner';
-import { HStack, VStack } from '@astryxdesign/core/Stack';
+import { HStack, StackItem, VStack } from '@astryxdesign/core/Stack';
 import { Heading, Text } from '@astryxdesign/core/Text';
+import { Card } from '../components/toss/Card';
 import { InstallHint } from '../components/InstallHint';
 import { CATEGORY_LABEL, PlaceSearch, type NewPlace } from '../editor/PlaceSearch';
 import { trips } from '../lib/db';
@@ -226,7 +227,7 @@ export function AddSharedPlacePage() {
             {status === 'undone' && (
               <>
                 <Banner status="info" title={t('add.undone')} />
-                <Button label={t('add.goHome')} variant="primary" onClick={() => navigate('/')} />
+                <Button label={t('add.goHome')} variant="primary" width="100%" onClick={() => navigate('/')} />
               </>
             )}
 
@@ -238,29 +239,34 @@ export function AddSharedPlacePage() {
                   description={add.place.latE7 === null ? t('add.added.nameOnly') : undefined}
                 />
                 {note && <Banner status="warning" title={note} />}
-                <HStack gap={2} wrap="wrap">
-                  <Button label={t('add.open')} variant="primary" onClick={() => navigate(`/trips/${add.tripId}`)} />
+                <HStack gap={2}>
                   <Button label={t('add.goHome')} variant="secondary" onClick={() => navigate('/')} />
-                  <Button label={t('add.undo')} variant="ghost" isDisabled={busy} onClick={() => void undo()} />
+                  <StackItem size="fill">
+                    <Button label={t('add.open')} variant="primary" width="100%" onClick={() => navigate(`/trips/${add.tripId}`)} />
+                  </StackItem>
                 </HStack>
 
-                <Collapsible trigger={<Text type="label">{t('add.changeTrip')}</Text>} defaultIsOpen={false}>
-                  <Selector label={t('add.target')} options={targetOptions} value={add.tripId} onChange={(v) => void changeTrip(v)} />
-                </Collapsible>
-
-                {hits.length > 1 && (
-                  <Collapsible trigger={<Text type="label">{t('add.otherPlace')}</Text>} defaultIsOpen={false}>
-                    <List hasDividers>
-                      {hits.map((h) => (
-                        <ListItem key={h.externalId} label={h.name} description={`${CATEGORY_LABEL[h.category]} · ${h.address}`} onClick={() => void rechoose(fromHit(h))} />
-                      ))}
-                    </List>
+                <Card pad={0}>
+                  <Collapsible trigger={<Text type="label">{t('add.changeTrip')}</Text>} defaultIsOpen={false}>
+                    <Selector label={t('add.target')} options={targetOptions} value={add.tripId} onChange={(v) => void changeTrip(v)} />
                   </Collapsible>
-                )}
 
-                <Collapsible trigger={<Text type="label">{t('add.manualFind')}</Text>} defaultIsOpen={false}>
-                  <PlaceSearch label={t('add.refine.search')} onPick={(p) => void rechoose(p)} />
-                </Collapsible>
+                  {hits.length > 1 && (
+                    <Collapsible trigger={<Text type="label">{t('add.otherPlace')}</Text>} defaultIsOpen={false}>
+                      <List hasDividers>
+                        {hits.map((h) => (
+                          <ListItem key={h.externalId} label={h.name} description={`${CATEGORY_LABEL[h.category]} · ${h.address}`} onClick={() => void rechoose(fromHit(h))} />
+                        ))}
+                      </List>
+                    </Collapsible>
+                  )}
+
+                  <Collapsible trigger={<Text type="label">{t('add.manualFind')}</Text>} defaultIsOpen={false}>
+                    <PlaceSearch label={t('add.refine.search')} onPick={(p) => void rechoose(p)} />
+                  </Collapsible>
+                </Card>
+
+                <Button label={t('add.undo')} variant="ghost" size="sm" isDisabled={busy} onClick={() => void undo()} />
               </>
             )}
           </VStack>

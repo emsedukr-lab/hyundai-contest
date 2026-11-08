@@ -10,6 +10,7 @@ import { HStack, StackItem, VStack } from '@astryxdesign/core/Stack';
 import { Heading, Text } from '@astryxdesign/core/Text';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { sampleTrip, type Home, type Trip } from '@tteonaljido/shared';
+import { Card } from '../components/toss/Card';
 import { InstallHint } from '../components/InstallHint';
 import { sendLog, trips, type SendLogEntry } from '../lib/db';
 import { dateLabel, periodLabel } from '../lib/format';
@@ -137,7 +138,7 @@ export function HomePage() {
                 <Text type="label" color="secondary">
                   {t('home.myTrips')}
                 </Text>
-                <div style={{ background: 'var(--color-background-card)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-container)', overflow: 'hidden' }}>
+                <Card pad={0}>
                   <List hasDividers>
                     {(docs ?? []).map((d) => (
                   <ListItem
@@ -157,7 +158,7 @@ export function HomePage() {
                   />
                     ))}
                   </List>
-                </div>
+                </Card>
               </VStack>
             )}
             <Text type="supporting" color="secondary">

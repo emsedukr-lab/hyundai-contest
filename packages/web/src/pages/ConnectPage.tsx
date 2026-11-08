@@ -243,12 +243,14 @@ export function ConnectPage() {
                 {t('connect.intro.description')}
               </Text>
             </VStack>
-            <List hasDividers>
-              <ListItem label={t('connect.intro.step1')} description={t('connect.intro.step1.detail')} />
-              <ListItem label={t('connect.intro.step2')} description={t('connect.intro.step2.detail')} />
-              <ListItem label={t('connect.intro.step3')} description={t('connect.intro.step3.detail')} />
-              <ListItem label={t('connect.intro.step4')} description={t('connect.intro.step4.detail')} />
-            </List>
+            <Card padding={0}>
+              <List hasDividers>
+                <ListItem label={t('connect.intro.step1')} description={t('connect.intro.step1.detail')} />
+                <ListItem label={t('connect.intro.step2')} description={t('connect.intro.step2.detail')} />
+                <ListItem label={t('connect.intro.step3')} description={t('connect.intro.step3.detail')} />
+                <ListItem label={t('connect.intro.step4')} description={t('connect.intro.step4.detail')} />
+              </List>
+            </Card>
           </VStack>
         );
       case 'code':
@@ -325,17 +327,21 @@ export function ConnectPage() {
               onChange={setIncludeHome}
               description={doc.home ? t('connect.consent.homeOn', { address: doc.home.address }) : t('connect.consent.noHome')}
             />
-            <List hasDividers header={<Text type="label">{t('connect.consent.sent')}</Text>}>
-              <ListItem label={t('connect.consent.basics')} description={`${doc.plan.name} · ${periodLabel(doc.plan.startDate, doc.plan.endDate)}`} />
-              <ListItem label={t('connect.consent.places', { n: doc.plan.places.length })} description={t('connect.consent.places.detail')} />
-              <ListItem label={t('connect.consent.days')} description={t('connect.consent.days.detail')} />
-              <ListItem label={t('connect.consent.lodging')} description={t('connect.consent.lodging.detail')} />
-              <ListItem label={t('common.homeAddress')} description={includeHome && doc.home ? t('common.included') : t('common.notIncluded')} />
-            </List>
-            <List hasDividers header={<Text type="label">{t('connect.consent.notSent')}</Text>}>
-              <ListItem label={t('connect.consent.private')} description={t('connect.consent.private.detail')} />
-              <ListItem label={t('connect.consent.otherTrips')} />
-            </List>
+            <Card padding={0}>
+              <List hasDividers header={<Text type="label">{t('connect.consent.sent')}</Text>}>
+                <ListItem label={t('connect.consent.basics')} description={`${doc.plan.name} · ${periodLabel(doc.plan.startDate, doc.plan.endDate)}`} />
+                <ListItem label={t('connect.consent.places', { n: doc.plan.places.length })} description={t('connect.consent.places.detail')} />
+                <ListItem label={t('connect.consent.days')} description={t('connect.consent.days.detail')} />
+                <ListItem label={t('connect.consent.lodging')} description={t('connect.consent.lodging.detail')} />
+                <ListItem label={t('common.homeAddress')} description={includeHome && doc.home ? t('common.included') : t('common.notIncluded')} />
+              </List>
+            </Card>
+            <Card padding={0}>
+              <List hasDividers header={<Text type="label">{t('connect.consent.notSent')}</Text>}>
+                <ListItem label={t('connect.consent.private')} description={t('connect.consent.private.detail')} />
+                <ListItem label={t('connect.consent.otherTrips')} />
+              </List>
+            </Card>
           </VStack>
         ) : null;
       case 'approve':
@@ -347,17 +353,19 @@ export function ConnectPage() {
                 {t('connect.approve.description')}
               </Text>
             </VStack>
-            <MetadataList orientation="vertical">
-              <MetadataListItem label={t('connect.approve.trip')}>{`${doc.plan.name} (v${doc.revision})`}</MetadataListItem>
-              <MetadataListItem label={t('connect.approve.period')}>{`${periodLabel(doc.plan.startDate, doc.plan.endDate)} · ${nightsLabel(doc.plan)}`}</MetadataListItem>
-              <MetadataListItem label={t('connect.approve.places')}>
-                {t('connect.approve.placesValue', { places: doc.plan.places.length, fixed: doc.plan.visits.filter((v) => v.fixed).length, unassigned: unassignedVisits(doc.plan).length })}
-              </MetadataListItem>
-              <MetadataListItem label={t('common.homeAddress')}>{includeHome && doc.home ? t('common.included') : t('common.notIncluded')}</MetadataListItem>
-              <MetadataListItem label={t('connect.approve.target')}>
-                {t('connect.approve.targetValue', { code: rec.confirmCode ? codeLabel(rec.confirmCode) : '', version: rec.carAppVersion ?? '' })}
-              </MetadataListItem>
-            </MetadataList>
+            <Card>
+              <MetadataList orientation="vertical">
+                <MetadataListItem label={t('connect.approve.trip')}>{`${doc.plan.name} (v${doc.revision})`}</MetadataListItem>
+                <MetadataListItem label={t('connect.approve.period')}>{`${periodLabel(doc.plan.startDate, doc.plan.endDate)} · ${nightsLabel(doc.plan)}`}</MetadataListItem>
+                <MetadataListItem label={t('connect.approve.places')}>
+                  {t('connect.approve.placesValue', { places: doc.plan.places.length, fixed: doc.plan.visits.filter((v) => v.fixed).length, unassigned: unassignedVisits(doc.plan).length })}
+                </MetadataListItem>
+                <MetadataListItem label={t('common.homeAddress')}>{includeHome && doc.home ? t('common.included') : t('common.notIncluded')}</MetadataListItem>
+                <MetadataListItem label={t('connect.approve.target')}>
+                  {t('connect.approve.targetValue', { code: rec.confirmCode ? codeLabel(rec.confirmCode) : '', version: rec.carAppVersion ?? '' })}
+                </MetadataListItem>
+              </MetadataList>
+            </Card>
             {(() => {
               // The conflicts the car would also flag — shown once more right before sending, so nothing surprises on arrival.
               const warnings = planWarnings(doc.plan, doc.home).filter((w) => w.level === 'warning');
@@ -384,17 +392,19 @@ export function ConnectPage() {
               </HStack>
             )}
             {view && (
-              <List hasDividers>
-                <ListItem
-                  label={t('connect.track.sent')}
-                  endContent={<Badge variant={rec?.sealed || view.state !== 'CLAIMED' ? 'success' : 'neutral'} label={rec?.sealed || view.state !== 'CLAIMED' ? t('connect.track.done') : t('connect.track.waiting')} />}
-                />
-                <ListItem label={t('connect.track.received')} endContent={<Badge variant={view.carFetched ? 'success' : 'neutral'} label={view.carFetched ? t('connect.track.done') : t('connect.track.waiting')} />} />
-                <ListItem
-                  label={t('connect.track.applied')}
-                  endContent={<Badge variant={view.state === 'APPLIED' ? 'success' : sessionOver ? 'warning' : 'neutral'} label={view.state === 'APPLIED' ? t('connect.track.done') : sessionOver ? t('connect.track.failed') : t('connect.track.waiting')} />}
-                />
-              </List>
+              <Card padding={0}>
+                <List hasDividers>
+                  <ListItem
+                    label={t('connect.track.sent')}
+                    endContent={<Badge variant={rec?.sealed || view.state !== 'CLAIMED' ? 'success' : 'neutral'} label={rec?.sealed || view.state !== 'CLAIMED' ? t('connect.track.done') : t('connect.track.waiting')} />}
+                  />
+                  <ListItem label={t('connect.track.received')} endContent={<Badge variant={view.carFetched ? 'success' : 'neutral'} label={view.carFetched ? t('connect.track.done') : t('connect.track.waiting')} />} />
+                  <ListItem
+                    label={t('connect.track.applied')}
+                    endContent={<Badge variant={view.state === 'APPLIED' ? 'success' : sessionOver ? 'warning' : 'neutral'} label={view.state === 'APPLIED' ? t('connect.track.done') : sessionOver ? t('connect.track.failed') : t('connect.track.waiting')} />}
+                  />
+                </List>
+              </Card>
             )}
           </VStack>
         );
@@ -405,38 +415,52 @@ export function ConnectPage() {
     const cancelBtn = !sessionOver && rec?.mobileToken && <Button label={t('connect.cancel')} variant="ghost" isDisabled={busy} onClick={doCancel} />;
     switch (stage) {
       case 'intro':
-        return <Button label={t('connect.intro.action')} variant="primary" isLoading={busy} onClick={doClaim} />;
+        return (
+          <StackItem size="fill">
+            <Button label={t('connect.intro.action')} variant="primary" width="100%" isLoading={busy} onClick={doClaim} />
+          </StackItem>
+        );
       case 'code':
         return (
           <>
             <Button label={t('connect.code.mismatch')} variant="secondary" isDisabled={busy} onClick={doCancel} />
-            <Button label={t('connect.code.match')} variant="primary" onClick={async () => rec && (setRec(await confirmCode(rec)), setStage('pick'))} />
+            <StackItem size="fill">
+              <Button label={t('connect.code.match')} variant="primary" width="100%" onClick={async () => rec && (setRec(await confirmCode(rec)), setStage('pick'))} />
+            </StackItem>
           </>
         );
       case 'pick':
         return (
           <>
             {cancelBtn}
-            <Button label={t('common.next')} variant="primary" isDisabled={!doc} onClick={() => setStage('consent')} />
+            <StackItem size="fill">
+              <Button label={t('common.next')} variant="primary" width="100%" isDisabled={!doc} onClick={() => setStage('consent')} />
+            </StackItem>
           </>
         );
       case 'consent':
         return (
           <>
             <Button label={t('common.prev')} variant="secondary" onClick={() => setStage('pick')} />
-            <Button label={t('common.next')} variant="primary" onClick={() => setStage('approve')} />
+            <StackItem size="fill">
+              <Button label={t('common.next')} variant="primary" width="100%" onClick={() => setStage('approve')} />
+            </StackItem>
           </>
         );
       case 'approve':
         return (
           <>
             <Button label={t('common.prev')} variant="secondary" isDisabled={busy} onClick={() => setStage('consent')} />
-            <Button label={t('connect.send')} variant="primary" isLoading={busy} onClick={doSend} />
+            <StackItem size="fill">
+              <Button label={t('connect.send')} variant="primary" width="100%" isLoading={busy} onClick={doSend} />
+            </StackItem>
           </>
         );
       case 'status':
         return sessionOver ? (
-          <Button label={t('connect.toTrips')} variant="primary" onClick={() => navigate('/')} />
+          <StackItem size="fill">
+            <Button label={t('connect.toTrips')} variant="primary" width="100%" onClick={() => navigate('/')} />
+          </StackItem>
         ) : (
           <>
             {cancelBtn}
