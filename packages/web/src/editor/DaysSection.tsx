@@ -16,7 +16,7 @@ import { dayEnd, dayIssues, hhmm, timeline, type Endpoint, type Home, type Trip 
 import { dateLabel, minutesLabel } from '../lib/format';
 import { t } from '../lib/i18n';
 import { assign, issueText, lodgingPlaces, move, moveTo, placeOf, setDepart, setEndBy, setLeg, setLodging, unassign, unassignedVisits, visitOf } from '../lib/trips';
-import { RouteSketch } from './RouteSketch';
+import { KakaoMap } from './KakaoMap';
 
 type ISOTime = Parameters<NonNullable<Parameters<typeof TimeInput>[0]['onChange']>>[0];
 
@@ -167,7 +167,7 @@ export function DaysSection({ plan, home, onChange, onOpenPlace, onError }: { pl
       </DndContext>
       <VStack gap={2}>
         <Button label={showSketch ? t('sketch.hide') : t('sketch.title')} size="sm" variant="ghost" onClick={() => setShowSketch((v) => !v)} />
-        {showSketch && <RouteSketch plan={plan} home={home} dayIndex={day.dayIndex} />}
+        {showSketch && <KakaoMap plan={plan} home={home} dayIndex={day.dayIndex} />}
       </VStack>
       {pool.length > 0 && (
         <Selector

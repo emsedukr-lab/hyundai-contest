@@ -23,7 +23,8 @@ export interface Sketch {
   height: number;
 }
 
-interface Raw {
+/** A day's ordered point (start anchor, numbered stops, end anchor) with its real coordinates — for the map or the sketch. */
+export interface DayPoint {
   kind: 'start' | 'stop' | 'end';
   label: string;
   n: number | null;
@@ -41,9 +42,11 @@ function anchor(plan: Trip, home: Home | null, e: Endpoint, homeLabel: string): 
   return p ? { latE7: p.latE7, lonE7: p.lonE7, label: p.name } : null;
 }
 
-function rawNodes(plan: Trip, home: Home | null, dayIndex: number, homeLabel: string): Raw[] {
+/** The day's start → stops → end in order, each with its coordinates (null when unknown). Pure; nothing leaves the device. */
+export function dayPoints(plan: Trip, home: Home | null, dayIndex: number, opts?: { homeLabel?: string }): DayPoint[] {
+  const homeLabel = opts?.homeLabel ?? '집';
   const day = plan.days[dayIndex - 1];
-  const out: Raw[] = [];
+  const out: DayPoint[] = [];
   const start =
     dayIndex === 1 ? anchor(plan, home, plan.origin, homeLabel) : (() => { const p = placeOf(plan, plan.days[dayIndex - 2]?.lodgingPlaceRef ?? null); return p ? { latE7: p.latE7, lonE7: p.lonE7, label: p.name } : null; })();
   if (start) out.push({ kind: 'start', label: start.label, n: null, latE7: start.latE7, lonE7: start.lonE7 });
@@ -64,8 +67,8 @@ export function daySketch(plan: Trip, home: Home | null, dayIndex: number, opts?
   const width = opts?.width ?? 100;
   const height = opts?.height ?? 100;
   const pad = opts?.pad ?? 12;
-  const raws = rawNodes(plan, home, dayIndex, opts?.homeLabel ?? '집');
-  const plot = raws.filter((r): r is Raw & { latE7: number; lonE7: number } => r.latE7 !== null && r.lonE7 !== null);
+  const raws = dayPoints(plan, home, dayIndex, { homeLabel: opts?.homeLabel });
+  const plot = raws.filter((r): r is DayPoint & { latE7: number; lonE7: number } => r.latE7 !== null && r.lonE7 !== null);
   const noCoords = raws.filter((r) => r.kind === 'stop' && (r.latE7 === null || r.lonE7 === null)).map((r) => r.label);
   if (plot.length === 0) return { nodes: [], noCoords, width, height };
   // Scale to the stops' own extent (≥2) so a far-away origin/home doesn't collapse the day's stops into one dot; the

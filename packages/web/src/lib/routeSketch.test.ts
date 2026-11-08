@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { sampleTrip, type Home } from '@tteonaljido/shared';
 import { nowIso } from './trips';
-import { daySketch } from './routeSketch';
+import { dayPoints, daySketch } from './routeSketch';
 
 const home: Home = { address: '서울', latE7: 375_662_952, lonE7: 1_269_779_451 };
 
@@ -36,6 +36,16 @@ describe('경로 스케치 정규화', () => {
     const blank = { ...trip, home: null, places: trip.places.map((p) => ({ ...p, latE7: null, lonE7: null })) };
     const s = daySketch(blank, null, 2);
     expect(s.nodes).toEqual([]);
+  });
+
+  it('dayPoints는 시작→정류장(번호)→끝 순서와 실좌표를 준다 (지도용)', () => {
+    const pts = dayPoints(trip, home, 2, { homeLabel: '집' });
+    expect(pts.length).toBeGreaterThan(0);
+    const stops = pts.filter((p) => p.kind === 'stop');
+    expect(stops.map((p) => p.n)).toEqual(stops.map((_, i) => i + 1));
+    // 좌표가 있는 정류장은 E7 숫자 그대로 보존(지도는 /1e7로 환산)
+    const withCoord = stops.find((p) => p.latE7 !== null);
+    if (withCoord) expect(typeof withCoord.latE7).toBe('number');
   });
 
   it('단일 지점은 상자 중앙 근처', () => {
