@@ -137,7 +137,9 @@ try {
     () => new Promise<string>((res) => { const r = indexedDB.open('tteonaljido'); r.onsuccess = () => { const tx = r.result.transaction('trips').objectStore('trips').getAllKeys(); tx.onsuccess = () => res(String(tx.result[0])); }; }),
   )) as string;
   await mp.goto(`${base}/trips/${tripId}`);
-  await mp.getByRole('button', { name: '친구에게 공유' }).click();
+  // Sharing sits in the editor's 더보기 menu.
+  await mp.getByRole('button', { name: '더보기', exact: true }).click();
+  await mp.getByRole('menuitem', { name: '친구에게 공유' }).click();
   await mp.getByText('친구에게 여행 공유').waitFor();
   check((await mp.getByText('집 주소는 공유되지 않아요').count()) > 0, 'friend-share excludes the home address');
   check((await mp.getByText(/^\d{6}$/).count()) > 0, 'friend-share shows a 6-digit passcode');

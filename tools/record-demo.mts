@@ -170,7 +170,7 @@ try {
   caption("휴대폰에서 짠 3박 4일 강릉 여행 · 예약 2곳, 숙소 3박 · 경포호는 '여유 있으면' 일정");
   await click(page, '샘플 여행 추가');
   await page.getByText('강릉 3박 4일', { exact: true }).first().click();
-  const day2 = page.locator('button[data-tab-value="2"]'); // Astryx tabs are buttons, not role=tab
+  const day2 = page.locator('button[data-tab-value="2"]'); // the editor's day tabs (timeline editor, M26)
   await day2.waitFor();
   await sleep(1200);
   await day2.scrollIntoViewIfNeeded();
@@ -178,14 +178,15 @@ try {
   await day2.click();
   await sleep(2500);
   // 경포호 as '여유 있으면' (optional), as a user would mark it; the current sample already is, then nothing changes.
-  await page.getByRole('button', { name: '상세', exact: true }).first().click();
+  // The day's first stop card (after the 출발 card) opens its details.
+  await page.locator('#day-panel .tl-card-main').nth(1).click();
   const dlg = page.locator('dialog[open]');
   await dlg.getByText('여유 있으면', { exact: true }).click();
   await sleep(1500);
   // The dialog has both a header ✕ and a bottom primary button labelled 닫기; click the explicit bottom one.
   await dlg.getByRole('button', { name: '닫기', exact: true }).last().click();
   const save = page.getByRole('button', { name: '저장', exact: true });
-  if (await save.isEnabled().catch(() => false)) await save.click();
+  if (await save.count()) await save.click(); // 저장 shows only with unsaved edits (else 경로 보고 차로 보내기)
   await sleep(1500);
   await click(page, '뒤로');
   await page.getByText('내 여행').waitFor();

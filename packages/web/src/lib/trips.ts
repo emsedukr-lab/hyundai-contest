@@ -243,6 +243,45 @@ export function moveTo(plan: Trip, dayIndex: number, from: number, to: number): 
   });
 }
 
+/**
+ * A day's timetable issues sorted by where the timeline shows them: a stop's card (issues naming a visit), the start
+ * node (leaving before midnight), the end node (arriving after the target time), or the day itself (anything else).
+ */
+export function nodeIssues(plan: Trip, dayIndex: number, severity: DayIssue['severity'] = 'CONFLICT') {
+  const out = { start: [] as DayIssue[], end: [] as DayIssue[], byVisit: {} as Record<string, DayIssue[]>, other: [] as DayIssue[] };
+  for (const i of dayIssues(plan, dayIndex)) {
+    if (i.severity !== severity) continue;
+    if (i.visitId) (out.byVisit[i.visitId] ??= []).push(i);
+    else if (i.code === 'DEPART_PREVIOUS_DAY') out.start.push(i);
+    else if (i.code === 'PAST_END_BY') out.end.push(i);
+    else out.other.push(i);
+  }
+  return out;
+}
+
+/**
+ * Where a place picked from the timeline's "+ 장소 추가" landed: on the day, as that night's lodging, kept in the trip
+ * (a lodging when the night already has one, or on the last day), or in the 보관함 because the day is full.
+ */
+export type AddOutcome = { plan: Trip; placed: 'day' | 'lodging' | 'kept' | 'pool'; reason?: string };
+
+/** Adds a place and puts it at the end of the day being viewed (lodging fills an unset night instead). */
+export function addToDay(plan: Trip, p: Omit<Place, 'placeRef'>, dayIndex: number): AddOutcome {
+  const added = addPlace(plan, p);
+  const place = added.places[added.places.length - 1];
+  if (p.category === 'LODGING') {
+    const day = added.days.find((d) => d.dayIndex === dayIndex);
+    const isLast = added.days[added.days.length - 1]?.dayIndex === dayIndex;
+    return day && !isLast && !day.lodgingPlaceRef ? { plan: setLodging(added, dayIndex, place.placeRef), placed: 'lodging' } : { plan: added, placed: 'kept' };
+  }
+  const visit = added.visits[added.visits.length - 1];
+  try {
+    return { plan: assign(added, visit.visitId, dayIndex), placed: 'day' };
+  } catch (e) {
+    return { plan: added, placed: 'pool', reason: (e as Error).message }; // day full: it waits in the 보관함
+  }
+}
+
 export const setLeg = (plan: Trip, dayIndex: number, k: number, minutes: number | null): Trip =>
   mapDay(plan, dayIndex, (d) => ({ ...d, legs: d.legs.map((l, i) => (i === k ? (minutes === null ? null : { minutes, source: 'USER_ESTIMATE' }) : l)) }));
 

@@ -161,3 +161,17 @@ export const HomeIcon = () => <Outline d="M4 10.5 12 4l8 6.5V19a1.5 1.5 0 0 1-1.
 export const BriefcaseIcon = () => <Outline d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7M4.5 7h15A1.5 1.5 0 0 1 21 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5v-9A1.5 1.5 0 0 1 4.5 7ZM3 12.5h18" />;
 /** The icon for a saved start place: 집 a house, 회사 a briefcase, 즐겨찾기 a star. */
 export const PresetIcon = ({ slot }: { slot: PresetSlot }) => (slot === 'home' ? <HomeIcon /> : slot === 'work' ? <BriefcaseIcon /> : <StarIcon />);
+/** Edit (a pencil), beside the editor title that opens the trip's name and dates. */
+export const PencilIcon = () => <Outline d="M14.5 5.5 18.5 9.5M4.5 19.5l1-4.5L15.3 5.2a1.4 1.4 0 0 1 2 0l1.5 1.5a1.4 1.4 0 0 1 0 2L9 18.5l-4.5 1Z" />;
+/** Drag handle: six dots. */
+export const GripIcon = () => (
+  <svg {...base}>
+    {[8, 12, 16].flatMap((y) => [9, 15].map((x) => <circle key={`${x}${y}`} cx={x} cy={y} r={1.4} fill="currentColor" />))}
+  </svg>
+);
+/** Add (a plus). */
+export const PlusIcon = () => <Outline d="M12 5v14M5 12h14" />;
+/** The day's end at home on the last day: a flag. */
+export const FlagIcon = () => <Outline d="M5.5 20.5V4.5m0 0h11l-2.5 4 2.5 4h-11" />;
+/** A night's lodging: a bed. */
+export const BedIcon = () => <Outline d="M3.5 18.5v-11m0 7h17v4m0-4V12a2.5 2.5 0 0 0-2.5-2.5h-7.5v5M6.8 11.2a1.6 1.6 0 1 0 0-.01" />;

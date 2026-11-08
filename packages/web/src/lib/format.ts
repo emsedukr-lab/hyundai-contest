@@ -22,3 +22,10 @@ export const dayOf = (at: number) => {
   const d = new Date(at);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 };
+
+/** A compact day label for tabs: "11/16(월)" (Korean) or "Mon Nov 16". */
+export function shortDate(date: string) {
+  const [y, m, d] = date.split('-').map(Number);
+  const weekday = WEEKDAY[new Date(Date.UTC(y, m - 1, d)).getUTCDay()];
+  return t('date.short', { month: lang === 'en' ? MONTH_EN[m - 1] : m, day: d, weekday });
+}

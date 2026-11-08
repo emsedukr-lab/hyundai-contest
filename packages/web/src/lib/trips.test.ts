@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { parseTransfer, sampleTrip, type Trip } from '@tteonaljido/shared';
-import { addPlace, assign, changeCategory, emptyPlan, isEndpointOnly, move, moveTo, newDoc, planWarnings, relinkLegs, rememberLegs, removePlace, savePlan, setDepart, setEndBy, setLeg, setLodging, setOrigin, setPeriod, startFromPreset, toTransfer, unassign, type LegBook } from './trips';
+import { addPlace, addToDay, assign, changeCategory, emptyPlan, isEndpointOnly, move, moveTo, newDoc, nodeIssues, planWarnings, relinkLegs, rememberLegs, removePlace, savePlan, setDepart, setEndBy, setLeg, setLodging, setOrigin, setPeriod, startFromPreset, toTransfer, unassign, type LegBook } from './trips';
 
 // The warning assertions below check the Korean copy; jsdom reports navigator.language as en-US.
 vi.hoisted(() => Object.defineProperty(navigator, 'language', { value: 'ko-KR', configurable: true }));
@@ -244,5 +244,45 @@ describe('start presets (설정 › 회사·즐겨찾기)', () => {
     const stop = base.visits[0].placeRef;
     const fromStop = setOrigin(base, { kind: 'PLACE', placeRef: stop });
     expect(setOrigin(fromStop, { kind: 'HOME' }).places.some((x) => x.placeRef === stop)).toBe(true);
+  });
+});
+
+describe('timeline nodes (M26)', () => {
+  const market = { name: '주문진 수산시장', address: '강릉시 주문진읍', latE7: 378_930_000, lonE7: 1_288_260_000, category: 'FOOD' as const, source: { provider: 'MANUAL' as const, externalId: null }, naviPoi: null, hours: { status: 'UNKNOWN' as const } };
+
+  it('sorts conflicts onto the node that shows them', () => {
+    const late = setEndBy(setDepart(sampleTrip(), 4, '09:45'), 2, '16:00');
+    const d4 = nodeIssues(late, 4);
+    expect(Object.values(d4.byVisit).flat().map((i) => i.code)).toContain('LATE_FOR_FIXED'); // on the stop it is about
+    expect(nodeIssues(late, 2).end.map((i) => i.code)).toEqual(['PAST_END_BY']); // on the lodging/home card
+    expect(nodeIssues(sampleTrip(), 1).other).toEqual([]);
+  });
+
+  it('a picked place lands at the end of the day being viewed', () => {
+    const base = sampleTrip();
+    const r = addToDay(base, market, 2);
+    expect(r.placed).toBe('day');
+    const v = r.plan.visits[r.plan.visits.length - 1];
+    expect(day(r.plan, 2).visitOrder.at(-1)).toBe(v.visitId);
+    expect(v.unassignedReason).toBeNull();
+  });
+
+  it('a lodging fills an unset night, otherwise it is just kept in the trip', () => {
+    const inn = { ...market, name: '경포 게스트하우스', category: 'LODGING' as const };
+    const open = setLodging(sampleTrip(), 1, null);
+    const r = addToDay(open, inn, 1);
+    expect(r.placed).toBe('lodging');
+    expect(day(r.plan, 1).lodgingPlaceRef).toBe(r.plan.places.at(-1)!.placeRef);
+    expect(addToDay(sampleTrip(), inn, 1).placed).toBe('kept'); // night 1 already has lodging
+    expect(addToDay(open, inn, open.days.length).placed).toBe('kept'); // the last day ends at home
+  });
+
+  it('a full day keeps the new place in the 보관함 instead of failing', () => {
+    let t = sampleTrip();
+    while (day(t, 1).visitOrder.length < 20) t = addToDay(t, market, 1).plan;
+    const r = addToDay(t, market, 1);
+    expect(r.placed).toBe('pool');
+    expect(r.reason).toBeTruthy();
+    expect(r.plan.visits.at(-1)!.unassignedReason).toBe('NOT_SCHEDULED_YET');
   });
 });

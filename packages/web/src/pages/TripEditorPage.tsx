@@ -3,82 +3,61 @@ import { AlertDialog } from '@astryxdesign/core/AlertDialog';
 import { Badge } from '@astryxdesign/core/Badge';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
-import { DateRangeInput } from '@astryxdesign/core/DateRangeInput';
 import { DropdownMenu } from '@astryxdesign/core/DropdownMenu';
-import { FormLayout } from '@astryxdesign/core/FormLayout';
-import { IconButton } from '@astryxdesign/core/IconButton';
-import { List, ListItem } from '@astryxdesign/core/List';
-import { NumberInput } from '@astryxdesign/core/NumberInput';
-import { SegmentedControl, SegmentedControlItem } from '@astryxdesign/core/SegmentedControl';
-import { Selector } from '@astryxdesign/core/Selector';
 import { Spinner } from '@astryxdesign/core/Spinner';
-import { HStack, VStack } from '@astryxdesign/core/Stack';
 import { Tab, TabList } from '@astryxdesign/core/TabList';
-import { Heading, Text } from '@astryxdesign/core/Text';
-import { TextInput } from '@astryxdesign/core/TextInput';
-import { TimeInput } from '@astryxdesign/core/TimeInput';
-import type { Endpoint, Trip, Visit } from '@tteonaljido/shared';
-import { MoreIcon, StarIcon } from '../components/shell/icons';
+import { dayIssues, type Trip } from '@tteonaljido/shared';
+import { MoreIcon, PencilIcon } from '../components/shell/icons';
 import { PushScreen } from '../components/shell/Screens';
-import { Card, CardListHeader, Section } from '../components/toss/Card';
-import { DaysSection } from '../editor/DaysSection';
-import { CATEGORY_LABEL, PlaceSearch } from '../editor/PlaceSearch';
+import { DayTimeline } from '../editor/DayTimeline';
 import { RecommendDialog } from '../editor/RecommendDialog';
 import { ShareDialog } from '../editor/ShareDialog';
+import { BasicsSheet } from '../editor/sheets/BasicsSheet';
+import { EndSheet } from '../editor/sheets/EndSheet';
+import { LegSheet } from '../editor/sheets/LegSheet';
+import { PlaceSheet, type Notice } from '../editor/sheets/PlaceSheet';
+import { SendSheet } from '../editor/sheets/SendSheet';
+import { StartSheet } from '../editor/sheets/StartSheet';
 import { VisitDialog } from '../editor/VisitDialog';
 import { trips } from '../lib/db';
+import { shortDate } from '../lib/format';
 import { t } from '../lib/i18n';
 import { navigate } from '../lib/router';
-import { PRESET_SLOTS, defaultHome, presetLabel, presetPlace } from '../lib/settings';
-import {
-  REASON_LABEL,
-  addPlace,
-  emptyPlan,
-  isEndpointOnly,
-  newDoc,
-  nightsLabel,
-  nowIso,
-  planWarnings,
-  presetInPlan,
-  relinkLegs,
-  rememberLegs,
-  savePlan,
-  setOrigin,
-  setPeriod,
-  startFromPreset,
-  unassignedVisits,
-  updateVisit,
-  type LegBook,
-  type TripDoc,
-} from '../lib/trips';
+import { defaultHome } from '../lib/settings';
+import { emptyPlan, newDoc, nightsLabel, nowIso, relinkLegs, rememberLegs, savePlan, unassignedVisits, type LegBook, type TripDoc } from '../lib/trips';
+import '../editor/timeline.css';
 
-type ISOTime = Parameters<NonNullable<Parameters<typeof TimeInput>[0]['onChange']>>[0];
-type Range = NonNullable<Parameters<typeof DateRangeInput>[0]['value']>;
-/** The editor's three parts, split into inline tabs so a phone isn't one endless scroll. */
-type EditorTab = 'basics' | 'places' | 'days';
+/** Which bottom sheet is open (one at a time; dialogs such as place details may stack above it). */
+type SheetState = { kind: 'basics' } | { kind: 'start' } | { kind: 'leg'; k: number } | { kind: 'end' } | { kind: 'place' } | { kind: 'send' } | { kind: 'map' } | null;
 
-const endpointValue = (e: Endpoint) => (e.kind === 'HOME' ? 'HOME' : e.placeRef);
-const toEndpoint = (v: string): Endpoint => (v === 'HOME' ? { kind: 'HOME' } : { kind: 'PLACE', placeRef: v });
+/** 'MM/DD–MM/DD' for the title line, from the same short labels as the day tabs (weekday dropped). */
+const shortPeriod = (start: string, end: string) => {
+  const s = shortDate(start).replace(/\(.*\)$/, '');
+  return start === end ? s : `${s}–${shortDate(end).replace(/\(.*\)$/, '')}`;
+};
 
+/**
+ * The trip editor as one timeline (M26): a title that opens the trip's name and dates, day tabs with 경로 추천 and
+ * 지도, then the selected day as a route from 출발 to 숙소/귀가. Every input opens in a bottom sheet; problems show
+ * on the node they concern. Below: 보관함 (places on no day yet) and one action — 저장 while there are unsaved edits,
+ * then 경로 보고 차로 보내기 (sending always starts from the car's QR, so that sheet shows the route and the steps).
+ */
 export function TripEditorPage({ tripId }: { tripId: string | null }) {
   const [doc, setDoc] = useState<TripDoc | null>(null);
   const [plan, setPlan] = useState<Trip | null>(null);
   // The one home address, set in 설정 and shared by every trip (route checks, map, recommend, what the car may get).
   const [home] = useState(defaultHome);
-  // Saved start places (설정 › 회사, 즐겨찾기 1–3), read once like home.
-  const [presets] = useState(() => PRESET_SLOTS.filter((s) => s !== 'home').map((slot) => ({ slot, place: presetPlace(slot) })));
   const [dirty, setDirty] = useState(false);
+  const [day, setDay] = useState('1');
+  const [sheet, setSheet] = useState<SheetState>(null);
   const [openPlace, setOpenPlace] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [saved, setSaved] = useState<string | null>(null);
+  const [notice, setNotice] = useState<Notice | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [recommending, setRecommending] = useState(false);
   const [sharing, setSharing] = useState(false);
-  const [tab, setTab] = useState<EditorTab>('basics');
   /** Travel times typed this session by pair of places, so reordering does not throw them away. */
   const book = useRef<LegBook>(new Map());
-  /** Importance a visit had before it was starred, so un-starring restores e.g. OPTIONAL instead of flattening it to NORMAL. */
-  const beforeMust = useRef(new Map<string, Visit['importance']>());
+  const tabsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     void (async () => {
@@ -88,45 +67,47 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
       book.current = new Map();
       rememberLegs(d.plan, book.current);
       setPlan(d.plan);
+      if (!tripId) setSheet({ kind: 'basics' }); // a new trip starts with where from, its name and dates
     })();
   }, [tripId]);
 
-  const warnings = useMemo(() => (plan ? planWarnings(plan, home) : []), [plan, home]);
+  // Long trips scroll their day tabs sideways; fade the edge that has more, so a cut tab reads as "scroll", not broken.
+  const dayCount = plan?.days.length ?? 0;
+  useEffect(() => {
+    const el = tabsRef.current;
+    if (!el) return;
+    const update = () => {
+      el.dataset.fadeLeft = String(el.scrollLeft > 2);
+      el.dataset.fadeRight = String(el.scrollLeft + el.clientWidth < el.scrollWidth - 2);
+    };
+    update();
+    el.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', update);
+    return () => {
+      el.removeEventListener('scroll', update);
+      window.removeEventListener('resize', update);
+    };
+  }, [dayCount]);
+
+  // Days with something to fix get a dot on their tab: a timetable conflict or a night without lodging.
+  const attention = useMemo(() => {
+    if (!plan) return new Set<number>();
+    const last = plan.days.length - 1;
+    return new Set(plan.days.filter((d, i) => (i < last && !d.lodgingPlaceRef) || dayIssues(plan, d.dayIndex).some((x) => x.severity === 'CONFLICT')).map((d) => d.dayIndex));
+  }, [plan]);
   if (!plan || !doc) return <Spinner />;
+
+  const dayIndex = plan.days.find((d) => String(d.dayIndex) === day)?.dayIndex ?? plan.days[0].dayIndex;
+  const pool = unassignedVisits(plan);
+  const poolNeedsCare = pool.some((v) => v.fixed);
 
   const edit = (p: Trip) => {
     const linked = relinkLegs(plan, p, book.current);
     rememberLegs(linked, book.current);
     setPlan(linked);
     setDirty(true);
-    setSaved(null);
   };
-  const endpointOptions = [{ value: 'HOME', label: t('common.home') }, ...plan.places.map((p) => ({ value: p.placeRef, label: p.name }))];
-
-  // 출발 장소 (top of 기본): 집 and the saved places first — a saved place already in the trip answers to its place — then
-  // the trip's other places. A slot not set yet is listed but disabled, pointing at 설정.
-  const seen = new Set<string>(['HOME']);
-  const savedStarts = [
-    { value: 'HOME', label: t('common.home'), description: home ? home.address : t('editor.startPlace.homeUnset') },
-    ...presets.flatMap(({ slot, place }) => {
-      if (!place) return [{ value: `preset:${slot}`, label: presetLabel(slot), description: t('settings.home.unset'), disabled: true }];
-      const value = presetInPlan(plan, place)?.placeRef ?? `preset:${slot}`;
-      if (seen.has(value)) return []; // two slots saved as the same place: list it once
-      seen.add(value);
-      return [{ value, label: `${presetLabel(slot)} · ${place.name}`, description: place.address }];
-    }),
-  ];
-  const tripStarts = plan.places.filter((p) => !seen.has(p.placeRef)).map((p) => ({ value: p.placeRef, label: p.name, description: p.address || undefined }));
-  const startOptions = [
-    { type: 'section' as const, title: t('editor.startPlace.saved'), options: savedStarts },
-    ...(tripStarts.length ? [{ type: 'section' as const, title: t('editor.startPlace.tripPlaces'), options: tripStarts }] : []),
-  ];
-  const startAddress = plan.origin.kind === 'HOME' ? (home ? home.address : t('editor.startPlace.homeUnset')) : plan.places.find((p) => p.placeRef === (plan.origin as { placeRef: string }).placeRef)?.address || undefined;
-  const pickStart = (v: string) => {
-    if (v === 'HOME') return edit(setOrigin(plan, { kind: 'HOME' }));
-    const preset = v.startsWith('preset:') ? presets.find((x) => `preset:${x.slot}` === v)?.place : undefined;
-    edit(preset ? startFromPreset(plan, preset) : setOrigin(plan, toEndpoint(v)));
-  };
+  const fail = (m: string) => setNotice({ tone: 'error', text: m });
 
   const save = async () => {
     const next = await savePlan(doc, plan, home);
@@ -134,7 +115,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
     setDoc(next);
     setPlan(next.plan);
     setDirty(false);
-    setSaved(next.revision === doc.revision && tripId ? t('editor.noChanges') : t('editor.saved', { revision: next.revision }));
+    setNotice({ tone: 'success', text: next.revision === doc.revision && tripId ? t('editor.noChanges') : t('editor.saved', { revision: next.revision }) });
     if (!tripId) navigate(`/trips/${next.tripId}`, true);
   };
 
@@ -147,23 +128,49 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
     navigate(`/trips/${nd.tripId}`);
   };
 
-  /** Leave the editor (back to the trips tab, or to 설정 to change home); unsaved edits ask first instead of vanishing. */
+  /** Leave the editor (back to the trips tab, or to 설정 to change a start place); unsaved edits ask first. */
   const leave = (to = '/') => {
     if (dirty && !window.confirm(t('editor.leave.confirm'))) return;
     navigate(to);
   };
+  const close = () => setSheet(null);
 
-  // Secondary actions live in the top bar's menu (toss.md 'menu': opens next to its trigger), keeping one CTA below.
   const menuItems = [
     ...(tripId ? [{ label: t('trip.duplicate'), onClick: () => void duplicate() }] : []),
     { label: t('share.button'), onClick: () => setSharing(true) },
-    { label: t('recommend.button'), onClick: () => setRecommending(true) },
     ...(tripId ? [{ type: 'divider' as const }, { label: t('editor.delete'), variant: 'destructive' as const, onClick: () => setConfirmDelete(true) }] : []),
   ];
 
+  const title = (
+    <button type="button" className="tl-title" onClick={() => setSheet({ kind: 'basics' })} aria-label={t('tl.editBasics')}>
+      <span className="tl-title-name">
+        <span>{plan.name || (tripId ? t('editor.titleEdit') : t('editor.titleNew'))}</span>
+        <PencilIcon />
+      </span>
+      <span className="tl-title-sub">{t('tl.summary', { period: shortPeriod(plan.startDate, plan.endDate), nights: nightsLabel(plan) })}</span>
+    </button>
+  );
+
+  const showSave = dirty || !tripId;
+  const cta = (
+    <div style={{ display: 'flex', gap: 8 }}>
+      <button type="button" className="tl-pool" onClick={() => setSheet({ kind: 'place' })} aria-label={`${t('tl.pool', { n: pool.length })}${poolNeedsCare ? ` · ${t('tl.fixedPool')}` : ''}`}>
+        {t('tl.pool', { n: pool.length })}
+        {poolNeedsCare && <span className="tl-dot" aria-hidden="true" />}
+      </button>
+      <div style={{ flex: '1 1 0', minWidth: 0 }}>
+        {showSave ? (
+          <Button label={t('editor.save')} variant="primary" size="lg" width="100%" onClick={save} />
+        ) : (
+          <Button label={t('tl.send')} variant="primary" size="lg" width="100%" onClick={() => setSheet({ kind: 'send' })} />
+        )}
+      </div>
+    </div>
+  );
+
   return (
     <PushScreen
-      title={tripId ? plan.name || t('editor.titleEdit') : t('editor.titleNew')}
+      title={title}
       onBack={() => leave()}
       actions={
         <>
@@ -179,218 +186,54 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
           />
         </>
       }
-      cta={<Button label={dirty || !tripId ? t('editor.save') : t('editor.savedState')} variant="primary" size="lg" width="100%" isDisabled={!dirty && !!tripId} onClick={save} />}>
-      <div className="tn-pad" style={{ position: 'sticky', top: 'calc(56px + env(safe-area-inset-top))', zIndex: 4, background: 'var(--color-background-body)' }}>
-        {/* ARIA tabs: one panel region whose content swaps, so every tab controls the same panel. */}
-        <TabList role="tablist" value={tab} onChange={(v) => setTab(v as EditorTab)} hasDivider>
-          <Tab value="basics" label={t('editor.tab.basics')} panelId="editor-panel" />
-          <Tab value="places" label={t('editor.tab.places')} panelId="editor-panel" />
-          <Tab value="days" label={t('editor.tab.days')} panelId="editor-panel" />
-        </TabList>
+      cta={cta}>
+      <div className="tl-dayrow">
+        <div className="tl-daytabs" ref={tabsRef}>
+          <TabList role="tablist" aria-label={t('days.title')} value={String(dayIndex)} onChange={setDay} hasDivider={false}>
+            {plan.days.map((d) => (
+              <Tab
+                key={d.dayIndex}
+                value={String(d.dayIndex)}
+                panelId="day-panel"
+                label={t('common.day', { day: d.dayIndex })}
+                endContent={attention.has(d.dayIndex) ? <span className="tl-dot" role="img" aria-label={t('tl.dayAttention')} /> : undefined}
+              />
+            ))}
+          </TabList>
+        </div>
+        <div className="tl-dayactions">
+          <Button label={t('recommend.button')} variant="secondary" size="sm" onClick={() => setRecommending(true)} />
+          <Button label={t('tl.map')} variant="secondary" size="sm" onClick={() => setSheet({ kind: 'map' })} />
+        </div>
       </div>
 
-      <div
-        id="editor-panel"
-        role="tabpanel"
-        aria-label={t(tab === 'basics' ? 'editor.tab.basics' : tab === 'places' ? 'editor.tab.places' : 'editor.tab.days')}
-        className="tn-pad"
-        style={{ display: 'flex', flexDirection: 'column', gap: 24, paddingTop: 16 }}>
-        {error && <Banner status="error" title={error} isDismissable onDismiss={() => setError(null)} />}
-        {saved && <Banner status="success" title={saved} isDismissable onDismiss={() => setSaved(null)} />}
-
-        {tab === 'basics' && (
-          <>
-            {/* Where the trip starts, first thing on a new trip: 집·회사·즐겨찾기 1–3 are set once in 설정. */}
-            <Section title={t('editor.startPlace')}>
-              <VStack gap={3}>
-                <VStack gap={1}>
-                  <Selector label={t('editor.startPlace')} isLabelHidden options={startOptions} value={endpointValue(plan.origin)} onChange={pickStart} />
-                  {startAddress && (
-                    <div style={{ wordBreak: 'keep-all' }}>
-                      <Text type="supporting">{startAddress}</Text>
-                    </div>
-                  )}
-                </VStack>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div style={{ flex: '1 1 auto', minWidth: 0, wordBreak: 'keep-all' }}>
-                    {presets.some((x) => !x.place) && (
-                      <Text type="supporting" color="secondary">
-                        {t('editor.startPlace.hint')}
-                      </Text>
-                    )}
-                  </div>
-                  <div style={{ flex: 'none' }}>
-                    <Button label={t('editor.home.openSettings')} variant="secondary" size="sm" onClick={() => leave('/settings')} />
-                  </div>
-                </div>
-              </VStack>
-            </Section>
-
-            <Section title={t('editor.basics')}>
-              <FormLayout>
-                <TextInput label={t('editor.name')} value={plan.name} onChange={(v) => edit({ ...plan, name: v.slice(0, 60) })} isRequired />
-                <DateRangeInput
-                  label={t('editor.period')}
-                  value={{ start: plan.startDate, end: plan.endDate } as Range}
-                  maxRangeSpan={14}
-                  hasClear={false}
-                  description={t('editor.period.detail', { nights: nightsLabel(plan), timezone: plan.timezone })}
-                  onChange={(r) => {
-                    if (!r) return;
-                    try {
-                      edit(setPeriod(plan, r.start, r.end));
-                    } catch (e) {
-                      setError((e as Error).message);
-                    }
-                  }}
-                />
-              </FormLayout>
-            </Section>
-
-            <Section title={t('editor.route')}>
-              <FormLayout>
-                <SegmentedControl
-                  label={t('editor.firstDay')}
-                  value={plan.firstDay.basis}
-                  onChange={(v) =>
-                    edit({
-                      ...plan,
-                      firstDay: v === 'DEPART_ORIGIN' ? { basis: 'DEPART_ORIGIN', departTime: '09:00' } : { basis: 'ARRIVE_FIRST_STOP', arriveTime: '10:00', prepMinutes: 10 },
-                    })
-                  }>
-                  <SegmentedControlItem value="DEPART_ORIGIN" label={t('editor.firstDay.depart')} />
-                  <SegmentedControlItem value="ARRIVE_FIRST_STOP" label={t('editor.firstDay.arrive')} />
-                </SegmentedControl>
-                {plan.firstDay.basis === 'DEPART_ORIGIN' ? (
-                  <TimeInput
-                    label={t('editor.departTime')}
-                    increment={30}
-                    value={plan.firstDay.departTime as ISOTime}
-                    onChange={(v) => v && edit({ ...plan, firstDay: { basis: 'DEPART_ORIGIN', departTime: String(v).slice(0, 5) } })}
-                  />
-                ) : (
-                  <HStack gap={2}>
-                    <TimeInput
-                      label={t('editor.arriveTime')}
-                      increment={30}
-                      value={plan.firstDay.arriveTime as ISOTime}
-                      onChange={(v) => v && plan.firstDay.basis === 'ARRIVE_FIRST_STOP' && edit({ ...plan, firstDay: { ...plan.firstDay, arriveTime: String(v).slice(0, 5) } })}
-                    />
-                    <NumberInput
-                      label={t('editor.prepMinutes')}
-                      value={plan.firstDay.prepMinutes}
-                      isIntegerOnly
-                      onChange={(v) =>
-                        plan.firstDay.basis === 'ARRIVE_FIRST_STOP' && edit({ ...plan, firstDay: { ...plan.firstDay, prepMinutes: Math.max(0, Math.min(240, Math.round(v ?? 0))) } })
-                      }
-                    />
-                  </HStack>
-                )}
-                <Selector label={t('editor.finalDestination')} options={endpointOptions} value={endpointValue(plan.finalDestination)} onChange={(v) => edit({ ...plan, finalDestination: toEndpoint(v) })} />
-              </FormLayout>
-            </Section>
-
-          </>
-        )}
-
-        {tab === 'places' && (
-          <VStack gap={3}>
-            <Heading level={2}>{t('editor.places')}</Heading>
-            <PlaceSearch onPick={(p) => edit(addPlace(plan, p))} onPickMany={(places) => edit(places.reduce((pl, p) => addPlace(pl, p), plan))} />
-            {plan.places.length === 0 ? (
-              <Text type="supporting" color="secondary">
-                {t('editor.firstPlace')}
-              </Text>
-            ) : (
-              <Card pad={0}>
-                <List hasDividers header={<CardListHeader>{t('editor.places.all', { n: plan.places.length })}</CardListHeader>}>
-                  {plan.places.map((p) => {
-                    const v = plan.visits.find((x) => x.placeRef === p.placeRef);
-                    const where = v
-                      ? v.unassignedReason
-                        ? t('common.unassigned')
-                        : t('common.day', { day: String(plan.days.find((d) => d.visitOrder.includes(v.visitId))?.dayIndex) })
-                      : isEndpointOnly(plan, p.placeRef)
-                        ? t('editor.places.endpointOnly')
-                        : t('common.lodging');
-                    return (
-                      <ListItem
-                        key={p.placeRef}
-                        label={p.name}
-                        description={`${CATEGORY_LABEL[p.category]} · ${where}${v?.fixed ? ` · ${t('common.fixedAt', { time: v.fixed.time })}` : ''}`}
-                        endContent={
-                          v ? (
-                            <IconButton
-                              label={v.importance === 'MUST' ? t('visit.must.unset') : t('visit.must.set')}
-                              icon={<StarIcon filled={v.importance === 'MUST'} />}
-                              variant="ghost"
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (v.importance === 'MUST') return edit(updateVisit(plan, v.visitId, { importance: beforeMust.current.get(v.visitId) ?? 'NORMAL' }));
-                                beforeMust.current.set(v.visitId, v.importance);
-                                edit(updateVisit(plan, v.visitId, { importance: 'MUST' }));
-                              }}
-                            />
-                          ) : undefined
-                        }
-                        onClick={() => setOpenPlace(p.placeRef)}
-                      />
-                    );
-                  })}
-                </List>
-              </Card>
-            )}
-          </VStack>
-        )}
-
-        {tab === 'days' && (
-          <>
-            <div>
-              <Button label={t('recommend.button')} variant="secondary" size="md" onClick={() => setRecommending(true)} />
-            </div>
-            <DaysSection plan={plan} home={home} onChange={edit} onOpenPlace={setOpenPlace} onError={setError} />
-
-            {unassignedVisits(plan).length > 0 && (
-              <VStack gap={3}>
-                <Heading level={2}>{t('editor.unassigned.title')}</Heading>
-                <Text type="supporting" color="secondary">
-                  {t('editor.unassigned.description')}
-                </Text>
-                <Card pad={0}>
-                  <List hasDividers>
-                    {unassignedVisits(plan).map((v) => (
-                      <ListItem
-                        key={v.visitId}
-                        label={plan.places.find((p) => p.placeRef === v.placeRef)?.name ?? v.visitId}
-                        endContent={
-                          <Selector
-                            label={t('editor.unassigned.reason')}
-                            isLabelHidden
-                            size="sm"
-                            options={Object.entries(REASON_LABEL).map(([value, label]) => ({ value, label }))}
-                            value={v.unassignedReason ?? 'NOT_SCHEDULED_YET'}
-                            onChange={(r) => edit(updateVisit(plan, v.visitId, { unassignedReason: r as Visit['unassignedReason'] }))}
-                          />
-                        }
-                      />
-                    ))}
-                  </List>
-                </Card>
-              </VStack>
-            )}
-
-            {warnings.length > 0 && (
-              <VStack gap={2}>
-                <Heading level={2}>{t('editor.warnings')}</Heading>
-                {warnings.map((w) => (
-                  <Banner key={w.text} status={w.level} title={w.text} />
-                ))}
-              </VStack>
-            )}
-          </>
-        )}
+      {notice && (
+        <div className="tn-pad" style={{ paddingTop: 12 }}>
+          <Banner status={notice.tone} title={notice.text} isDismissable onDismiss={() => setNotice(null)} />
+        </div>
+      )}
+      {/* ARIA tabs: one panel whose content follows the selected day. */}
+      <div id="day-panel" role="tabpanel" aria-label={t('common.day', { day: dayIndex })} style={{ paddingTop: 12, paddingBottom: 16 }}>
+        <DayTimeline
+          plan={plan}
+          home={home}
+          dayIndex={dayIndex}
+          onChange={edit}
+          onError={fail}
+          onOpenPlace={setOpenPlace}
+          onOpenStart={() => setSheet({ kind: 'start' })}
+          onOpenLeg={(k) => setSheet({ kind: 'leg', k })}
+          onOpenEnd={() => setSheet({ kind: 'end' })}
+          onAddPlace={() => setSheet({ kind: 'place' })}
+        />
       </div>
+
+      <BasicsSheet isOpen={sheet?.kind === 'basics'} onClose={close} plan={plan} home={home} isNew={!tripId} onChange={edit} onOpenSettings={() => leave('/settings')} />
+      <StartSheet isOpen={sheet?.kind === 'start'} onClose={close} plan={plan} home={home} dayIndex={dayIndex} onChange={edit} onOpenSettings={() => leave('/settings')} />
+      {sheet?.kind === 'leg' && <LegSheet isOpen onClose={close} plan={plan} dayIndex={dayIndex} k={sheet.k} onChange={edit} />}
+      <EndSheet isOpen={sheet?.kind === 'end'} onClose={close} plan={plan} home={home} dayIndex={dayIndex} onChange={edit} onOpenPlace={setOpenPlace} />
+      <PlaceSheet isOpen={sheet?.kind === 'place'} onClose={close} plan={plan} dayIndex={dayIndex} onChange={edit} onOpenPlace={setOpenPlace} onNotice={setNotice} />
+      {(sheet?.kind === 'send' || sheet?.kind === 'map') && <SendSheet key={`${sheet.kind}${dayIndex}`} isOpen onClose={close} plan={plan} home={home} dayIndex={dayIndex} mode={sheet.kind} />}
 
       <VisitDialog plan={plan} placeRef={openPlace} onChange={edit} onClose={() => setOpenPlace(null)} />
       <RecommendDialog isOpen={recommending} plan={plan} home={home} book={book.current} onApply={edit} onClose={() => setRecommending(false)} />

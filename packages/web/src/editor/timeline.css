@@ -1,0 +1,382 @@
+/*
+ * The editor's day timeline: start → (travel → stop)… → add → travel → lodging/home, top to bottom.
+ * A 32px rail on the left carries the route (dashed between places) and each node's marker; cards sit to its right.
+ * Cards are the grey Pleos section surface (radius 20) used across the app; problems tint the card's edge, not a box
+ * at the bottom of the page.
+ */
+.tl {
+  display: flex;
+  flex-direction: column;
+  padding: 0 24px;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+.tl-row {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  column-gap: 10px;
+}
+.tl-rail {
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+/* The route line: dashed through travel legs and the add card, solid stub into a node so markers look threaded. */
+.tl-rail::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  border-left: 2px dashed var(--color-border-emphasized);
+  transform: translateX(-1px);
+}
+.tl-row.is-first .tl-rail::before {
+  top: 28px;
+}
+.tl-row.is-last .tl-rail::before {
+  bottom: auto;
+  height: 28px;
+}
+.tl-marker {
+  position: relative;
+  z-index: 1;
+  margin-top: 14px;
+  width: 28px;
+  height: 28px;
+  border-radius: 9999px;
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+  background: var(--color-background-body);
+  color: var(--color-text-primary);
+  border: 2px solid var(--color-text-primary);
+  box-sizing: border-box;
+}
+.tl-marker svg {
+  width: 16px;
+  height: 16px;
+}
+.tl-marker.is-accent {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+}
+.tl-marker.is-warn {
+  border-color: var(--color-border-warning);
+  color: var(--color-text-warning);
+}
+
+/* Cards: start, stop, lodging/home. The whole text area is one button; handle and menu sit beside it. */
+.tl-card {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  margin: 6px 0;
+  border-radius: var(--radius-container);
+  background: var(--color-background-card);
+  border: 1.5px solid transparent;
+}
+.tl-card.is-warn {
+  border-color: var(--color-border-warning);
+  background: color-mix(in srgb, var(--color-text-warning) 7%, var(--color-background-card));
+}
+.tl-card.is-error {
+  border-color: var(--color-border-error);
+}
+.tl-card-main {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 14px 4px 14px 16px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  border-radius: var(--radius-container);
+}
+.tl-card-main:active {
+  background: var(--color-background-muted);
+}
+.tl-card-main:focus-visible,
+.tl-leg:focus-visible,
+.tl-add:focus-visible,
+.tl-handle:focus-visible,
+.tl-pool:focus-visible,
+.tl-title:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+.tl-kicker {
+  font-size: 13px;
+  line-height: 1.4;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+.tl-name {
+  font-size: 17px;
+  line-height: 1.4;
+  font-weight: 600;
+}
+.tl-name-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.tl-line {
+  font-size: 14px;
+  line-height: 1.5;
+}
+.tl-meta {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+.tl-warn-text {
+  font-size: 13px;
+  line-height: 1.5;
+  font-weight: 600;
+  color: var(--color-text-warning);
+}
+.tl-error-text {
+  font-size: 13px;
+  line-height: 1.5;
+  font-weight: 600;
+  color: var(--color-text-error);
+}
+.tl-card-end {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 8px 6px 0 0;
+}
+.tl-handle {
+  width: 40px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--color-icon-secondary);
+  cursor: grab;
+  touch-action: none;
+}
+
+/* Travel leg: a pill on the dashed line. Missing time is a warning pill that opens the minutes sheet. */
+.tl-legrow {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+.tl-leg {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 4px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 9999px;
+  background: var(--color-background-body);
+  color: var(--color-text-secondary);
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.4;
+  cursor: pointer;
+}
+.tl-leg.is-missing {
+  border-color: var(--color-border-warning);
+  color: var(--color-text-warning);
+  background: color-mix(in srgb, var(--color-text-warning) 8%, var(--color-background-body));
+  font-weight: 600;
+}
+
+/* "+ 장소 추가하기": a dashed card on the route. */
+.tl-add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 52px;
+  margin: 6px 0;
+  border: 1.5px dashed var(--color-border-emphasized);
+  border-radius: var(--radius-container);
+  background: transparent;
+  color: var(--color-accent);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.tl-add:active {
+  background: var(--color-background-muted);
+}
+
+/* Day row under the top bar: day tabs scroll sideways, the two actions stay put. */
+.tl-dayrow {
+  position: sticky;
+  top: calc(56px + env(safe-area-inset-top));
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 24px;
+  background: var(--color-background-body);
+  border-bottom: 1px solid var(--color-border);
+}
+.tl-daytabs {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.tl-daytabs::-webkit-scrollbar {
+  display: none;
+}
+.tl-daytabs[data-fade-right='true'] {
+  mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+}
+.tl-daytabs[data-fade-left='true'] {
+  mask-image: linear-gradient(to left, #000 calc(100% - 28px), transparent);
+}
+.tl-daytabs[data-fade-left='true'][data-fade-right='true'] {
+  mask-image: linear-gradient(to right, transparent, #000 28px, #000 calc(100% - 28px), transparent);
+}
+.tl-dayactions {
+  flex: none;
+  display: flex;
+  gap: 6px;
+}
+.tl-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 9999px;
+  background: var(--color-text-warning);
+}
+
+/* Editor title: name over the period, the whole block opens the trip's details. */
+.tl-title {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+  max-width: 100%;
+  padding: 2px 4px;
+  margin: 0 -4px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.tl-title-name {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  font-size: 17px;
+  line-height: 1.3;
+  font-weight: 600;
+}
+.tl-title-name > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tl-title-name svg {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  color: var(--color-icon-secondary);
+}
+.tl-title-sub {
+  font-size: 12px;
+  line-height: 1.3;
+  font-weight: 400;
+  color: var(--color-text-secondary);
+}
+
+/* Bottom bar: 보관함 beside the one primary action. */
+.tl-pool {
+  position: relative;
+  flex: none;
+  min-height: 48px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--color-background-muted);
+  color: var(--color-text-primary);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.tl-pool .tl-dot {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+}
+
+/* Sheets: a header row, a padded body, and a footer that stays reachable while the body scrolls. */
+.tl-sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 16px 4px 24px;
+}
+.tl-sheet-head h2 {
+  margin: 0;
+  font-size: 19px;
+  line-height: 1.4;
+  font-weight: 700;
+}
+.tl-sheet-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 8px 24px 16px;
+  word-break: keep-all;
+}
+.tl-sheet-foot {
+  position: sticky;
+  bottom: 0;
+  padding: 12px 24px calc(12px + env(safe-area-inset-bottom));
+  background: var(--color-background-surface);
+}
+.tl-sheet-section {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.4;
+  font-weight: 700;
+}
+.tl-steps {
+  margin: 0;
+  padding-left: 22px;
+  list-style: decimal outside;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tl-card-main,
+  .tl-add {
+    transition: none;
+  }
+}

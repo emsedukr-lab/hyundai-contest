@@ -16,7 +16,7 @@ import { useEffect, useState } from 'react';
 import type { OpeningHours, Place, Trip, Visit } from '@tteonaljido/shared';
 import { dateLabel } from '../lib/format';
 import { t } from '../lib/i18n';
-import { changeCategory, isEndpointOnly, removePlace, updatePlace, updateVisit } from '../lib/trips';
+import { REASON_LABEL, changeCategory, isEndpointOnly, removePlace, updatePlace, updateVisit } from '../lib/trips';
 import { CATEGORY_OPTIONS } from './PlaceSearch';
 
 type ISOTime = Parameters<NonNullable<Parameters<typeof TimeInput>[0]['onChange']>>[0];
@@ -58,6 +58,15 @@ export function VisitDialog({ plan, placeRef, onChange, onClose }: { plan: Trip;
       <VStack gap={4}>
         <FormLayout>
           <Selector label={t('common.type')} options={CATEGORY_OPTIONS} value={place.category} onChange={(v) => onChange(changeCategory(plan, place.placeRef, v as Place['category']))} />
+          {visit && visit.unassignedReason !== null && (
+            // On no day yet (보관함): why, as the car shows it.
+            <Selector
+              label={t('editor.unassigned.reason')}
+              options={Object.entries(REASON_LABEL).map(([value, label]) => ({ value, label }))}
+              value={visit.unassignedReason}
+              onChange={(r) => setVisit({ unassignedReason: r as Visit['unassignedReason'] })}
+            />
+          )}
           {visit ? (
             <>
               <NumberInput label={t('visit.stay')} value={visit.stayMinutes} onChange={(v) => setVisit({ stayMinutes: Math.max(0, Math.min(720, Math.round(v))) })} step={15} isIntegerOnly />
