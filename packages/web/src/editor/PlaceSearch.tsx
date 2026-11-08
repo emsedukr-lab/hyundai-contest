@@ -10,6 +10,7 @@ import { HStack, StackItem, VStack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
 import { TextArea } from '@astryxdesign/core/TextArea';
 import { TextInput } from '@astryxdesign/core/TextInput';
+import { Token } from '@astryxdesign/core/Token';
 import type { Place } from '@tteonaljido/shared';
 import { Card } from '../components/toss/Card';
 import { favorites } from '../lib/db';
@@ -54,13 +55,30 @@ export const byName = (name: string): NewPlace => ({
   hours: { status: 'UNKNOWN' },
 });
 
-/** Kakao search through our relay, with a manual fallback when search is not available. */
-export function PlaceSearch({ onPick, onPickMany, label = t('place.search'), lodgingOnly = false }: { onPick: (p: NewPlace) => void; onPickMany?: (places: NewPlace[]) => void; label?: string; lodgingOnly?: boolean }) {
+/**
+ * Kakao search through our relay, with a manual fallback when search is not available. `requireCoords` is for pickers
+ * that need a real location (the home address): it hides the name-only paths — manual entry, "add by name", and
+ * favorites without coordinates — which could never satisfy them.
+ */
+export function PlaceSearch({
+  onPick,
+  onPickMany,
+  label = t('place.search'),
+  lodgingOnly = false,
+  requireCoords = false,
+}: {
+  onPick: (p: NewPlace) => void;
+  onPickMany?: (places: NewPlace[]) => void;
+  label?: string;
+  lodgingOnly?: boolean;
+  requireCoords?: boolean;
+}) {
   const [q, setQ] = useState('');
   const [hits, setHits] = useState<PlaceHit[] | null>(null);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [unavailable, setUnavailable] = useState(false);
+  const [searchError, setSearchError] = useState(false);
   const [manual, setManual] = useState(false);
   const [favs, setFavs] = useState<FavoritePlace[]>([]);
   const [manageFavs, setManageFavs] = useState(false);
@@ -89,6 +107,8 @@ export function PlaceSearch({ onPick, onPickMany, label = t('place.search'), lod
     onPick(lodgingOnly ? { ...p, category: 'LODGING' } : p);
     setQ('');
     setNote(null);
+    setHits(null);
+    setSearchError(false);
   };
 
   const run = async (query?: string) => {
@@ -96,12 +116,15 @@ export function PlaceSearch({ onPick, onPickMany, label = t('place.search'), lod
     if (!term) return;
     setBusy(true);
     setNote(null);
+    setSearchError(false);
     try {
       setHits(await searchPlaces(term));
+      setUnavailable(false);
     } catch (e) {
       setHits(null);
       const off = e instanceof ApiError && e.status === 503;
       setUnavailable(off);
+      setSearchError(true);
       setNote(off ? t('place.search.unavailable') : t('place.search.failed'));
     } finally {
       setBusy(false);
@@ -160,9 +183,14 @@ export function PlaceSearch({ onPick, onPickMany, label = t('place.search'), lod
     await run(term);
   };
 
+  // A picker that needs coordinates can't use a name-only favorite.
+  const shownFavs = requireCoords ? favs.filter((f) => f.latE7 !== null && f.lonE7 !== null) : favs;
+  // Offer "add by name" when search failed or found nothing — never where a real location is required.
+  const canAddByName = !requireCoords && !!q.trim() && (searchError || hits?.length === 0);
+
   return (
     <VStack gap={2}>
-      {favs.length > 0 && (
+      {shownFavs.length > 0 && (
         <VStack gap={1}>
           <HStack gap={2} vAlign="center">
             <StackItem size="fill">
@@ -171,9 +199,10 @@ export function PlaceSearch({ onPick, onPickMany, label = t('place.search'), lod
             <Button label={manageFavs ? t('favorites.done') : t('favorites.manage')} variant="ghost" size="sm" onClick={() => setManageFavs((m) => !m)} />
           </HStack>
           <HStack gap={2} wrap="wrap">
-            {favs.map((f) =>
+            {shownFavs.map((f) =>
               manageFavs ? (
-                <Button key={f.id} label={`${f.name}  ✕`} variant="secondary" size="sm" onClick={() => void (async () => { await favorites.remove(f.id); await reloadFavs(); })()} />
+                // Token's remove button carries a localized "remove {name}" label for screen readers.
+                <Token key={f.id} label={f.name} onRemove={() => void (async () => { await favorites.remove(f.id); await reloadFavs(); })()} />
               ) : (
                 <Button key={f.id} label={f.name} variant="secondary" size="sm" onClick={() => pick(asNewPlace(f))} />
               ),
@@ -188,8 +217,8 @@ export function PlaceSearch({ onPick, onPickMany, label = t('place.search'), lod
         <Button label={t('place.search.action')} variant="secondary" isLoading={busy} onClick={() => run()} />
       </HStack>
       {note && <Banner status="info" title={note} />}
-      {note && q.trim() && <Button label={t('place.search.addByName', { query: q.trim().slice(0, 20) })} variant="primary" size="sm" onClick={addByName} />}
       {hits && hits.length === 0 && <Banner status="info" title={t('place.search.noResults')} />}
+      {canAddByName && <Button label={t('place.search.addByName', { query: q.trim().slice(0, 20) })} variant="primary" size="sm" onClick={addByName} />}
       {hits && hits.length > 0 && (
         <Card pad={0}>
         <List hasDividers>
@@ -221,7 +250,7 @@ export function PlaceSearch({ onPick, onPickMany, label = t('place.search'), lod
         </Card>
       )}
       <HStack gap={2} wrap="wrap">
-        <Button label={unavailable ? t('place.manual.full') : t('place.manual.open')} variant="ghost" size="sm" onClick={() => setManual(true)} />
+        {!requireCoords && <Button label={unavailable ? t('place.manual.searchOff') : t('place.manual.open')} variant="ghost" size="sm" onClick={() => setManual(true)} />}
         <Button label={t('place.paste.open')} variant="ghost" size="sm" onClick={() => setShowPaste((v) => !v)} />
       </HStack>
       {showPaste && (
@@ -251,6 +280,14 @@ function ManualPlaceDialog({ isOpen, onClose, onSave, lodgingOnly }: { isOpen: b
   const [address, setAddress] = useState('');
   const [category, setCategory] = useState<Place['category']>(lodgingOnly ? 'LODGING' : 'SIGHT');
   const valid = name.trim().length > 0;
+
+  // The dialog stays mounted between uses; start each opening blank so the last place isn't offered again.
+  useEffect(() => {
+    if (!isOpen) return;
+    setName('');
+    setAddress('');
+    setCategory(lodgingOnly ? 'LODGING' : 'SIGHT');
+  }, [isOpen, lodgingOnly]);
 
   // Coordinates are no longer entered by hand — the car finds the exact spot from the name/address in its navigation.
   return (

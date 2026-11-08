@@ -10,22 +10,43 @@ import { json } from './http';
 
 // host must equal, or be a subdomain of, one of these
 const ALLOW = [/(^|\.)naver\.me$/, /(^|\.)naver\.com$/, /^kko\.kl$/, /^kko\.to$/, /(^|\.)kakao\.com$/];
-const allowedHost = (host: string) => ALLOW.some((re) => re.test(host.toLowerCase()));
+export const allowedHost = (host: string) => ALLOW.some((re) => re.test(host.toLowerCase()));
 
 const str = (v: unknown) => (typeof v === 'string' ? v : '');
 
-const ENTITIES: Record<string, string> = { '&amp;': '&', '&lt;': '<', '&gt;': '>', '&quot;': '"', '&#39;': "'", '&#x27;': "'" };
-const decode = (s: string) => s.replace(/&(amp|lt|gt|quot|#39|#x27);/g, (m) => ENTITIES[m] ?? m);
+const NAMED: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' };
 
-/** Reads an Open Graph / meta tag's content, tolerating either attribute order. */
+/** Decodes the entities found in og tags: the common named ones and any numeric one (`&#44;`, `&#xAC00;`). */
+const decode = (s: string) =>
+  s.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (m, e: string) => {
+    if (e[0] !== '#') return NAMED[e.toLowerCase()] ?? m;
+    const cp = e[1] === 'x' || e[1] === 'X' ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10);
+    return cp > 0 && cp <= 0x10ffff ? String.fromCodePoint(cp) : m;
+  });
+
+/**
+ * Reads an Open Graph / meta tag's content, tolerating either attribute order. The closing quote must match the
+ * opening one, so an apostrophe inside `content="Mom's Touch"` doesn't cut the value short.
+ */
 function meta(html: string, prop: string): string {
-  const a = html.match(new RegExp(`<meta[^>]+(?:property|name)=["']${prop}["'][^>]*?content=["']([^"']*)["']`, 'i'));
-  const b = a ?? html.match(new RegExp(`<meta[^>]+content=["']([^"']*)["'][^>]*?(?:property|name)=["']${prop}["']`, 'i'));
-  return b ? decode(b[1]) : '';
+  const a = html.match(new RegExp(`<meta\\b[^>]*?(?:property|name)\\s*=\\s*["']${prop}["'][^>]*?\\bcontent\\s*=\\s*(["'])(.*?)\\1`, 'i'));
+  const b = a ?? html.match(new RegExp(`<meta\\b[^>]*?\\bcontent\\s*=\\s*(["'])(.*?)\\1[^>]*?(?:property|name)\\s*=\\s*["']${prop}["']`, 'i'));
+  return b ? decode(b[2]) : '';
 }
 
 /** Drops a trailing site suffix a provider may append to og:title (e.g. "경포호 : 네이버", "… | 카카오맵"). */
 const stripSuffix = (name: string) => name.replace(/\s*[-:|]\s*(네이버\s*지도|네이버|카카오\s*맵|카카오맵|kakao\s*map|naver\s*map)\s*$/i, '').trim();
+
+/** A title that is only the map app's name — what a link to the app's home page (not a place) carries. */
+const APP_ONLY = /^(네이버\s*지도|네이버|카카오\s*맵|카카오맵|카카오|kakao\s*map|naver\s*map|naver|kakao)$/i;
+
+/** The place name and address from a shared page's og tags, or null when the page names no place. */
+export function parseOg(html: string): { name: string; address: string } | null {
+  const name = stripSuffix(meta(html, 'og:title').replace(/\s+/g, ' ').trim()).slice(0, 60);
+  const address = meta(html, 'og:description').replace(/\s+/g, ' ').trim().slice(0, 120);
+  if (!name || APP_ONLY.test(name)) return null;
+  return { name, address };
+}
 
 const UA = 'Mozilla/5.0 (compatible; TteonaljidoBot/1.0; +https://tteonaljido.tteonaljido-worker.workers.dev)';
 
@@ -46,6 +67,7 @@ export async function resolveShare(body: Record<string, unknown>): Promise<Respo
       res = await fetch(current.toString(), { method: 'GET', redirect: 'manual', headers: { 'User-Agent': UA, Accept: 'text/html,*/*' }, signal: AbortSignal.timeout(5_000) });
       if (res.status >= 300 && res.status < 400) {
         const loc = res.headers.get('Location');
+        await res.body?.cancel().catch(() => {}); // a redirect's body is never read; release it
         if (!loc) break;
         const next = new URL(loc, current);
         if (next.protocol !== 'https:' || !allowedHost(next.hostname)) return json({ error: 'RESOLVE_FAILED' }, 422);
@@ -54,7 +76,10 @@ export async function resolveShare(body: Record<string, unknown>): Promise<Respo
       }
       break;
     }
-    if (!res || !res.ok) return json({ error: 'RESOLVE_FAILED' }, 422);
+    if (!res || !res.ok) {
+      await res?.body?.cancel().catch(() => {});
+      return json({ error: 'RESOLVE_FAILED' }, 422);
+    }
 
     // Read at most ~512KB of HTML; the og tags are near the top anyway.
     let html = '';
@@ -72,14 +97,13 @@ export async function resolveShare(body: Record<string, unknown>): Promise<Respo
           break;
         }
       }
+      html += dec.decode(); // flush a multi-byte character split across the last chunk
     } else {
       html = await res.text();
     }
 
-    const name = stripSuffix(meta(html, 'og:title').replace(/\s+/g, ' ').trim()).slice(0, 60);
-    const address = meta(html, 'og:description').replace(/\s+/g, ' ').trim().slice(0, 120);
-    if (!name) return json({ error: 'RESOLVE_FAILED' }, 422);
-    return json({ name, address });
+    const place = parseOg(html);
+    return place ? json(place) : json({ error: 'RESOLVE_FAILED' }, 422);
   } catch {
     return json({ error: 'RESOLVE_FAILED' }, 422);
   }

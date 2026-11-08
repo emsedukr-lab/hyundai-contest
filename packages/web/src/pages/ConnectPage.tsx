@@ -13,6 +13,7 @@ import { Step, Stepper } from '@astryxdesign/core/Stepper';
 import { Switch } from '@astryxdesign/core/Switch';
 import { Heading, Text } from '@astryxdesign/core/Text';
 import { isTerminal, parseQrFragment, sampleTrip, type SessionView } from '@tteonaljido/shared';
+import { CardListHeader } from '../components/toss/Card';
 import { pairings, trips, type PairingRecord } from '../lib/db';
 import { codeLabel, periodLabel } from '../lib/format';
 import { t } from '../lib/i18n';
@@ -328,7 +329,7 @@ export function ConnectPage() {
               description={doc.home ? t('connect.consent.homeOn', { address: doc.home.address }) : t('connect.consent.noHome')}
             />
             <Card padding={0}>
-              <List hasDividers header={<Text type="label">{t('connect.consent.sent')}</Text>}>
+              <List hasDividers header={<CardListHeader>{t('connect.consent.sent')}</CardListHeader>}>
                 <ListItem label={t('connect.consent.basics')} description={`${doc.plan.name} · ${periodLabel(doc.plan.startDate, doc.plan.endDate)}`} />
                 <ListItem label={t('connect.consent.places', { n: doc.plan.places.length })} description={t('connect.consent.places.detail')} />
                 <ListItem label={t('connect.consent.days')} description={t('connect.consent.days.detail')} />
@@ -337,7 +338,7 @@ export function ConnectPage() {
               </List>
             </Card>
             <Card padding={0}>
-              <List hasDividers header={<Text type="label">{t('connect.consent.notSent')}</Text>}>
+              <List hasDividers header={<CardListHeader>{t('connect.consent.notSent')}</CardListHeader>}>
                 <ListItem label={t('connect.consent.private')} description={t('connect.consent.private.detail')} />
                 <ListItem label={t('connect.consent.otherTrips')} />
               </List>

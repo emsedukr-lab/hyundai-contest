@@ -1,6 +1,6 @@
 import type { CSSProperties, ReactNode } from 'react';
 import { VStack } from '@astryxdesign/core/Stack';
-import { Heading } from '@astryxdesign/core/Text';
+import { Heading, Text } from '@astryxdesign/core/Text';
 
 /**
  * 토스 룩의 기본 블록: 회색 캔버스 위에 올리는 흰색 라운드 카드(헤어라인 보더).
@@ -29,5 +29,20 @@ export function Section({ title, children, pad }: { title: string; children: Rea
       <Heading level={2}>{title}</Heading>
       <Card pad={pad}>{children}</Card>
     </VStack>
+  );
+}
+
+/**
+ * Header for a `List` inside a `Card pad={0}`. The list rows bring their own inset but Astryx's list header has none,
+ * so on its own it would sit on the card's rounded edge. Pass it as the List's `header` so the list stays named for
+ * screen readers (`aria-labelledby`).
+ */
+export function CardListHeader({ children }: { children: ReactNode }) {
+  return (
+    <div style={{ padding: '12px 8px 4px' }}>
+      <Text type="label" color="secondary">
+        {children}
+      </Text>
+    </div>
   );
 }

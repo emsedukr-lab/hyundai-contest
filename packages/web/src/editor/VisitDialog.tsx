@@ -12,7 +12,7 @@ import { Switch } from '@astryxdesign/core/Switch';
 import { Text } from '@astryxdesign/core/Text';
 import { TimeInput } from '@astryxdesign/core/TimeInput';
 import { Token } from '@astryxdesign/core/Token';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { OpeningHours, Place, Trip, Visit } from '@tteonaljido/shared';
 import { dateLabel } from '../lib/format';
 import { t } from '../lib/i18n';
@@ -27,11 +27,16 @@ const ALL_DAYS = ['1', '2', '3', '4', '5', '6', '7'];
 
 /** Edits one place and its visit attributes (stay, importance, desired/fixed time, flexibility, hours). */
 export function VisitDialog({ plan, placeRef, onChange, onClose }: { plan: Trip; placeRef: string | null; onChange: (p: Trip) => void; onClose: () => void }) {
+  // Hooks first, before any early return (rules of hooks); each opened place starts without a pending delete.
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [pickDate, setPickDate] = useState<ISODateString | undefined>(undefined);
+  useEffect(() => {
+    setConfirmDelete(false);
+    setPickDate(undefined);
+  }, [placeRef]);
   const place = plan.places.find((p) => p.placeRef === placeRef);
   const visit = plan.visits.find((v) => v.placeRef === placeRef);
   if (!place) return null;
-  const [confirmDelete, setConfirmDelete] = useState(false);
-  const [pickDate, setPickDate] = useState<ISODateString | undefined>(undefined);
   const setVisit = (patch: Partial<Visit>) => visit && onChange(updateVisit(plan, visit.visitId, patch));
   const setPlace = (patch: Partial<Place>) => onChange(updatePlace(plan, place.placeRef, patch));
   const hours = place.hours;

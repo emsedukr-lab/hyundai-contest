@@ -17,7 +17,7 @@ import { Heading, Text } from '@astryxdesign/core/Text';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { TimeInput } from '@astryxdesign/core/TimeInput';
 import type { Endpoint, Home, Trip, Visit } from '@tteonaljido/shared';
-import { Card, Section } from '../components/toss/Card';
+import { Card, CardListHeader, Section } from '../components/toss/Card';
 import { DaysSection } from '../editor/DaysSection';
 import { CATEGORY_LABEL, PlaceSearch } from '../editor/PlaceSearch';
 import { RecommendDialog } from '../editor/RecommendDialog';
@@ -47,6 +47,8 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
   const [sharing, setSharing] = useState(false);
   /** Travel times typed this session by pair of places, so reordering does not throw them away. */
   const book = useRef<LegBook>(new Map());
+  /** Importance a visit had before it was starred, so un-starring restores e.g. OPTIONAL instead of flattening it to NORMAL. */
+  const beforeMust = useRef(new Map<string, Visit['importance']>());
 
   useEffect(() => {
     void (async () => {
@@ -84,6 +86,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
 
   /** Makes a copy of the current trip (places, days, home and all) as a new trip and opens it. The original is untouched. */
   const duplicate = async () => {
+    if (dirty) await save(); // keep unsaved edits in the original too, not only in the copy
     const clone: Trip = { ...structuredClone(plan), tripId: crypto.randomUUID(), name: t('trip.copyName', { name: plan.name }).slice(0, 60), revision: 1, updatedAt: nowIso() };
     const nd = await newDoc(clone, home);
     await trips.put(nd);
@@ -180,15 +183,21 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
               </Text>
               {home ? (
                 <HStack gap={2} vAlign="center">
-                  <Text>{home.address}</Text>
-                  <Button label={t('editor.home.remove')} variant="ghost" size="sm" onClick={() => (setHome(null), setDirty(true))} />
+                  {/* a long address wraps; the button keeps its size instead of being squeezed to "지…" */}
+                  <StackItem size="fill">
+                    <Text>{home.address}</Text>
+                  </StackItem>
+                  <StackItem size="static">
+                    <Button label={t('editor.home.remove')} variant="ghost" size="sm" onClick={() => (setHome(null), setDirty(true))} />
+                  </StackItem>
                 </HStack>
               ) : (
                 <PlaceSearch
                   label={t('editor.home.search')}
+                  requireCoords
                   onPick={(p) => {
                     // Home needs coordinates; without them the car keeps using its navigation HOME.
-                    if (p.latE7 === null || p.lonE7 === null) return setError(t('editor.home.needsCoords'));
+                    if (p.latE7 === null || p.lonE7 === null) return setError(t('editor.home.needsSearch'));
                     setHome({ address: (p.address || p.name).slice(0, 120), latE7: p.latE7, lonE7: p.lonE7 });
                     setDirty(true);
                   }}
@@ -206,7 +215,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
                 </Text>
               ) : (
                 <Card pad={0}>
-                <List hasDividers header={<Text type="label">{t('editor.places.all', { n: plan.places.length })}</Text>}>
+                <List hasDividers header={<CardListHeader>{t('editor.places.all', { n: plan.places.length })}</CardListHeader>}>
                   {plan.places.map((p) => {
                     const v = plan.visits.find((x) => x.placeRef === p.placeRef);
                     const where = v ? (v.unassignedReason ? t('common.unassigned') : t('common.day', { day: String(plan.days.find((d) => d.visitOrder.includes(v.visitId))?.dayIndex) })) : t('common.lodging');
@@ -224,7 +233,9 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
                               size="sm"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                edit(updateVisit(plan, v.visitId, { importance: v.importance === 'MUST' ? 'NORMAL' : 'MUST' }));
+                                if (v.importance === 'MUST') return edit(updateVisit(plan, v.visitId, { importance: beforeMust.current.get(v.visitId) ?? 'NORMAL' }));
+                                beforeMust.current.set(v.visitId, v.importance);
+                                edit(updateVisit(plan, v.visitId, { importance: 'MUST' }));
                               }}
                             />
                           ) : undefined
@@ -239,7 +250,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
             </VStack>
 
             <HStack hAlign="end" gap={2}>
-              <Button label={t('trip.duplicate')} variant="ghost" size="sm" onClick={() => void duplicate()} />
+              {tripId && <Button label={t('trip.duplicate')} variant="ghost" size="sm" onClick={() => void duplicate()} />}
               <Button label={t('share.button')} variant="ghost" size="sm" onClick={() => setSharing(true)} />
               <Button label={t('recommend.button')} variant="secondary" size="sm" onClick={() => setRecommending(true)} />
             </HStack>

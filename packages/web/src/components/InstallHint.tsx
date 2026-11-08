@@ -38,24 +38,39 @@ const wasDismissed = (): boolean => {
   }
 };
 
+// Chrome fires `beforeinstallprompt` once per page load. Capture it at module load (this file is imported at startup)
+// rather than in the component, so the install button is still there after the banner unmounts on a screen change.
+let deferred: BeforeInstallPromptEvent | null = null;
+let installed = false;
+const listeners = new Set<() => void>();
+const notify = () => listeners.forEach((l) => l());
+window.addEventListener('beforeinstallprompt', (e) => {
+  if (isStandalone() || wasDismissed()) return; // let the browser's own prompt show when we won't offer ours
+  e.preventDefault(); // keep the browser's own mini-infobar from showing; we offer our own button
+  deferred = e as BeforeInstallPromptEvent;
+  notify();
+});
+window.addEventListener('appinstalled', () => {
+  deferred = null;
+  installed = true;
+  notify();
+});
+
 export function InstallHint() {
-  const [prompt, setPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [hidden, setHidden] = useState(() => isStandalone() || wasDismissed());
+  const [prompt, setPrompt] = useState<BeforeInstallPromptEvent | null>(deferred);
+  const [hidden, setHidden] = useState(() => installed || isStandalone() || wasDismissed());
 
   useEffect(() => {
-    if (hidden) return;
-    const onPrompt = (e: Event) => {
-      e.preventDefault(); // keep the browser's own mini-infobar from showing; we offer our own button
-      setPrompt(e as BeforeInstallPromptEvent);
+    const sync = () => {
+      setPrompt(deferred);
+      if (installed) setHidden(true);
     };
-    const onInstalled = () => setHidden(true);
-    window.addEventListener('beforeinstallprompt', onPrompt);
-    window.addEventListener('appinstalled', onInstalled);
+    listeners.add(sync);
+    sync();
     return () => {
-      window.removeEventListener('beforeinstallprompt', onPrompt);
-      window.removeEventListener('appinstalled', onInstalled);
+      listeners.delete(sync);
     };
-  }, [hidden]);
+  }, []);
 
   if (hidden) return null;
 
@@ -80,6 +95,7 @@ export function InstallHint() {
     } catch {
       /* user dismissed the native dialog */
     } finally {
+      deferred = null; // a prompt event can be used only once
       setPrompt(null);
       setHidden(true);
     }

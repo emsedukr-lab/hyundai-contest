@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parsePastedPlace, parsePastedPlaces, sharedParamsFromSearch, sharedPlaceTerm, sharedUrl } from './placeShare';
+import { isAddressLine, parsePastedPlace, parsePastedPlaces, sharedParamsFromSearch, sharedPlaceTerm, sharedUrl } from './placeShare';
 
 describe('지도앱 공유 수집 파싱', () => {
   it('제목이 있으면 제목을 검색어로', () => {
@@ -85,5 +85,26 @@ describe('여러 줄 붙여넣기 파싱 (parsePastedPlaces)', () => {
 
   it('빈 입력은 빈 배열', () => {
     expect(parsePastedPlaces('   \n\n')).toEqual([]);
+  });
+});
+
+describe('공유 텍스트 정리 (자동 추가 이름·주소 줄)', () => {
+  const naverShare = '[네이버 지도]\n경포호\n강원특별자치도 강릉시 운정동 256\nhttps://naver.me/x';
+
+  it('공유 제목·본문의 줄 안 링크·[카카오맵]·앱이름 줄을 걷어낸다', () => {
+    expect(sharedPlaceTerm({ text: '안목해변 https://kko.kl/xyz 추천' })).toBe('안목해변 추천');
+    expect(sharedPlaceTerm({ title: '[카카오맵] 경포대' })).toBe('경포대');
+    expect(sharedPlaceTerm({ title: '네이버 지도', text: '경포호\nhttps://naver.me/a' })).toBe('경포호');
+  });
+
+  it('공유 본문의 주소 줄은 장소가 아니다', () => {
+    expect(sharedPlaceTerm({ text: naverShare })).toBe('경포호');
+    expect(parsePastedPlace(naverShare).term).toBe('경포호');
+    expect(parsePastedPlaces(naverShare)).toEqual(['경포호']);
+  });
+
+  it('주소 줄 판별: 도·시군구·번지가 모두 있어야 주소', () => {
+    for (const a of ['강원 강릉시 저동 94', '서울 중구 세종대로 110', '경기 성남시 분당구 판교역로 166', '강원특별자치도 강릉시 운정동 256-1']) expect(isAddressLine(a)).toBe(true);
+    for (const n of ['부산 해운대 블루라인파크', '제주 4.3평화공원', '서울숲', '광주 서구 1913송정역시장', '경기 수원시 화성행궁', '테라로사 경포호수점']) expect(isAddressLine(n)).toBe(false);
   });
 });

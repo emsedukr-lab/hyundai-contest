@@ -5,7 +5,7 @@ import type { Home, Trip } from '@tteonaljido/shared';
 import { t } from '../lib/i18n';
 import { dayPoints } from '../lib/routeSketch';
 import { RouteSketch } from './RouteSketch';
-import { JS_KEY, escapeHtml, loadKakao } from '../lib/kakaoSdk';
+import { JS_KEY, escapeHtml, loadKakao, numberPin } from '../lib/kakaoSdk';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -19,10 +19,12 @@ export function KakaoMap({ plan, home, dayIndex }: { plan: Trip; home: Home | nu
   const [failed, setFailed] = useState(false);
 
   const pts = useMemo(() => dayPoints(plan, home, dayIndex, { homeLabel: t('common.home') }), [plan, home, dayIndex]);
-  const coords = useMemo(() => pts.filter((p): p is typeof p & { latE7: number; lonE7: number } => p.latE7 !== null && p.lonE7 !== null), [pts]);
+  const plotted = useMemo(() => pts.filter((p): p is typeof p & { latE7: number; lonE7: number } => p.latE7 !== null && p.lonE7 !== null), [pts]);
   const noCoords = useMemo(() => pts.filter((p) => p.kind === 'stop' && (p.latE7 === null || p.lonE7 === null)).map((p) => p.label), [pts]);
-  // Stable signature so the effect only rebuilds the map when the day's points actually change.
-  const sig = useMemo(() => coords.map((c) => `${c.latE7},${c.lonE7},${c.label}`).join('|'), [coords]);
+  // Every plan edit (typing a trip name, a travel time) makes new point objects. Key the array on what is drawn, so the
+  // effect below rebuilds the map only when the day's markers actually change — not on every keystroke.
+  const sig = useMemo(() => plotted.map((c) => `${c.latE7},${c.lonE7},${c.label},${c.kind},${c.n ?? ''}`).join('|'), [plotted]);
+  const coords = useMemo(() => plotted, [sig]);
 
   useEffect(() => {
     if (!JS_KEY || !ref.current || coords.length === 0) return;
@@ -39,10 +41,7 @@ export function KakaoMap({ plan, home, dayIndex }: { plan: Trip; home: Home | nu
           const info = new kakao.maps.InfoWindow({ position: ll, content: `<div style="padding:4px 8px;font-size:12px;white-space:nowrap">${escapeHtml(p.n ? `${p.n}. ${p.label}` : p.label)}</div>` });
           if (p.kind === 'stop' && p.n) {
             // a numbered pin (custom overlay) so the visit order shows on the marker itself; click toggles the full name
-            const el = document.createElement('div');
-            el.textContent = String(p.n);
-            el.title = p.label;
-            el.setAttribute('style', 'display:flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:999px;background:#3182F6;color:#fff;font:700 12px/1 sans-serif;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.4);cursor:pointer');
+            const el = numberPin(p.n, p.label, true);
             let open = false;
             el.addEventListener('click', () => ((open = !open) ? info.open(map) : info.close()));
             new kakao.maps.CustomOverlay({ position: ll, content: el, xAnchor: 0.5, yAnchor: 0.5, map, zIndex: 3 });
@@ -70,7 +69,7 @@ export function KakaoMap({ plan, home, dayIndex }: { plan: Trip; home: Home | nu
       cancelled = true;
       if (el) el.innerHTML = '';
     };
-  }, [sig, coords]);
+  }, [coords]);
 
   // No key, nothing to plot, or the SDK failed → the no-map SVG sketch (same props, CSP-safe).
   if (!JS_KEY || failed || coords.length === 0) return <RouteSketch plan={plan} home={home} dayIndex={dayIndex} />;

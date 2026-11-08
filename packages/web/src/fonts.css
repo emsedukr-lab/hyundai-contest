@@ -1,6 +1,6 @@
 /* Toss look uses Pretendard (the free Pretendard Variable, the closest open substitute for Toss Product Sans).
-   Self-hosted so it works offline and keeps the CSP to 'self' (font-src 'self'). Also aliased from
-   @astryxdesign/theme-neutral/fonts.css in vite.config.ts, and imported directly in main.tsx. */
+   Self-hosted so it works offline and keeps the CSP to 'self' (font-src 'self'). Imported in main.tsx.
+   Served with a 1-year immutable cache (public/_headers): rename the file if the font is ever replaced. */
 @font-face {
   font-family: 'Pretendard Variable';
   src: url('/fonts/PretendardVariable.woff2') format('woff2-variations');

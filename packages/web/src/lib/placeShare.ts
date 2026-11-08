@@ -14,13 +14,15 @@ export interface SharedParams {
 
 const isUrl = (s: string): boolean => /^https?:\/\//i.test(s.trim());
 
-/** The best place-name search term from a share payload: the title, else the first non-URL line of the text. */
+/**
+ * The best place-name search term from a share payload: the title, else the first usable line of the text. Each
+ * candidate goes through the same clean-up as a paste (URLs, "[카카오맵]" prefixes, app-name-only and address lines
+ * dropped), because the result is added automatically and a junk name would travel to the car as the place name.
+ */
 export function sharedPlaceTerm(p: SharedParams): string | null {
-  const title = (p.title ?? '').trim();
-  if (title && !isUrl(title)) return title.slice(0, 60);
-  for (const line of (p.text ?? '').split(/\r?\n/)) {
-    const s = line.trim();
-    if (s && !isUrl(s)) return s.slice(0, 60);
+  for (const line of [p.title ?? '', ...(p.text ?? '').split(/\r?\n/)]) {
+    const name = placeName(line);
+    if (name) return name.slice(0, 60);
   }
   return null;
 }
@@ -51,6 +53,24 @@ function cleanLine(line: string): string {
     .trim();
 }
 
+const PROVINCE = /^(서울|부산|대구|인천|광주|대전|울산|세종|경기|강원|충북|충남|충청|전북|전남|전라|경북|경남|경상|제주)\S*\s/;
+
+/**
+ * A line that reads like a Korean street/lot address ("강원 강릉시 저동 94", "서울 중구 세종대로 110"): it starts with a
+ * province, has a 시/군/구 word, and has a standalone number. Map apps put this under the name in shared text; treating
+ * it as a second place would make bulk add search the address and pick an unrelated spot. Names that merely start with
+ * a region ("부산 해운대 블루라인파크", "제주 4.3평화공원", "광주 서구 1913송정역시장") are kept.
+ */
+export function isAddressLine(s: string): boolean {
+  return PROVINCE.test(s) && /\s\S+(시|군|구)(?=\s|$)/.test(s) && /(^|\s)\d+(-\d+)?(?=\s|$)/.test(s);
+}
+
+/** A cleaned place name from one line, or '' when the line is empty, an app label, or an address. */
+function placeName(line: string): string {
+  const cleaned = cleanLine(line);
+  return !cleaned || MAP_APP_LABEL.test(cleaned) || isAddressLine(cleaned) ? '' : cleaned;
+}
+
 /**
  * Pulls a place name (and any link) out of text copied from a map app's "share → copy", so the user can paste it on
  * any device — not only the installed PWA that the GET share target needs. Handles the common Naver/Kakao shapes:
@@ -62,9 +82,8 @@ export function parsePastedPlace(text: string): { term: string | null; url: stri
   const urlMatch = text.match(/https?:\/\/\S+/);
   const url = urlMatch ? urlMatch[0].trim() : null;
   for (const line of text.split(/\r?\n/)) {
-    const cleaned = cleanLine(line);
-    if (!cleaned || MAP_APP_LABEL.test(cleaned)) continue;
-    return { term: cleaned.slice(0, 60), url };
+    const name = placeName(line);
+    if (name) return { term: name.slice(0, 60), url };
   }
   return { term: null, url };
 }
@@ -78,9 +97,9 @@ export function parsePastedPlaces(text: string, max = 30): string[] {
   const out: string[] = [];
   const seen = new Set<string>();
   for (const line of text.split(/\r?\n/)) {
-    const cleaned = cleanLine(line);
-    if (!cleaned || MAP_APP_LABEL.test(cleaned)) continue;
-    const term = cleaned.slice(0, 60);
+    const name = placeName(line);
+    if (!name) continue;
+    const term = name.slice(0, 60);
     const key = term.toLowerCase();
     if (seen.has(key)) continue;
     seen.add(key);

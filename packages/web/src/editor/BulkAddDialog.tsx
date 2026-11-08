@@ -8,7 +8,7 @@ import { Spinner } from '@astryxdesign/core/Spinner';
 import { HStack, StackItem, VStack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
 import { Card } from '../components/toss/Card';
-import { JS_KEY, loadKakao } from '../lib/kakaoSdk';
+import { JS_KEY, loadKakao, numberPin } from '../lib/kakaoSdk';
 import { t } from '../lib/i18n';
 import { ApiError, searchPlaces, type PlaceHit } from '../lib/pairing';
 import { byName, fromHit, type NewPlace } from './PlaceSearch';
@@ -44,6 +44,7 @@ async function pool<T>(items: T[], limit: number, fn: (item: T, i: number) => Pr
 export function BulkAddDialog({ isOpen, terms, lodgingOnly, onClose, onAdd }: { isOpen: boolean; terms: string[]; lodgingOnly: boolean; onClose: () => void; onAdd: (places: NewPlace[]) => void }) {
   const [rows, setRows] = useState<Row[] | null>(null);
   const [searchOff, setSearchOff] = useState(false);
+  const [failed, setFailed] = useState(0); // searches that errored (e.g. rate-limited) — not the same as "no match"
   const mapRef = useRef<HTMLDivElement>(null);
 
   // Search every term when the dialog opens (concurrency-limited).
@@ -52,20 +53,24 @@ export function BulkAddDialog({ isOpen, terms, lodgingOnly, onClose, onAdd }: { 
     let cancelled = false;
     setRows(null);
     setSearchOff(false);
+    setFailed(0);
     const result: Row[] = terms.map((term) => ({ term, hits: [], choice: NAME }));
     void (async () => {
       let off = false;
+      let errors = 0;
       await pool(terms, 4, async (term, i) => {
         try {
           const hits = await searchPlaces(term);
           result[i] = { term, hits, choice: hits.length > 0 ? 0 : NAME };
         } catch (e) {
           if (e instanceof ApiError && e.status === 503) off = true;
+          else errors++;
           result[i] = { term, hits: [], choice: NAME };
         }
       });
       if (cancelled) return;
       setSearchOff(off);
+      setFailed(errors);
       setRows([...result]);
     })();
     return () => {
@@ -87,8 +92,10 @@ export function BulkAddDialog({ isOpen, terms, lodgingOnly, onClose, onAdd }: { 
     return out;
   }, [rows, lodgingOnly]);
 
-  const coords = useMemo(() => selected.filter((p): p is NewPlace & { latE7: number; lonE7: number } => p.latE7 !== null && p.lonE7 !== null), [selected]);
-  const sig = useMemo(() => coords.map((c) => `${c.latE7},${c.lonE7}`).join('|'), [coords]);
+  const located = useMemo(() => selected.filter((p): p is NewPlace & { latE7: number; lonE7: number } => p.latE7 !== null && p.lonE7 !== null), [selected]);
+  const sig = useMemo(() => located.map((c) => `${c.latE7},${c.lonE7},${c.name}`).join('|'), [located]);
+  // Same pins ⇒ same array, so switching a row between "by name" and "skip" doesn't rebuild the map.
+  const coords = useMemo(() => located, [sig]);
 
   // Overview map: a numbered pin for each selected place that has coordinates.
   useEffect(() => {
@@ -103,11 +110,7 @@ export function BulkAddDialog({ isOpen, terms, lodgingOnly, onClose, onAdd }: { 
         coords.forEach((p, i) => {
           const ll = new kakao.maps.LatLng(p.latE7 / 1e7, p.lonE7 / 1e7);
           bounds.extend(ll);
-          const el = document.createElement('div');
-          el.textContent = String(i + 1);
-          el.title = p.name;
-          el.setAttribute('style', 'display:flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:999px;background:#3182F6;color:#fff;font:700 12px/1 sans-serif;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.4)');
-          new kakao.maps.CustomOverlay({ position: ll, content: el, xAnchor: 0.5, yAnchor: 0.5, map, zIndex: 3 });
+          new kakao.maps.CustomOverlay({ position: ll, content: numberPin(i + 1, p.name), xAnchor: 0.5, yAnchor: 0.5, map, zIndex: 3 });
         });
         if (coords.length > 1) map.setBounds(bounds);
       })
@@ -115,7 +118,7 @@ export function BulkAddDialog({ isOpen, terms, lodgingOnly, onClose, onAdd }: { 
     return () => {
       cancelled = true;
     };
-  }, [isOpen, sig, coords]);
+  }, [isOpen, coords]);
 
   return (
     <Dialog isOpen={isOpen} onOpenChange={(o) => !o && onClose()} width={640}>
@@ -129,6 +132,7 @@ export function BulkAddDialog({ isOpen, terms, lodgingOnly, onClose, onAdd }: { 
         ) : (
           <>
             {searchOff && <Banner status="info" title={t('bulk.searchOff')} />}
+            {!searchOff && failed > 0 && <Banner status="warning" title={t('bulk.someFailed')} />}
             {JS_KEY && coords.length > 0 && <div ref={mapRef} style={{ width: '100%', height: 220 }} role="img" aria-label={t('map.bulkAria')} />}
             <Card>
               <VStack gap={3}>
@@ -137,7 +141,7 @@ export function BulkAddDialog({ isOpen, terms, lodgingOnly, onClose, onAdd }: { 
                     {i > 0 && <Divider />}
                     <Text type="label">{r.term}</Text>
                     <Selector
-                      label={t('bulk.pickAddress')}
+                      label={`${r.term} · ${t('bulk.pickAddress')}`}
                       isLabelHidden
                       value={String(r.choice)}
                       options={[...r.hits.map((h, k) => ({ value: String(k), label: `${h.name} · ${h.address}` })), { value: NAME, label: t('bulk.byName') }, { value: SKIP, label: t('bulk.skip') }]}

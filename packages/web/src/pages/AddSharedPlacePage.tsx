@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
-import { Collapsible } from '@astryxdesign/core/Collapsible';
+import { Collapsible, CollapsibleGroup } from '@astryxdesign/core/Collapsible';
 import { Layout, LayoutContent, LayoutHeader } from '@astryxdesign/core/Layout';
 import { List, ListItem } from '@astryxdesign/core/List';
 import { Selector } from '@astryxdesign/core/Selector';
@@ -10,7 +10,7 @@ import { HStack, StackItem, VStack } from '@astryxdesign/core/Stack';
 import { Heading, Text } from '@astryxdesign/core/Text';
 import { Card } from '../components/toss/Card';
 import { InstallHint } from '../components/InstallHint';
-import { CATEGORY_LABEL, PlaceSearch, type NewPlace } from '../editor/PlaceSearch';
+import { byName, CATEGORY_LABEL, fromHit, PlaceSearch, type NewPlace } from '../editor/PlaceSearch';
 import { trips } from '../lib/db';
 import { t } from '../lib/i18n';
 import { ApiError, resolvePlace, searchPlaces, type PlaceHit } from '../lib/pairing';
@@ -19,29 +19,6 @@ import { navigate } from '../lib/router';
 import { addPlace, emptyPlan, newDoc, removePlace, savePlan, type TripDoc } from '../lib/trips';
 
 const NEW = 'new';
-
-const fromHit = (h: PlaceHit): NewPlace => ({
-  name: h.name,
-  address: h.address,
-  latE7: h.latE7,
-  lonE7: h.lonE7,
-  category: h.category,
-  source: { provider: 'KAKAO', externalId: h.externalId },
-  naviPoi: null,
-  hours: { status: 'UNKNOWN' },
-});
-
-/** A place added by name only (search off or no result); the car pins the exact spot in the Hyundai navigation. */
-const byName = (term: string): NewPlace => ({
-  name: term.slice(0, 60),
-  address: '',
-  latE7: null,
-  lonE7: null,
-  category: 'OTHER',
-  source: { provider: 'MANUAL', externalId: null },
-  naviPoi: null,
-  hours: { status: 'UNKNOWN' },
-});
 
 /** Where the shared place should go: an existing trip, a brand-new blank trip, or the auto "받은 장소" collection. */
 type Intent = { existingId: string } | { collection: true } | { new: true };
@@ -56,7 +33,25 @@ interface AddState {
   place: NewPlace;
 }
 
-type Status = 'resolving' | 'added' | 'undone' | 'noTerm';
+type Status = 'resolving' | 'added' | 'undone' | 'noTerm' | 'failed' | 'restored';
+
+/**
+ * The outcome, stored on this /add history entry. The share query stays in the URL, so without it, coming Back from the
+ * editor (or reloading) would mount the page fresh and add the same place a second time — possibly into another trip.
+ */
+interface AddMarker {
+  status: 'added' | 'undone';
+  tripId: string;
+  tripName: string;
+  placeName: string;
+}
+const MARK = 'tteonaljidoAdd';
+const readMarker = (): AddMarker | null => {
+  const s: unknown = history.state;
+  return s && typeof s === 'object' && MARK in s ? ((s as Record<string, AddMarker>)[MARK] ?? null) : null;
+};
+const writeMarker = (status: AddMarker['status'], a: AddState) =>
+  history.replaceState({ ...(history.state ?? {}), [MARK]: { status, tripId: a.tripId, tripName: a.doc.plan.name, placeName: a.place.name } satisfies AddMarker }, '');
 
 /**
  * Landing page for the GET Web Share Target (`/add?title=…&text=…&url=…`). The shared place is resolved to coordinates
@@ -73,6 +68,7 @@ export function AddSharedPlacePage() {
   const [docs, setDocs] = useState<TripDoc[]>([]); // trips at landing, for the "move to" picker
   const [hits, setHits] = useState<PlaceHit[]>([]);
   const [add, setAdd] = useState<AddState | null>(null);
+  const [restored, setRestored] = useState<AddMarker | null>(null); // result of an earlier visit to this entry
   const [note, setNote] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const ran = useRef(false); // guard the one-time auto-add (React StrictMode runs effects twice in dev)
@@ -120,36 +116,49 @@ export function AddSharedPlacePage() {
   useEffect(() => {
     if (ran.current) return;
     ran.current = true;
+    // Already handled on this history entry (Back from the editor, or a reload): show the result, don't add again.
+    const prior = readMarker();
+    if (prior) {
+      setRestored(prior);
+      setStatus(prior.status === 'undone' ? 'undone' : 'restored');
+      return;
+    }
     void (async () => {
-      // Prefer the shared title; if there's only a link, ask the server to read the place name from it.
-      let name = term;
-      if (!name) {
-        const u = sharedUrl(params);
-        if (u) {
-          try {
-            name = (await resolvePlace(u)).name;
-          } catch {
-            /* resolve failed → fall through to noTerm */
+      try {
+        // Prefer the shared title; if there's only a link, ask the server to read the place name from it.
+        let name = term;
+        if (!name) {
+          const u = sharedUrl(params);
+          if (u) {
+            try {
+              name = (await resolvePlace(u)).name;
+            } catch {
+              /* resolve failed → fall through to noTerm */
+            }
           }
         }
+        if (!name) {
+          setStatus('noTerm');
+          return;
+        }
+        const all = await trips.all();
+        setDocs(all);
+        let found: PlaceHit[] = [];
+        try {
+          found = await searchPlaces(name);
+        } catch (e) {
+          if (!(e instanceof ApiError && e.status === 503)) setNote(t('place.search.failed'));
+        }
+        setHits(found);
+        const place = found[0] ? fromHit(found[0]) : byName(name);
+        const intent: Intent = all[0] ? { existingId: all[0].tripId } : { collection: true };
+        const added = await doAdd(intent, place);
+        setAdd(added);
+        writeMarker('added', added);
+        setStatus('added');
+      } catch {
+        setStatus('failed'); // storage unavailable or a write failed: say so instead of spinning forever
       }
-      if (!name) {
-        setStatus('noTerm');
-        return;
-      }
-      const all = await trips.all();
-      setDocs(all);
-      let found: PlaceHit[] = [];
-      try {
-        found = await searchPlaces(name);
-      } catch (e) {
-        if (!(e instanceof ApiError && e.status === 503)) setNote(t('place.search.failed'));
-      }
-      setHits(found);
-      const place = found[0] ? fromHit(found[0]) : byName(name);
-      const intent: Intent = all[0] ? { existingId: all[0].tripId } : { collection: true };
-      setAdd(await doAdd(intent, place));
-      setStatus('added');
     })();
   }, [term]);
 
@@ -158,31 +167,51 @@ export function AddSharedPlacePage() {
   const undo = async () => {
     if (!add || busy) return;
     setBusy(true);
-    await revert(add);
-    setStatus('undone');
-    setBusy(false);
+    try {
+      await revert(add);
+      writeMarker('undone', add);
+      setStatus('undone');
+    } catch {
+      setNote(t('add.failed'));
+    } finally {
+      setBusy(false);
+    }
   };
 
   /** Move the same place to a different trip: take it out of the current one, put it in the chosen one. */
   const changeTrip = async (value: string) => {
     if (!add || busy || value === add.tripId) return;
     setBusy(true);
-    await revert(add);
-    setAdd(await doAdd(value === NEW ? { new: true } : { existingId: value }, add.place));
-    setBusy(false);
+    try {
+      await revert(add);
+      const moved = await doAdd(value === NEW ? { new: true } : { existingId: value }, add.place);
+      setAdd(moved);
+      writeMarker('added', moved);
+    } catch {
+      setNote(t('add.failed'));
+    } finally {
+      setBusy(false);
+    }
   };
 
   /** Keep the trip, swap the place (a different candidate, or a manual search result). */
   const rechoose = async (place: NewPlace) => {
     if (!add || busy) return;
     setBusy(true);
-    const without = removePlace(add.doc.plan, add.placeRef);
-    const withNew = addPlace(without, place);
-    const placeRef = withNew.places[withNew.places.length - 1].placeRef;
-    const next = await savePlan(add.doc, withNew, add.doc.home);
-    await trips.put(next);
-    setAdd({ ...add, placeRef, doc: next, place });
-    setBusy(false);
+    try {
+      const without = removePlace(add.doc.plan, add.placeRef);
+      const withNew = addPlace(without, place);
+      const placeRef = withNew.places[withNew.places.length - 1].placeRef;
+      const next = await savePlan(add.doc, withNew, add.doc.home);
+      await trips.put(next);
+      const swapped = { ...add, placeRef, doc: next, place };
+      setAdd(swapped);
+      writeMarker('added', swapped);
+    } catch {
+      setNote(t('add.failed'));
+    } finally {
+      setBusy(false);
+    }
   };
 
   // Trips offered in the "move to" picker: the current one first, then the rest, then a new trip.
@@ -224,10 +253,29 @@ export function AddSharedPlacePage() {
               </HStack>
             )}
 
+            {status === 'failed' && (
+              <>
+                <Banner status="error" title={t('add.failed')} />
+                <Button label={t('add.goHome')} variant="primary" width="100%" onClick={() => navigate('/')} />
+              </>
+            )}
+
             {status === 'undone' && (
               <>
                 <Banner status="info" title={t('add.undone')} />
                 <Button label={t('add.goHome')} variant="primary" width="100%" onClick={() => navigate('/')} />
+              </>
+            )}
+
+            {status === 'restored' && restored && (
+              <>
+                <Banner status="success" title={t('add.added', { name: restored.placeName, trip: restored.tripName })} />
+                <HStack gap={2}>
+                  <Button label={t('add.goHome')} variant="secondary" onClick={() => navigate('/')} />
+                  <StackItem size="fill">
+                    <Button label={t('add.open')} variant="primary" width="100%" onClick={() => navigate(`/trips/${restored.tripId}`)} />
+                  </StackItem>
+                </HStack>
               </>
             )}
 
@@ -246,24 +294,26 @@ export function AddSharedPlacePage() {
                   </StackItem>
                 </HStack>
 
-                <Card pad={0}>
-                  <Collapsible trigger={<Text type="label">{t('add.changeTrip')}</Text>} defaultIsOpen={false}>
-                    <Selector label={t('add.target')} options={targetOptions} value={add.tripId} onChange={(v) => void changeTrip(v)} />
-                  </Collapsible>
-
-                  {hits.length > 1 && (
-                    <Collapsible trigger={<Text type="label">{t('add.otherPlace')}</Text>} defaultIsOpen={false}>
-                      <List hasDividers>
-                        {hits.map((h) => (
-                          <ListItem key={h.externalId} label={h.name} description={`${CATEGORY_LABEL[h.category]} · ${h.address}`} onClick={() => void rechoose(fromHit(h))} />
-                        ))}
-                      </List>
+                <Card>
+                  <CollapsibleGroup type="multiple" hasDividers density="balanced">
+                    <Collapsible value="trip" trigger={<Text type="label">{t('add.changeTrip')}</Text>}>
+                      <Selector label={t('add.target')} options={targetOptions} value={add.tripId} onChange={(v) => void changeTrip(v)} />
                     </Collapsible>
-                  )}
 
-                  <Collapsible trigger={<Text type="label">{t('add.manualFind')}</Text>} defaultIsOpen={false}>
-                    <PlaceSearch label={t('add.refine.search')} onPick={(p) => void rechoose(p)} />
-                  </Collapsible>
+                    {hits.length > 1 && (
+                      <Collapsible value="place" trigger={<Text type="label">{t('add.otherPlace')}</Text>}>
+                        <List hasDividers>
+                          {hits.map((h) => (
+                            <ListItem key={h.externalId} label={h.name} description={`${CATEGORY_LABEL[h.category]} · ${h.address}`} onClick={() => void rechoose(fromHit(h))} />
+                          ))}
+                        </List>
+                      </Collapsible>
+                    )}
+
+                    <Collapsible value="manual" trigger={<Text type="label">{t('add.manualFind')}</Text>}>
+                      <PlaceSearch label={t('add.refine.search')} onPick={(p) => void rechoose(p)} />
+                    </Collapsible>
+                  </CollapsibleGroup>
                 </Card>
 
                 <Button label={t('add.undo')} variant="ghost" size="sm" isDisabled={busy} onClick={() => void undo()} />
