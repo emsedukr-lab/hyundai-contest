@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parsePastedPlace, sharedParamsFromSearch, sharedPlaceTerm, sharedUrl } from './placeShare';
+import { parsePastedPlace, parsePastedPlaces, sharedParamsFromSearch, sharedPlaceTerm, sharedUrl } from './placeShare';
 
 describe('지도앱 공유 수집 파싱', () => {
   it('제목이 있으면 제목을 검색어로', () => {
@@ -58,5 +58,32 @@ describe('지도앱 복사 붙여넣기 파싱 (parsePastedPlace)', () => {
 
   it('빈 문자열이면 둘 다 null', () => {
     expect(parsePastedPlace('   ')).toEqual({ term: null, url: null });
+  });
+});
+
+describe('여러 줄 붙여넣기 파싱 (parsePastedPlaces)', () => {
+  it('줄마다 한 곳씩', () => {
+    expect(parsePastedPlaces('경포호\n안목해변\n강릉중앙시장')).toEqual(['경포호', '안목해변', '강릉중앙시장']);
+  });
+
+  it('번호·불릿·줄 안 링크를 걷어낸다', () => {
+    expect(parsePastedPlaces('1. 경포호\n2) 안목해변 https://naver.me/a\n- 테라로사\n• 강문해변')).toEqual(['경포호', '안목해변', '테라로사', '강문해변']);
+  });
+
+  it('[카카오맵] 접두사와 앱이름 전용 줄 처리', () => {
+    expect(parsePastedPlaces('카카오맵\n[카카오맵] 경포대\n네이버 지도')).toEqual(['경포대']);
+  });
+
+  it('대소문자 무시 중복 제거·빈 줄 무시', () => {
+    expect(parsePastedPlaces('경포호\n\n경포호\n  \n안목해변')).toEqual(['경포호', '안목해변']);
+  });
+
+  it('최대 개수로 자른다', () => {
+    const many = Array.from({ length: 40 }, (_, i) => `장소${i}`).join('\n');
+    expect(parsePastedPlaces(many, 30)).toHaveLength(30);
+  });
+
+  it('빈 입력은 빈 배열', () => {
+    expect(parsePastedPlaces('   \n\n')).toEqual([]);
   });
 });

@@ -5,35 +5,9 @@ import type { Home, Trip } from '@tteonaljido/shared';
 import { t } from '../lib/i18n';
 import { dayPoints } from '../lib/routeSketch';
 import { RouteSketch } from './RouteSketch';
+import { JS_KEY, escapeHtml, loadKakao } from '../lib/kakaoSdk';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-declare global {
-  interface Window {
-    kakao?: any;
-  }
-}
-
-const JS_KEY = import.meta.env.VITE_KAKAO_JS_KEY;
-
-let sdk: Promise<any> | null = null;
-/** Loads the Kakao Maps JS SDK once (from dapi.kakao.com; the CSP allows dapi.kakao.com and *.kakaocdn.net). Rejects if it can't load. */
-function loadKakao(key: string): Promise<any> {
-  if (window.kakao?.maps) return Promise.resolve(window.kakao);
-  sdk ??= new Promise<any>((resolve, reject) => {
-    const s = document.createElement('script');
-    s.async = true;
-    s.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${encodeURIComponent(key)}&autoload=false`;
-    s.onload = () => (window.kakao ? window.kakao.maps.load(() => resolve(window.kakao)) : reject(new Error('kakao missing')));
-    s.onerror = () => {
-      sdk = null; // let a later mount retry
-      reject(new Error('kakao sdk load failed'));
-    };
-    document.head.appendChild(s);
-  });
-  return sdk;
-}
-
-const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
 
 /**
  * 경로 미리보기 (real map): a day's stops as numbered markers with the route drawn between them, on a Kakao map. Needs a
@@ -62,7 +36,7 @@ export function KakaoMap({ plan, home, dayIndex }: { plan: Trip; home: Home | nu
         for (const p of coords) {
           const ll = new kakao.maps.LatLng(p.latE7 / 1e7, p.lonE7 / 1e7);
           path.push(ll);
-          const info = new kakao.maps.InfoWindow({ position: ll, content: `<div style="padding:4px 8px;font-size:12px;white-space:nowrap">${esc(p.n ? `${p.n}. ${p.label}` : p.label)}</div>` });
+          const info = new kakao.maps.InfoWindow({ position: ll, content: `<div style="padding:4px 8px;font-size:12px;white-space:nowrap">${escapeHtml(p.n ? `${p.n}. ${p.label}` : p.label)}</div>` });
           if (p.kind === 'stop' && p.n) {
             // a numbered pin (custom overlay) so the visit order shows on the marker itself; click toggles the full name
             const el = document.createElement('div');

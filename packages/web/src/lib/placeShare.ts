@@ -41,6 +41,16 @@ export function sharedParamsFromSearch(search: string): SharedParams {
 /** Lines that are only a map-app name, not the place (so they are skipped when reading a pasted share). */
 const MAP_APP_LABEL = /^(카카오\s*맵|네이버\s*지도|구글\s*지도|티맵|naver\s*map|kakao\s*map|google\s*maps|tmap)$/i;
 
+/** Strips a pasted line down to a bare place name: drop URLs, a leading number/bullet, a leading "[카카오맵]", extra spaces. */
+function cleanLine(line: string): string {
+  return line
+    .replace(/https?:\/\/\S+/g, '') // drop URLs
+    .replace(/^\s*(?:\d+[.)]|[-•*·])\s*/, '') // drop a leading "1." / "2)" / "- " / "• " list marker
+    .replace(/^\[[^\]]*\]\s*/, '') // drop a leading "[카카오맵]" etc.
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 /**
  * Pulls a place name (and any link) out of text copied from a map app's "share → copy", so the user can paste it on
  * any device — not only the installed PWA that the GET share target needs. Handles the common Naver/Kakao shapes:
@@ -51,14 +61,31 @@ const MAP_APP_LABEL = /^(카카오\s*맵|네이버\s*지도|구글\s*지도|티�
 export function parsePastedPlace(text: string): { term: string | null; url: string | null } {
   const urlMatch = text.match(/https?:\/\/\S+/);
   const url = urlMatch ? urlMatch[0].trim() : null;
-  const lines = text
-    .split(/\r?\n/)
-    .map((l) => l.replace(/https?:\/\/\S+/g, '').replace(/\s+/g, ' ').trim())
-    .filter(Boolean);
-  for (const line of lines) {
-    const cleaned = line.replace(/^\[[^\]]*\]\s*/, '').trim(); // drop a leading "[카카오맵]" etc.
+  for (const line of text.split(/\r?\n/)) {
+    const cleaned = cleanLine(line);
     if (!cleaned || MAP_APP_LABEL.test(cleaned)) continue;
     return { term: cleaned.slice(0, 60), url };
   }
   return { term: null, url };
+}
+
+/**
+ * Pulls MANY place names out of a pasted list — one per line — so the user can paste a whole itinerary and search each.
+ * Reuses {@link cleanLine} (URLs, list markers and app labels stripped), skips app-label-only lines, removes
+ * case-insensitive duplicates, and caps the count so a huge paste can't blow past the search rate limit.
+ */
+export function parsePastedPlaces(text: string, max = 30): string[] {
+  const out: string[] = [];
+  const seen = new Set<string>();
+  for (const line of text.split(/\r?\n/)) {
+    const cleaned = cleanLine(line);
+    if (!cleaned || MAP_APP_LABEL.test(cleaned)) continue;
+    const term = cleaned.slice(0, 60);
+    const key = term.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(term);
+    if (out.length >= max) break;
+  }
+  return out;
 }

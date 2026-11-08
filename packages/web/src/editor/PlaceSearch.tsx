@@ -17,7 +17,8 @@ import { asNewPlace, favoriteId, toFavorite } from '../lib/favorites';
 import type { FavoritePlace } from '../lib/favorites';
 import { t } from '../lib/i18n';
 import { ApiError, searchPlaces, type PlaceHit } from '../lib/pairing';
-import { parsePastedPlace } from '../lib/placeShare';
+import { parsePastedPlace, parsePastedPlaces } from '../lib/placeShare';
+import { BulkAddDialog } from './BulkAddDialog';
 
 export const CATEGORY_OPTIONS = [
   { value: 'SIGHT', label: t('place.category.sight') },
@@ -30,7 +31,7 @@ export const CATEGORY_LABEL = Object.fromEntries(CATEGORY_OPTIONS.map((o) => [o.
 
 export type NewPlace = Omit<Place, 'placeRef'>;
 
-const fromHit = (h: PlaceHit): NewPlace => ({
+export const fromHit = (h: PlaceHit): NewPlace => ({
   name: h.name,
   address: h.address,
   latE7: h.latE7,
@@ -41,8 +42,20 @@ const fromHit = (h: PlaceHit): NewPlace => ({
   hours: { status: 'UNKNOWN' },
 });
 
+/** A place added by name only; the car finds its exact location in the Hyundai navigation. */
+export const byName = (name: string): NewPlace => ({
+  name: name.slice(0, 60),
+  address: '',
+  latE7: null,
+  lonE7: null,
+  category: 'OTHER',
+  source: { provider: 'MANUAL', externalId: null },
+  naviPoi: null,
+  hours: { status: 'UNKNOWN' },
+});
+
 /** Kakao search through our relay, with a manual fallback when search is not available. */
-export function PlaceSearch({ onPick, label = t('place.search'), lodgingOnly = false }: { onPick: (p: NewPlace) => void; label?: string; lodgingOnly?: boolean }) {
+export function PlaceSearch({ onPick, onPickMany, label = t('place.search'), lodgingOnly = false }: { onPick: (p: NewPlace) => void; onPickMany?: (places: NewPlace[]) => void; label?: string; lodgingOnly?: boolean }) {
   const [q, setQ] = useState('');
   const [hits, setHits] = useState<PlaceHit[] | null>(null);
   const [busy, setBusy] = useState(false);
@@ -53,6 +66,7 @@ export function PlaceSearch({ onPick, label = t('place.search'), lodgingOnly = f
   const [manageFavs, setManageFavs] = useState(false);
   const [showPaste, setShowPaste] = useState(false);
   const [paste, setPaste] = useState('');
+  const [bulkTerms, setBulkTerms] = useState<string[] | null>(null);
 
   useEffect(() => {
     void favorites.all().then(setFavs);
@@ -69,9 +83,10 @@ export function PlaceSearch({ onPick, label = t('place.search'), lodgingOnly = f
 
   /** Adds a place by name only; the car finds its exact location in the Hyundai navigation. */
   const addByName = () => {
-    const name = q.trim().slice(0, 60);
+    const name = q.trim();
     if (!name) return;
-    onPick({ name, address: '', latE7: null, lonE7: null, category: lodgingOnly ? 'LODGING' : 'OTHER', source: { provider: 'MANUAL', externalId: null }, naviPoi: null, hours: { status: 'UNKNOWN' } });
+    const p = byName(name);
+    onPick(lodgingOnly ? { ...p, category: 'LODGING' } : p);
     setQ('');
     setNote(null);
   };
@@ -104,13 +119,23 @@ export function PlaceSearch({ onPick, label = t('place.search'), lodgingOnly = f
     }
   };
 
-  /** Turn pasted Naver/Kakao "share → copy" text into a search: extract the place name, then run the normal search. */
+  /**
+   * Turn pasted map text into a search. Several lines (and onPickMany available) → open the bulk review dialog to pick
+   * an address per name and add them all at once. A single line → the normal single search.
+   */
   const runPaste = async () => {
-    const { term } = parsePastedPlace(paste);
-    if (!term) {
+    const terms = parsePastedPlaces(paste);
+    if (terms.length === 0) {
       setNote(t('place.paste.noName'));
       return;
     }
+    if (onPickMany && terms.length > 1) {
+      setBulkTerms(terms);
+      setShowPaste(false);
+      setPaste('');
+      return;
+    }
+    const term = terms[0];
     setQ(term);
     setShowPaste(false);
     setPaste('');
@@ -182,6 +207,11 @@ export function PlaceSearch({ onPick, label = t('place.search'), lodgingOnly = f
       {showPaste && (
         <VStack gap={2}>
           <TextArea label={t('place.paste.label')} value={paste} onChange={setPaste} placeholder={t('place.paste.placeholder')} rows={3} isOptional />
+          {onPickMany && (
+            <Text type="supporting" color="secondary">
+              {t('place.bulk.hint')}
+            </Text>
+          )}
           <HStack gap={2}>
             <Button label={t('place.paste.fromClipboard')} variant="ghost" size="sm" onClick={() => void readClipboard()} />
             <Button label={t('place.paste.find')} variant="primary" size="sm" isDisabled={!paste.trim()} onClick={() => void runPaste()} />
@@ -189,6 +219,9 @@ export function PlaceSearch({ onPick, label = t('place.search'), lodgingOnly = f
         </VStack>
       )}
       <ManualPlaceDialog isOpen={manual} lodgingOnly={lodgingOnly} onClose={() => setManual(false)} onSave={(p) => (onPick(p), setManual(false))} />
+      {onPickMany && bulkTerms && (
+        <BulkAddDialog isOpen terms={bulkTerms} lodgingOnly={lodgingOnly} onClose={() => setBulkTerms(null)} onAdd={(places) => onPickMany(places)} />
+      )}
     </VStack>
   );
 }

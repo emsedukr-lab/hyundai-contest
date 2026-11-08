@@ -199,7 +199,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
 
             <VStack gap={3}>
               <Heading level={2}>{t('editor.places')}</Heading>
-              <PlaceSearch onPick={(p) => edit(addPlace(plan, p))} />
+              <PlaceSearch onPick={(p) => edit(addPlace(plan, p))} onPickMany={(places) => edit(places.reduce((pl, p) => addPlace(pl, p), plan))} />
               {plan.places.length === 0 ? (
                 <Text type="supporting" color="secondary">
                   {t('editor.firstPlace')}
