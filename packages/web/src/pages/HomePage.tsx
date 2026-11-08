@@ -59,7 +59,7 @@ export function HomePage() {
         </div>
       ) : (
         <Section title={t('home.myTrips')}>
-          <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+          <ul className="tn-cards">
             {(docs ?? []).map((d) => {
               const unassigned = unassignedVisits(d.plan).length;
               const sent = lastSends[d.tripId];

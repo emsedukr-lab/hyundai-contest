@@ -25,7 +25,8 @@ interface RowProps {
 }
 
 /**
- * toss.md list-row: full-bleed, 14×24 padding, the whole row is the hit area. Renders a real `<button>` when it acts,
+ * toss.md list-row: full-bleed, 14×24 padding, the whole row is the hit area — or, inside a `<ul className="tn-cards">`,
+ * one card of a stageshow-style stack (a category's menus as separate cards, 12px apart). Renders a real `<button>` when it acts,
  * an `<a>` when it navigates (`href` + `onClick` for client routing), else a plain row.
  */
 export function Row({ title, subtitle, lead, end, chevron, onClick, href }: RowProps) {

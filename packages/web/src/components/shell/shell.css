@@ -198,6 +198,8 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
+  word-break: keep-all; /* Korean wraps between words, not mid-word, in the narrower cards */
+  overflow-wrap: anywhere; /* …but a long unbroken token (an address, a URL) still fits */
 }
 .tn-row-title {
   font-size: 17px;
@@ -226,6 +228,38 @@
   border-radius: 14px;
   background: var(--color-background-muted);
   color: var(--color-icon-primary);
+}
+
+/*
+ * Stacked cards (stageshow 'Stacked cards'): inside one category every menu is its own card — one width, one left
+ * edge (the section title's 24pt gutter), 12px apart — instead of full-bleed rows run together. The card is the grey
+ * Pleos section surface used across the app; its icon tile turns white so it still reads on the grey.
+ */
+.tn-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0 24px;
+  list-style: none;
+}
+.tn-cards .tn-row {
+  min-height: 72px;
+  padding: 14px 16px 14px 14px;
+  border-radius: var(--radius-container);
+  background: var(--color-background-card);
+}
+.tn-cards .tn-row:active {
+  background: var(--color-background-muted);
+}
+.tn-cards .tn-row:not(:has(.tn-lead)) {
+  padding-left: 20px; /* text-only card: the text takes the inset the icon tile would have */
+}
+.tn-cards .tn-lead {
+  background: var(--color-background-surface);
+}
+.tn-cards .tn-row:focus-visible {
+  outline-offset: 2px;
 }
 
 /* Page text block: title + description with 24pt side padding. */

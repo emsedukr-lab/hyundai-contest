@@ -61,7 +61,11 @@ export function PlacesPage() {
       </Section>
 
       <Section title={t('places.howTo')}>
-        <Row lead={<ShareIcon />} title={t('places.share.title')} subtitle={t('places.share.detail')} />
+        <ul className="tn-cards">
+          <li>
+            <Row lead={<ShareIcon />} title={t('places.share.title')} subtitle={t('places.share.detail')} />
+          </li>
+        </ul>
       </Section>
 
       <Section
@@ -72,7 +76,7 @@ export function PlacesPage() {
             {t('places.favorites.empty')}
           </p>
         ) : (
-          <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+          <ul className="tn-cards">
             {favs.map((f) => (
               <li key={f.id}>
                 <Row

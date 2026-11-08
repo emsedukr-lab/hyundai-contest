@@ -52,10 +52,16 @@ export function CarPage() {
         <p>{t('car.intro')}</p>
       </div>
 
-      {resumable && <Row href="/c" onClick={() => navigate('/c')} lead={<CarIcon />} title={t('car.resume')} subtitle={t('car.resume.detail')} chevron />}
+      {resumable && (
+        <ul className="tn-cards">
+          <li>
+            <Row href="/c" onClick={() => navigate('/c')} lead={<CarIcon />} title={t('car.resume')} subtitle={t('car.resume.detail')} chevron />
+          </li>
+        </ul>
+      )}
 
       <Section title={t('car.howTo')}>
-        <ol style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+        <ol className="tn-cards">
           <li>
             <Row lead={<CarIcon />} title={t('car.step1')} />
           </li>
@@ -74,7 +80,7 @@ export function CarPage() {
             {t('car.recent.empty')}
           </p>
         ) : (
-          <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+          <ul className="tn-cards">
             {(recent ?? []).map((r) => (
               <li key={r.tripId}>
                 <Row

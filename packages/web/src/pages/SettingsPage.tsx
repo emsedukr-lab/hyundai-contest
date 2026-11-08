@@ -86,7 +86,7 @@ export function SettingsPage() {
 
       {/* Start places for new trips: 집 (the one home every trip shares), 회사, 즐겨찾기 1–3. */}
       <Section title={t('settings.origins')}>
-        <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+        <ul className="tn-cards">
           {presets.map(({ slot, place }) => (
             <li key={slot}>
               <Row
@@ -100,13 +100,13 @@ export function SettingsPage() {
             </li>
           ))}
         </ul>
-        <p className="tn-pad" style={{ margin: '4px 0 0', fontSize: 13, lineHeight: 1.5, color: 'var(--color-text-secondary)' }}>
+        <p className="tn-pad" style={{ margin: '12px 0 0', fontSize: 13, lineHeight: 1.5, color: 'var(--color-text-secondary)' }}>
           {t('settings.origins.detail')}
         </p>
       </Section>
 
       <Section title={t('more.data')}>
-        <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+        <ul className="tn-cards">
           <li>
             <Row lead={<DownloadIcon />} title={t('home.exportBackup')} subtitle={t('more.export.detail')} onClick={docs.length ? exportAll : undefined} />
           </li>
@@ -115,7 +115,7 @@ export function SettingsPage() {
           </li>
         </ul>
         {showImport && (
-          <div className="tn-pad" style={{ paddingTop: 4, paddingBottom: 8 }}>
+          <div className="tn-pad" style={{ paddingTop: 12, paddingBottom: 8 }}>
             <FileInput
               label={t('home.backupFile.label')}
               mode="input"
@@ -130,7 +130,7 @@ export function SettingsPage() {
           </div>
         )}
         {shareText && (
-          <div className="tn-pad" style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingTop: 4, paddingBottom: 8 }}>
+          <div className="tn-pad" style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingTop: 12, paddingBottom: 8 }}>
             <Banner status="info" title={t('share.importTitle')} description={t('share.importHint')} />
             <TextInput label={t('share.passcode')} value={sharePass} inputMode="numeric" onChange={setSharePass} />
             <div style={{ display: 'flex', gap: 8 }}>
@@ -144,7 +144,7 @@ export function SettingsPage() {
       </Section>
 
       <Section title={t('more.app')}>
-        <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+        <ul className="tn-cards">
           {install.available && (
             <li>
               <Row
