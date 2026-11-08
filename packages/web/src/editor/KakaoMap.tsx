@@ -56,25 +56,45 @@ export function KakaoMap({ plan, home, dayIndex }: { plan: Trip; home: Home | nu
     loadKakao(JS_KEY)
       .then((kakao) => {
         if (cancelled || !ref.current) return;
+        ref.current.innerHTML = ''; // a day switch re-runs this effect on the same div; clear the old map so they don't stack
         const map = new kakao.maps.Map(ref.current, { center: new kakao.maps.LatLng(coords[0].latE7 / 1e7, coords[0].lonE7 / 1e7), level: 6 });
-        const bounds = new kakao.maps.LatLngBounds();
         const path: any[] = [];
         for (const p of coords) {
           const ll = new kakao.maps.LatLng(p.latE7 / 1e7, p.lonE7 / 1e7);
           path.push(ll);
-          bounds.extend(ll);
-          const marker = new kakao.maps.Marker({ position: ll, map });
-          const info = new kakao.maps.InfoWindow({ content: `<div style="padding:4px 8px;font-size:12px;white-space:nowrap">${esc(p.n ? `${p.n}. ${p.label}` : p.label)}</div>` });
-          kakao.maps.event.addListener(marker, 'click', () => info.open(map, marker));
+          const info = new kakao.maps.InfoWindow({ position: ll, content: `<div style="padding:4px 8px;font-size:12px;white-space:nowrap">${esc(p.n ? `${p.n}. ${p.label}` : p.label)}</div>` });
+          if (p.kind === 'stop' && p.n) {
+            // a numbered pin (custom overlay) so the visit order shows on the marker itself; click toggles the full name
+            const el = document.createElement('div');
+            el.textContent = String(p.n);
+            el.title = p.label;
+            el.setAttribute('style', 'display:flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:999px;background:#276EF1;color:#fff;font:700 12px/1 sans-serif;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.4);cursor:pointer');
+            let open = false;
+            el.addEventListener('click', () => ((open = !open) ? info.open(map) : info.close()));
+            new kakao.maps.CustomOverlay({ position: ll, content: el, xAnchor: 0.5, yAnchor: 0.5, map, zIndex: 3 });
+          } else {
+            // start/end anchor (home or the night's lodging): a plain pin, name on click
+            const marker = new kakao.maps.Marker({ position: ll, map });
+            kakao.maps.event.addListener(marker, 'click', () => info.open(map, marker));
+          }
         }
         if (path.length > 1) new kakao.maps.Polyline({ path, strokeWeight: 4, strokeColor: '#276EF1', strokeOpacity: 0.85, strokeStyle: 'solid', map });
-        if (coords.length > 1) map.setBounds(bounds);
+        // Fit to the day's stops (≥2) so a far-away home/lodging anchor doesn't zoom the whole region out and overlap them.
+        const stops = coords.filter((p) => p.kind === 'stop');
+        const base = stops.length >= 2 ? stops : coords;
+        if (base.length > 1) {
+          const bounds = new kakao.maps.LatLngBounds();
+          for (const p of base) bounds.extend(new kakao.maps.LatLng(p.latE7 / 1e7, p.lonE7 / 1e7));
+          map.setBounds(bounds);
+        }
       })
       .catch(() => {
         if (!cancelled) setFailed(true);
       });
+    const el = ref.current;
     return () => {
       cancelled = true;
+      if (el) el.innerHTML = '';
     };
   }, [sig, coords]);
 
@@ -83,7 +103,7 @@ export function KakaoMap({ plan, home, dayIndex }: { plan: Trip; home: Home | nu
 
   return (
     <VStack gap={2}>
-      <div ref={ref} style={{ width: '100%', height: 240 }} role="img" aria-label={t('sketch.aria', { day: dayIndex })} />
+      <div ref={ref} style={{ width: '100%', height: 240 }} role="img" aria-label={t('map.aria', { day: dayIndex })} />
       {noCoords.length > 0 && (
         <Text type="supporting" color="secondary">
           {t('sketch.noCoords', { names: noCoords.join(', ') })}
