@@ -9,6 +9,7 @@ import { dayEnds } from '../dayInfo';
 import { PlaceSearch } from '../PlaceSearch';
 import { Sheet } from '../Sheet';
 import { EndpointField } from '../EndpointField';
+import { FieldPrefix } from '../FieldPrefix';
 
 type ISOTime = Parameters<NonNullable<Parameters<typeof TimeInput>[0]['onChange']>>[0];
 
@@ -20,21 +21,23 @@ export function EndSheet({ isOpen, onClose, plan, home, dayIndex, onChange, onOp
   const { day, isLast, endName } = dayEnds(plan, dayIndex);
   const endLabel = endName ?? t('days.lodgingUnset');
   const endBy = (
-    <TimeInput
-      label={t('days.endBy', { end: endLabel })}
-      description={t('days.endBy.detail')}
-      value={(day.endBy ?? undefined) as ISOTime}
-      increment={30}
-      hasClear
-      isOptional
-      onChange={(v) => onChange(setEndBy(plan, day.dayIndex, v ? String(v).slice(0, 5) : null))}
-    />
+    <FieldPrefix prefix={day.endBy ? t('tl.endByPh') : null}>
+      <TimeInput
+        label={t('days.endBy', { end: endLabel })}
+        isLabelHidden
+        placeholder={t('tl.endByPh')}
+        value={(day.endBy ?? undefined) as ISOTime}
+        increment={30}
+        hasClear
+        onChange={(v) => onChange(setEndBy(plan, day.dayIndex, v ? String(v).slice(0, 5) : null))}
+      />
+    </FieldPrefix>
   );
   return (
     <Sheet isOpen={isOpen} onClose={onClose} title={isLast ? t('tl.home') : t('days.lodging', { day: day.dayIndex })} height="tall" footer={<Button label={t('tl.done')} variant="primary" size="lg" width="100%" onClick={onClose} />}>
       {isLast ? (
         <>
-          <EndpointField which="finalDestination" plan={plan} home={home} onChange={onChange} onOpenSettings={onOpenSettings} />
+          <EndpointField which="finalDestination" compact plan={plan} home={home} onChange={onChange} onOpenSettings={onOpenSettings} />
           {day.lodgingPlaceRef && (
             <Banner status="warning" title={t('trip.warn.lastLodging')} endContent={<Button label={t('tl.clearLodging')} variant="secondary" size="sm" onClick={() => onChange(setLodging(plan, day.dayIndex, null))} />} />
           )}
@@ -44,11 +47,11 @@ export function EndSheet({ isOpen, onClose, plan, home, dayIndex, onChange, onOp
         <>
           <Selector
             label={t('common.lodging')}
+            isLabelHidden
             placeholder={lodgingPlaces(plan).length ? t('days.lodging.placeholder') : t('days.lodging.none')}
             options={[{ value: '', label: t('days.lodging.unset') }, ...lodgingPlaces(plan).map((p) => ({ value: p.placeRef, label: p.name }))]}
             value={day.lodgingPlaceRef ?? ''}
             onChange={(ref) => onChange(setLodging(plan, day.dayIndex, ref || null))}
-            description={t('days.lodging.detail')}
           />
           {day.lodgingPlaceRef && (
             <div>
@@ -57,6 +60,9 @@ export function EndSheet({ isOpen, onClose, plan, home, dayIndex, onChange, onOp
           )}
           <PlaceSearch
             label={t('tl.newLodging')}
+            placeholder={t('tl.newLodging')}
+            isLabelHidden
+            compact
             lodgingOnly
             onPick={(p) => {
               const added = addPlace(plan, p);

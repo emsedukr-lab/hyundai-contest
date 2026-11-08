@@ -62,7 +62,6 @@ export function DayTimeline({ plan, home, dayIndex, onChange, onError, onOpenPla
     : day.departTime
       ? t('tl.departAt', { time: day.departTime })
       : null;
-  const homeMissing = isFirst && plan.origin.kind === 'HOME' && !home;
 
   // 끝: a night's lodging, or home/the final place on the last day
   const lodgingMissing = !isLast && endName === null;
@@ -113,7 +112,6 @@ export function DayTimeline({ plan, home, dayIndex, onChange, onError, onOpenPla
             <span className="tl-kicker">{`${t('tl.start')} · ${shortDate(day.date)}`}</span>
             <span className="tl-name">{startName}</span>
             {startTime ? <span className="tl-line">{startTime}</span> : <span className="tl-warn-text">{t('tl.departUnset')}</span>}
-            {homeMissing && <span className="tl-meta">{t('editor.startPlace.homeUnset')}</span>}
             {issues.start.map((x, n) => (
               <span key={n} className="tl-error-text">
                 {issueText(x)}
@@ -158,8 +156,6 @@ export function DayTimeline({ plan, home, dayIndex, onChange, onError, onOpenPla
             <span className="tl-kicker">{isLast ? t('tl.home') : t('common.lodging')}</span>
             {lodgingMissing ? <span className="tl-name tl-warn-text" style={{ fontSize: 17 }}>{t('tl.lodgingUnset')}</span> : <span className="tl-name">{endName}</span>}
             {endTimes && <span className="tl-line">{endTimes}</span>}
-            {!isLast && <span className="tl-meta">{t('tl.lodgingNext')}</span>}
-            {isLast && plan.finalDestination.kind === 'HOME' && !home && <span className="tl-meta">{t('trip.warn.noHome')}</span>}
             {lastLodging && <span className="tl-warn-text">{t('trip.warn.lastLodging')}</span>}
             {issues.end.map((x, n) => (
               <span key={n} className="tl-error-text">

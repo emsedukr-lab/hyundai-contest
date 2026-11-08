@@ -576,6 +576,8 @@ const ko = {
   'tl.toDay1': '1일차 일정 짜기',
   'settings.preset.description2': '새 여행의 출발 장소나 귀가 시 도착 장소로 고를 수 있어요 · 이 휴대폰에만 저장되고, 고른 여행에서는 여행의 장소로 함께 차에 보내져요',
   'settings.origins.detail2': '여행 정보 탭에서 출발·도착 장소로 골라요',
+  'tl.nightLodging': '{day}일차 숙소',
+  'tl.endByPh': '도착 목표 시각',
 } as const satisfies Record<string, string>;
 
 export type Key = keyof typeof ko;
@@ -1150,6 +1152,8 @@ const en: Record<Key, string> = {
   'tl.toDay1': 'Plan day 1',
   'settings.preset.description2': 'Pick it as a trip\'s start or where it ends · it stays on this phone, and a trip that uses it sends it to the car as one of the trip\'s places',
   'settings.origins.detail2': 'Pick them as the start or end on a trip\'s details tab',
+  'tl.nightLodging': 'Night {day} lodging',
+  'tl.endByPh': 'Arrive by',
 };
 
 /** Both tables, for tests. */

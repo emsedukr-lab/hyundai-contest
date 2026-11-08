@@ -4,7 +4,7 @@ import { Selector } from '@astryxdesign/core/Selector';
 import { VStack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
 import type { Endpoint, Home, Trip } from '@tteonaljido/shared';
-import { PencilIcon } from '../components/shell/icons';
+import { FlagIcon, PencilIcon, PinIcon } from '../components/shell/icons';
 import { t } from '../lib/i18n';
 import { PRESET_SLOTS, presetLabel, presetPlace } from '../lib/settings';
 import { endpointFromPreset, presetInPlan, setEndpoint, type EndpointSide } from '../lib/trips';
@@ -25,6 +25,7 @@ export function EndpointField({
   onOpenSettings,
   label,
   isLabelHidden = false,
+  compact = false,
 }: {
   which: EndpointSide;
   plan: Trip;
@@ -34,6 +35,8 @@ export function EndpointField({
   label?: string;
   /** Hide the select's visible label when a section title above already says it (kept for screen readers). */
   isLabelHidden?: boolean;
+  /** The concise editor form: no visible label (a start pin or a return flag inside the field says which end), no address or hint lines. */
+  compact?: boolean;
 }) {
   const [presets] = useState(() => PRESET_SLOTS.filter((s) => s !== 'home').map((slot) => ({ slot, place: presetPlace(slot) })));
   const seen = new Set<string>(['HOME']);
@@ -65,18 +68,25 @@ export function EndpointField({
     <VStack gap={1}>
       <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8 }}>
         <div style={{ flex: '1 1 auto', minWidth: 0 }}>
-          <Selector label={fieldLabel} isLabelHidden={isLabelHidden} options={options} value={endpointValue(current)} onChange={pick} />
+          <Selector
+            label={fieldLabel}
+            isLabelHidden={isLabelHidden || compact}
+            startIcon={compact ? <span className="tl-fieldicon">{which === 'origin' ? <PinIcon /> : <FlagIcon />}</span> : undefined}
+            options={options}
+            value={endpointValue(current)}
+            onChange={pick}
+          />
         </div>
         <div style={{ flex: 'none' }}>
           <IconButton label={t('editor.home.openSettings')} icon={<PencilIcon />} variant="secondary" size="md" onClick={onOpenSettings} />
         </div>
       </div>
-      {address && (
+      {!compact && address && (
         <div style={{ wordBreak: 'keep-all' }}>
           <Text type="supporting">{address}</Text>
         </div>
       )}
-      {presets.some((x) => !x.place) && (
+      {!compact && presets.some((x) => !x.place) && (
         <div style={{ wordBreak: 'keep-all' }}>
           <Text type="supporting" color="secondary">
             {t('editor.startPlace.hint')}

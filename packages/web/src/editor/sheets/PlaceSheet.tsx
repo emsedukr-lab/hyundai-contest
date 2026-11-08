@@ -52,9 +52,6 @@ export function PlaceSheet({ isOpen, onClose, plan, dayIndex, onChange, onOpenPl
         </Text>
       ) : (
         <>
-          <Text type="supporting" color="secondary">
-            {t('tl.poolHint', { day: dayIndex })}
-          </Text>
           <Card pad={0}>
             <List hasDividers>
               {pool.map((v) => {
@@ -87,7 +84,7 @@ export function PlaceSheet({ isOpen, onClose, plan, dayIndex, onChange, onOpenPl
       <h3 className="tl-sheet-section" style={{ marginTop: 8 }}>
         {t('tl.searchNew')}
       </h3>
-      <PlaceSearch onPick={pickNew} onPickMany={pickMany} />
+      <PlaceSearch isLabelHidden placeholder={t('place.search')} onPick={pickNew} onPickMany={pickMany} />
     </Sheet>
   );
 }

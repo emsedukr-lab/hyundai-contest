@@ -16,11 +16,11 @@ export function LegSheet({ isOpen, onClose, plan, dayIndex, k, onChange }: { isO
       <Text type="label">{t('tl.legRoute', { from, to })}</Text>
       <NumberInput
         label={t('tl.legInput')}
+        isLabelHidden
         value={day.legs[k]?.minutes ?? null}
-        placeholder={t('days.legEmpty')}
+        placeholder={t('tl.legInput')}
         hasClear
         isIntegerOnly
-        description={t('tl.legHint')}
         onChange={(v: number | null) => onChange(setLeg(plan, day.dayIndex, k, v === null || !Number.isFinite(v) ? null : Math.max(0, Math.min(1440, Math.round(v)))))}
       />
     </Sheet>

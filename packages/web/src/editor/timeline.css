@@ -380,3 +380,45 @@
     transition: none;
   }
 }
+
+/* A short in-field prefix for inputs that always hold a value ("체류(분) 60"), so no label sits above them. */
+.tl-infield {
+  white-space: nowrap;
+  font-size: 13px;
+  line-height: 1;
+  color: var(--color-text-secondary);
+}
+.tl-fieldicon {
+  display: inline-flex;
+  color: var(--color-icon-secondary);
+}
+.tl-fieldicon svg {
+  width: 18px;
+  height: 18px;
+}
+/* A night's lodging once chosen: shaped like the inputs around it, with the night and a clear button. */
+.tl-lodging {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 2px 4px 2px 14px;
+  border: 1px solid var(--color-border-emphasized);
+  border-radius: 9999px;
+  background: var(--color-background-body);
+}
+.tl-lodging-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 15px;
+  line-height: 1.4;
+  overflow: hidden;
+}
+.tl-lodging-text > span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

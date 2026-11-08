@@ -21,7 +21,7 @@ export function StartSheet({ isOpen, onClose, plan, home, dayIndex, onChange, on
     <Sheet isOpen={isOpen} onClose={onClose} title={t('tl.start')} height="tall" footer={<Button label={t('tl.done')} variant="primary" size="lg" width="100%" onClick={onClose} />}>
       {isFirst ? (
         <>
-          <EndpointField which="origin" plan={plan} home={home} onChange={onChange} onOpenSettings={onOpenSettings} />
+          <EndpointField which="origin" compact plan={plan} home={home} onChange={onChange} onOpenSettings={onOpenSettings} />
           <FormLayout>
             <SegmentedControl
               label={t('editor.firstDay')}
@@ -33,6 +33,7 @@ export function StartSheet({ isOpen, onClose, plan, home, dayIndex, onChange, on
             {fd.basis === 'DEPART_ORIGIN' ? (
               <TimeInput
                 label={t('editor.departTime')}
+                isLabelHidden
                 increment={30}
                 value={fd.departTime as ISOTime}
                 onChange={(v) => v && onChange({ ...plan, firstDay: { basis: 'DEPART_ORIGIN', departTime: String(v).slice(0, 5) } })}
@@ -41,12 +42,15 @@ export function StartSheet({ isOpen, onClose, plan, home, dayIndex, onChange, on
               <HStack gap={2}>
                 <TimeInput
                   label={t('editor.arriveTime')}
+                  isLabelHidden
                   increment={30}
                   value={fd.arriveTime as ISOTime}
                   onChange={(v) => v && onChange({ ...plan, firstDay: { ...fd, arriveTime: String(v).slice(0, 5) } })}
                 />
                 <NumberInput
                   label={t('editor.prepMinutes')}
+                  isLabelHidden
+                  startIcon={<span className="tl-infield">{t('editor.prepMinutes')}</span>}
                   value={fd.prepMinutes}
                   isIntegerOnly
                   onChange={(v) => onChange({ ...plan, firstDay: { ...fd, prepMinutes: Math.max(0, Math.min(240, Math.round(v ?? 0))) } })}
@@ -58,6 +62,8 @@ export function StartSheet({ isOpen, onClose, plan, home, dayIndex, onChange, on
       ) : (
         <TimeInput
           label={t('days.departFrom', { start: startName })}
+          isLabelHidden
+          placeholder={t('tl.departTime')}
           value={(day.departTime ?? undefined) as ISOTime}
           increment={30}
           hasClear

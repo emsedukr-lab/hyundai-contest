@@ -63,7 +63,8 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
 
   useEffect(() => {
     void (async () => {
-      const d = tripId ? await trips.get(tripId) : await newDoc(emptyPlan(), defaultHome());
+      // A new trip starts with an empty name, so the field shows its placeholder; saving fills in the default if left blank.
+      const d = tripId ? await trips.get(tripId) : await newDoc({ ...emptyPlan(), name: '' }, defaultHome());
       if (!d) return navigate('/', true);
       setDoc(d);
       book.current = new Map();
@@ -116,8 +117,11 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
   };
   const fail = (m: string) => setNotice({ tone: 'error', text: m });
 
+  /** The plan as stored and shared: a blank name becomes the default one (the transfer needs a name). */
+  const named = (p: Trip): Trip => (p.name.trim() ? p : { ...p, name: t('trip.defaultName') });
+
   const save = async () => {
-    const next = await savePlan(doc, plan, home);
+    const next = await savePlan(doc, named(plan), home);
     await trips.put(next);
     setDoc(next);
     setPlan(next.plan);
@@ -223,7 +227,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
       {/* ARIA tabs: one panel whose content follows the selected day. */}
       <div id="day-panel" role="tabpanel" aria-label={onInfo ? t('tl.basicsTitle') : t('common.day', { day: dayIndex })} style={{ paddingTop: onInfo ? 20 : 12, paddingBottom: 16 }}>
         {onInfo ? (
-          <TripInfoPanel plan={plan} home={home} isNew={!tripId} onChange={edit} onOpenSettings={() => leave('/settings')} onPlanDays={() => setDay(String(plan.days[0].dayIndex))} />
+          <TripInfoPanel plan={plan} home={home} onChange={edit} onOpenSettings={() => leave('/settings')} onPlanDays={() => setDay(String(plan.days[0].dayIndex))} />
         ) : (
           <DayTimeline
             plan={plan}
@@ -248,7 +252,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
 
       <VisitDialog plan={plan} placeRef={openPlace} onChange={edit} onClose={() => setOpenPlace(null)} />
       <RecommendDialog isOpen={recommending} plan={plan} home={home} book={book.current} onApply={edit} onClose={() => setRecommending(false)} />
-      <ShareDialog isOpen={sharing} doc={{ ...doc, plan, home }} onClose={() => setSharing(false)} />
+      <ShareDialog isOpen={sharing} doc={{ ...doc, plan: named(plan), home }} onClose={() => setSharing(false)} />
       <AlertDialog
         isOpen={confirmDelete}
         onOpenChange={setConfirmDelete}

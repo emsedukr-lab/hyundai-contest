@@ -16,7 +16,8 @@ import { useEffect, useState } from 'react';
 import type { OpeningHours, Place, Trip, Visit } from '@tteonaljido/shared';
 import { dateLabel } from '../lib/format';
 import { t } from '../lib/i18n';
-import { REASON_LABEL, changeCategory, isEndpointOnly, removePlace, updatePlace, updateVisit } from '../lib/trips';
+import { FieldPrefix } from './FieldPrefix';
+import { REASON_LABEL, changeCategory, removePlace, updatePlace, updateVisit } from '../lib/trips';
 import { CATEGORY_OPTIONS } from './PlaceSearch';
 
 type ISOTime = Parameters<NonNullable<Parameters<typeof TimeInput>[0]['onChange']>>[0];
@@ -57,11 +58,12 @@ export function VisitDialog({ plan, placeRef, onChange, onClose }: { plan: Trip;
       <DialogHeader title={place.name} subtitle={place.address} onOpenChange={(o) => !o && onClose()} />
       <VStack gap={4}>
         <FormLayout>
-          <Selector label={t('common.type')} options={CATEGORY_OPTIONS} value={place.category} onChange={(v) => onChange(changeCategory(plan, place.placeRef, v as Place['category']))} />
+          <Selector label={t('common.type')} isLabelHidden options={CATEGORY_OPTIONS} value={place.category} onChange={(v) => onChange(changeCategory(plan, place.placeRef, v as Place['category']))} />
           {visit && visit.unassignedReason !== null && (
             // On no day yet (보관함): why, as the car shows it.
             <Selector
               label={t('editor.unassigned.reason')}
+              isLabelHidden
               options={Object.entries(REASON_LABEL).map(([value, label]) => ({ value, label }))}
               value={visit.unassignedReason}
               onChange={(r) => setVisit({ unassignedReason: r as Visit['unassignedReason'] })}
@@ -69,25 +71,27 @@ export function VisitDialog({ plan, placeRef, onChange, onClose }: { plan: Trip;
           )}
           {visit ? (
             <>
-              <NumberInput label={t('visit.stay')} value={visit.stayMinutes} onChange={(v) => setVisit({ stayMinutes: Math.max(0, Math.min(720, Math.round(v))) })} step={15} isIntegerOnly />
-              <NumberInput label={t('visit.prep')} value={visit.prepMinutes} onChange={(v) => setVisit({ prepMinutes: Math.max(0, Math.min(120, Math.round(v))) })} step={5} isIntegerOnly />
+              <NumberInput label={t('visit.stay')} isLabelHidden startIcon={<span className="tl-infield">{t('visit.stay')}</span>} value={visit.stayMinutes} onChange={(v) => setVisit({ stayMinutes: Math.max(0, Math.min(720, Math.round(v))) })} step={15} isIntegerOnly />
+              <NumberInput label={t('visit.prep')} isLabelHidden startIcon={<span className="tl-infield">{t('visit.prep')}</span>} value={visit.prepMinutes} onChange={(v) => setVisit({ prepMinutes: Math.max(0, Math.min(120, Math.round(v))) })} step={5} isIntegerOnly />
               <SegmentedControl label={t('visit.importance')} value={visit.importance} onChange={(v) => setVisit({ importance: v as Visit['importance'] })}>
                 <SegmentedControlItem value="MUST" label={t('common.must')} />
                 <SegmentedControlItem value="NORMAL" label={t('visit.importance.normal')} />
                 <SegmentedControlItem value="OPTIONAL" label={t('visit.importance.optional')} />
               </SegmentedControl>
-              <TimeInput label={t('visit.desiredTime')} value={iso(visit.desiredTime)} onChange={(v) => setVisit({ desiredTime: hhmm(v) })} hasClear isOptional />
+              <FieldPrefix prefix={visit.desiredTime ? t('visit.desiredTime') : null}>
+                <TimeInput label={t('visit.desiredTime')} isLabelHidden placeholder={t('visit.desiredTime')} value={iso(visit.desiredTime)} onChange={(v) => setVisit({ desiredTime: hhmm(v) })} hasClear />
+              </FieldPrefix>
               <Switch
                 label={t('visit.fixed')}
-                description={t('visit.fixed.detail')}
                 value={!!visit.fixed}
                 onChange={(on) => setVisit(on ? { fixed: { time: visit.desiredTime?.replace(/:(\d\d)$/, (_, m) => (Number(m) < 30 ? ':00' : ':30')) ?? '12:00', kind: 'USER' }, timeFlexible: false } : { fixed: null })}
               />
               {visit.fixed && (
                 <HStack gap={2}>
-                  <TimeInput label={t('visit.fixedTime')} value={iso(visit.fixed.time)} increment={30} onChange={(v) => v && setVisit({ fixed: { ...visit.fixed!, time: hhmm(v)! } })} />
+                  <TimeInput label={t('visit.fixedTime')} isLabelHidden value={iso(visit.fixed.time)} increment={30} onChange={(v) => v && setVisit({ fixed: { ...visit.fixed!, time: hhmm(v)! } })} />
                   <Selector
                     label={t('common.type')}
+                    isLabelHidden
                     options={[
                       { value: 'RESERVATION', label: t('visit.fixedKind.reservation') },
                       { value: 'USER', label: t('visit.fixedKind.user') },
@@ -100,25 +104,20 @@ export function VisitDialog({ plan, placeRef, onChange, onClose }: { plan: Trip;
               <Switch label={t('visit.dateFlexible')} value={visit.dateFlexible} onChange={(v) => setVisit({ dateFlexible: v })} />
               <Switch label={t('visit.timeFlexible')} value={visit.timeFlexible} isDisabled={!!visit.fixed} onChange={(v) => setVisit({ timeFlexible: v })} />
             </>
-          ) : (
-            <Text type="supporting" color="secondary">
-              {isEndpointOnly(plan, place.placeRef) ? t('visit.endpointNote') : t('visit.lodgingNote')}
-            </Text>
-          )}
+          ) : null}
           <Switch
             label={t('visit.hours')}
-            description={t('visit.hours.detail')}
             value={hours.status === 'USER_ENTERED'}
             onChange={(on) => (on ? setDaily('09:00', '21:00') : setPlace({ hours: { status: 'UNKNOWN' } }))}
           />
           {daily && (
             <HStack gap={2}>
-              <TimeInput label={t('visit.opens')} value={iso(daily.open)} increment={30} onChange={(v) => v && setDaily(hhmm(v)!, daily.close)} />
-              <TimeInput label={t('visit.closes')} value={iso(daily.close)} increment={30} onChange={(v) => v && setDaily(daily.open, hhmm(v)!)} />
+              <TimeInput label={t('visit.opens')} isLabelHidden value={iso(daily.open)} increment={30} onChange={(v) => v && setDaily(hhmm(v)!, daily.close)} />
+              <TimeInput label={t('visit.closes')} isLabelHidden value={iso(daily.close)} increment={30} onChange={(v) => v && setDaily(daily.open, hhmm(v)!)} />
             </HStack>
           )}
           {daily && (
-            <CheckboxList label={t('visit.openDays')} description={t('visit.openDays.detail')} value={openDays} onChange={(days) => days.length > 0 && setHours(daily.open, daily.close, days)}>
+            <CheckboxList label={t('visit.openDays')} isLabelHidden value={openDays} onChange={(days) => days.length > 0 && setHours(daily.open, daily.close, days)}>
               {WEEKDAYS.map((key, i) => (
                 <CheckboxListItem key={key} value={ALL_DAYS[i]} label={t(key)} />
               ))}
@@ -128,11 +127,11 @@ export function VisitDialog({ plan, placeRef, onChange, onClose }: { plan: Trip;
             <VStack gap={2}>
               <DateInput
                 label={t('visit.closedDates')}
-                description={t('visit.closedDates.detail')}
+                isLabelHidden
+                placeholder={t('visit.closedDates')}
                 value={pickDate}
                 min={plan.startDate as ISODateString}
                 max={plan.endDate as ISODateString}
-                isOptional
                 hasClear
                 onChange={(v) => {
                   if (v && closedDates.length < 31) setClosedDates([...closedDates, v]);

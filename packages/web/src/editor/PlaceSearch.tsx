@@ -66,12 +66,21 @@ export function PlaceSearch({
   label = t('place.search'),
   lodgingOnly = false,
   requireCoords = false,
+  placeholder,
+  isLabelHidden = false,
+  compact = false,
 }: {
   onPick: (p: NewPlace) => void;
   onPickMany?: (places: NewPlace[]) => void;
   label?: string;
   lodgingOnly?: boolean;
   requireCoords?: boolean;
+  /** Text inside the empty search field (defaults to the example names). */
+  placeholder?: string;
+  /** Keep the label for screen readers only; the placeholder says what the field is. */
+  isLabelHidden?: boolean;
+  /** Just the search field and its results: no favorites row, manual entry or paste panel. */
+  compact?: boolean;
 }) {
   const [q, setQ] = useState('');
   const [hits, setHits] = useState<PlaceHit[] | null>(null);
@@ -190,7 +199,7 @@ export function PlaceSearch({
 
   return (
     <VStack gap={2}>
-      {shownFavs.length > 0 && (
+      {!compact && shownFavs.length > 0 && (
         <VStack gap={1}>
           <HStack gap={2} vAlign="center">
             <StackItem size="fill">
@@ -212,7 +221,7 @@ export function PlaceSearch({
       )}
       <HStack gap={2} vAlign="end">
         <StackItem size="fill">
-          <TextInput label={label} value={q} onChange={setQ} onEnter={() => run()} placeholder={t('place.search.placeholder')} hasClear />
+          <TextInput label={label} isLabelHidden={isLabelHidden} value={q} onChange={setQ} onEnter={() => run()} placeholder={placeholder ?? t('place.search.placeholder')} hasClear />
         </StackItem>
         <Button label={t('place.search.action')} variant="secondary" isLoading={busy} onClick={() => run()} />
       </HStack>
@@ -249,11 +258,13 @@ export function PlaceSearch({
         </List>
         </Card>
       )}
+      {!compact && (
       <HStack gap={2} wrap="wrap">
         {!requireCoords && <Button label={unavailable ? t('place.manual.searchOff') : t('place.manual.open')} variant="ghost" size="sm" onClick={() => setManual(true)} />}
         <Button label={t('place.paste.open')} variant="ghost" size="sm" onClick={() => setShowPaste((v) => !v)} />
       </HStack>
-      {showPaste && (
+      )}
+      {!compact && showPaste && (
         <VStack gap={2}>
           <TextArea label={t('place.paste.label')} value={paste} onChange={setPaste} placeholder={t('place.paste.placeholder')} rows={3} isOptional />
           {onPickMany && (
