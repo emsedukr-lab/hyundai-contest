@@ -5,8 +5,9 @@ import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Selector } from '@astryxdesign/core/Selector';
 import { Spinner } from '@astryxdesign/core/Spinner';
-import { HStack, VStack } from '@astryxdesign/core/Stack';
+import { HStack, StackItem, VStack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
+import { Card } from '../components/toss/Card';
 import { JS_KEY, loadKakao } from '../lib/kakaoSdk';
 import { t } from '../lib/i18n';
 import { ApiError, searchPlaces, type PlaceHit } from '../lib/pairing';
@@ -105,7 +106,7 @@ export function BulkAddDialog({ isOpen, terms, lodgingOnly, onClose, onAdd }: { 
           const el = document.createElement('div');
           el.textContent = String(i + 1);
           el.title = p.name;
-          el.setAttribute('style', 'display:flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:999px;background:#276EF1;color:#fff;font:700 12px/1 sans-serif;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.4)');
+          el.setAttribute('style', 'display:flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:999px;background:#3182F6;color:#fff;font:700 12px/1 sans-serif;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.4)');
           new kakao.maps.CustomOverlay({ position: ll, content: el, xAnchor: 0.5, yAnchor: 0.5, map, zIndex: 3 });
         });
         if (coords.length > 1) map.setBounds(bounds);
@@ -129,34 +130,39 @@ export function BulkAddDialog({ isOpen, terms, lodgingOnly, onClose, onAdd }: { 
           <>
             {searchOff && <Banner status="info" title={t('bulk.searchOff')} />}
             {JS_KEY && coords.length > 0 && <div ref={mapRef} style={{ width: '100%', height: 220 }} role="img" aria-label={t('map.bulkAria')} />}
-            <VStack gap={3}>
-              {rows.map((r, i) => (
-                <VStack key={i} gap={1}>
-                  {i > 0 && <Divider />}
-                  <Text type="label">{r.term}</Text>
-                  <Selector
-                    label={t('bulk.pickAddress')}
-                    isLabelHidden
-                    value={String(r.choice)}
-                    options={[...r.hits.map((h, k) => ({ value: String(k), label: `${h.name} · ${h.address}` })), { value: NAME, label: t('bulk.byName') }, { value: SKIP, label: t('bulk.skip') }]}
-                    onChange={(v) => setChoice(i, v === NAME || v === SKIP ? v : Number(v))}
-                  />
-                </VStack>
-              ))}
-            </VStack>
+            <Card>
+              <VStack gap={3}>
+                {rows.map((r, i) => (
+                  <VStack key={i} gap={1}>
+                    {i > 0 && <Divider />}
+                    <Text type="label">{r.term}</Text>
+                    <Selector
+                      label={t('bulk.pickAddress')}
+                      isLabelHidden
+                      value={String(r.choice)}
+                      options={[...r.hits.map((h, k) => ({ value: String(k), label: `${h.name} · ${h.address}` })), { value: NAME, label: t('bulk.byName') }, { value: SKIP, label: t('bulk.skip') }]}
+                      onChange={(v) => setChoice(i, v === NAME || v === SKIP ? v : Number(v))}
+                    />
+                  </VStack>
+                ))}
+              </VStack>
+            </Card>
           </>
         )}
-        <HStack gap={2} hAlign="end">
+        <HStack gap={2}>
           <Button label={t('common.cancel')} variant="secondary" onClick={onClose} />
-          <Button
-            label={t('bulk.addN', { n: selected.length })}
-            variant="primary"
-            isDisabled={selected.length === 0}
-            onClick={() => {
-              onAdd(selected);
-              onClose();
-            }}
-          />
+          <StackItem size="fill">
+            <Button
+              label={t('bulk.addN', { n: selected.length })}
+              variant="primary"
+              width="100%"
+              isDisabled={selected.length === 0}
+              onClick={() => {
+                onAdd(selected);
+                onClose();
+              }}
+            />
+          </StackItem>
         </HStack>
       </VStack>
     </Dialog>

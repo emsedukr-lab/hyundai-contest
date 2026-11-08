@@ -3,7 +3,7 @@ import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { Card } from '@astryxdesign/core/Card';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
-import { HStack, VStack } from '@astryxdesign/core/Stack';
+import { HStack, StackItem, VStack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
 import { useMemo, useState } from 'react';
 import { hhmm, timeline, type Home, type Trip } from '@tteonaljido/shared';
@@ -53,9 +53,11 @@ export function RecommendDialog({
       {lodgingStep ? (
         <VStack gap={4}>
           <Banner status="info" title={t('recommend.lodging.title')} description={t('recommend.lodging.body', { days: gaps.map((d) => t('common.day', { day: d })).join(', ') })} />
-          <HStack gap={2} hAlign="between">
+          <HStack gap={2}>
             <Button label={t('recommend.lodging.inputFirst')} variant="secondary" onClick={close} />
-            <Button label={t('recommend.lodging.proceed')} variant="primary" onClick={() => setProceeded(true)} />
+            <StackItem size="fill">
+              <Button label={t('recommend.lodging.proceed')} variant="primary" width="100%" onClick={() => setProceeded(true)} />
+            </StackItem>
           </HStack>
         </VStack>
       ) : (
@@ -109,17 +111,20 @@ export function RecommendDialog({
             })}
           </VStack>
 
-          <HStack gap={2} hAlign="between">
+          <HStack gap={2}>
             <Button label={t('common.cancel')} variant="secondary" onClick={close} />
-            <Button
-              label={t('recommend.apply')}
-              variant="primary"
-              isDisabled={!diff.changed}
-              onClick={() => {
-                onApply(proposed);
-                close();
-              }}
-            />
+            <StackItem size="fill">
+              <Button
+                label={t('recommend.apply')}
+                variant="primary"
+                width="100%"
+                isDisabled={!diff.changed}
+                onClick={() => {
+                  onApply(proposed);
+                  close();
+                }}
+              />
+            </StackItem>
           </HStack>
         </VStack>
       )}

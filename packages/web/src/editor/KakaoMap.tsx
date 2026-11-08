@@ -42,7 +42,7 @@ export function KakaoMap({ plan, home, dayIndex }: { plan: Trip; home: Home | nu
             const el = document.createElement('div');
             el.textContent = String(p.n);
             el.title = p.label;
-            el.setAttribute('style', 'display:flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:999px;background:#276EF1;color:#fff;font:700 12px/1 sans-serif;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.4);cursor:pointer');
+            el.setAttribute('style', 'display:flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:999px;background:#3182F6;color:#fff;font:700 12px/1 sans-serif;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.4);cursor:pointer');
             let open = false;
             el.addEventListener('click', () => ((open = !open) ? info.open(map) : info.close()));
             new kakao.maps.CustomOverlay({ position: ll, content: el, xAnchor: 0.5, yAnchor: 0.5, map, zIndex: 3 });
@@ -52,7 +52,7 @@ export function KakaoMap({ plan, home, dayIndex }: { plan: Trip; home: Home | nu
             kakao.maps.event.addListener(marker, 'click', () => info.open(map, marker));
           }
         }
-        if (path.length > 1) new kakao.maps.Polyline({ path, strokeWeight: 4, strokeColor: '#276EF1', strokeOpacity: 0.85, strokeStyle: 'solid', map });
+        if (path.length > 1) new kakao.maps.Polyline({ path, strokeWeight: 4, strokeColor: '#3182F6', strokeOpacity: 0.85, strokeStyle: 'solid', map });
         // Fit to the day's stops (≥2) so a far-away home/lodging anchor doesn't zoom the whole region out and overlap them.
         const stops = coords.filter((p) => p.kind === 'stop');
         const base = stops.length >= 2 ? stops : coords;

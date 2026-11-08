@@ -11,6 +11,7 @@ import { Text } from '@astryxdesign/core/Text';
 import { TextArea } from '@astryxdesign/core/TextArea';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import type { Place } from '@tteonaljido/shared';
+import { Card } from '../components/toss/Card';
 import { favorites } from '../lib/db';
 import { asNewPlace, favoriteId, toFavorite } from '../lib/favorites';
 import type { FavoritePlace } from '../lib/favorites';
@@ -190,6 +191,7 @@ export function PlaceSearch({ onPick, onPickMany, label = t('place.search'), lod
       {note && q.trim() && <Button label={t('place.search.addByName', { query: q.trim().slice(0, 20) })} variant="primary" size="sm" onClick={addByName} />}
       {hits && hits.length === 0 && <Banner status="info" title={t('place.search.noResults')} />}
       {hits && hits.length > 0 && (
+        <Card pad={0}>
         <List hasDividers>
           {hits.map((h) => (
             <ListItem
@@ -216,6 +218,7 @@ export function PlaceSearch({ onPick, onPickMany, label = t('place.search'), lod
             />
           ))}
         </List>
+        </Card>
       )}
       <HStack gap={2} wrap="wrap">
         <Button label={unavailable ? t('place.manual.full') : t('place.manual.open')} variant="ghost" size="sm" onClick={() => setManual(true)} />
@@ -259,11 +262,13 @@ function ManualPlaceDialog({ isOpen, onClose, onSave, lodgingOnly }: { isOpen: b
           <TextInput label={t('place.manual.address')} value={address} onChange={setAddress} isOptional />
           {!lodgingOnly && <Selector label={t('common.type')} options={CATEGORY_OPTIONS} value={category} onChange={(v) => setCategory(v as Place['category'])} />}
         </FormLayout>
-        <HStack gap={2} hAlign="end">
+        <HStack gap={2}>
           <Button label={t('common.cancel')} variant="secondary" onClick={onClose} />
+          <StackItem size="fill">
           <Button
             label={t('place.manual.add')}
             variant="primary"
+            width="100%"
             isDisabled={!valid}
             onClick={() =>
               onSave({
@@ -278,6 +283,7 @@ function ManualPlaceDialog({ isOpen, onClose, onSave, lodgingOnly }: { isOpen: b
               })
             }
           />
+          </StackItem>
         </HStack>
       </VStack>
     </Dialog>
