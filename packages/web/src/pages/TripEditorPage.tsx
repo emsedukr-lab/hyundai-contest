@@ -25,7 +25,7 @@ import { VisitDialog } from '../editor/VisitDialog';
 import { trips } from '../lib/db';
 import { t } from '../lib/i18n';
 import { navigate } from '../lib/router';
-import { REASON_LABEL, addPlace, emptyPlan, newDoc, nightsLabel, planWarnings, relinkLegs, rememberLegs, savePlan, setPeriod, unassignedVisits, updateVisit, type LegBook, type TripDoc } from '../lib/trips';
+import { REASON_LABEL, addPlace, emptyPlan, newDoc, nightsLabel, nowIso, planWarnings, relinkLegs, rememberLegs, savePlan, setPeriod, unassignedVisits, updateVisit, type LegBook, type TripDoc } from '../lib/trips';
 
 type ISOTime = Parameters<NonNullable<Parameters<typeof TimeInput>[0]['onChange']>>[0];
 type Range = NonNullable<Parameters<typeof DateRangeInput>[0]['value']>;
@@ -79,6 +79,14 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
     setDirty(false);
     setSaved(next.revision === doc.revision && tripId ? t('editor.noChanges') : t('editor.saved', { revision: next.revision }));
     if (!tripId) navigate(`/trips/${next.tripId}`, true);
+  };
+
+  /** Makes a copy of the current trip (places, days, home and all) as a new trip and opens it. The original is untouched. */
+  const duplicate = async () => {
+    const clone: Trip = { ...structuredClone(plan), tripId: crypto.randomUUID(), name: t('trip.copyName', { name: plan.name }).slice(0, 60), revision: 1, updatedAt: nowIso() };
+    const nd = await newDoc(clone, home);
+    await trips.put(nd);
+    navigate(`/trips/${nd.tripId}`);
   };
 
   return (
@@ -209,6 +217,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
 
             <Divider />
             <HStack hAlign="end" gap={2}>
+              <Button label={t('trip.duplicate')} variant="ghost" size="sm" onClick={() => void duplicate()} />
               <Button label={t('share.button')} variant="ghost" size="sm" onClick={() => setSharing(true)} />
               <Button label={t('recommend.button')} variant="secondary" size="sm" onClick={() => setRecommending(true)} />
             </HStack>

@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
+import { IconButton } from '@astryxdesign/core/IconButton';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
 import { List, ListItem } from '@astryxdesign/core/List';
 import { NumberInput } from '@astryxdesign/core/NumberInput';
@@ -10,6 +11,9 @@ import { HStack, StackItem, VStack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import type { Place } from '@tteonaljido/shared';
+import { favorites } from '../lib/db';
+import { asNewPlace, favoriteId, toFavorite } from '../lib/favorites';
+import type { FavoritePlace } from '../lib/favorites';
 import { t } from '../lib/i18n';
 import { ApiError, searchPlaces, type PlaceHit } from '../lib/pairing';
 
@@ -43,6 +47,21 @@ export function PlaceSearch({ onPick, label = t('place.search'), lodgingOnly = f
   const [note, setNote] = useState<string | null>(null);
   const [unavailable, setUnavailable] = useState(false);
   const [manual, setManual] = useState(false);
+  const [favs, setFavs] = useState<FavoritePlace[]>([]);
+  const [manageFavs, setManageFavs] = useState(false);
+
+  useEffect(() => {
+    void favorites.all().then(setFavs);
+  }, []);
+  const reloadFavs = async () => setFavs(await favorites.all());
+  const isFav = (p: NewPlace) => favs.some((f) => f.id === favoriteId(p));
+  const toggleFav = async (p: NewPlace) => {
+    if (isFav(p)) await favorites.remove(favoriteId(p));
+    else await favorites.put(toFavorite(p));
+    await reloadFavs();
+  };
+  /** Add respecting the lodging-only context (e.g. when picking a night's lodging). */
+  const pick = (p: NewPlace) => onPick(lodgingOnly ? { ...p, category: 'LODGING' } : p);
 
   /** Adds a place by name only; the car finds its exact location in the Hyundai navigation. */
   const addByName = () => {
@@ -71,6 +90,25 @@ export function PlaceSearch({ onPick, label = t('place.search'), lodgingOnly = f
 
   return (
     <VStack gap={2}>
+      {favs.length > 0 && (
+        <VStack gap={1}>
+          <HStack gap={2} vAlign="center">
+            <StackItem size="fill">
+              <Text type="label">{t('favorites.title')}</Text>
+            </StackItem>
+            <Button label={manageFavs ? t('favorites.done') : t('favorites.manage')} variant="ghost" size="sm" onClick={() => setManageFavs((m) => !m)} />
+          </HStack>
+          <HStack gap={2} wrap="wrap">
+            {favs.map((f) =>
+              manageFavs ? (
+                <Button key={f.id} label={`${f.name}  ✕`} variant="secondary" size="sm" onClick={() => void (async () => { await favorites.remove(f.id); await reloadFavs(); })()} />
+              ) : (
+                <Button key={f.id} label={f.name} variant="secondary" size="sm" onClick={() => pick(asNewPlace(f))} />
+              ),
+            )}
+          </HStack>
+        </VStack>
+      )}
       <HStack gap={2} vAlign="end">
         <StackItem size="fill">
           <TextInput label={label} value={q} onChange={setQ} onEnter={run} placeholder={t('place.search.placeholder')} hasClear />
@@ -87,6 +125,18 @@ export function PlaceSearch({ onPick, label = t('place.search'), lodgingOnly = f
               key={h.externalId}
               label={h.name}
               description={`${CATEGORY_LABEL[h.category]} · ${h.address}`}
+              endContent={
+                <IconButton
+                  label={isFav(fromHit(h)) ? t('favorites.remove') : t('favorites.add')}
+                  icon={<span>{isFav(fromHit(h)) ? '★' : '☆'}</span>}
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    void toggleFav(fromHit(h));
+                  }}
+                />
+              }
               onClick={() => {
                 onPick({ ...fromHit(h), category: lodgingOnly ? 'LODGING' : h.category });
                 setHits(null);
