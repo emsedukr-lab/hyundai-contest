@@ -9,6 +9,7 @@ import { NumberInput } from '@astryxdesign/core/NumberInput';
 import { Selector } from '@astryxdesign/core/Selector';
 import { HStack, StackItem, VStack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
+import { TextArea } from '@astryxdesign/core/TextArea';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import type { Place } from '@tteonaljido/shared';
 import { favorites } from '../lib/db';
@@ -16,6 +17,7 @@ import { asNewPlace, favoriteId, toFavorite } from '../lib/favorites';
 import type { FavoritePlace } from '../lib/favorites';
 import { t } from '../lib/i18n';
 import { ApiError, searchPlaces, type PlaceHit } from '../lib/pairing';
+import { parsePastedPlace } from '../lib/placeShare';
 
 export const CATEGORY_OPTIONS = [
   { value: 'SIGHT', label: t('place.category.sight') },
@@ -49,6 +51,8 @@ export function PlaceSearch({ onPick, label = t('place.search'), lodgingOnly = f
   const [manual, setManual] = useState(false);
   const [favs, setFavs] = useState<FavoritePlace[]>([]);
   const [manageFavs, setManageFavs] = useState(false);
+  const [showPaste, setShowPaste] = useState(false);
+  const [paste, setPaste] = useState('');
 
   useEffect(() => {
     void favorites.all().then(setFavs);
@@ -72,12 +76,13 @@ export function PlaceSearch({ onPick, label = t('place.search'), lodgingOnly = f
     setNote(null);
   };
 
-  const run = async () => {
-    if (!q.trim()) return;
+  const run = async (query?: string) => {
+    const term = (query ?? q).trim();
+    if (!term) return;
     setBusy(true);
     setNote(null);
     try {
-      setHits(await searchPlaces(q.trim()));
+      setHits(await searchPlaces(term));
     } catch (e) {
       setHits(null);
       const off = e instanceof ApiError && e.status === 503;
@@ -86,6 +91,30 @@ export function PlaceSearch({ onPick, label = t('place.search'), lodgingOnly = f
     } finally {
       setBusy(false);
     }
+  };
+
+  /** Best-effort: pull the copied map text straight from the clipboard (falls back to manual paste if blocked). */
+  const readClipboard = async () => {
+    try {
+      const txt = await navigator.clipboard.readText();
+      if (txt.trim()) setPaste(txt);
+      else setNote(t('place.paste.clipboardEmpty'));
+    } catch {
+      setNote(t('place.paste.clipboardFail'));
+    }
+  };
+
+  /** Turn pasted Naver/Kakao "share → copy" text into a search: extract the place name, then run the normal search. */
+  const runPaste = async () => {
+    const { term } = parsePastedPlace(paste);
+    if (!term) {
+      setNote(t('place.paste.noName'));
+      return;
+    }
+    setQ(term);
+    setShowPaste(false);
+    setPaste('');
+    await run(term);
   };
 
   return (
@@ -111,9 +140,9 @@ export function PlaceSearch({ onPick, label = t('place.search'), lodgingOnly = f
       )}
       <HStack gap={2} vAlign="end">
         <StackItem size="fill">
-          <TextInput label={label} value={q} onChange={setQ} onEnter={run} placeholder={t('place.search.placeholder')} hasClear />
+          <TextInput label={label} value={q} onChange={setQ} onEnter={() => run()} placeholder={t('place.search.placeholder')} hasClear />
         </StackItem>
-        <Button label={t('place.search.action')} variant="secondary" isLoading={busy} onClick={run} />
+        <Button label={t('place.search.action')} variant="secondary" isLoading={busy} onClick={() => run()} />
       </HStack>
       {note && <Banner status="info" title={note} />}
       {note && q.trim() && <Button label={t('place.search.addByName', { query: q.trim().slice(0, 20) })} variant="primary" size="sm" onClick={addByName} />}
@@ -146,9 +175,19 @@ export function PlaceSearch({ onPick, label = t('place.search'), lodgingOnly = f
           ))}
         </List>
       )}
-      <HStack gap={2}>
+      <HStack gap={2} wrap="wrap">
         <Button label={unavailable ? t('place.manual.full') : t('place.manual.open')} variant="ghost" size="sm" onClick={() => setManual(true)} />
+        <Button label={t('place.paste.open')} variant="ghost" size="sm" onClick={() => setShowPaste((v) => !v)} />
       </HStack>
+      {showPaste && (
+        <VStack gap={2}>
+          <TextArea label={t('place.paste.label')} value={paste} onChange={setPaste} placeholder={t('place.paste.placeholder')} rows={3} isOptional />
+          <HStack gap={2}>
+            <Button label={t('place.paste.fromClipboard')} variant="ghost" size="sm" onClick={() => void readClipboard()} />
+            <Button label={t('place.paste.find')} variant="primary" size="sm" isDisabled={!paste.trim()} onClick={() => void runPaste()} />
+          </HStack>
+        </VStack>
+      )}
       <ManualPlaceDialog isOpen={manual} lodgingOnly={lodgingOnly} onClose={() => setManual(false)} onSave={(p) => (onPick(p), setManual(false))} />
     </VStack>
   );

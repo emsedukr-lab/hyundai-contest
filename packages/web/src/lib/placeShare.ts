@@ -37,3 +37,28 @@ export function sharedParamsFromSearch(search: string): SharedParams {
   const q = new URLSearchParams(search);
   return { title: q.get('title'), text: q.get('text'), url: q.get('url') };
 }
+
+/** Lines that are only a map-app name, not the place (so they are skipped when reading a pasted share). */
+const MAP_APP_LABEL = /^(카카오\s*맵|네이버\s*지도|구글\s*지도|티맵|naver\s*map|kakao\s*map|google\s*maps|tmap)$/i;
+
+/**
+ * Pulls a place name (and any link) out of text copied from a map app's "share → copy", so the user can paste it on
+ * any device — not only the installed PWA that the GET share target needs. Handles the common Naver/Kakao shapes:
+ * "이름\nhttps://naver.me/…", "[카카오맵] 이름 http://kko.kl/…", a bare "이름 https://…" line, and app-label header
+ * lines. URLs are stripped out of the name; the link is kept for display only. Coordinates are still resolved by the
+ * existing Kakao keyword search (no provider URL is fetched — that would need an external call and break the CSP).
+ */
+export function parsePastedPlace(text: string): { term: string | null; url: string | null } {
+  const urlMatch = text.match(/https?:\/\/\S+/);
+  const url = urlMatch ? urlMatch[0].trim() : null;
+  const lines = text
+    .split(/\r?\n/)
+    .map((l) => l.replace(/https?:\/\/\S+/g, '').replace(/\s+/g, ' ').trim())
+    .filter(Boolean);
+  for (const line of lines) {
+    const cleaned = line.replace(/^\[[^\]]*\]\s*/, '').trim(); // drop a leading "[카카오맵]" etc.
+    if (!cleaned || MAP_APP_LABEL.test(cleaned)) continue;
+    return { term: cleaned.slice(0, 60), url };
+  }
+  return { term: null, url };
+}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { sharedParamsFromSearch, sharedPlaceTerm, sharedUrl } from './placeShare';
+import { parsePastedPlace, sharedParamsFromSearch, sharedPlaceTerm, sharedUrl } from './placeShare';
 
 describe('지도앱 공유 수집 파싱', () => {
   it('제목이 있으면 제목을 검색어로', () => {
@@ -27,5 +27,36 @@ describe('지도앱 공유 수집 파싱', () => {
     expect(p.title).toBe('경포호');
     expect(p.text).toBe('hi');
     expect(p.url).toBe('https://naver.me/a');
+  });
+});
+
+describe('지도앱 복사 붙여넣기 파싱 (parsePastedPlace)', () => {
+  it('네이버: 이름 줄 + 링크 줄', () => {
+    const r = parsePastedPlace('경포호\nhttps://naver.me/abc');
+    expect(r.term).toBe('경포호');
+    expect(r.url).toBe('https://naver.me/abc');
+  });
+
+  it('카카오: [카카오맵] 접두사와 한 줄에 섞인 링크를 걷어낸다', () => {
+    expect(parsePastedPlace('[카카오맵] 테라로사 커피공장 강릉본점 https://kko.kl/xyz').term).toBe('테라로사 커피공장 강릉본점');
+  });
+
+  it('한 줄에 이름과 링크가 함께 있어도 이름만', () => {
+    expect(parsePastedPlace('안목해변 https://naver.me/x 추천!').term).toBe('안목해변 추천!');
+  });
+
+  it('앱 이름만 있는 머리글 줄은 건너뛴다', () => {
+    expect(parsePastedPlace('네이버 지도\n경포대\nhttps://naver.me/z').term).toBe('경포대');
+    expect(parsePastedPlace('카카오맵\n강문해변').term).toBe('강문해변');
+  });
+
+  it('링크만 있고 이름이 없으면 term은 null, url은 반환', () => {
+    const r = parsePastedPlace('https://naver.me/onlylink');
+    expect(r.term).toBeNull();
+    expect(r.url).toBe('https://naver.me/onlylink');
+  });
+
+  it('빈 문자열이면 둘 다 null', () => {
+    expect(parsePastedPlace('   ')).toEqual({ term: null, url: null });
   });
 });
