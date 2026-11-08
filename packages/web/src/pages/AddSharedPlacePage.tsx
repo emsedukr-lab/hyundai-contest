@@ -16,6 +16,7 @@ import { t } from '../lib/i18n';
 import { ApiError, resolvePlace, searchPlaces, type PlaceHit } from '../lib/pairing';
 import { sharedParamsFromSearch, sharedPlaceTerm, sharedUrl } from '../lib/placeShare';
 import { navigate } from '../lib/router';
+import { defaultHome } from '../lib/settings';
 import { addPlace, emptyPlan, newDoc, removePlace, savePlan, type TripDoc } from '../lib/trips';
 
 const NEW = 'new';
@@ -86,16 +87,16 @@ export function AddSharedPlacePage() {
         created = false;
         prevDoc = got;
       } else {
-        doc = await newDoc(emptyPlan());
+        doc = await newDoc(emptyPlan(), defaultHome());
         created = true;
         prevDoc = null;
       }
     } else if ('collection' in intent) {
-      doc = await newDoc({ ...emptyPlan(), name: t('add.collectionName') });
+      doc = await newDoc({ ...emptyPlan(), name: t('add.collectionName') }, defaultHome());
       created = true;
       prevDoc = null;
     } else {
-      doc = await newDoc(emptyPlan());
+      doc = await newDoc(emptyPlan(), defaultHome());
       created = true;
       prevDoc = null;
     }

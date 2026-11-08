@@ -29,6 +29,7 @@ import { VisitDialog } from '../editor/VisitDialog';
 import { trips } from '../lib/db';
 import { t } from '../lib/i18n';
 import { navigate } from '../lib/router';
+import { defaultHome } from '../lib/settings';
 import { REASON_LABEL, addPlace, emptyPlan, newDoc, nightsLabel, nowIso, planWarnings, relinkLegs, rememberLegs, savePlan, setPeriod, unassignedVisits, updateVisit, type LegBook, type TripDoc } from '../lib/trips';
 
 type ISOTime = Parameters<NonNullable<Parameters<typeof TimeInput>[0]['onChange']>>[0];
@@ -58,7 +59,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
 
   useEffect(() => {
     void (async () => {
-      const d = tripId ? await trips.get(tripId) : await newDoc(emptyPlan());
+      const d = tripId ? await trips.get(tripId) : await newDoc(emptyPlan(), defaultHome()); // a new trip starts with the home set in 설정
       if (!d) return navigate('/', true);
       setDoc(d);
       book.current = new Map();
@@ -78,6 +79,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
     setDirty(true);
     setSaved(null);
   };
+  const savedHome = defaultHome(); // the home set in 설정, offered to a trip that has none
   const endpointOptions = [{ value: 'HOME', label: t('common.home') }, ...plan.places.map((p) => ({ value: p.placeRef, label: p.name }))];
 
   const save = async () => {
@@ -233,6 +235,12 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
                     </StackItem>
                   </HStack>
                 ) : (
+                  <VStack gap={3}>
+                  {savedHome && (
+                    <div>
+                      <Button label={t('settings.home.apply')} variant="secondary" size="md" onClick={() => (setHome(savedHome), setDirty(true))} />
+                    </div>
+                  )}
                   <PlaceSearch
                     label={t('editor.home.search')}
                     requireCoords
@@ -243,6 +251,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
                       setDirty(true);
                     }}
                   />
+                  </VStack>
                 )}
               </VStack>
             </Section>

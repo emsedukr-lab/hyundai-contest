@@ -465,7 +465,7 @@ const ko = {
   'nav.trips': '여행',
   'nav.places': '장소',
   'nav.car': '차량',
-  'nav.more': '전체',
+  'nav.settings': '설정',
   'trips.create': '새 여행 만들기',
   'places.intro': '지도 앱에서 본 곳을 바로 여행에 담아요',
   'places.howTo': '지도 앱에서 담기',
@@ -497,6 +497,13 @@ const ko = {
   'editor.tabs': '편집 구역',
   'editor.more': '더보기',
   'editor.leave.confirm': '저장하지 않은 변경이 있어요 · 나가면 사라져요',
+  'settings.defaults': '새 여행 기본값',
+  'settings.home.unset': '설정하지 않았어요',
+  'settings.home.description': '여기서 정한 집 주소는 새 여행에 자동으로 들어가요 · 이 휴대폰에만 저장되고, 차로 보낼 때 포함할지는 매번 직접 골라요',
+  'settings.home.saved': '집 주소를 저장했어요',
+  'settings.home.cleared': '집 주소를 지웠어요',
+  'settings.home.change': '다른 주소 검색',
+  'settings.home.apply': '설정한 집 주소 넣기',
 } as const satisfies Record<string, string>;
 
 export type Key = keyof typeof ko;
@@ -960,7 +967,7 @@ const en: Record<Key, string> = {
   'nav.trips': 'Trips',
   'nav.places': 'Places',
   'nav.car': 'Car',
-  'nav.more': 'More',
+  'nav.settings': 'Settings',
   'trips.create': 'Create a trip',
   'places.intro': 'Put places you find in map apps straight into a trip',
   'places.howTo': 'Save from a map app',
@@ -992,6 +999,13 @@ const en: Record<Key, string> = {
   'editor.tabs': 'Editor sections',
   'editor.more': 'More actions',
   'editor.leave.confirm': 'You have unsaved changes · they will be lost if you leave',
+  'settings.defaults': 'Defaults for new trips',
+  'settings.home.unset': 'Not set',
+  'settings.home.description': 'The home address set here goes into new trips automatically · it stays on this phone, and you choose whether to send it to the car each time',
+  'settings.home.saved': 'Home address saved',
+  'settings.home.cleared': 'Home address removed',
+  'settings.home.change': 'Search another address',
+  'settings.home.apply': 'Use the home address from Settings',
 };
 
 /** Both tables, for tests. */

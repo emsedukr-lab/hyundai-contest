@@ -60,18 +60,28 @@ export function CarIcon({ filled }: { filled?: boolean }) {
   );
 }
 
-/** 전체 — four tiles. */
-export function MenuIcon({ filled }: { filled?: boolean }) {
-  const tiles = [
-    [4, 4],
-    [13, 4],
-    [4, 13],
-    [13, 13],
-  ];
+/** 설정 — a gear (outline when inactive, filled when active). */
+export function GearIcon({ filled }: { filled?: boolean }) {
+  // eight teeth around a ring, every 45°
+  const teeth = Array.from({ length: 8 }, (_, i) => {
+    const a = (i * Math.PI) / 4;
+    return [12 + Math.cos(a) * 7.1, 12 + Math.sin(a) * 7.1, 12 + Math.cos(a) * 9.1, 12 + Math.sin(a) * 9.1];
+  });
   return (
     <svg {...base}>
-      {tiles.map(([x, y]) =>
-        filled ? <rect key={`${x}${y}`} x={x} y={y} width="7" height="7" rx="2" fill="currentColor" /> : <rect key={`${x}${y}`} x={x + 0.75} y={y + 0.75} width="5.5" height="5.5" rx="1.75" {...stroke} />,
+      {teeth.map(([x1, y1, x2, y2], i) => (
+        <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="currentColor" strokeWidth={filled ? 3 : 2.25} strokeLinecap="round" />
+      ))}
+      {filled ? (
+        <>
+          <circle cx="12" cy="12" r="7.25" fill="currentColor" />
+          <circle cx="12" cy="12" r="2.75" fill={cut} />
+        </>
+      ) : (
+        <>
+          <circle cx="12" cy="12" r="6.5" {...stroke} />
+          <circle cx="12" cy="12" r="2.5" {...stroke} />
+        </>
       )}
     </svg>
   );
@@ -144,3 +154,5 @@ export function StarIcon({ filled }: { filled?: boolean }) {
   const d = 'm12 3.6 2.6 5.3 5.8.85-4.2 4.1 1 5.8-5.2-2.75-5.2 2.75 1-5.8-4.2-4.1 5.8-.85L12 3.6Z';
   return <svg {...base}>{filled ? <path d={d} fill="currentColor" stroke="currentColor" strokeWidth={1.5} strokeLinejoin="round" /> : <path d={d} {...stroke} />}</svg>;
 }
+/** Home (the home address). */
+export const HomeIcon = () => <Outline d="M4 10.5 12 4l8 6.5V19a1.5 1.5 0 0 1-1.5 1.5H14.5V15h-5v5.5H5.5A1.5 1.5 0 0 1 4 19v-8.5Z" />;

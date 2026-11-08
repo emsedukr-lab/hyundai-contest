@@ -1,16 +1,16 @@
 import type { ComponentType } from 'react';
 import { t } from '../../lib/i18n';
 import { navigate } from '../../lib/router';
-import { CarIcon, MapIcon, MenuIcon, PinIcon } from './icons';
+import { CarIcon, GearIcon, MapIcon, PinIcon } from './icons';
 
-type NavLabel = 'nav.trips' | 'nav.places' | 'nav.car' | 'nav.more';
+type NavLabel = 'nav.trips' | 'nav.places' | 'nav.car' | 'nav.settings';
 
 /** The four destinations (toss.md tab-bar allows 2–5). Order = importance: trips first, settings last. */
 export const TABS: Array<{ path: string; label: NavLabel; Icon: ComponentType<{ filled?: boolean }> }> = [
   { path: '/', label: 'nav.trips', Icon: MapIcon },
   { path: '/places', label: 'nav.places', Icon: PinIcon },
   { path: '/car', label: 'nav.car', Icon: CarIcon },
-  { path: '/more', label: 'nav.more', Icon: MenuIcon },
+  { path: '/settings', label: 'nav.settings', Icon: GearIcon },
 ];
 
 /**

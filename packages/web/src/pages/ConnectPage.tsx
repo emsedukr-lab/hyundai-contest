@@ -19,6 +19,7 @@ import { codeLabel, periodLabel } from '../lib/format';
 import { t } from '../lib/i18n';
 import { ApiError, cancel, claim, confirmCode, finish, openPairing, send, status, supportsWebCrypto } from '../lib/pairing';
 import { navigate } from '../lib/router';
+import { defaultHome } from '../lib/settings';
 import { newDoc, nightsLabel, nowIso, planWarnings, unassignedVisits, type TripDoc } from '../lib/trips';
 
 type Stage = 'loading' | 'invalid' | 'unsupported' | 'intro' | 'code' | 'pick' | 'consent' | 'approve' | 'status';
@@ -212,7 +213,7 @@ export function ConnectPage() {
   };
 
   const addSample = async () => {
-    const d = await newDoc({ ...sampleTrip(nowIso()), tripId: crypto.randomUUID() });
+    const d = await newDoc({ ...sampleTrip(nowIso()), tripId: crypto.randomUUID() }, defaultHome());
     await trips.put(d);
     setDocs(await trips.all());
     setPicked(d.tripId);

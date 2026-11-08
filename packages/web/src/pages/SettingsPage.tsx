@@ -4,20 +4,21 @@ import { Button } from '@astryxdesign/core/Button';
 import { FileInput } from '@astryxdesign/core/FileInput';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { useInstallPrompt } from '../components/InstallHint';
-import { DownloadIcon, InfoIcon, PhoneIcon, ShieldIcon, UploadIcon } from '../components/shell/icons';
+import { DownloadIcon, HomeIcon, InfoIcon, PhoneIcon, ShieldIcon, UploadIcon } from '../components/shell/icons';
 import { Row, Section } from '../components/shell/rows';
 import { TabScreen } from '../components/shell/Screens';
 import { trips } from '../lib/db';
 import { t } from '../lib/i18n';
 import { navigate } from '../lib/router';
+import { defaultHome } from '../lib/settings';
 import { docFromShare, importShare, isShareFile } from '../lib/share';
 import { newDoc, nowIso, type TripDoc } from '../lib/trips';
 
 /**
- * 전체 tab: trip data (backup out, backup or a friend's share file in) and the app (install, privacy, about).
- * The import logic is the one that used to sit on the trips screen, moved as-is.
+ * 설정 tab: defaults for new trips (the home address), trip data (backup out, backup or a friend's share file in) and
+ * the app (install, privacy, about). The import logic is the one that used to sit on the trips screen, moved as-is.
  */
-export function MorePage() {
+export function SettingsPage() {
   const [docs, setDocs] = useState<TripDoc[]>([]);
   const [message, setMessage] = useState<string | null>(null);
   const [showImport, setShowImport] = useState(false);
@@ -25,6 +26,7 @@ export function MorePage() {
   const [shareText, setShareText] = useState<string | null>(null);
   const [sharePass, setSharePass] = useState('');
   const install = useInstallPrompt();
+  const [home] = useState(defaultHome);
 
   const reload = async () => setDocs(await trips.all());
   useEffect(() => void reload(), []);
@@ -75,12 +77,23 @@ export function MorePage() {
   };
 
   return (
-    <TabScreen path="/more" title={t('nav.more')}>
+    <TabScreen path="/settings" title={t('nav.settings')}>
       {message && (
         <div className="tn-pad" style={{ paddingTop: 8 }}>
           <Banner status="info" title={message} isDismissable onDismiss={() => setMessage(null)} />
         </div>
       )}
+
+      <Section title={t('settings.defaults')}>
+        <Row
+          href="/settings/home"
+          onClick={() => navigate('/settings/home')}
+          lead={<HomeIcon />}
+          title={t('common.homeAddress')}
+          subtitle={home ? home.address : t('settings.home.unset')}
+          chevron
+        />
+      </Section>
 
       <Section title={t('more.data')}>
         <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>

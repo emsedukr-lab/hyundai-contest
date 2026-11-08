@@ -1,10 +1,11 @@
 import { AddSharedPlacePage } from './pages/AddSharedPlacePage';
 import { CarPage } from './pages/CarPage';
 import { ConnectPage } from './pages/ConnectPage';
+import { HomeAddressPage } from './pages/HomeAddressPage';
 import { HomePage } from './pages/HomePage';
-import { MorePage } from './pages/MorePage';
 import { PlacesPage } from './pages/PlacesPage';
 import { PrivacyPage } from './pages/PrivacyPage';
+import { SettingsPage } from './pages/SettingsPage';
 import { TripEditorPage } from './pages/TripEditorPage';
 import { usePath } from './lib/router';
 
@@ -18,6 +19,7 @@ export default function App() {
   // Push screens. The share target (/add) and the car QR (/c#…) land here directly.
   if (path === '/c') return <ConnectPage />;
   if (path === '/privacy') return <PrivacyPage />;
+  if (path === '/settings/home') return <HomeAddressPage />;
   if (path === '/add') return <AddSharedPlacePage />;
   // Keyed by trip so moving between trips (duplicate, save of a new trip) starts the editor fresh: no unsaved flag,
   // banners, open dialog or travel-time memory carried over from the previous trip.
@@ -28,6 +30,7 @@ export default function App() {
   // Tab roots.
   if (path === '/places') return <PlacesPage />;
   if (path === '/car') return <CarPage />;
-  if (path === '/more') return <MorePage />;
+  // '/more' was this tab's first address; keep it working.
+  if (path === '/settings' || path === '/more') return <SettingsPage />;
   return <HomePage />;
 }
