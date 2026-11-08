@@ -6,7 +6,7 @@ import { Button } from '@astryxdesign/core/Button';
 import { DropdownMenu } from '@astryxdesign/core/DropdownMenu';
 import { Spinner } from '@astryxdesign/core/Spinner';
 import { Tab, TabList } from '@astryxdesign/core/TabList';
-import { dayIssues, type Trip } from '@tteonaljido/shared';
+import { dayIssues, type Home, type Trip } from '@tteonaljido/shared';
 import { MoreIcon, PencilIcon } from '../components/shell/icons';
 import { PushScreen } from '../components/shell/Screens';
 import { DayTimeline } from '../editor/DayTimeline';
@@ -19,7 +19,7 @@ import { SendSheet } from '../editor/sheets/SendSheet';
 import { StartSheet } from '../editor/sheets/StartSheet';
 import { TripInfoPanel } from '../editor/TripInfoPanel';
 import { VisitDialog } from '../editor/VisitDialog';
-import { trips } from '../lib/db';
+import { TRIPS_CHANGED, trips } from '../lib/db';
 import { shortDate } from '../lib/format';
 import { t } from '../lib/i18n';
 import { navigate } from '../lib/router';
@@ -29,6 +29,17 @@ import '../editor/timeline.css';
 
 /** Which bottom sheet is open (one at a time; dialogs such as place details may stack above it). */
 type SheetState = { kind: 'start' } | { kind: 'leg'; k: number } | { kind: 'end' } | { kind: 'place' } | { kind: 'send' } | { kind: 'map' } | null;
+
+/** The plan as stored and shared: a blank name becomes the default one (the transfer needs a name). */
+const named = (p: Trip): Trip => (p.name.trim() ? p : { ...p, name: t('trip.defaultName') });
+
+/** Writes the trip to this phone (a new revision only when its content changed) and tells listening lists. */
+async function persist(doc: TripDoc, plan: Trip, home: Home | null): Promise<TripDoc> {
+  const next = await savePlan(doc, named(plan), home);
+  await trips.put(next);
+  window.dispatchEvent(new Event(TRIPS_CHANGED));
+  return next;
+}
 
 /** 'MM/DD–MM/DD' for the title line, from the same short labels as the day tabs (weekday dropped). */
 const shortPeriod = (start: string, end: string) => {
@@ -60,6 +71,23 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
   /** Travel times typed this session by pair of places, so reordering does not throw them away. */
   const book = useRef<LegBook>(new Map());
   const tabsRef = useRef<HTMLDivElement>(null);
+  // The latest state for saves that happen outside a render: leaving by browser back (unmount) or the app going away.
+  const latest = useRef<{ doc: TripDoc | null; plan: Trip | null; dirty: boolean }>({ doc: null, plan: null, dirty: false });
+  latest.current = { doc, plan, dirty };
+  /** Saves run one after another so two of them never race on the same revision. */
+  const queue = useRef<Promise<unknown>>(Promise.resolve());
+  const saveNow = (): Promise<TripDoc | null> => {
+    const run = queue.current.then(async () => {
+      const now = latest.current;
+      if (!now.dirty || !now.doc || !now.plan) return null;
+      now.dirty = false;
+      const next = await persist(now.doc, now.plan, home);
+      latest.current.doc = next; // edits made while saving stay marked as unsaved
+      return next;
+    });
+    queue.current = run.catch(() => undefined);
+    return run;
+  };
 
   useEffect(() => {
     void (async () => {
@@ -91,6 +119,28 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
     };
   }, [dayCount]);
 
+  // Auto-save: leaving by browser back unmounts the editor; closing or switching away hides the page.
+  useEffect(() => {
+    const hide = () => {
+      void saveNow().then((next) => {
+        if (!next) return;
+        setDoc(next);
+        setDirty(false);
+        // A new trip now has an address; keep it without re-mounting the editor while the user is away.
+        if (location.pathname === '/trips/new') history.replaceState(null, '', `/trips/${next.tripId}`);
+      });
+    };
+    const onVisibility = () => document.visibilityState === 'hidden' && hide();
+    document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('pagehide', hide);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('pagehide', hide);
+      void saveNow();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Days with something to fix get a dot on their tab: a timetable conflict or a night without lodging.
   const attention = useMemo(() => {
     if (!plan) return new Set<number>();
@@ -117,12 +167,9 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
   };
   const fail = (m: string) => setNotice({ tone: 'error', text: m });
 
-  /** The plan as stored and shared: a blank name becomes the default one (the transfer needs a name). */
-  const named = (p: Trip): Trip => (p.name.trim() ? p : { ...p, name: t('trip.defaultName') });
-
   const save = async () => {
-    const next = await savePlan(doc, named(plan), home);
-    await trips.put(next);
+    latest.current = { doc, plan, dirty: true };
+    const next = (await saveNow()) ?? doc;
     setDoc(next);
     setPlan(next.plan);
     setDirty(false);
@@ -139,9 +186,9 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
     navigate(`/trips/${nd.tripId}`);
   };
 
-  /** Leave the editor (back to the trips tab, or to 설정 to change a start place); unsaved edits ask first. */
-  const leave = (to = '/') => {
-    if (dirty && !window.confirm(t('editor.leave.confirm'))) return;
+  /** Leave the editor (back to the trips tab, or to 설정 to change a start place); unsaved edits are saved first. */
+  const leave = async (to = '/') => {
+    await saveNow();
     navigate(to);
   };
   const close = () => setSheet(null);
@@ -261,6 +308,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
         actionLabel={t('editor.delete.action')}
         actionVariant="destructive"
         onAction={async () => {
+          latest.current.dirty = false; // deleting: nothing to auto-save on the way out
           await trips.remove(doc.tripId);
           navigate('/', true);
         }}

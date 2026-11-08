@@ -8,7 +8,7 @@ import { InstallHint } from '../components/InstallHint';
 import { MapIcon } from '../components/shell/icons';
 import { Row, Section } from '../components/shell/rows';
 import { TabScreen } from '../components/shell/Screens';
-import { sendLog, trips, type SendLogEntry } from '../lib/db';
+import { TRIPS_CHANGED, sendLog, trips, type SendLogEntry } from '../lib/db';
 import { dateLabel, dayOf, periodLabel } from '../lib/format';
 import { t } from '../lib/i18n';
 import { navigate } from '../lib/router';
@@ -29,7 +29,13 @@ export function HomePage() {
     for (const e of log) latest[e.tripId] ??= e;
     setLastSends(latest);
   };
-  useEffect(() => void reload(), []);
+  useEffect(() => {
+    void reload();
+    // The editor saves on its way out (browser back included); reload when that write lands after this list.
+    const onChanged = () => void reload();
+    window.addEventListener(TRIPS_CHANGED, onChanged);
+    return () => window.removeEventListener(TRIPS_CHANGED, onChanged);
+  }, []);
 
   const addSample = async () => {
     const plan: Trip = { ...sampleTrip(nowIso()), tripId: crypto.randomUUID() };

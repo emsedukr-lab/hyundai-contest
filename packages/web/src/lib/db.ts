@@ -52,6 +52,9 @@ const db = () =>
     },
   }));
 
+/** Fired after the editor saves a trip (also on its way out), so open lists can reload. */
+export const TRIPS_CHANGED = 'tteonaljido:trips-changed';
+
 export const trips = {
   all: async () => (await (await db()).getAll('trips')).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)),
   get: async (id: string) => (await db()).get('trips', id),

@@ -3,13 +3,13 @@ import { t } from '../../lib/i18n';
 import { navigate } from '../../lib/router';
 import { CarIcon, GearIcon, MapIcon, PinIcon } from './icons';
 
-type NavLabel = 'nav.trips' | 'nav.places' | 'nav.car' | 'nav.settings';
+type NavLabel = 'nav.trips' | 'nav.places' | 'nav.connect' | 'nav.settings';
 
 /** The four destinations (toss.md tab-bar allows 2–5). Order = importance: trips first, settings last. */
 export const TABS: Array<{ path: string; label: NavLabel; Icon: ComponentType<{ filled?: boolean }> }> = [
   { path: '/', label: 'nav.trips', Icon: MapIcon },
   { path: '/places', label: 'nav.places', Icon: PinIcon },
-  { path: '/car', label: 'nav.car', Icon: CarIcon },
+  { path: '/car', label: 'nav.connect', Icon: CarIcon }, // 연결: pairing with the car (address stays /car)
   { path: '/settings', label: 'nav.settings', Icon: GearIcon },
 ];
 

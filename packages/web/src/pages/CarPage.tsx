@@ -47,7 +47,7 @@ export function CarPage() {
   }, []);
 
   return (
-    <TabScreen path="/car" title={t('nav.car')}>
+    <TabScreen path="/car" title={t('nav.connect')}>
       <div className="tn-intro">
         <p>{t('car.intro')}</p>
       </div>
