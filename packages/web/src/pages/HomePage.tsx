@@ -6,7 +6,7 @@ import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { FileInput } from '@astryxdesign/core/FileInput';
 import { Layout, LayoutContent, LayoutFooter, LayoutHeader } from '@astryxdesign/core/Layout';
 import { List, ListItem } from '@astryxdesign/core/List';
-import { HStack, VStack } from '@astryxdesign/core/Stack';
+import { HStack, StackItem, VStack } from '@astryxdesign/core/Stack';
 import { Heading, Text } from '@astryxdesign/core/Text';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { sampleTrip, type Home, type Trip } from '@tteonaljido/shared';
@@ -133,8 +133,13 @@ export function HomePage() {
                 <Banner status="info" title={t('home.shareHint')} />
               </VStack>
             ) : (
-              <List hasDividers header={<Text type="label">{t('home.myTrips')}</Text>}>
-                {(docs ?? []).map((d) => (
+              <VStack gap={2}>
+                <Text type="label" color="secondary">
+                  {t('home.myTrips')}
+                </Text>
+                <div style={{ background: 'var(--color-background-card)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-container)', overflow: 'hidden' }}>
+                  <List hasDividers>
+                    {(docs ?? []).map((d) => (
                   <ListItem
                     key={d.tripId}
                     label={d.plan.name}
@@ -150,8 +155,10 @@ export function HomePage() {
                     }
                     onClick={() => navigate(`/trips/${d.tripId}`)}
                   />
-                ))}
-              </List>
+                    ))}
+                  </List>
+                </div>
+              </VStack>
             )}
             <Text type="supporting" color="secondary">
               {t('home.storageNote')}
@@ -191,7 +198,9 @@ export function HomePage() {
         docs?.length ? (
           <LayoutFooter hasDivider>
             <HStack gap={2}>
-              <Button label={t('home.newTrip')} variant="primary" onClick={() => navigate('/trips/new')} />
+              <StackItem size="fill">
+                <Button label={t('home.newTrip')} variant="primary" width="100%" onClick={() => navigate('/trips/new')} />
+              </StackItem>
               <Button label={t('common.addSample')} variant="secondary" onClick={addSample} />
             </HStack>
           </LayoutFooter>
