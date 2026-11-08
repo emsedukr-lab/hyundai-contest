@@ -48,8 +48,15 @@ export function TripInfoPanel({ plan, home, onChange, onOpenSettings }: { plan: 
       {nights.length > 0 && (
         <Card>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {nights.map((d) => (
-              <LodgingField key={d.dayIndex} plan={plan} dayIndex={d.dayIndex} onChange={onChange} />
+            {nights.map((d, i) => (
+              <LodgingField
+                key={d.dayIndex}
+                plan={plan}
+                dayIndex={d.dayIndex}
+                onChange={onChange}
+                // the same hotel several nights in a row: its times and memo once, on the first night
+                showNotes={!d.lodgingPlaceRef || nights[i - 1]?.lodgingPlaceRef !== d.lodgingPlaceRef}
+              />
             ))}
           </div>
         </Card>

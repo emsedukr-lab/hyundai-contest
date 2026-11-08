@@ -138,6 +138,13 @@
   line-height: 1.5;
   color: var(--color-text-secondary);
 }
+/* A phone-only note on a card (memo, check-in/out): quiet grey under the card's facts. */
+.tl-memo {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+  white-space: pre-wrap;
+}
 .tl-warn-text {
   font-size: 13px;
   line-height: 1.5;
@@ -198,25 +205,6 @@
   font-weight: 600;
 }
 
-/* Day tabs inside a sheet (map / send): they scroll sideways when there are many days. */
-.tl-daytabs {
-  flex: 1 1 auto;
-  min-width: 0;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-.tl-daytabs::-webkit-scrollbar {
-  display: none;
-}
-.tl-daytabs[data-fade-right='true'] {
-  mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
-}
-.tl-daytabs[data-fade-left='true'] {
-  mask-image: linear-gradient(to left, #000 calc(100% - 28px), transparent);
-}
-.tl-daytabs[data-fade-left='true'][data-fade-right='true'] {
-  mask-image: linear-gradient(to right, transparent, #000 28px, #000 calc(100% - 28px), transparent);
-}
 .tl-dot {
   display: inline-block;
   width: 7px;

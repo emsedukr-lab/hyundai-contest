@@ -11,6 +11,7 @@ import { minutesLabel, shortDate } from '../lib/format';
 import { t } from '../lib/i18n';
 import { issueText, move, moveTo, nodeIssues, placeOf, unassign, visitOf } from '../lib/trips';
 import { dayEnds, legEnds } from './dayInfo';
+import { useNotes } from './NotesContext';
 import './timeline.css';
 
 interface Props {
@@ -33,7 +34,12 @@ interface Props {
  */
 export function DayTimeline({ plan, home, dayIndex, onChange, onError, onOpenPlace, onOpenStart, onOpenLeg, onOpenEnd }: Props) {
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }));
-  const { day, isFirst, isLast, startName, endName } = dayEnds(plan, dayIndex);
+  const { day, i, isFirst, isLast, startName, endName } = dayEnds(plan, dayIndex);
+  const { notes } = useNotes();
+  // Phone-only notes shown in grey: the night's lodging (check-in/out, memo) and, on the next morning, its check-out.
+  const lodgingNote = !isLast && day.lodgingPlaceRef ? notes[day.lodgingPlaceRef] : undefined;
+  const prevCheckOut = !isFirst ? notes[plan.days[i - 1]?.lodgingPlaceRef ?? '']?.checkOut : undefined;
+  const lodgingTimes = [lodgingNote?.checkIn ? t('tl.checkInAt', { time: lodgingNote.checkIn }) : '', lodgingNote?.checkOut ? t('tl.checkOutAt', { time: lodgingNote.checkOut }) : ''].filter(Boolean).join(' · ');
   const times = useMemo(() => Object.fromEntries(timeline(plan, day.dayIndex).map((st) => [st.visitId, st])), [plan, day.dayIndex]);
   const issues = useMemo(() => nodeIssues(plan, day.dayIndex), [plan, day.dayIndex]);
   const endAt = dayEnd(plan, day.dayIndex);
@@ -102,6 +108,7 @@ export function DayTimeline({ plan, home, dayIndex, onChange, onError, onOpenPla
             <span className="tl-kicker">{`${t('tl.start')} · ${shortDate(day.date)}`}</span>
             <span className="tl-name">{startName}</span>
             {startTime ? <span className="tl-line">{startTime}</span> : <span className="tl-warn-text">{t('tl.departUnset')}</span>}
+            {prevCheckOut && <span className="tl-memo">{t('tl.checkOutAt', { time: prevCheckOut })}</span>}
             {issues.start.map((x, n) => (
               <span key={n} className="tl-error-text">
                 {issueText(x)}
@@ -145,6 +152,8 @@ export function DayTimeline({ plan, home, dayIndex, onChange, onError, onOpenPla
             <span className="tl-kicker">{isLast ? t('tl.home') : t('common.lodging')}</span>
             {lodgingMissing ? <span className="tl-name tl-warn-text" style={{ fontSize: 17 }}>{t('tl.lodgingUnset')}</span> : <span className="tl-name">{endName}</span>}
             {endTimes && <span className="tl-line">{endTimes}</span>}
+            {lodgingTimes && <span className="tl-memo">{lodgingTimes}</span>}
+            {lodgingNote?.memo && <span className="tl-memo">{lodgingNote.memo}</span>}
             {lastLodging && <span className="tl-warn-text">{t('trip.warn.lastLodging')}</span>}
             {issues.end.map((x, n) => (
               <span key={n} className="tl-error-text">
@@ -185,8 +194,10 @@ function StopCard({
   onUnassign: () => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const { notes } = useNotes();
   const v = visitOf(plan, id)!;
   const p = placeOf(plan, v.placeRef)!;
+  const memo = notes[p.placeRef]?.memo;
   const conflict = issues.length > 0;
   const timeText =
     !time || time.start === null ? t('days.timeCheck') : time.arrive === null ? t('days.timeStart', { start: clock(time.start) }) : t('days.times', { arrive: clock(time.arrive), start: clock(time.start) });
@@ -216,6 +227,7 @@ function StopCard({
           </span>
           <span className="tl-line">{timeText}</span>
           <span className="tl-meta">{meta}</span>
+          {memo && <span className="tl-memo">{memo}</span>}
           {issues.map((x, n) => (
             <span key={n} className="tl-error-text">
               {issueText(x)}

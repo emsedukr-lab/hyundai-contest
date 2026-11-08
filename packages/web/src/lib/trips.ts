@@ -15,6 +15,7 @@ import {
   type Visit,
 } from '@tteonaljido/shared';
 import { t } from './i18n';
+import type { TripNotes } from './notes';
 
 /**
  * A trip as kept on this phone. `plan` is the editable trip in transfer shape (home always null);
@@ -27,6 +28,8 @@ export interface TripDoc {
   planHash: string;
   plan: Trip;
   home: Home | null;
+  /** Phone-only notes per place (memo, lodging check-in/out); never part of the transfer. */
+  notes?: TripNotes;
 }
 
 const rand = () => Math.random().toString(36).slice(2, 10);

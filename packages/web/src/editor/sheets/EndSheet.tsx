@@ -10,6 +10,7 @@ import { PlaceSearch } from '../PlaceSearch';
 import { Sheet } from '../Sheet';
 import { EndpointField } from '../EndpointField';
 import { FieldPrefix } from '../FieldPrefix';
+import { LodgingNoteFields } from '../NotesContext';
 
 type ISOTime = Parameters<NonNullable<Parameters<typeof TimeInput>[0]['onChange']>>[0];
 
@@ -54,6 +55,7 @@ export function EndSheet({ isOpen, onClose, plan, home, dayIndex, onChange, onOp
             value={day.lodgingPlaceRef ?? ''}
             onChange={(ref) => onChange(setLodging(plan, day.dayIndex, ref || null))}
           />
+          {day.lodgingPlaceRef && <LodgingNoteFields placeRef={day.lodgingPlaceRef} />}
           {day.lodgingPlaceRef && (
             <div>
               <Button label={t('tl.lodgingDetails')} variant="secondary" size="sm" onClick={() => onOpenPlace(day.lodgingPlaceRef!)} />

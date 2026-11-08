@@ -581,6 +581,14 @@ const ko = {
   'tl.endByPh': '도착 목표 시각',
   'tl.savedEndPlaces': '설정한 도착 장소',
   'tl.targetDay': '넣을 날',
+  'tl.checkIn': '입실 시간 (선택)',
+  'tl.checkOut': '퇴실 시간 (선택)',
+  'tl.checkInShort': '입실',
+  'tl.checkOutShort': '퇴실',
+  'tl.memo': '메모',
+  'tl.lodgingMemo': '메모 (호실 등)',
+  'tl.checkInAt': '입실 {time}',
+  'tl.checkOutAt': '퇴실 {time}',
 } as const satisfies Record<string, string>;
 
 export type Key = keyof typeof ko;
@@ -1160,6 +1168,14 @@ const en: Record<Key, string> = {
   'tl.endByPh': 'Arrive by',
   'tl.savedEndPlaces': 'Saved end places',
   'tl.targetDay': 'Add to',
+  'tl.checkIn': 'Check-in time (optional)',
+  'tl.checkOut': 'Check-out time (optional)',
+  'tl.checkInShort': 'Check-in',
+  'tl.checkOutShort': 'Check-out',
+  'tl.memo': 'Memo',
+  'tl.lodgingMemo': 'Memo (room number, etc.)',
+  'tl.checkInAt': 'Check-in {time}',
+  'tl.checkOutAt': 'Check-out {time}',
 };
 
 /** Both tables, for tests. */

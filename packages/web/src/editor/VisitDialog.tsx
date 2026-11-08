@@ -17,6 +17,7 @@ import type { OpeningHours, Place, Trip, Visit } from '@tteonaljido/shared';
 import { dateLabel } from '../lib/format';
 import { t } from '../lib/i18n';
 import { FieldPrefix } from './FieldPrefix';
+import { LodgingNoteFields, PlaceMemoField } from './NotesContext';
 import { REASON_LABEL, changeCategory, removePlace, updatePlace, updateVisit } from '../lib/trips';
 import { CATEGORY_OPTIONS } from './PlaceSearch';
 
@@ -59,6 +60,8 @@ export function VisitDialog({ plan, placeRef, onChange, onClose }: { plan: Trip;
       <VStack gap={4}>
         <FormLayout>
           <Selector label={t('common.type')} isLabelHidden placement="below" options={CATEGORY_OPTIONS} value={place.category} onChange={(v) => onChange(changeCategory(plan, place.placeRef, v as Place['category']))} />
+          {/* Phone-only notes: lodging gets check-in/out and a memo, any other place a memo. */}
+          {place.category === 'LODGING' ? <LodgingNoteFields placeRef={place.placeRef} /> : <PlaceMemoField placeRef={place.placeRef} />}
           {visit && visit.unassignedReason !== null && (
             // On no day yet (보관함): why, as the car shows it.
             <Selector
@@ -169,7 +172,8 @@ export function VisitDialog({ plan, placeRef, onChange, onClose }: { plan: Trip;
           </VStack>
         ) : (
           <HStack gap={2} hAlign="between">
-            <Button label={t('visit.delete')} variant="destructive" onClick={() => setConfirmDelete(true)} />
+            {/* A quiet first step: red only on the confirm below, so the rare delete doesn't shout on every place. */}
+            <Button label={t('visit.delete')} variant="ghost" onClick={() => setConfirmDelete(true)} />
             <Button label={t('common.close')} variant="primary" onClick={onClose} />
           </HStack>
         )}

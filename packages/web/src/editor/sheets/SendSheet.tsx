@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Button } from '@astryxdesign/core/Button';
-import { Tab, TabList } from '@astryxdesign/core/TabList';
+import { Selector } from '@astryxdesign/core/Selector';
 import type { Home, Trip } from '@tteonaljido/shared';
+import { shortDate } from '../../lib/format';
 import { t } from '../../lib/i18n';
 import { navigate } from '../../lib/router';
 import { planWarnings } from '../../lib/trips';
@@ -28,17 +29,17 @@ export function SendSheet({ isOpen, onClose, plan, home, dayIndex, mode }: { isO
   return (
     <Sheet isOpen={isOpen} onClose={onClose} title={mode === 'send' ? t('tl.sendTitle') : t('tl.mapTitle')} height="tall">
       {plan.days.length > 1 && (
-        <div className="tl-daytabs">
-          <TabList role="tablist" aria-label={t('days.title')} value={String(shown)} onChange={setDay} hasDivider>
-            {plan.days.map((d) => (
-              <Tab key={d.dayIndex} value={String(d.dayIndex)} panelId="send-map" label={t('common.day', { day: d.dayIndex })} />
-            ))}
-          </TabList>
-        </div>
+        // A day picker, not a tab strip: no sideways scroll button to cover a day's name on long trips.
+        <Selector
+          label={t('days.title')}
+          isLabelHidden
+          placement="below"
+          options={plan.days.map((d) => ({ value: String(d.dayIndex), label: `${t('common.day', { day: d.dayIndex })} · ${shortDate(d.date)}` }))}
+          value={String(shown)}
+          onChange={setDay}
+        />
       )}
-      <div id="send-map" role="tabpanel" aria-label={t('common.day', { day: shown })}>
-        <KakaoMap plan={plan} home={home} dayIndex={shown} />
-      </div>
+      <KakaoMap plan={plan} home={home} dayIndex={shown} />
       {mode === 'send' && (
         <>
           {checks.length > 0 && (

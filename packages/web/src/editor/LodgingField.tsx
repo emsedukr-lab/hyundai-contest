@@ -4,19 +4,21 @@ import type { Trip } from '@tteonaljido/shared';
 import { BedIcon, CloseIcon } from '../components/shell/icons';
 import { t } from '../lib/i18n';
 import { addPlace, lodgingPlaces, placeOf, setLodging } from '../lib/trips';
+import { LodgingNoteFields } from './NotesContext';
 import { PlaceSearch } from './PlaceSearch';
 
 /**
  * One night's lodging on the 여행 정보 tab — usually booked before the days are planned. Empty: a search field
  * ("1일차 숙소") plus the trip's lodgings as one-tap choices (the same hotel for several nights). Chosen: the night and
- * the lodging in an input-shaped row with a clear button.
+ * the lodging in an input-shaped row with a clear button, then its check-in/out times and memo (phone-only notes).
  */
-export function LodgingField({ plan, dayIndex, onChange }: { plan: Trip; dayIndex: number; onChange: (p: Trip) => void }) {
+export function LodgingField({ plan, dayIndex, onChange, showNotes = true }: { plan: Trip; dayIndex: number; onChange: (p: Trip) => void; showNotes?: boolean }) {
   const day = plan.days.find((d) => d.dayIndex === dayIndex);
   const chosen = placeOf(plan, day?.lodgingPlaceRef ?? '');
   if (!day) return null;
   if (chosen)
     return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
       <div className="tl-lodging">
         <span className="tl-fieldicon" aria-hidden="true">
           <BedIcon />
@@ -26,6 +28,9 @@ export function LodgingField({ plan, dayIndex, onChange }: { plan: Trip; dayInde
           <span>{chosen.name}</span>
         </span>
         <IconButton label={t('tl.clearLodging')} icon={<CloseIcon />} variant="ghost" size="sm" onClick={() => onChange(setLodging(plan, dayIndex, null))} />
+      </div>
+      {/* Check-in/out and a memo (room number…), once per stay: on the first night at this lodging. */}
+      {showNotes && <LodgingNoteFields placeRef={chosen.placeRef} />}
       </div>
     );
   const known = lodgingPlaces(plan);

@@ -9,6 +9,7 @@ import { dayIssues, type Home, type Trip } from '@tteonaljido/shared';
 import { MoreIcon, PencilIcon, PlusIcon } from '../components/shell/icons';
 import { PushScreen } from '../components/shell/Screens';
 import { DayTimeline } from '../editor/DayTimeline';
+import { NotesContext } from '../editor/NotesContext';
 import { RecommendDialog } from '../editor/RecommendDialog';
 import { ShareDialog } from '../editor/ShareDialog';
 import { EndSheet } from '../editor/sheets/EndSheet';
@@ -22,6 +23,7 @@ import { TRIPS_CHANGED, trips } from '../lib/db';
 import { shortDate } from '../lib/format';
 import { t } from '../lib/i18n';
 import { navigate } from '../lib/router';
+import { cleanNotes, setNote, type TripNotes } from '../lib/notes';
 import { defaultHome } from '../lib/settings';
 import { emptyPlan, newDoc, nightsLabel, nowIso, relinkLegs, rememberLegs, savePlan, unassignedVisits, type LegBook, type TripDoc } from '../lib/trips';
 import '../editor/timeline.css';
@@ -43,8 +45,9 @@ const STUCK_AT = 56 + 56;
 const named = (p: Trip): Trip => (p.name.trim() ? p : { ...p, name: t('trip.defaultName') });
 
 /** Writes the trip to this phone (a new revision only when its content changed) and tells listening lists. */
-async function persist(doc: TripDoc, plan: Trip, home: Home | null): Promise<TripDoc> {
-  const next = await savePlan(doc, named(plan), home);
+async function persist(doc: TripDoc, plan: Trip, home: Home | null, notes: TripNotes): Promise<TripDoc> {
+  // Notes are phone-only and outside the plan's hash: changing only a memo keeps the version the car knows.
+  const next: TripDoc = { ...(await savePlan(doc, named(plan), home)), notes: cleanNotes(notes, new Set(plan.places.map((p) => p.placeRef))) };
   await trips.put(next);
   window.dispatchEvent(new Event(TRIPS_CHANGED));
   return next;
@@ -69,6 +72,8 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
   // The one home address, set in 설정 and shared by every trip (route checks, map, recommend, what the car may get).
   const [home] = useState(defaultHome);
   const [dirty, setDirty] = useState(false);
+  /** Phone-only memos and lodging check-in/out, by place (saved with the trip, never sent to the car). */
+  const [notes, setNotes] = useState<TripNotes>({});
   /** The day whose header is stuck under the top bar (the + button adds there); day 1 while 여행 정보 is in view. */
   const [focusDay, setFocusDay] = useState(1);
   const [sheet, setSheet] = useState<SheetState>(null);
@@ -80,8 +85,8 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
   /** Travel times typed this session by pair of places, so reordering does not throw them away. */
   const book = useRef<LegBook>(new Map());
   // The latest state for saves that happen outside a render: leaving by browser back (unmount) or the app going away.
-  const latest = useRef<{ doc: TripDoc | null; plan: Trip | null; dirty: boolean }>({ doc: null, plan: null, dirty: false });
-  latest.current = { doc, plan, dirty };
+  const latest = useRef<{ doc: TripDoc | null; plan: Trip | null; notes: TripNotes; dirty: boolean }>({ doc: null, plan: null, notes: {}, dirty: false });
+  latest.current = { doc, plan, notes, dirty };
   /** Saves run one after another so two of them never race on the same revision. */
   const queue = useRef<Promise<unknown>>(Promise.resolve());
   const saveNow = (): Promise<TripDoc | null> => {
@@ -89,7 +94,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
       const now = latest.current;
       if (!now.dirty || !now.doc || !now.plan) return null;
       now.dirty = false;
-      const next = await persist(now.doc, now.plan, home);
+      const next = await persist(now.doc, now.plan, home, now.notes);
       latest.current.doc = next; // edits made while saving stay marked as unsaved
       return next;
     });
@@ -103,6 +108,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
       const d = tripId ? await trips.get(tripId) : await newDoc({ ...emptyPlan(), name: '' }, defaultHome());
       if (!d) return navigate('/', true);
       setDoc(d);
+      setNotes(cleanNotes(d.notes));
       book.current = new Map();
       rememberLegs(d.plan, book.current);
       setPlan(d.plan);
@@ -173,11 +179,18 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
     setDirty(true);
   };
   const fail = (m: string) => setNotice({ tone: 'error', text: m });
+  const notesApi = {
+    notes,
+    setNote: (placeRef: string, patch: Parameters<typeof setNote>[2]) => {
+      setNotes((n) => setNote(n, placeRef, patch));
+      setDirty(true);
+    },
+  };
   /** Brings a day's section to the top, under its own stuck header. */
   const showDay = (day: number) => requestAnimationFrame(() => document.getElementById(`day-${day}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
 
   const save = async () => {
-    latest.current = { doc, plan, dirty: true };
+    latest.current = { doc, plan, notes, dirty: true };
     const next = (await saveNow()) ?? doc;
     setDoc(next);
     setPlan(next.plan);
@@ -190,7 +203,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
   const duplicate = async () => {
     if (dirty) await save(); // keep unsaved edits in the original too, not only in the copy
     const clone: Trip = { ...structuredClone(plan), tripId: crypto.randomUUID(), name: t('trip.copyName', { name: plan.name }).slice(0, 60), revision: 1, updatedAt: nowIso() };
-    const nd = await newDoc(clone, home);
+    const nd: TripDoc = { ...(await newDoc(clone, home)), notes: cleanNotes(notes) }; // the copy keeps its memos (same places)
     await trips.put(nd);
     navigate(`/trips/${nd.tripId}`);
   };
@@ -227,6 +240,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
     );
 
   return (
+    <NotesContext.Provider value={notesApi}>
     <PushScreen
       title={title}
       onBack={() => leave()}
@@ -335,5 +349,6 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
         }}
       />
     </PushScreen>
+    </NotesContext.Provider>
   );
 }

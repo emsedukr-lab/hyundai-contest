@@ -8,6 +8,7 @@ import { DownloadIcon, InfoIcon, PhoneIcon, PresetIcon, ShieldIcon, UploadIcon }
 import { Row, Section } from '../components/shell/rows';
 import { TabScreen } from '../components/shell/Screens';
 import { trips } from '../lib/db';
+import { cleanNotes } from '../lib/notes';
 import { t } from '../lib/i18n';
 import { navigate } from '../lib/router';
 import { PRESET_SLOTS, presetLabel, presetPlace } from '../lib/settings';
@@ -57,7 +58,8 @@ export function SettingsPage() {
       const existing = new Set(docs.map((d) => d.tripId));
       const overwrites = data.trips.filter((d) => existing.has(d.tripId)).length;
       if (overwrites > 0 && !window.confirm(t('home.import.overwrite', { n: overwrites }))) return;
-      for (const d of data.trips) await trips.put(await newDoc({ ...d.plan, revision: d.revision, updatedAt: d.updatedAt }, d.home));
+      // Notes (memos, lodging check-in/out) are kept, re-checked like everything else in a backup file.
+      for (const d of data.trips) await trips.put({ ...(await newDoc({ ...d.plan, revision: d.revision, updatedAt: d.updatedAt }, d.home)), notes: cleanNotes(d.notes) });
       setMessage(t('home.imported', { n: data.trips.length }));
       await reload();
     } catch {
