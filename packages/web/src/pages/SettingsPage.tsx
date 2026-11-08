@@ -101,7 +101,7 @@ export function SettingsPage() {
           ))}
         </ul>
         <p className="tn-pad" style={{ margin: '12px 0 0', fontSize: 13, lineHeight: 1.5, color: 'var(--color-text-secondary)' }}>
-          {t('settings.origins.detail')}
+          {t('settings.origins.detail2')}
         </p>
       </Section>
 

@@ -1,7 +1,6 @@
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { Selector } from '@astryxdesign/core/Selector';
-import { Text } from '@astryxdesign/core/Text';
 import { TimeInput } from '@astryxdesign/core/TimeInput';
 import type { Home, Trip } from '@tteonaljido/shared';
 import { t } from '../../lib/i18n';
@@ -9,15 +8,15 @@ import { addPlace, lodgingPlaces, setEndBy, setLodging } from '../../lib/trips';
 import { dayEnds } from '../dayInfo';
 import { PlaceSearch } from '../PlaceSearch';
 import { Sheet } from '../Sheet';
-import { endpointValue, toEndpoint } from '../StartPlaceField';
+import { EndpointField } from '../EndpointField';
 
 type ISOTime = Parameters<NonNullable<Parameters<typeof TimeInput>[0]['onChange']>>[0];
 
 /**
  * The day's end card. A night: ① which lodging (an existing one, or find a new one right here) → ② the time to be
- * there by. The last day: where the trip ends (home or a place) and the time to be back by.
+ * there by. The last day: where the trip ends (귀가 시 도착 장소, same field as 여행 정보) and the time to be back by.
  */
-export function EndSheet({ isOpen, onClose, plan, home, dayIndex, onChange, onOpenPlace }: { isOpen: boolean; onClose: () => void; plan: Trip; home: Home | null; dayIndex: number; onChange: (p: Trip) => void; onOpenPlace: (ref: string) => void }) {
+export function EndSheet({ isOpen, onClose, plan, home, dayIndex, onChange, onOpenPlace, onOpenSettings }: { isOpen: boolean; onClose: () => void; plan: Trip; home: Home | null; dayIndex: number; onChange: (p: Trip) => void; onOpenPlace: (ref: string) => void; onOpenSettings: () => void }) {
   const { day, isLast, endName } = dayEnds(plan, dayIndex);
   const endLabel = endName ?? t('days.lodgingUnset');
   const endBy = (
@@ -35,17 +34,7 @@ export function EndSheet({ isOpen, onClose, plan, home, dayIndex, onChange, onOp
     <Sheet isOpen={isOpen} onClose={onClose} title={isLast ? t('tl.home') : t('days.lodging', { day: day.dayIndex })} height="tall" footer={<Button label={t('tl.done')} variant="primary" size="lg" width="100%" onClick={onClose} />}>
       {isLast ? (
         <>
-          <Selector
-            label={t('editor.finalDestination')}
-            options={[{ value: 'HOME', label: t('common.home') }, ...plan.places.map((p) => ({ value: p.placeRef, label: p.name }))]}
-            value={endpointValue(plan.finalDestination)}
-            onChange={(v) => onChange({ ...plan, finalDestination: toEndpoint(v) })}
-          />
-          {plan.finalDestination.kind === 'HOME' && !home && (
-            <Text type="supporting" color="secondary">
-              {t('trip.warn.noHome')}
-            </Text>
-          )}
+          <EndpointField which="finalDestination" plan={plan} home={home} onChange={onChange} onOpenSettings={onOpenSettings} />
           {day.lodgingPlaceRef && (
             <Banner status="warning" title={t('trip.warn.lastLodging')} endContent={<Button label={t('tl.clearLodging')} variant="secondary" size="sm" onClick={() => onChange(setLodging(plan, day.dayIndex, null))} />} />
           )}

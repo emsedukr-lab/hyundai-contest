@@ -36,7 +36,7 @@ export function StartPlacePage({ slot }: { slot: PresetSlot }) {
   return (
     <PushScreen title={isHome ? t('common.homeAddress') : label} onBack={() => navigate('/settings')}>
       <div className="tn-intro">
-        <p>{isHome ? t('settings.home.description') : t('settings.preset.description')}</p>
+        <p>{isHome ? t('settings.home.description') : t('settings.preset.description2')}</p>
       </div>
       <div className="tn-pad" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         {note && <Banner status={note.tone} title={note.text} isDismissable onDismiss={() => setNote(null)} />}

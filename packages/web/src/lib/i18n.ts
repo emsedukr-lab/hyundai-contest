@@ -571,6 +571,11 @@ const ko = {
   'tl.sendHow': '차에서 이렇게 보내요',
   'tl.sendChecks': '보내기 전에 확인할 점',
   'tl.mapTitle': '경로 미리보기',
+  'tl.infoIntro': '여행 이름과 기간, 출발·도착 장소를 정해요',
+  'tl.endPlace': '귀가 시 도착 장소',
+  'tl.toDay1': '1일차 일정 짜기',
+  'settings.preset.description2': '새 여행의 출발 장소나 귀가 시 도착 장소로 고를 수 있어요 · 이 휴대폰에만 저장되고, 고른 여행에서는 여행의 장소로 함께 차에 보내져요',
+  'settings.origins.detail2': '여행 정보 탭에서 출발·도착 장소로 골라요',
 } as const satisfies Record<string, string>;
 
 export type Key = keyof typeof ko;
@@ -1140,6 +1145,11 @@ const en: Record<Key, string> = {
   'tl.sendHow': 'How to send from the car',
   'tl.sendChecks': 'Check before sending',
   'tl.mapTitle': 'Route preview',
+  'tl.infoIntro': 'Set the trip name, dates, and where you start and end',
+  'tl.endPlace': 'Where you end up',
+  'tl.toDay1': 'Plan day 1',
+  'settings.preset.description2': 'Pick it as a trip\'s start or where it ends · it stays on this phone, and a trip that uses it sends it to the car as one of the trip\'s places',
+  'settings.origins.detail2': 'Pick them as the start or end on a trip\'s details tab',
 };
 
 /** Both tables, for tests. */

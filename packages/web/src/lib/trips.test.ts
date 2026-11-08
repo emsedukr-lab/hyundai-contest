@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { parseTransfer, sampleTrip, type Trip } from '@tteonaljido/shared';
-import { addPlace, addToDay, assign, changeCategory, emptyPlan, isEndpointOnly, move, moveTo, newDoc, nodeIssues, planWarnings, relinkLegs, rememberLegs, removePlace, savePlan, setDepart, setEndBy, setLeg, setLodging, setOrigin, setPeriod, startFromPreset, toTransfer, unassign, type LegBook } from './trips';
+import { addPlace, addToDay, assign, changeCategory, emptyPlan, isEndpointOnly, move, moveTo, endpointFromPreset, newDoc, nodeIssues, planWarnings, relinkLegs, rememberLegs, removePlace, savePlan, setDepart, setEndBy, setLeg, setEndpoint, setLodging, setOrigin, setPeriod, startFromPreset, toTransfer, unassign, type LegBook } from './trips';
 
 // The warning assertions below check the Korean copy; jsdom reports navigator.language as en-US.
 vi.hoisted(() => Object.defineProperty(navigator, 'language', { value: 'ko-KR', configurable: true }));
@@ -284,5 +284,32 @@ describe('timeline nodes (M26)', () => {
     expect(r.placed).toBe('pool');
     expect(r.reason).toBeTruthy();
     expect(r.plan.visits.at(-1)!.unassignedReason).toBe('NOT_SCHEDULED_YET');
+  });
+});
+
+describe('return destination presets (M27)', () => {
+  const work = { name: '현대자동차 본사', address: '서울 서초구 헌릉로 12', latE7: 374_634_000, lonE7: 1_270_394_000 };
+  const gym = { name: '양재 체육관', address: '서울 서초구 양재동', latE7: 374_700_000, lonE7: 1_270_300_000 };
+
+  it('ending at a saved place adds it as an endpoint-only place and the transfer stays valid', async () => {
+    const t = endpointFromPreset(sampleTrip(), 'finalDestination', work);
+    const p = t.places.find((x) => x.name === work.name)!;
+    expect(t.finalDestination).toEqual({ kind: 'PLACE', placeRef: p.placeRef });
+    expect(isEndpointOnly(t, p.placeRef)).toBe(true);
+    expect(await parseTransfer(JSON.stringify(await toTransfer(await newDoc(t, home), true)))).toMatchObject({ ok: true });
+  });
+
+  it('starting and ending at the same saved place shares one place', () => {
+    const t = endpointFromPreset(startFromPreset(sampleTrip(), work), 'finalDestination', work);
+    expect(t.places.filter((x) => x.name === work.name)).toHaveLength(1);
+    expect(t.origin).toEqual(t.finalDestination);
+  });
+
+  it('changing the return drops the old place unless the start still uses it', () => {
+    const atGym = endpointFromPreset(sampleTrip(), 'finalDestination', gym);
+    const ref = (atGym.finalDestination as { placeRef: string }).placeRef;
+    expect(setEndpoint(atGym, 'finalDestination', { kind: 'HOME' }).places.some((x) => x.placeRef === ref)).toBe(false);
+    const both = startFromPreset(atGym, gym);
+    expect(setEndpoint(both, 'finalDestination', { kind: 'HOME' }).places.some((x) => x.placeRef === ref)).toBe(true);
   });
 });

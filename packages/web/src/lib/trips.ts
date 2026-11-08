@@ -144,33 +144,41 @@ export const isEndpointOnly = (plan: Trip, placeRef: string) => {
   return !!p && p.category !== 'LODGING' && !plan.visits.some((v) => v.placeRef === placeRef);
 };
 
+/** The trip's two ends: where day 1 starts and where the last day ends. */
+export type EndpointSide = 'origin' | 'finalDestination';
+
 /**
- * Sets the first-day start. A place that existed only to be the old start (endpoint-only, not the final destination
- * or any night's lodging) is dropped with it, so trying 회사 then 즐겨찾기 doesn't leave stray places behind.
+ * Sets one end of the trip. A place that existed only to be the old end (endpoint-only, not the other end or any
+ * night's lodging) is dropped with it, so trying 회사 then 즐겨찾기 doesn't leave stray places behind.
  */
-export function setOrigin(plan: Trip, origin: Endpoint): Trip {
-  const prev = plan.origin;
-  const next: Trip = { ...plan, origin };
-  if (prev.kind !== 'PLACE' || (origin.kind === 'PLACE' && origin.placeRef === prev.placeRef)) return next;
+export function setEndpoint(plan: Trip, which: EndpointSide, endpoint: Endpoint): Trip {
+  const prev = plan[which];
+  const next: Trip = { ...plan, [which]: endpoint };
+  if (prev.kind !== 'PLACE' || (endpoint.kind === 'PLACE' && endpoint.placeRef === prev.placeRef)) return next;
   const ref = prev.placeRef;
-  const stillUsed = (next.finalDestination.kind === 'PLACE' && next.finalDestination.placeRef === ref) || next.days.some((d) => d.lodgingPlaceRef === ref);
+  const other = next[which === 'origin' ? 'finalDestination' : 'origin'];
+  const stillUsed = (other.kind === 'PLACE' && other.placeRef === ref) || next.days.some((d) => d.lodgingPlaceRef === ref);
   return isEndpointOnly(next, ref) && !stillUsed ? removePlace(next, ref) : next;
 }
 
-/** A saved start place (설정 › 회사, 즐겨찾기): name plus address and coordinates. */
+/** Sets the first-day start (see [setEndpoint]). */
+export const setOrigin = (plan: Trip, origin: Endpoint): Trip => setEndpoint(plan, 'origin', origin);
+
+/** A saved place (설정 › 회사, 즐겨찾기): name plus address and coordinates. */
 export type StartPreset = Home & { name: string };
 
-/** The trip's copy of a saved start place, matched by name and coordinates. */
+/** The trip's copy of a saved place, matched by name and coordinates. */
 export const presetInPlan = (plan: Trip, preset: StartPreset) =>
   plan.places.find((p) => p.latE7 === preset.latE7 && p.lonE7 === preset.lonE7 && p.name === preset.name.slice(0, TRANSFER_LIMITS.nameMax));
 
 /**
- * Starts the trip from a saved place. The transfer only knows HOME or a place of the trip, so the preset joins the
- * trip as an endpoint-only place (no visit: it is where the day begins, not a stop) — or the copy already there is reused.
+ * Starts or ends the trip at a saved place. The transfer only knows HOME or a place of the trip, so the preset joins
+ * the trip as an endpoint-only place (no visit: the day begins or ends there, nobody stops there on the way) — or the
+ * copy already there is reused, so starting and ending at 회사 shares one place.
  */
-export function startFromPreset(plan: Trip, preset: StartPreset): Trip {
+export function endpointFromPreset(plan: Trip, which: EndpointSide, preset: StartPreset): Trip {
   const same = presetInPlan(plan, preset);
-  if (same) return setOrigin(plan, { kind: 'PLACE', placeRef: same.placeRef });
+  if (same) return setEndpoint(plan, which, { kind: 'PLACE', placeRef: same.placeRef });
   const place: Place = {
     placeRef: newRef('p'),
     name: preset.name.slice(0, TRANSFER_LIMITS.nameMax),
@@ -182,8 +190,11 @@ export function startFromPreset(plan: Trip, preset: StartPreset): Trip {
     naviPoi: null,
     hours: { status: 'UNKNOWN' },
   };
-  return setOrigin({ ...plan, places: [...plan.places, place] }, { kind: 'PLACE', placeRef: place.placeRef });
+  return setEndpoint({ ...plan, places: [...plan.places, place] }, which, { kind: 'PLACE', placeRef: place.placeRef });
 }
+
+/** Starts the trip from a saved place (see [endpointFromPreset]). */
+export const startFromPreset = (plan: Trip, preset: StartPreset): Trip => endpointFromPreset(plan, 'origin', preset);
 
 export function removePlace(plan: Trip, placeRef: string): Trip {
   let next = plan;

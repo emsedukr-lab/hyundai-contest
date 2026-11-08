@@ -9,7 +9,7 @@ import { t } from '../../lib/i18n';
 import { setDepart } from '../../lib/trips';
 import { dayEnds } from '../dayInfo';
 import { Sheet } from '../Sheet';
-import { StartPlaceField } from '../StartPlaceField';
+import { EndpointField } from '../EndpointField';
 
 type ISOTime = Parameters<NonNullable<Parameters<typeof TimeInput>[0]['onChange']>>[0];
 
@@ -21,7 +21,7 @@ export function StartSheet({ isOpen, onClose, plan, home, dayIndex, onChange, on
     <Sheet isOpen={isOpen} onClose={onClose} title={t('tl.start')} height="tall" footer={<Button label={t('tl.done')} variant="primary" size="lg" width="100%" onClick={onClose} />}>
       {isFirst ? (
         <>
-          <StartPlaceField plan={plan} home={home} onChange={onChange} onOpenSettings={onOpenSettings} />
+          <EndpointField which="origin" plan={plan} home={home} onChange={onChange} onOpenSettings={onOpenSettings} />
           <FormLayout>
             <SegmentedControl
               label={t('editor.firstDay')}

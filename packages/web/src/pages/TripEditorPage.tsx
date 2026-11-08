@@ -12,12 +12,12 @@ import { PushScreen } from '../components/shell/Screens';
 import { DayTimeline } from '../editor/DayTimeline';
 import { RecommendDialog } from '../editor/RecommendDialog';
 import { ShareDialog } from '../editor/ShareDialog';
-import { BasicsSheet } from '../editor/sheets/BasicsSheet';
 import { EndSheet } from '../editor/sheets/EndSheet';
 import { LegSheet } from '../editor/sheets/LegSheet';
 import { PlaceSheet, type Notice } from '../editor/sheets/PlaceSheet';
 import { SendSheet } from '../editor/sheets/SendSheet';
 import { StartSheet } from '../editor/sheets/StartSheet';
+import { TripInfoPanel } from '../editor/TripInfoPanel';
 import { VisitDialog } from '../editor/VisitDialog';
 import { trips } from '../lib/db';
 import { shortDate } from '../lib/format';
@@ -28,7 +28,7 @@ import { emptyPlan, newDoc, nightsLabel, nowIso, relinkLegs, rememberLegs, saveP
 import '../editor/timeline.css';
 
 /** Which bottom sheet is open (one at a time; dialogs such as place details may stack above it). */
-type SheetState = { kind: 'basics' } | { kind: 'start' } | { kind: 'leg'; k: number } | { kind: 'end' } | { kind: 'place' } | { kind: 'send' } | { kind: 'map' } | null;
+type SheetState = { kind: 'start' } | { kind: 'leg'; k: number } | { kind: 'end' } | { kind: 'place' } | { kind: 'send' } | { kind: 'map' } | null;
 
 /** 'MM/DD–MM/DD' for the title line, from the same short labels as the day tabs (weekday dropped). */
 const shortPeriod = (start: string, end: string) => {
@@ -37,8 +37,9 @@ const shortPeriod = (start: string, end: string) => {
 };
 
 /**
- * The trip editor as one timeline (M26): a title that opens the trip's name and dates, day tabs with 경로 추천 and
- * 지도, then the selected day as a route from 출발 to 숙소/귀가. Every input opens in a bottom sheet; problems show
+ * The trip editor as one timeline (M26–27): a title that jumps to the 여행 정보 tab, then tabs [여행 정보][1일차]… with
+ * 경로 추천 and 지도. 여행 정보 sets name → period → 출발 장소 → 귀가 시 도착 장소 in the page (a new trip opens there);
+ * a day tab shows that day as a route from 출발 to 숙소/귀가. Every input opens in a bottom sheet; problems show
  * on the node they concern. Below: 보관함 (places on no day yet) and one action — 저장 while there are unsaved edits,
  * then 경로 보고 차로 보내기 (sending always starts from the car's QR, so that sheet shows the route and the steps).
  */
@@ -48,7 +49,8 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
   // The one home address, set in 설정 and shared by every trip (route checks, map, recommend, what the car may get).
   const [home] = useState(defaultHome);
   const [dirty, setDirty] = useState(false);
-  const [day, setDay] = useState('1');
+  // 'info' = the 여행 정보 tab (a new trip opens there), else a day number.
+  const [day, setDay] = useState(tripId ? '1' : 'info');
   const [sheet, setSheet] = useState<SheetState>(null);
   const [openPlace, setOpenPlace] = useState<string | null>(null);
   const [notice, setNotice] = useState<Notice | null>(null);
@@ -67,7 +69,6 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
       book.current = new Map();
       rememberLegs(d.plan, book.current);
       setPlan(d.plan);
-      if (!tripId) setSheet({ kind: 'basics' }); // a new trip starts with where from, its name and dates
     })();
   }, [tripId]);
 
@@ -97,7 +98,13 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
   }, [plan]);
   if (!plan || !doc) return <Spinner />;
 
+  const onInfo = day === 'info';
+  // On the 여행 정보 tab the map and send sheets follow day 1.
   const dayIndex = plan.days.find((d) => String(d.dayIndex) === day)?.dayIndex ?? plan.days[0].dayIndex;
+  const openInfo = () => {
+    setDay('info');
+    window.scrollTo({ top: 0 });
+  };
   const pool = unassignedVisits(plan);
   const poolNeedsCare = pool.some((v) => v.fixed);
 
@@ -142,7 +149,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
   ];
 
   const title = (
-    <button type="button" className="tl-title" onClick={() => setSheet({ kind: 'basics' })} aria-label={t('tl.editBasics')}>
+    <button type="button" className="tl-title" onClick={openInfo} aria-label={t('tl.editBasics')}>
       <span className="tl-title-name">
         <span>{plan.name || (tripId ? t('editor.titleEdit') : t('editor.titleNew'))}</span>
         <PencilIcon />
@@ -189,7 +196,8 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
       cta={cta}>
       <div className="tl-dayrow">
         <div className="tl-daytabs" ref={tabsRef}>
-          <TabList role="tablist" aria-label={t('days.title')} value={String(dayIndex)} onChange={setDay} hasDivider={false}>
+          <TabList role="tablist" aria-label={t('days.title')} value={onInfo ? 'info' : String(dayIndex)} onChange={setDay} hasDivider={false}>
+            <Tab value="info" panelId="day-panel" label={t('tl.basicsTitle')} />
             {plan.days.map((d) => (
               <Tab
                 key={d.dayIndex}
@@ -213,25 +221,28 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
         </div>
       )}
       {/* ARIA tabs: one panel whose content follows the selected day. */}
-      <div id="day-panel" role="tabpanel" aria-label={t('common.day', { day: dayIndex })} style={{ paddingTop: 12, paddingBottom: 16 }}>
-        <DayTimeline
-          plan={plan}
-          home={home}
-          dayIndex={dayIndex}
-          onChange={edit}
-          onError={fail}
-          onOpenPlace={setOpenPlace}
-          onOpenStart={() => setSheet({ kind: 'start' })}
-          onOpenLeg={(k) => setSheet({ kind: 'leg', k })}
-          onOpenEnd={() => setSheet({ kind: 'end' })}
-          onAddPlace={() => setSheet({ kind: 'place' })}
-        />
+      <div id="day-panel" role="tabpanel" aria-label={onInfo ? t('tl.basicsTitle') : t('common.day', { day: dayIndex })} style={{ paddingTop: onInfo ? 20 : 12, paddingBottom: 16 }}>
+        {onInfo ? (
+          <TripInfoPanel plan={plan} home={home} isNew={!tripId} onChange={edit} onOpenSettings={() => leave('/settings')} onPlanDays={() => setDay(String(plan.days[0].dayIndex))} />
+        ) : (
+          <DayTimeline
+            plan={plan}
+            home={home}
+            dayIndex={dayIndex}
+            onChange={edit}
+            onError={fail}
+            onOpenPlace={setOpenPlace}
+            onOpenStart={() => setSheet({ kind: 'start' })}
+            onOpenLeg={(k) => setSheet({ kind: 'leg', k })}
+            onOpenEnd={() => setSheet({ kind: 'end' })}
+            onAddPlace={() => setSheet({ kind: 'place' })}
+          />
+        )}
       </div>
 
-      <BasicsSheet isOpen={sheet?.kind === 'basics'} onClose={close} plan={plan} home={home} isNew={!tripId} onChange={edit} onOpenSettings={() => leave('/settings')} />
       <StartSheet isOpen={sheet?.kind === 'start'} onClose={close} plan={plan} home={home} dayIndex={dayIndex} onChange={edit} onOpenSettings={() => leave('/settings')} />
       {sheet?.kind === 'leg' && <LegSheet isOpen onClose={close} plan={plan} dayIndex={dayIndex} k={sheet.k} onChange={edit} />}
-      <EndSheet isOpen={sheet?.kind === 'end'} onClose={close} plan={plan} home={home} dayIndex={dayIndex} onChange={edit} onOpenPlace={setOpenPlace} />
+      <EndSheet isOpen={sheet?.kind === 'end'} onClose={close} plan={plan} home={home} dayIndex={dayIndex} onChange={edit} onOpenPlace={setOpenPlace} onOpenSettings={() => leave('/settings')} />
       <PlaceSheet isOpen={sheet?.kind === 'place'} onClose={close} plan={plan} dayIndex={dayIndex} onChange={edit} onOpenPlace={setOpenPlace} onNotice={setNotice} />
       {(sheet?.kind === 'send' || sheet?.kind === 'map') && <SendSheet key={`${sheet.kind}${dayIndex}`} isOpen onClose={close} plan={plan} home={home} dayIndex={dayIndex} mode={sheet.kind} />}
 
