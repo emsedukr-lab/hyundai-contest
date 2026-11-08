@@ -56,6 +56,39 @@ window.addEventListener('appinstalled', () => {
   notify();
 });
 
+/**
+ * Install state for a menu row (the 전체 tab): `available` when installing can help — the browser's prompt is ready, or
+ * it's iOS where the steps are manual — and `install()` opens the prompt. Shares the module-level capture above.
+ */
+export function useInstallPrompt() {
+  const [prompt, setPrompt] = useState<BeforeInstallPromptEvent | null>(deferred);
+  const [done, setDone] = useState(() => installed || isStandalone());
+  useEffect(() => {
+    const sync = () => {
+      setPrompt(deferred);
+      if (installed) setDone(true);
+    };
+    listeners.add(sync);
+    sync();
+    return () => {
+      listeners.delete(sync);
+    };
+  }, []);
+  const install = async () => {
+    if (!prompt) return;
+    try {
+      await prompt.prompt();
+      await prompt.userChoice;
+    } catch {
+      /* user dismissed the native dialog */
+    } finally {
+      deferred = null; // a prompt event can be used only once
+      notify();
+    }
+  };
+  return { available: !done && (!!prompt || isIos()), canPrompt: !done && !!prompt, ios: isIos(), install };
+}
+
 export function InstallHint() {
   const [prompt, setPrompt] = useState<BeforeInstallPromptEvent | null>(deferred);
   const [hidden, setHidden] = useState(() => installed || isStandalone() || wasDismissed());

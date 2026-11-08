@@ -3,49 +3,32 @@ import { Badge } from '@astryxdesign/core/Badge';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
-import { FileInput } from '@astryxdesign/core/FileInput';
-import { Layout, LayoutContent, LayoutFooter, LayoutHeader } from '@astryxdesign/core/Layout';
-import { List, ListItem } from '@astryxdesign/core/List';
-import { HStack, StackItem, VStack } from '@astryxdesign/core/Stack';
-import { Heading, Text } from '@astryxdesign/core/Text';
-import { TextInput } from '@astryxdesign/core/TextInput';
 import { sampleTrip, type Home, type Trip } from '@tteonaljido/shared';
-import { Card, CardListHeader } from '../components/toss/Card';
 import { InstallHint } from '../components/InstallHint';
+import { MapIcon } from '../components/shell/icons';
+import { Row, Section } from '../components/shell/rows';
+import { TabScreen } from '../components/shell/Screens';
 import { sendLog, trips, type SendLogEntry } from '../lib/db';
-import { dateLabel, periodLabel } from '../lib/format';
+import { dateLabel, dayOf, periodLabel } from '../lib/format';
 import { t } from '../lib/i18n';
 import { navigate } from '../lib/router';
-import { docFromShare, importShare, isShareFile } from '../lib/share';
 import { newDoc, nightsLabel, nowIso, unassignedVisits, type TripDoc } from '../lib/trips';
 
+/** 여행 tab: the trip list, one primary "create" action and a sample for a first look. Backup and import live in 전체. */
 export function HomePage() {
   const [docs, setDocs] = useState<TripDoc[] | null>(null);
   const [lastSends, setLastSends] = useState<Record<string, SendLogEntry>>({});
   const [message, setMessage] = useState<string | null>(null);
-  const [showImport, setShowImport] = useState(false);
-  // A friend's encrypted share needs a passcode; hold the file text until it is entered.
-  const [shareText, setShareText] = useState<string | null>(null);
-  const [sharePass, setSharePass] = useState('');
 
   const reload = async () => {
-    const all = await trips.all();
+    const [all, log] = await Promise.all([trips.all(), sendLog.recent(1000)]);
     setDocs(all);
-    // The most recent send per trip, so a card can show "last sent vN · date".
+    // The most recent send per trip, so a row can show "last sent vN · date" (the log is newest first).
     const latest: Record<string, SendLogEntry> = {};
-    for (const d of all) {
-      const log = await sendLog.forTrip(d.tripId);
-      const newest = log.reduce<SendLogEntry | null>((a, b) => (a && a.at >= b.at ? a : b), null);
-      if (newest) latest[d.tripId] = newest;
-    }
+    for (const e of log) latest[e.tripId] ??= e;
     setLastSends(latest);
   };
   useEffect(() => void reload(), []);
-
-  const localDate = (at: number) => {
-    const d = new Date(at);
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-  };
 
   const addSample = async () => {
     const plan: Trip = { ...sampleTrip(nowIso()), tripId: crypto.randomUUID() };
@@ -56,155 +39,57 @@ export function HomePage() {
     await reload();
   };
 
-  const exportAll = () => {
-    const blob = new Blob([JSON.stringify({ format: 'tteonaljido-backup', version: 1, trips: docs }, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = t('home.backupFileName', { date: nowIso().slice(0, 10) });
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const importFile = async (file: File) => {
-    const text = await file.text();
-    // A friend's share is encrypted: hold it and ask for the passcode instead of importing immediately.
-    if (isShareFile(text)) {
-      setShareText(text);
-      setSharePass('');
-      setShowImport(false);
-      return;
-    }
-    try {
-      const data = JSON.parse(text) as { format?: string; trips?: TripDoc[] };
-      if (data.format !== 'tteonaljido-backup' || !Array.isArray(data.trips)) throw new Error('not a backup');
-      // A backup replaces trips with the same id; warn before overwriting any.
-      const existing = new Set((docs ?? []).map((d) => d.tripId));
-      const overwrites = data.trips.filter((d) => existing.has(d.tripId)).length;
-      if (overwrites > 0 && !window.confirm(t('home.import.overwrite', { n: overwrites }))) return;
-      for (const d of data.trips) await trips.put(await newDoc({ ...d.plan, revision: d.revision, updatedAt: d.updatedAt }, d.home));
-      setMessage(t('home.imported', { n: data.trips.length }));
-      await reload();
-    } catch {
-      setMessage(t('home.notBackup'));
-    }
-  };
-
-  const importSharedTrip = async () => {
-    if (!shareText) return;
-    const r = await importShare(shareText, sharePass.trim());
-    if (!r.ok) return setMessage(t(r.reason === 'passcode' ? 'share.wrongPass' : 'share.invalid'));
-    await trips.put(await docFromShare(r.transfer));
-    setShareText(null);
-    setSharePass('');
-    setMessage(t('share.received'));
-    await reload();
-  };
-
   return (
-    <Layout
-      contentWidth={640}
-      header={
-        <LayoutHeader hasDivider>
-          <VStack gap={0.5}>
-            <Heading level={1}>{t('home.title')}</Heading>
-            <Text type="supporting" color="secondary">
-              {t('home.tagline')}
-            </Text>
-          </VStack>
-        </LayoutHeader>
-      }
-      content={
-        <LayoutContent>
-          <VStack gap={4}>
-            <InstallHint />
-            {message && <Banner status="info" title={message} isDismissable onDismiss={() => setMessage(null)} />}
-            {docs !== null && docs.length === 0 ? (
-              <VStack gap={3}>
-                <EmptyState
-                  title={t('common.noTrips')}
-                  description={t('home.empty.description')}
-                  actions={
-                    <HStack gap={2}>
-                      <Button label={t('home.newTrip')} variant="primary" onClick={() => navigate('/trips/new')} />
-                      <Button label={t('common.addSample')} variant="secondary" onClick={addSample} />
-                    </HStack>
-                  }
-                />
-                <Banner status="info" title={t('home.shareHint')} />
-              </VStack>
-            ) : (
-              <VStack gap={2}>
-                <Card pad={0}>
-                  {/* header (not a loose label) so the list is named for screen readers via aria-labelledby */}
-                  <List hasDividers header={<CardListHeader>{t('home.myTrips')}</CardListHeader>}>
-                    {(docs ?? []).map((d) => (
-                  <ListItem
-                    key={d.tripId}
-                    label={d.plan.name}
-                    description={
-                      t('common.tripSummary', { period: periodLabel(d.plan.startDate, d.plan.endDate), nights: nightsLabel(d.plan), places: d.plan.places.length }) +
-                      (lastSends[d.tripId] ? ` · ${t('home.lastSend', { version: lastSends[d.tripId].revision, date: dateLabel(localDate(lastSends[d.tripId].at)) })}` : '')
-                    }
-                    endContent={
-                      <HStack gap={1}>
-                        {unassignedVisits(d.plan).length > 0 && <Badge variant="warning" label={t('home.unassignedBadge', { n: unassignedVisits(d.plan).length })} />}
-                        <Badge variant="neutral" label={`v${d.revision}`} />
-                      </HStack>
-                    }
+    <TabScreen path="/" title={t('home.title')}>
+      <div className="tn-intro">
+        <p>{t('home.tagline')}</p>
+      </div>
+      <div className="tn-pad" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <InstallHint />
+        {message && <Banner status="info" title={message} isDismissable onDismiss={() => setMessage(null)} />}
+        <div style={{ display: 'flex', gap: 8 }}>
+          <div style={{ flex: '1 1 0', minWidth: 0 }}>
+            <Button label={t('trips.create')} variant="primary" size="lg" width="100%" onClick={() => navigate('/trips/new')} />
+          </div>
+          <Button label={t('common.addSample')} variant="secondary" size="lg" onClick={() => void addSample()} />
+        </div>
+      </div>
+      {docs !== null && docs.length === 0 ? (
+        <div className="tn-pad" style={{ paddingTop: 32 }}>
+          <EmptyState title={t('common.noTrips')} description={t('home.empty.description')} />
+        </div>
+      ) : (
+        <Section title={t('home.myTrips')}>
+          <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+            {(docs ?? []).map((d) => {
+              const unassigned = unassignedVisits(d.plan).length;
+              const sent = lastSends[d.tripId];
+              return (
+                <li key={d.tripId}>
+                  <Row
+                    href={`/trips/${d.tripId}`}
                     onClick={() => navigate(`/trips/${d.tripId}`)}
+                    lead={<MapIcon />}
+                    title={
+                      // badges ride on the title line so the summary gets the full width on a 360pt screen
+                      <span style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6 }}>
+                        <span>{d.plan.name}</span>
+                        <Badge variant="neutral" label={`v${d.revision}`} />
+                        {unassigned > 0 && <Badge variant="warning" label={t('home.unassignedBadge', { n: unassigned })} />}
+                      </span>
+                    }
+                    subtitle={
+                      t('common.tripSummary', { period: periodLabel(d.plan.startDate, d.plan.endDate), nights: nightsLabel(d.plan), places: d.plan.places.length }) +
+                      (sent ? ` · ${t('home.lastSend', { version: sent.revision, date: dateLabel(dayOf(sent.at)) })}` : '')
+                    }
+                    chevron
                   />
-                    ))}
-                  </List>
-                </Card>
-              </VStack>
-            )}
-            <Text type="supporting" color="secondary">
-              {t('home.storageNote')}
-            </Text>
-            <HStack gap={2} wrap="wrap">
-              <Button label={t('home.exportBackup')} variant="ghost" size="sm" isDisabled={!docs?.length} onClick={exportAll} />
-              <Button label={t('home.importBackup')} variant="ghost" size="sm" onClick={() => setShowImport((v) => !v)} />
-              <Button label={t('privacy.title')} variant="ghost" size="sm" onClick={() => navigate('/privacy')} />
-            </HStack>
-            {showImport && (
-              <FileInput
-                label={t('home.backupFile.label')}
-                mode="input"
-                accept="application/json"
-                value={null}
-                onChange={(f) => {
-                  const file = Array.isArray(f) ? f[0] : f;
-                  if (file) void importFile(file).then(() => setShowImport(false));
-                }}
-                description={t('home.backupFile.description')}
-              />
-            )}
-            {shareText && (
-              <VStack gap={2}>
-                <Banner status="info" title={t('share.importTitle')} description={t('share.importHint')} />
-                <TextInput label={t('share.passcode')} value={sharePass} inputMode="numeric" onChange={setSharePass} />
-                <HStack gap={2}>
-                  <Button label={t('share.importAction')} variant="primary" size="sm" isDisabled={sharePass.trim().length < 4} onClick={importSharedTrip} />
-                  <Button label={t('common.cancel')} variant="ghost" size="sm" onClick={() => setShareText(null)} />
-                </HStack>
-              </VStack>
-            )}
-          </VStack>
-        </LayoutContent>
-      }
-      footer={
-        docs?.length ? (
-          <LayoutFooter hasDivider>
-            <HStack gap={2}>
-              <StackItem size="fill">
-                <Button label={t('home.newTrip')} variant="primary" width="100%" onClick={() => navigate('/trips/new')} />
-              </StackItem>
-              <Button label={t('common.addSample')} variant="secondary" onClick={addSample} />
-            </HStack>
-          </LayoutFooter>
-        ) : undefined
-      }
-    />
+                </li>
+              );
+            })}
+          </ul>
+        </Section>
+      )}
+    </TabScreen>
   );
 }

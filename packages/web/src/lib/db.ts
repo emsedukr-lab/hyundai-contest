@@ -79,6 +79,8 @@ export const pairings = {
 export const sendLog = {
   add: async (e: SendLogEntry) => void (await (await db()).add('sendLog', e)),
   forTrip: async (tripId: string) => (await db()).getAllFromIndex('sendLog', 'byTrip', tripId),
+  /** Sends across every trip, newest first (the 차량 tab's recent list). */
+  recent: async (limit = 20) => (await (await db()).getAll('sendLog')).sort((a, b) => b.at - a.at).slice(0, limit),
 };
 
 export async function requestPersistence() {

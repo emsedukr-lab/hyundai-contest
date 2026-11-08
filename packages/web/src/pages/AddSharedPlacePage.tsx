@@ -2,12 +2,12 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { Collapsible, CollapsibleGroup } from '@astryxdesign/core/Collapsible';
-import { Layout, LayoutContent, LayoutHeader } from '@astryxdesign/core/Layout';
 import { List, ListItem } from '@astryxdesign/core/List';
 import { Selector } from '@astryxdesign/core/Selector';
 import { Spinner } from '@astryxdesign/core/Spinner';
-import { HStack, StackItem, VStack } from '@astryxdesign/core/Stack';
-import { Heading, Text } from '@astryxdesign/core/Text';
+import { HStack } from '@astryxdesign/core/Stack';
+import { Text } from '@astryxdesign/core/Text';
+import { PushScreen } from '../components/shell/Screens';
 import { Card } from '../components/toss/Card';
 import { InstallHint } from '../components/InstallHint';
 import { byName, CATEGORY_LABEL, fromHit, PlaceSearch, type NewPlace } from '../editor/PlaceSearch';
@@ -229,99 +229,91 @@ export function AddSharedPlacePage() {
     return opts;
   }, [add, docs]);
 
+  // One bottom CTA per state (toss.md): the next step filled, "home" beside it as the secondary.
+  const goHome = (primary: boolean) =>
+    primary ? (
+      <div>
+        <Button label={t('add.goHome')} variant="primary" size="lg" width="100%" onClick={() => navigate('/')} />
+      </div>
+    ) : (
+      <div className="is-secondary">
+        <Button label={t('add.goHome')} variant="secondary" size="lg" onClick={() => navigate('/')} />
+      </div>
+    );
+  const openTrip = (tripId: string) => (
+    <div>
+      <Button label={t('add.open')} variant="primary" size="lg" width="100%" onClick={() => navigate(`/trips/${tripId}`)} />
+    </div>
+  );
+  const cta =
+    status === 'added' && add ? (
+      <>
+        {goHome(false)}
+        {openTrip(add.tripId)}
+      </>
+    ) : status === 'restored' && restored ? (
+      <>
+        {goHome(false)}
+        {openTrip(restored.tripId)}
+      </>
+    ) : status === 'undone' || status === 'failed' || status === 'noTerm' ? (
+      goHome(true)
+    ) : undefined;
+
   return (
-    <Layout
-      contentWidth={640}
-      header={
-        <LayoutHeader hasDivider>
+    <PushScreen title={t('add.title')} onBack={() => navigate('/')} cta={cta}>
+      <div className="tn-pad" style={{ display: 'flex', flexDirection: 'column', gap: 16, paddingTop: 8 }}>
+        <InstallHint />
+        {status === 'noTerm' && <Banner status="info" title={t('add.noTerm')} />}
+
+        {status === 'resolving' && (
           <HStack gap={2} vAlign="center">
-            <Button label={t('common.back')} variant="ghost" size="sm" onClick={() => navigate('/')} />
-            <Heading level={1}>{t('add.title')}</Heading>
+            <Spinner />
+            <Text color="secondary">{t('add.saving')}</Text>
           </HStack>
-        </LayoutHeader>
-      }
-      content={
-        <LayoutContent>
-          <VStack gap={4}>
-            <InstallHint />
-            {status === 'noTerm' && <Banner status="info" title={t('add.noTerm')} />}
+        )}
 
-            {status === 'resolving' && (
-              <HStack gap={2} vAlign="center">
-                <Spinner />
-                <Text color="secondary">{t('add.saving')}</Text>
-              </HStack>
-            )}
+        {status === 'failed' && <Banner status="error" title={t('add.failed')} />}
+        {status === 'undone' && <Banner status="info" title={t('add.undone')} />}
+        {status === 'restored' && restored && <Banner status="success" title={t('add.added', { name: restored.placeName, trip: restored.tripName })} />}
 
-            {status === 'failed' && (
-              <>
-                <Banner status="error" title={t('add.failed')} />
-                <Button label={t('add.goHome')} variant="primary" width="100%" onClick={() => navigate('/')} />
-              </>
-            )}
+        {status === 'added' && add && (
+          <>
+            <Banner
+              status="success"
+              title={t('add.added', { name: add.place.name, trip: add.doc.plan.name })}
+              description={add.place.latE7 === null ? t('add.added.nameOnly') : undefined}
+            />
+            {note && <Banner status="warning" title={note} />}
 
-            {status === 'undone' && (
-              <>
-                <Banner status="info" title={t('add.undone')} />
-                <Button label={t('add.goHome')} variant="primary" width="100%" onClick={() => navigate('/')} />
-              </>
-            )}
+            <Card>
+              <CollapsibleGroup type="multiple" hasDividers density="balanced">
+                <Collapsible value="trip" trigger={<Text type="label">{t('add.changeTrip')}</Text>}>
+                  <Selector label={t('add.target')} options={targetOptions} value={add.tripId} onChange={(v) => void changeTrip(v)} />
+                </Collapsible>
 
-            {status === 'restored' && restored && (
-              <>
-                <Banner status="success" title={t('add.added', { name: restored.placeName, trip: restored.tripName })} />
-                <HStack gap={2}>
-                  <Button label={t('add.goHome')} variant="secondary" onClick={() => navigate('/')} />
-                  <StackItem size="fill">
-                    <Button label={t('add.open')} variant="primary" width="100%" onClick={() => navigate(`/trips/${restored.tripId}`)} />
-                  </StackItem>
-                </HStack>
-              </>
-            )}
+                {hits.length > 1 && (
+                  <Collapsible value="place" trigger={<Text type="label">{t('add.otherPlace')}</Text>}>
+                    <List hasDividers>
+                      {hits.map((h) => (
+                        <ListItem key={h.externalId} label={h.name} description={`${CATEGORY_LABEL[h.category]} · ${h.address}`} onClick={() => void rechoose(fromHit(h))} />
+                      ))}
+                    </List>
+                  </Collapsible>
+                )}
 
-            {status === 'added' && add && (
-              <>
-                <Banner
-                  status="success"
-                  title={t('add.added', { name: add.place.name, trip: add.doc.plan.name })}
-                  description={add.place.latE7 === null ? t('add.added.nameOnly') : undefined}
-                />
-                {note && <Banner status="warning" title={note} />}
-                <HStack gap={2}>
-                  <Button label={t('add.goHome')} variant="secondary" onClick={() => navigate('/')} />
-                  <StackItem size="fill">
-                    <Button label={t('add.open')} variant="primary" width="100%" onClick={() => navigate(`/trips/${add.tripId}`)} />
-                  </StackItem>
-                </HStack>
+                <Collapsible value="manual" trigger={<Text type="label">{t('add.manualFind')}</Text>}>
+                  <PlaceSearch label={t('add.refine.search')} onPick={(p) => void rechoose(p)} />
+                </Collapsible>
+              </CollapsibleGroup>
+            </Card>
 
-                <Card>
-                  <CollapsibleGroup type="multiple" hasDividers density="balanced">
-                    <Collapsible value="trip" trigger={<Text type="label">{t('add.changeTrip')}</Text>}>
-                      <Selector label={t('add.target')} options={targetOptions} value={add.tripId} onChange={(v) => void changeTrip(v)} />
-                    </Collapsible>
-
-                    {hits.length > 1 && (
-                      <Collapsible value="place" trigger={<Text type="label">{t('add.otherPlace')}</Text>}>
-                        <List hasDividers>
-                          {hits.map((h) => (
-                            <ListItem key={h.externalId} label={h.name} description={`${CATEGORY_LABEL[h.category]} · ${h.address}`} onClick={() => void rechoose(fromHit(h))} />
-                          ))}
-                        </List>
-                      </Collapsible>
-                    )}
-
-                    <Collapsible value="manual" trigger={<Text type="label">{t('add.manualFind')}</Text>}>
-                      <PlaceSearch label={t('add.refine.search')} onPick={(p) => void rechoose(p)} />
-                    </Collapsible>
-                  </CollapsibleGroup>
-                </Card>
-
-                <Button label={t('add.undo')} variant="ghost" size="sm" isDisabled={busy} onClick={() => void undo()} />
-              </>
-            )}
-          </VStack>
-        </LayoutContent>
-      }
-    />
+            <div>
+              <Button label={t('add.undo')} variant="ghost" size="sm" isDisabled={busy} onClick={() => void undo()} />
+            </div>
+          </>
+        )}
+      </div>
+    </PushScreen>
   );
 }

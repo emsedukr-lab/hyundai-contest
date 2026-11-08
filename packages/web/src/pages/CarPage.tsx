@@ -1,0 +1,95 @@
+import { useEffect, useState } from 'react';
+import { CarIcon, MapIcon, QrIcon, SendIcon } from '../components/shell/icons';
+import { Row, Section } from '../components/shell/rows';
+import { TabScreen } from '../components/shell/Screens';
+import { sendLog, trips } from '../lib/db';
+import { dateLabel, dayOf } from '../lib/format';
+import { t } from '../lib/i18n';
+import { navigate } from '../lib/router';
+
+/** The pairing page remembers its session per browser window (ConnectPage's LAST_SID); /c resumes it. */
+const hasOpenConnection = () => {
+  try {
+    return !!sessionStorage.getItem('tteonaljido.lastSid');
+  } catch {
+    return false;
+  }
+};
+
+interface RecentSend {
+  tripId: string;
+  name: string;
+  revision: number;
+  at: number;
+}
+
+/**
+ * 차량 tab: how a trip gets to the car (the car shows a QR, the phone scans it — the phone can't start a connection
+ * itself), a way back into a connection already in progress in this window, and the trips sent most recently.
+ */
+export function CarPage() {
+  const [recent, setRecent] = useState<RecentSend[] | null>(null);
+  const [resumable] = useState(hasOpenConnection);
+
+  useEffect(() => {
+    void (async () => {
+      const [log, all] = await Promise.all([sendLog.recent(200), trips.all()]);
+      const names = new Map(all.map((d) => [d.tripId, d.plan.name]));
+      const out: RecentSend[] = [];
+      for (const e of log) {
+        const name = names.get(e.tripId);
+        if (!name || out.some((r) => r.tripId === e.tripId)) continue; // one row per trip, deleted trips skipped
+        out.push({ tripId: e.tripId, name, revision: e.revision, at: e.at });
+        if (out.length >= 10) break;
+      }
+      setRecent(out);
+    })();
+  }, []);
+
+  return (
+    <TabScreen path="/car" title={t('nav.car')}>
+      <div className="tn-intro">
+        <p>{t('car.intro')}</p>
+      </div>
+
+      {resumable && <Row href="/c" onClick={() => navigate('/c')} lead={<CarIcon />} title={t('car.resume')} subtitle={t('car.resume.detail')} chevron />}
+
+      <Section title={t('car.howTo')}>
+        <ol style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+          <li>
+            <Row lead={<CarIcon />} title={t('car.step1')} />
+          </li>
+          <li>
+            <Row lead={<QrIcon />} title={t('car.step2')} />
+          </li>
+          <li>
+            <Row lead={<SendIcon />} title={t('car.step3')} />
+          </li>
+        </ol>
+      </Section>
+
+      <Section title={t('car.recent')}>
+        {recent && recent.length === 0 ? (
+          <p className="tn-pad" style={{ margin: 0, fontSize: 15, lineHeight: 1.5, color: 'var(--color-text-secondary)' }}>
+            {t('car.recent.empty')}
+          </p>
+        ) : (
+          <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+            {(recent ?? []).map((r) => (
+              <li key={r.tripId}>
+                <Row
+                  href={`/trips/${r.tripId}`}
+                  onClick={() => navigate(`/trips/${r.tripId}`)}
+                  lead={<MapIcon />}
+                  title={r.name}
+                  subtitle={t('home.lastSend', { version: r.revision, date: dateLabel(dayOf(r.at)) })}
+                  chevron
+                />
+              </li>
+            ))}
+          </ul>
+        )}
+      </Section>
+    </TabScreen>
+  );
+}

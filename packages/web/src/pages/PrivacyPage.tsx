@@ -1,9 +1,5 @@
-import { Button } from '@astryxdesign/core/Button';
-import { Layout, LayoutContent, LayoutHeader } from '@astryxdesign/core/Layout';
-import { List, ListItem } from '@astryxdesign/core/List';
-import { HStack, VStack } from '@astryxdesign/core/Stack';
-import { Heading, Text } from '@astryxdesign/core/Text';
-import { Card } from '../components/toss/Card';
+import { Row } from '../components/shell/rows';
+import { PushScreen } from '../components/shell/Screens';
 import { t } from '../lib/i18n';
 import { navigate } from '../lib/router';
 
@@ -18,34 +14,20 @@ const ROWS: Array<[string, string]> = [
   [t('privacy.ongoing.label'), t('privacy.ongoing.text')],
 ];
 
+/** 개인정보 안내 — opened from the 전체 tab, so back returns there. Plain, full-bleed rows (read-only facts). */
 export function PrivacyPage() {
   return (
-    <Layout
-      contentWidth={640}
-      header={
-        <LayoutHeader hasDivider>
-          <HStack gap={2} vAlign="center">
-            <Button label={t('common.back')} variant="ghost" size="sm" onClick={() => navigate('/')} />
-            <Heading level={1}>{t('privacy.title')}</Heading>
-          </HStack>
-        </LayoutHeader>
-      }
-      content={
-        <LayoutContent>
-          <VStack gap={4}>
-            <Card pad={0}>
-              <List hasDividers>
-                {ROWS.map(([label, description]) => (
-                  <ListItem key={label} label={label} description={description} />
-                ))}
-              </List>
-            </Card>
-            <Text type="supporting" color="secondary">
-              {t('privacy.processors')}
-            </Text>
-          </VStack>
-        </LayoutContent>
-      }
-    />
+    <PushScreen title={t('privacy.title')} onBack={() => navigate('/more')}>
+      <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+        {ROWS.map(([label, description]) => (
+          <li key={label}>
+            <Row title={label} subtitle={description} />
+          </li>
+        ))}
+      </ul>
+      <p className="tn-pad" style={{ margin: '16px 0 0', fontSize: 13, lineHeight: 1.5, color: 'var(--color-text-secondary)' }}>
+        {t('privacy.processors')}
+      </p>
+    </PushScreen>
   );
 }

@@ -3,16 +3,16 @@ import { Badge } from '@astryxdesign/core/Badge';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { Card } from '@astryxdesign/core/Card';
-import { Layout, LayoutContent, LayoutFooter, LayoutHeader } from '@astryxdesign/core/Layout';
 import { List, ListItem } from '@astryxdesign/core/List';
 import { MetadataList, MetadataListItem } from '@astryxdesign/core/MetadataList';
 import { SelectableCard } from '@astryxdesign/core/SelectableCard';
 import { Spinner } from '@astryxdesign/core/Spinner';
 import { HStack, StackItem, VStack } from '@astryxdesign/core/Stack';
-import { Step, Stepper } from '@astryxdesign/core/Stepper';
+import { ProgressBar } from '@astryxdesign/core/ProgressBar';
 import { Switch } from '@astryxdesign/core/Switch';
 import { Heading, Text } from '@astryxdesign/core/Text';
 import { isTerminal, parseQrFragment, sampleTrip, type SessionView } from '@tteonaljido/shared';
+import { PushScreen } from '../components/shell/Screens';
 import { CardListHeader } from '../components/toss/Card';
 import { pairings, trips, type PairingRecord } from '../lib/db';
 import { codeLabel, periodLabel } from '../lib/format';
@@ -476,37 +476,15 @@ export function ConnectPage() {
 
   const step = STEP_OF[stage];
   return (
-    <Layout
-      contentWidth={640}
-      header={
-        <LayoutHeader hasDivider>
-          <VStack gap={3}>
-            <Heading level={1}>{t('connect.title')}</Heading>
-            {step !== undefined && (
-              <Stepper activeStep={step} label={t('connect.stepper')}>
-                {STEPS.map((s, i) => (
-                  <Step key={s} step={i} label={s} status={i === step && stage === 'status' && view?.state === 'APPLIED' ? 'success' : undefined} />
-                ))}
-              </Stepper>
-            )}
-          </VStack>
-        </LayoutHeader>
-      }
-      content={
-        <LayoutContent>
-          <VStack gap={4}>
-            {err && <Banner status="error" title={err} />}
-            {content}
-          </VStack>
-        </LayoutContent>
-      }
-      footer={
-        <LayoutFooter hasDivider>
-          <HStack gap={2} hAlign="end" wrap="wrap">
-            {footer}
-          </HStack>
-        </LayoutFooter>
-      }
-    />
+    <PushScreen title={t('connect.title')} onBack={() => navigate('/car')} cta={footer}>
+      <div className="tn-pad" style={{ display: 'flex', flexDirection: 'column', gap: 16, paddingTop: 8 }}>
+        {/* A five-label stepper doesn't fit 360pt; the progress bar's accessible label names the current step. */}
+        {step !== undefined && (
+          <ProgressBar label={`${t('connect.stepper')}: ${STEPS[step]}`} value={step + 1} max={STEPS.length} hasValueLabel formatValueLabel={(v, m) => `${STEPS[step]} · ${v}/${m}`} />
+        )}
+        {err && <Banner status="error" title={err} />}
+        {content}
+      </div>
+    </PushScreen>
   );
 }

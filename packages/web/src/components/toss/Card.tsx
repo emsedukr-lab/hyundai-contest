@@ -3,7 +3,7 @@ import { VStack } from '@astryxdesign/core/Stack';
 import { Heading, Text } from '@astryxdesign/core/Text';
 
 /**
- * 토스 룩의 기본 블록: 회색 캔버스 위에 올리는 흰색 라운드 카드(헤어라인 보더).
+ * Pleos 모바일의 섹션 카드: 흰 캔버스 위 회색(basic-50) 면, 큰 카드 라운드 24(m-radius-3xl), 장식 보더 없음.
  * `pad={0}`이면 List처럼 자체 패딩을 가진 내용을 풀블리드로 담는 컨테이너가 된다(overflow hidden).
  */
 export function Card({ children, pad = 16, style }: { children: ReactNode; pad?: number; style?: CSSProperties }) {
@@ -11,8 +11,7 @@ export function Card({ children, pad = 16, style }: { children: ReactNode; pad?:
     <div
       style={{
         background: 'var(--color-background-card)',
-        border: '1px solid var(--color-border)',
-        borderRadius: 'var(--radius-container)',
+        borderRadius: 'var(--radius-page)',
         overflow: 'hidden',
         padding: pad,
         ...style,

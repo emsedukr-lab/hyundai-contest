@@ -4,19 +4,22 @@ import { Badge } from '@astryxdesign/core/Badge';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { DateRangeInput } from '@astryxdesign/core/DateRangeInput';
+import { DropdownMenu } from '@astryxdesign/core/DropdownMenu';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
 import { IconButton } from '@astryxdesign/core/IconButton';
-import { Layout, LayoutContent, LayoutFooter, LayoutHeader } from '@astryxdesign/core/Layout';
 import { List, ListItem } from '@astryxdesign/core/List';
 import { NumberInput } from '@astryxdesign/core/NumberInput';
 import { SegmentedControl, SegmentedControlItem } from '@astryxdesign/core/SegmentedControl';
 import { Selector } from '@astryxdesign/core/Selector';
 import { Spinner } from '@astryxdesign/core/Spinner';
 import { HStack, StackItem, VStack } from '@astryxdesign/core/Stack';
+import { Tab, TabList } from '@astryxdesign/core/TabList';
 import { Heading, Text } from '@astryxdesign/core/Text';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { TimeInput } from '@astryxdesign/core/TimeInput';
 import type { Endpoint, Home, Trip, Visit } from '@tteonaljido/shared';
+import { MoreIcon, StarIcon } from '../components/shell/icons';
+import { PushScreen } from '../components/shell/Screens';
 import { Card, CardListHeader, Section } from '../components/toss/Card';
 import { DaysSection } from '../editor/DaysSection';
 import { CATEGORY_LABEL, PlaceSearch } from '../editor/PlaceSearch';
@@ -30,6 +33,8 @@ import { REASON_LABEL, addPlace, emptyPlan, newDoc, nightsLabel, nowIso, planWar
 
 type ISOTime = Parameters<NonNullable<Parameters<typeof TimeInput>[0]['onChange']>>[0];
 type Range = NonNullable<Parameters<typeof DateRangeInput>[0]['value']>;
+/** The editor's three parts, split into inline tabs so a phone isn't one endless scroll. */
+type EditorTab = 'basics' | 'places' | 'days';
 
 const endpointValue = (e: Endpoint) => (e.kind === 'HOME' ? 'HOME' : e.placeRef);
 const toEndpoint = (v: string): Endpoint => (v === 'HOME' ? { kind: 'HOME' } : { kind: 'PLACE', placeRef: v });
@@ -45,6 +50,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [recommending, setRecommending] = useState(false);
   const [sharing, setSharing] = useState(false);
+  const [tab, setTab] = useState<EditorTab>('basics');
   /** Travel times typed this session by pair of places, so reordering does not throw them away. */
   const book = useRef<LegBook>(new Map());
   /** Importance a visit had before it was starred, so un-starring restores e.g. OPTIONAL instead of flattening it to NORMAL. */
@@ -93,24 +99,59 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
     navigate(`/trips/${nd.tripId}`);
   };
 
-  return (
-    <Layout
-      contentWidth={640}
-      header={
-        <LayoutHeader hasDivider>
-          <HStack gap={2} vAlign="center">
-            <Button label={t('common.back')} variant="ghost" size="sm" onClick={() => navigate('/')} />
-            <Heading level={1}>{tripId ? t('editor.titleEdit') : t('editor.titleNew')}</Heading>
-            <Badge variant="neutral" label={`v${doc.revision}${dirty ? ` · ${t('editor.unsaved')}` : ''}`} />
-          </HStack>
-        </LayoutHeader>
-      }
-      content={
-        <LayoutContent>
-          <VStack gap={6}>
-            {error && <Banner status="error" title={error} isDismissable onDismiss={() => setError(null)} />}
-            {saved && <Banner status="success" title={saved} isDismissable onDismiss={() => setSaved(null)} />}
+  /** Back to the trips tab; unsaved edits ask first instead of vanishing. */
+  const leave = () => {
+    if (dirty && !window.confirm(t('editor.leave.confirm'))) return;
+    navigate('/');
+  };
 
+  // Secondary actions live in the top bar's menu (toss.md 'menu': opens next to its trigger), keeping one CTA below.
+  const menuItems = [
+    ...(tripId ? [{ label: t('trip.duplicate'), onClick: () => void duplicate() }] : []),
+    { label: t('share.button'), onClick: () => setSharing(true) },
+    { label: t('recommend.button'), onClick: () => setRecommending(true) },
+    ...(tripId ? [{ type: 'divider' as const }, { label: t('editor.delete'), variant: 'destructive' as const, onClick: () => setConfirmDelete(true) }] : []),
+  ];
+
+  return (
+    <PushScreen
+      title={tripId ? plan.name || t('editor.titleEdit') : t('editor.titleNew')}
+      onBack={leave}
+      actions={
+        <>
+          <Badge variant="neutral" label={`v${doc.revision}${dirty ? ` · ${t('editor.unsaved')}` : ''}`} />
+          <DropdownMenu
+            items={menuItems}
+            presentation="popover"
+            renderTrigger={(props) => (
+              <button type="button" className="tn-iconbtn" aria-label={t('editor.more')} {...props}>
+                <MoreIcon />
+              </button>
+            )}
+          />
+        </>
+      }
+      cta={<Button label={dirty || !tripId ? t('editor.save') : t('editor.savedState')} variant="primary" size="lg" width="100%" isDisabled={!dirty && !!tripId} onClick={save} />}>
+      <div className="tn-pad" style={{ position: 'sticky', top: 'calc(56px + env(safe-area-inset-top))', zIndex: 4, background: 'var(--color-background-body)' }}>
+        {/* ARIA tabs: one panel region whose content swaps, so every tab controls the same panel. */}
+        <TabList role="tablist" value={tab} onChange={(v) => setTab(v as EditorTab)} hasDivider>
+          <Tab value="basics" label={t('editor.tab.basics')} panelId="editor-panel" />
+          <Tab value="places" label={t('editor.tab.places')} panelId="editor-panel" />
+          <Tab value="days" label={t('editor.tab.days')} panelId="editor-panel" />
+        </TabList>
+      </div>
+
+      <div
+        id="editor-panel"
+        role="tabpanel"
+        aria-label={t(tab === 'basics' ? 'editor.tab.basics' : tab === 'places' ? 'editor.tab.places' : 'editor.tab.days')}
+        className="tn-pad"
+        style={{ display: 'flex', flexDirection: 'column', gap: 24, paddingTop: 16 }}>
+        {error && <Banner status="error" title={error} isDismissable onDismiss={() => setError(null)} />}
+        {saved && <Banner status="success" title={saved} isDismissable onDismiss={() => setSaved(null)} />}
+
+        {tab === 'basics' && (
+          <>
             <Section title={t('editor.basics')}>
               <FormLayout>
                 <TextInput label={t('editor.name')} value={plan.name} onChange={(v) => edit({ ...plan, name: v.slice(0, 60) })} isRequired />
@@ -178,43 +219,46 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
 
             <Section title={t('editor.home.title')}>
               <VStack gap={3}>
-              <Text type="supporting" color="secondary">
-                {t('editor.home.description')}
-              </Text>
-              {home ? (
-                <HStack gap={2} vAlign="center">
-                  {/* a long address wraps; the button keeps its size instead of being squeezed to "지…" */}
-                  <StackItem size="fill">
-                    <Text>{home.address}</Text>
-                  </StackItem>
-                  <StackItem size="static">
-                    <Button label={t('editor.home.remove')} variant="ghost" size="sm" onClick={() => (setHome(null), setDirty(true))} />
-                  </StackItem>
-                </HStack>
-              ) : (
-                <PlaceSearch
-                  label={t('editor.home.search')}
-                  requireCoords
-                  onPick={(p) => {
-                    // Home needs coordinates; without them the car keeps using its navigation HOME.
-                    if (p.latE7 === null || p.lonE7 === null) return setError(t('editor.home.needsSearch'));
-                    setHome({ address: (p.address || p.name).slice(0, 120), latE7: p.latE7, lonE7: p.lonE7 });
-                    setDirty(true);
-                  }}
-                />
-              )}
+                <Text type="supporting" color="secondary">
+                  {t('editor.home.description')}
+                </Text>
+                {home ? (
+                  <HStack gap={2} vAlign="center">
+                    {/* a long address wraps; the button keeps its size instead of being squeezed to "지…" */}
+                    <StackItem size="fill">
+                      <Text>{home.address}</Text>
+                    </StackItem>
+                    <StackItem size="static">
+                      <Button label={t('editor.home.remove')} variant="ghost" size="sm" onClick={() => (setHome(null), setDirty(true))} />
+                    </StackItem>
+                  </HStack>
+                ) : (
+                  <PlaceSearch
+                    label={t('editor.home.search')}
+                    requireCoords
+                    onPick={(p) => {
+                      // Home needs coordinates; without them the car keeps using its navigation HOME.
+                      if (p.latE7 === null || p.lonE7 === null) return setError(t('editor.home.needsSearch'));
+                      setHome({ address: (p.address || p.name).slice(0, 120), latE7: p.latE7, lonE7: p.lonE7 });
+                      setDirty(true);
+                    }}
+                  />
+                )}
               </VStack>
             </Section>
+          </>
+        )}
 
-            <VStack gap={3}>
-              <Heading level={2}>{t('editor.places')}</Heading>
-              <PlaceSearch onPick={(p) => edit(addPlace(plan, p))} onPickMany={(places) => edit(places.reduce((pl, p) => addPlace(pl, p), plan))} />
-              {plan.places.length === 0 ? (
-                <Text type="supporting" color="secondary">
-                  {t('editor.firstPlace')}
-                </Text>
-              ) : (
-                <Card pad={0}>
+        {tab === 'places' && (
+          <VStack gap={3}>
+            <Heading level={2}>{t('editor.places')}</Heading>
+            <PlaceSearch onPick={(p) => edit(addPlace(plan, p))} onPickMany={(places) => edit(places.reduce((pl, p) => addPlace(pl, p), plan))} />
+            {plan.places.length === 0 ? (
+              <Text type="supporting" color="secondary">
+                {t('editor.firstPlace')}
+              </Text>
+            ) : (
+              <Card pad={0}>
                 <List hasDividers header={<CardListHeader>{t('editor.places.all', { n: plan.places.length })}</CardListHeader>}>
                   {plan.places.map((p) => {
                     const v = plan.visits.find((x) => x.placeRef === p.placeRef);
@@ -228,7 +272,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
                           v ? (
                             <IconButton
                               label={v.importance === 'MUST' ? t('visit.must.unset') : t('visit.must.set')}
-                              icon={<span>{v.importance === 'MUST' ? '★' : '☆'}</span>}
+                              icon={<StarIcon filled={v.importance === 'MUST'} />}
                               variant="ghost"
                               size="sm"
                               onClick={(e) => {
@@ -245,15 +289,16 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
                     );
                   })}
                 </List>
-                </Card>
-              )}
-            </VStack>
+              </Card>
+            )}
+          </VStack>
+        )}
 
-            <HStack hAlign="end" gap={2}>
-              {tripId && <Button label={t('trip.duplicate')} variant="ghost" size="sm" onClick={() => void duplicate()} />}
-              <Button label={t('share.button')} variant="ghost" size="sm" onClick={() => setSharing(true)} />
-              <Button label={t('recommend.button')} variant="secondary" size="sm" onClick={() => setRecommending(true)} />
-            </HStack>
+        {tab === 'days' && (
+          <>
+            <div>
+              <Button label={t('recommend.button')} variant="secondary" size="md" onClick={() => setRecommending(true)} />
+            </div>
             <DaysSection plan={plan} home={home} onChange={edit} onOpenPlace={setOpenPlace} onError={setError} />
 
             {unassignedVisits(plan).length > 0 && (
@@ -263,24 +308,24 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
                   {t('editor.unassigned.description')}
                 </Text>
                 <Card pad={0}>
-                <List hasDividers>
-                  {unassignedVisits(plan).map((v) => (
-                    <ListItem
-                      key={v.visitId}
-                      label={plan.places.find((p) => p.placeRef === v.placeRef)?.name ?? v.visitId}
-                      endContent={
-                        <Selector
-                          label={t('editor.unassigned.reason')}
-                          isLabelHidden
-                          size="sm"
-                          options={Object.entries(REASON_LABEL).map(([value, label]) => ({ value, label }))}
-                          value={v.unassignedReason ?? 'NOT_SCHEDULED_YET'}
-                          onChange={(r) => edit(updateVisit(plan, v.visitId, { unassignedReason: r as Visit['unassignedReason'] }))}
-                        />
-                      }
-                    />
-                  ))}
-                </List>
+                  <List hasDividers>
+                    {unassignedVisits(plan).map((v) => (
+                      <ListItem
+                        key={v.visitId}
+                        label={plan.places.find((p) => p.placeRef === v.placeRef)?.name ?? v.visitId}
+                        endContent={
+                          <Selector
+                            label={t('editor.unassigned.reason')}
+                            isLabelHidden
+                            size="sm"
+                            options={Object.entries(REASON_LABEL).map(([value, label]) => ({ value, label }))}
+                            value={v.unassignedReason ?? 'NOT_SCHEDULED_YET'}
+                            onChange={(r) => edit(updateVisit(plan, v.visitId, { unassignedReason: r as Visit['unassignedReason'] }))}
+                          />
+                        }
+                      />
+                    ))}
+                  </List>
                 </Card>
               </VStack>
             )}
@@ -293,36 +338,25 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
                 ))}
               </VStack>
             )}
+          </>
+        )}
+      </div>
 
-            {tripId && <Button label={t('editor.delete')} variant="destructive" size="sm" onClick={() => setConfirmDelete(true)} />}
-          </VStack>
-          <VisitDialog plan={plan} placeRef={openPlace} onChange={edit} onClose={() => setOpenPlace(null)} />
-          <RecommendDialog isOpen={recommending} plan={plan} home={home} book={book.current} onApply={edit} onClose={() => setRecommending(false)} />
-          <ShareDialog isOpen={sharing} doc={{ ...doc, plan, home }} onClose={() => setSharing(false)} />
-          <AlertDialog
-            isOpen={confirmDelete}
-            onOpenChange={setConfirmDelete}
-            title={t('editor.delete.title')}
-            description={t('editor.delete.description')}
-            actionLabel={t('editor.delete.action')}
-            actionVariant="destructive"
-            onAction={async () => {
-              await trips.remove(doc.tripId);
-              navigate('/', true);
-            }}
-          />
-        </LayoutContent>
-      }
-      footer={
-        <LayoutFooter hasDivider>
-          <HStack gap={2}>
-            <Button label={t('common.close')} variant="secondary" onClick={() => navigate('/')} />
-            <StackItem size="fill">
-              <Button label={dirty || !tripId ? t('editor.save') : t('editor.savedState')} variant="primary" width="100%" isDisabled={!dirty && !!tripId} onClick={save} />
-            </StackItem>
-          </HStack>
-        </LayoutFooter>
-      }
-    />
+      <VisitDialog plan={plan} placeRef={openPlace} onChange={edit} onClose={() => setOpenPlace(null)} />
+      <RecommendDialog isOpen={recommending} plan={plan} home={home} book={book.current} onApply={edit} onClose={() => setRecommending(false)} />
+      <ShareDialog isOpen={sharing} doc={{ ...doc, plan, home }} onClose={() => setSharing(false)} />
+      <AlertDialog
+        isOpen={confirmDelete}
+        onOpenChange={setConfirmDelete}
+        title={t('editor.delete.title')}
+        description={t('editor.delete.description')}
+        actionLabel={t('editor.delete.action')}
+        actionVariant="destructive"
+        onAction={async () => {
+          await trips.remove(doc.tripId);
+          navigate('/', true);
+        }}
+      />
+    </PushScreen>
   );
 }

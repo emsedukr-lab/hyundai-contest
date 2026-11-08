@@ -16,3 +16,9 @@ export const minutesLabel = (m: number) =>
   m < 60 ? t('duration.min', { m }) : m % 60 === 0 ? t('duration.hour', { h: m / 60 }) : t('duration.hourMin', { h: Math.floor(m / 60), m: m % 60 });
 
 export const codeLabel = (code: string) => `${code.slice(0, 3)} ${code.slice(3)}`;
+
+/** The local calendar date (YYYY-MM-DD) of a timestamp, for `dateLabel`. */
+export const dayOf = (at: number) => {
+  const d = new Date(at);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
