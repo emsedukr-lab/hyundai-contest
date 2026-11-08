@@ -170,16 +170,14 @@ try {
   caption("휴대폰에서 짠 3박 4일 강릉 여행 · 예약 2곳, 숙소 3박 · 경포호는 '여유 있으면' 일정");
   await click(page, '샘플 여행 추가');
   await page.getByText('강릉 3박 4일', { exact: true }).first().click();
-  const day2 = page.locator('button[data-tab-value="2"]'); // the editor's day tabs (timeline editor, M26)
+  const day2 = page.locator('#day-2'); // the editor is one page: 여행 정보, then each day with a sticky header (M30)
   await day2.waitFor();
   await sleep(1200);
-  await day2.scrollIntoViewIfNeeded();
-  await sleep(1500);
-  await day2.click();
+  await day2.evaluate((el) => el.scrollIntoView({ behavior: 'smooth', block: 'start' }));
   await sleep(2500);
   // 경포호 as '여유 있으면' (optional), as a user would mark it; the current sample already is, then nothing changes.
   // The day's first stop card (after the 출발 card) opens its details.
-  await page.locator('#day-panel .tl-card-main').nth(1).click();
+  await page.locator('#day-2 .tl-card-main').nth(1).click();
   const dlg = page.locator('dialog[open]');
   await dlg.getByText('여유 있으면', { exact: true }).click();
   await sleep(1500);

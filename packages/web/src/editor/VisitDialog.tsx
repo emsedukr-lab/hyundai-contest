@@ -58,12 +58,13 @@ export function VisitDialog({ plan, placeRef, onChange, onClose }: { plan: Trip;
       <DialogHeader title={place.name} subtitle={place.address} onOpenChange={(o) => !o && onClose()} />
       <VStack gap={4}>
         <FormLayout>
-          <Selector label={t('common.type')} isLabelHidden options={CATEGORY_OPTIONS} value={place.category} onChange={(v) => onChange(changeCategory(plan, place.placeRef, v as Place['category']))} />
+          <Selector label={t('common.type')} isLabelHidden placement="below" options={CATEGORY_OPTIONS} value={place.category} onChange={(v) => onChange(changeCategory(plan, place.placeRef, v as Place['category']))} />
           {visit && visit.unassignedReason !== null && (
             // On no day yet (보관함): why, as the car shows it.
             <Selector
               label={t('editor.unassigned.reason')}
               isLabelHidden
+              placement="below"
               options={Object.entries(REASON_LABEL).map(([value, label]) => ({ value, label }))}
               value={visit.unassignedReason}
               onChange={(r) => setVisit({ unassignedReason: r as Visit['unassignedReason'] })}
@@ -92,6 +93,7 @@ export function VisitDialog({ plan, placeRef, onChange, onClose }: { plan: Trip;
                   <Selector
                     label={t('common.type')}
                     isLabelHidden
+                    placement="below"
                     options={[
                       { value: 'RESERVATION', label: t('visit.fixedKind.reservation') },
                       { value: 'USER', label: t('visit.fixedKind.user') },

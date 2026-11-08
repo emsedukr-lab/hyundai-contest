@@ -6,7 +6,7 @@ import { Badge } from '@astryxdesign/core/Badge';
 import { Banner } from '@astryxdesign/core/Banner';
 import { DropdownMenu } from '@astryxdesign/core/DropdownMenu';
 import { dayEnd, hhmm, timeline, type DayIssue, type Home, type Trip } from '@tteonaljido/shared';
-import { BedIcon, FlagIcon, GripIcon, MoreIcon, PlusIcon } from '../components/shell/icons';
+import { BedIcon, FlagIcon, GripIcon, MoreIcon } from '../components/shell/icons';
 import { minutesLabel, shortDate } from '../lib/format';
 import { t } from '../lib/i18n';
 import { issueText, move, moveTo, nodeIssues, placeOf, unassign, visitOf } from '../lib/trips';
@@ -23,15 +23,15 @@ interface Props {
   onOpenStart: () => void;
   onOpenLeg: (k: number) => void;
   onOpenEnd: () => void;
-  onAddPlace: () => void;
 }
 
 /**
- * One day as a vertical route: 출발 → (이동 → 장소)… → + 장소 추가 → 이동 → 숙소 (or 귀가 on the last day). Every
+ * One day as a vertical route: 출발 → (이동 → 장소)… → 이동 → 숙소 (or 귀가 on the last day); places are added with the
+ * editor's floating + button. Every
  * problem shows on the node it is about — a tinted card edge and one line of text — instead of a list at the bottom.
  * Stops reorder by their handle (pointer or keyboard) or the ⋯ menu; fixed visits never move on their own.
  */
-export function DayTimeline({ plan, home, dayIndex, onChange, onError, onOpenPlace, onOpenStart, onOpenLeg, onOpenEnd, onAddPlace }: Props) {
+export function DayTimeline({ plan, home, dayIndex, onChange, onError, onOpenPlace, onOpenStart, onOpenLeg, onOpenEnd }: Props) {
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }));
   const { day, isFirst, isLast, startName, endName } = dayEnds(plan, dayIndex);
   const times = useMemo(() => Object.fromEntries(timeline(plan, day.dayIndex).map((st) => [st.visitId, st])), [plan, day.dayIndex]);
@@ -85,16 +85,6 @@ export function DayTimeline({ plan, home, dayIndex, onChange, onError, onOpenPla
     );
   };
 
-  const addCard = (
-    <div className="tl-row">
-      <div className="tl-rail" />
-      <button type="button" className="tl-add" onClick={onAddPlace}>
-        <PlusIcon />
-        {t('tl.addPlace')}
-      </button>
-    </div>
-  );
-
   return (
     <div className="tl">
       {issues.other.map((x, n) => (
@@ -142,7 +132,6 @@ export function DayTimeline({ plan, home, dayIndex, onChange, onError, onOpenPla
         </SortableContext>
       </DndContext>
 
-      {addCard}
       {leg(day.visitOrder.length)}
 
       <div className="tl-row is-last">

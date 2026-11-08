@@ -52,7 +52,7 @@ export function EndpointField({
   ];
   const tripPlaces = plan.places.filter((p) => !seen.has(p.placeRef)).map((p) => ({ value: p.placeRef, label: p.name, description: p.address || undefined }));
   const options = [
-    { type: 'section' as const, title: t('editor.startPlace.saved'), options: savedPlaces },
+    { type: 'section' as const, title: which === 'origin' ? t('editor.startPlace.saved') : t('tl.savedEndPlaces'), options: savedPlaces },
     ...(tripPlaces.length ? [{ type: 'section' as const, title: t('editor.startPlace.tripPlaces'), options: tripPlaces }] : []),
   ];
   const current = plan[which];
@@ -71,6 +71,7 @@ export function EndpointField({
           <Selector
             label={fieldLabel}
             isLabelHidden={isLabelHidden || compact}
+            placement="below"
             startIcon={compact ? <span className="tl-fieldicon">{which === 'origin' ? <PinIcon /> : <FlagIcon />}</span> : undefined}
             options={options}
             value={endpointValue(current)}

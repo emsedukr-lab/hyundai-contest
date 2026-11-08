@@ -107,9 +107,7 @@
 }
 .tl-card-main:focus-visible,
 .tl-leg:focus-visible,
-.tl-add:focus-visible,
 .tl-handle:focus-visible,
-.tl-pool:focus-visible,
 .tl-title:focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
@@ -200,40 +198,7 @@
   font-weight: 600;
 }
 
-/* "+ 장소 추가하기": a dashed card on the route. */
-.tl-add {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  width: 100%;
-  min-height: 52px;
-  margin: 6px 0;
-  border: 1.5px dashed var(--color-border-emphasized);
-  border-radius: var(--radius-container);
-  background: transparent;
-  color: var(--color-accent);
-  font: inherit;
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-}
-.tl-add:active {
-  background: var(--color-background-muted);
-}
-
-/* Day row under the top bar: day tabs scroll sideways, the two actions stay put. */
-.tl-dayrow {
-  position: sticky;
-  top: calc(56px + env(safe-area-inset-top));
-  z-index: 4;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0 24px;
-  background: var(--color-background-body);
-  border-bottom: 1px solid var(--color-border);
-}
+/* Day tabs inside a sheet (map / send): they scroll sideways when there are many days. */
 .tl-daytabs {
   flex: 1 1 auto;
   min-width: 0;
@@ -251,11 +216,6 @@
 }
 .tl-daytabs[data-fade-left='true'][data-fade-right='true'] {
   mask-image: linear-gradient(to right, transparent, #000 28px, #000 calc(100% - 28px), transparent);
-}
-.tl-dayactions {
-  flex: none;
-  display: flex;
-  gap: 6px;
 }
 .tl-dot {
   display: inline-block;
@@ -309,25 +269,80 @@
   color: var(--color-text-secondary);
 }
 
-/* Bottom bar: 보관함 beside the one primary action. */
-.tl-pool {
-  position: relative;
-  flex: none;
-  min-height: 48px;
-  padding: 0 16px;
+/*
+ * Section headers of the one-page editor (여행 정보, N일차): each sticks under the top bar while its section is on
+ * screen, and the next section's header takes over as it arrives.
+ */
+.tl-sechead {
+  position: sticky;
+  top: calc(56px + env(safe-area-inset-top));
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 56px;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 8px 24px;
+  background: var(--color-background-body);
+  border-bottom: 1px solid var(--color-border);
+  font-size: 17px;
+  line-height: 1.4;
+  font-weight: 700;
+}
+.tl-sechead-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Floating "+" (add a place) above the bottom action, kept inside the 480pt content column on wide screens. */
+.tl-fab {
+  position: fixed;
+  z-index: 6;
+  right: calc(max(0px, (100vw - 480px) / 2) + 20px);
+  bottom: calc(96px + env(safe-area-inset-bottom));
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
   border: 0;
-  border-radius: 14px;
-  background: var(--color-background-muted);
-  color: var(--color-text-primary);
-  font: inherit;
-  font-size: 15px;
-  font-weight: 600;
+  border-radius: 9999px;
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+  box-shadow: var(--shadow-high);
   cursor: pointer;
 }
-.tl-pool .tl-dot {
+.tl-fab svg {
+  width: 26px;
+  height: 26px;
+}
+.tl-fab:active {
+  transform: scale(0.96);
+}
+.tl-fab:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+.tl-fab-badge {
   position: absolute;
-  top: 8px;
-  right: 8px;
+  top: -2px;
+  right: -2px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  box-sizing: border-box;
+  border-radius: 9999px;
+  background: var(--color-text-primary);
+  color: var(--color-background-body);
+  font-size: 12px;
+  line-height: 20px;
+  font-weight: 700;
+  text-align: center;
+}
+.tl-fab-badge.is-warn {
+  background: var(--color-text-warning);
 }
 
 /* Sheets: a header row, a padded body, and a footer that stays reachable while the body scrolls. */
@@ -375,8 +390,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .tl-card-main,
-  .tl-add {
+  .tl-card-main {
     transition: none;
   }
 }

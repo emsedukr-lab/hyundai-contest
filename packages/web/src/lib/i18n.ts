@@ -579,6 +579,8 @@ const ko = {
   'settings.origins.detail2': '여행 정보 탭에서 출발·도착 장소로 골라요',
   'tl.nightLodging': '{day}일차 숙소',
   'tl.endByPh': '도착 목표 시각',
+  'tl.savedEndPlaces': '설정한 도착 장소',
+  'tl.targetDay': '넣을 날',
 } as const satisfies Record<string, string>;
 
 export type Key = keyof typeof ko;
@@ -1156,6 +1158,8 @@ const en: Record<Key, string> = {
   'settings.origins.detail2': 'Pick them as the start or end on a trip\'s details tab',
   'tl.nightLodging': 'Night {day} lodging',
   'tl.endByPh': 'Arrive by',
+  'tl.savedEndPlaces': 'Saved end places',
+  'tl.targetDay': 'Add to',
 };
 
 /** Both tables, for tests. */

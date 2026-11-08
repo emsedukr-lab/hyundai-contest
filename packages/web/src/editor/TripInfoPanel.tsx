@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Banner } from '@astryxdesign/core/Banner';
-import { Button } from '@astryxdesign/core/Button';
 import { DateRangeInput } from '@astryxdesign/core/DateRangeInput';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import type { Home, Trip } from '@tteonaljido/shared';
@@ -13,11 +12,11 @@ import { LodgingField } from './LodgingField';
 type Range = NonNullable<Parameters<typeof DateRangeInput>[0]['value']>;
 
 /**
- * 여행 정보 — the editor's first tab, in the page itself (no popup), in the order a trip is set up: 여행 이름 → 여행 기간
+ * 여행 정보 — the editor page's first section (no popup), in the order a trip is set up: 여행 이름 → 여행 기간
  * → 출발 장소 → 귀가 시 도착 장소, then each night's lodging (booked ahead, so chosen here, night by night). Fields
  * speak through placeholders and in-field icons rather than labels above them; the labels stay for screen readers.
  */
-export function TripInfoPanel({ plan, home, onChange, onOpenSettings, onPlanDays }: { plan: Trip; home: Home | null; onChange: (p: Trip) => void; onOpenSettings: () => void; onPlanDays: () => void }) {
+export function TripInfoPanel({ plan, home, onChange, onOpenSettings }: { plan: Trip; home: Home | null; onChange: (p: Trip) => void; onOpenSettings: () => void }) {
   const [error, setError] = useState<string | null>(null);
   const nights = plan.days.slice(0, -1);
   return (
@@ -55,7 +54,6 @@ export function TripInfoPanel({ plan, home, onChange, onOpenSettings, onPlanDays
           </div>
         </Card>
       )}
-      <Button label={t('tl.toDay1')} variant="secondary" size="lg" width="100%" onClick={onPlanDays} />
     </div>
   );
 }

@@ -48,6 +48,7 @@ export function EndSheet({ isOpen, onClose, plan, home, dayIndex, onChange, onOp
           <Selector
             label={t('common.lodging')}
             isLabelHidden
+            placement="below"
             placeholder={lodgingPlaces(plan).length ? t('days.lodging.placeholder') : t('days.lodging.none')}
             options={[{ value: '', label: t('days.lodging.unset') }, ...lodgingPlaces(plan).map((p) => ({ value: p.placeRef, label: p.name }))]}
             value={day.lodgingPlaceRef ?? ''}

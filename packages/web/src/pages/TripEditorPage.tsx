@@ -5,9 +5,8 @@ import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { DropdownMenu } from '@astryxdesign/core/DropdownMenu';
 import { Spinner } from '@astryxdesign/core/Spinner';
-import { Tab, TabList } from '@astryxdesign/core/TabList';
 import { dayIssues, type Home, type Trip } from '@tteonaljido/shared';
-import { MoreIcon, PencilIcon } from '../components/shell/icons';
+import { MoreIcon, PencilIcon, PlusIcon } from '../components/shell/icons';
 import { PushScreen } from '../components/shell/Screens';
 import { DayTimeline } from '../editor/DayTimeline';
 import { RecommendDialog } from '../editor/RecommendDialog';
@@ -28,7 +27,17 @@ import { emptyPlan, newDoc, nightsLabel, nowIso, relinkLegs, rememberLegs, saveP
 import '../editor/timeline.css';
 
 /** Which bottom sheet is open (one at a time; dialogs such as place details may stack above it). */
-type SheetState = { kind: 'start' } | { kind: 'leg'; k: number } | { kind: 'end' } | { kind: 'place' } | { kind: 'send' } | { kind: 'map' } | null;
+type SheetState =
+  | { kind: 'start'; day: number }
+  | { kind: 'leg'; day: number; k: number }
+  | { kind: 'end'; day: number }
+  | { kind: 'map'; day: number }
+  | { kind: 'place' }
+  | { kind: 'send' }
+  | null;
+
+/** Section header height under the 56pt top bar: a day counts as "in view" once its header is stuck there. */
+const STUCK_AT = 56 + 56;
 
 /** The plan as stored and shared: a blank name becomes the default one (the transfer needs a name). */
 const named = (p: Trip): Trip => (p.name.trim() ? p : { ...p, name: t('trip.defaultName') });
@@ -41,18 +50,18 @@ async function persist(doc: TripDoc, plan: Trip, home: Home | null): Promise<Tri
   return next;
 }
 
-/** 'MM/DD–MM/DD' for the title line, from the same short labels as the day tabs (weekday dropped). */
+/** 'MM/DD–MM/DD' for the title line, from the same short labels as the day headers (weekday dropped). */
 const shortPeriod = (start: string, end: string) => {
   const s = shortDate(start).replace(/\(.*\)$/, '');
   return start === end ? s : `${s}–${shortDate(end).replace(/\(.*\)$/, '')}`;
 };
 
 /**
- * The trip editor as one timeline (M26–27): a title that jumps to the 여행 정보 tab, then tabs [여행 정보][1일차]… with
- * 경로 추천 and 지도. 여행 정보 sets name → period → 출발 장소 → 귀가 시 도착 장소 in the page (a new trip opens there);
- * a day tab shows that day as a route from 출발 to 숙소/귀가. Every input opens in a bottom sheet; problems show
- * on the node they concern. Below: 보관함 (places on no day yet) and one action — 저장 while there are unsaved edits,
- * then 경로 보고 차로 보내기 (sending always starts from the car's QR, so that sheet shows the route and the steps).
+ * The trip editor as one page (M30): 여행 정보, then every day as a route from 출발 to 숙소/귀가, one after another in a
+ * single scroll. Each section's header sticks under the top bar while its section is on screen, so you always see which
+ * part you are in. Places are added with the floating + button (to the day in view; its badge counts the places on no
+ * day yet). Every input opens in a bottom sheet; problems show on the node they concern. Below: one action — 저장 while
+ * there are unsaved edits, then 경로 보고 차로 보내기. Leaving saves on its own (M29).
  */
 export function TripEditorPage({ tripId }: { tripId: string | null }) {
   const [doc, setDoc] = useState<TripDoc | null>(null);
@@ -60,8 +69,8 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
   // The one home address, set in 설정 and shared by every trip (route checks, map, recommend, what the car may get).
   const [home] = useState(defaultHome);
   const [dirty, setDirty] = useState(false);
-  // 'info' = the 여행 정보 tab (a new trip opens there), else a day number.
-  const [day, setDay] = useState(tripId ? '1' : 'info');
+  /** The day whose header is stuck under the top bar (the + button adds there); day 1 while 여행 정보 is in view. */
+  const [focusDay, setFocusDay] = useState(1);
   const [sheet, setSheet] = useState<SheetState>(null);
   const [openPlace, setOpenPlace] = useState<string | null>(null);
   const [notice, setNotice] = useState<Notice | null>(null);
@@ -70,7 +79,6 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
   const [sharing, setSharing] = useState(false);
   /** Travel times typed this session by pair of places, so reordering does not throw them away. */
   const book = useRef<LegBook>(new Map());
-  const tabsRef = useRef<HTMLDivElement>(null);
   // The latest state for saves that happen outside a render: leaving by browser back (unmount) or the app going away.
   const latest = useRef<{ doc: TripDoc | null; plan: Trip | null; dirty: boolean }>({ doc: null, plan: null, dirty: false });
   latest.current = { doc, plan, dirty };
@@ -101,21 +109,26 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
     })();
   }, [tripId]);
 
-  // Long trips scroll their day tabs sideways; fade the edge that has more, so a cut tab reads as "scroll", not broken.
+  // Which day is in view: the last day section whose top has reached the stuck-header line.
   const dayCount = plan?.days.length ?? 0;
   useEffect(() => {
-    const el = tabsRef.current;
-    if (!el) return;
+    let frame = 0;
     const update = () => {
-      el.dataset.fadeLeft = String(el.scrollLeft > 2);
-      el.dataset.fadeRight = String(el.scrollLeft + el.clientWidth < el.scrollWidth - 2);
+      frame = 0;
+      let current = 1;
+      for (const el of document.querySelectorAll<HTMLElement>('section[data-day]')) if (el.getBoundingClientRect().top <= STUCK_AT) current = Number(el.dataset.day);
+      setFocusDay(current);
+    };
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(update);
     };
     update();
-    el.addEventListener('scroll', update, { passive: true });
-    window.addEventListener('resize', update);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
     return () => {
-      el.removeEventListener('scroll', update);
-      window.removeEventListener('resize', update);
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+      if (frame) cancelAnimationFrame(frame);
     };
   }, [dayCount]);
 
@@ -141,7 +154,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Days with something to fix get a dot on their tab: a timetable conflict or a night without lodging.
+  // Days with something to fix get a dot on their header: a timetable conflict or a night without lodging.
   const attention = useMemo(() => {
     if (!plan) return new Set<number>();
     const last = plan.days.length - 1;
@@ -149,15 +162,9 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
   }, [plan]);
   if (!plan || !doc) return <Spinner />;
 
-  const onInfo = day === 'info';
-  // On the 여행 정보 tab the map and send sheets follow day 1.
-  const dayIndex = plan.days.find((d) => String(d.dayIndex) === day)?.dayIndex ?? plan.days[0].dayIndex;
-  const openInfo = () => {
-    setDay('info');
-    window.scrollTo({ top: 0 });
-  };
   const pool = unassignedVisits(plan);
   const poolNeedsCare = pool.some((v) => v.fixed);
+  const targetDay = plan.days.some((d) => d.dayIndex === focusDay) ? focusDay : plan.days[0].dayIndex;
 
   const edit = (p: Trip) => {
     const linked = relinkLegs(plan, p, book.current);
@@ -166,6 +173,8 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
     setDirty(true);
   };
   const fail = (m: string) => setNotice({ tone: 'error', text: m });
+  /** Brings a day's section to the top, under its own stuck header. */
+  const showDay = (day: number) => requestAnimationFrame(() => document.getElementById(`day-${day}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
 
   const save = async () => {
     latest.current = { doc, plan, dirty: true };
@@ -194,13 +203,14 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
   const close = () => setSheet(null);
 
   const menuItems = [
+    { label: t('recommend.button'), onClick: () => setRecommending(true) },
     ...(tripId ? [{ label: t('trip.duplicate'), onClick: () => void duplicate() }] : []),
     { label: t('share.button'), onClick: () => setSharing(true) },
     ...(tripId ? [{ type: 'divider' as const }, { label: t('editor.delete'), variant: 'destructive' as const, onClick: () => setConfirmDelete(true) }] : []),
   ];
 
   const title = (
-    <button type="button" className="tl-title" onClick={openInfo} aria-label={t('tl.editBasics')}>
+    <button type="button" className="tl-title" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} aria-label={t('tl.editBasics')}>
       <span className="tl-title-name">
         <span>{plan.name || (tripId ? t('editor.titleEdit') : t('editor.titleNew'))}</span>
         <PencilIcon />
@@ -209,22 +219,12 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
     </button>
   );
 
-  const showSave = dirty || !tripId;
-  const cta = (
-    <div style={{ display: 'flex', gap: 8 }}>
-      <button type="button" className="tl-pool" onClick={() => setSheet({ kind: 'place' })} aria-label={`${t('tl.pool', { n: pool.length })}${poolNeedsCare ? ` · ${t('tl.fixedPool')}` : ''}`}>
-        {t('tl.pool', { n: pool.length })}
-        {poolNeedsCare && <span className="tl-dot" aria-hidden="true" />}
-      </button>
-      <div style={{ flex: '1 1 0', minWidth: 0 }}>
-        {showSave ? (
-          <Button label={t('editor.save')} variant="primary" size="lg" width="100%" onClick={save} />
-        ) : (
-          <Button label={t('tl.send')} variant="primary" size="lg" width="100%" onClick={() => setSheet({ kind: 'send' })} />
-        )}
-      </div>
-    </div>
-  );
+  const cta =
+    dirty || !tripId ? (
+      <Button label={t('editor.save')} variant="primary" size="lg" width="100%" onClick={save} />
+    ) : (
+      <Button label={t('tl.send')} variant="primary" size="lg" width="100%" onClick={() => setSheet({ kind: 'send' })} />
+    );
 
   return (
     <PushScreen
@@ -245,57 +245,78 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
         </>
       }
       cta={cta}>
-      <div className="tl-dayrow">
-        <div className="tl-daytabs" ref={tabsRef}>
-          <TabList role="tablist" aria-label={t('days.title')} value={onInfo ? 'info' : String(dayIndex)} onChange={setDay} hasDivider={false}>
-            <Tab value="info" panelId="day-panel" label={t('tl.basicsTitle')} />
-            {plan.days.map((d) => (
-              <Tab
-                key={d.dayIndex}
-                value={String(d.dayIndex)}
-                panelId="day-panel"
-                label={t('common.day', { day: d.dayIndex })}
-                endContent={attention.has(d.dayIndex) ? <span className="tl-dot" role="img" aria-label={t('tl.dayAttention')} /> : undefined}
-              />
-            ))}
-          </TabList>
-        </div>
-        <div className="tl-dayactions">
-          <Button label={t('recommend.button')} variant="secondary" size="sm" onClick={() => setRecommending(true)} />
-          <Button label={t('tl.map')} variant="secondary" size="sm" onClick={() => setSheet({ kind: 'map' })} />
-        </div>
-      </div>
-
       {notice && (
         <div className="tn-pad" style={{ paddingTop: 12 }}>
           <Banner status={notice.tone} title={notice.text} isDismissable onDismiss={() => setNotice(null)} />
         </div>
       )}
-      {/* ARIA tabs: one panel whose content follows the selected day. */}
-      <div id="day-panel" role="tabpanel" aria-label={onInfo ? t('tl.basicsTitle') : t('common.day', { day: dayIndex })} style={{ paddingTop: onInfo ? 20 : 12, paddingBottom: 16 }}>
-        {onInfo ? (
-          <TripInfoPanel plan={plan} home={home} onChange={edit} onOpenSettings={() => leave('/settings')} onPlanDays={() => setDay(String(plan.days[0].dayIndex))} />
-        ) : (
-          <DayTimeline
-            plan={plan}
-            home={home}
-            dayIndex={dayIndex}
-            onChange={edit}
-            onError={fail}
-            onOpenPlace={setOpenPlace}
-            onOpenStart={() => setSheet({ kind: 'start' })}
-            onOpenLeg={(k) => setSheet({ kind: 'leg', k })}
-            onOpenEnd={() => setSheet({ kind: 'end' })}
-            onAddPlace={() => setSheet({ kind: 'place' })}
-          />
-        )}
-      </div>
 
-      <StartSheet isOpen={sheet?.kind === 'start'} onClose={close} plan={plan} home={home} dayIndex={dayIndex} onChange={edit} onOpenSettings={() => leave('/settings')} />
-      {sheet?.kind === 'leg' && <LegSheet isOpen onClose={close} plan={plan} dayIndex={dayIndex} k={sheet.k} onChange={edit} />}
-      <EndSheet isOpen={sheet?.kind === 'end'} onClose={close} plan={plan} home={home} dayIndex={dayIndex} onChange={edit} onOpenPlace={setOpenPlace} onOpenSettings={() => leave('/settings')} />
-      <PlaceSheet isOpen={sheet?.kind === 'place'} onClose={close} plan={plan} dayIndex={dayIndex} onChange={edit} onOpenPlace={setOpenPlace} onNotice={setNotice} />
-      {(sheet?.kind === 'send' || sheet?.kind === 'map') && <SendSheet key={`${sheet.kind}${dayIndex}`} isOpen onClose={close} plan={plan} home={home} dayIndex={dayIndex} mode={sheet.kind} />}
+      <section id="trip-info" aria-labelledby="trip-info-h">
+        <h2 id="trip-info-h" className="tl-sechead">
+          <span className="tl-sechead-title">{t('tl.basicsTitle')}</span>
+        </h2>
+        <div style={{ paddingTop: 16, paddingBottom: 8 }}>
+          <TripInfoPanel plan={plan} home={home} onChange={edit} onOpenSettings={() => leave('/settings')} />
+        </div>
+      </section>
+
+      {plan.days.map((d) => (
+        <section key={d.dayIndex} id={`day-${d.dayIndex}`} data-day={d.dayIndex} aria-labelledby={`day-${d.dayIndex}-h`}>
+          <h2 id={`day-${d.dayIndex}-h`} className="tl-sechead">
+            <span className="tl-sechead-title">{`${t('common.day', { day: d.dayIndex })} · ${shortDate(d.date)}`}</span>
+            {attention.has(d.dayIndex) && <span className="tl-dot" role="img" aria-label={t('tl.dayAttention')} />}
+            <span style={{ marginLeft: 'auto' }}>
+              <Button label={t('tl.map')} variant="secondary" size="sm" onClick={() => setSheet({ kind: 'map', day: d.dayIndex })} />
+            </span>
+          </h2>
+          {/* The last day leaves room so its end card can scroll clear of the floating + button. */}
+          <div style={{ paddingTop: 12, paddingBottom: d.dayIndex === plan.days[plan.days.length - 1].dayIndex ? 88 : 16 }}>
+            <DayTimeline
+              plan={plan}
+              home={home}
+              dayIndex={d.dayIndex}
+              onChange={edit}
+              onError={fail}
+              onOpenPlace={setOpenPlace}
+              onOpenStart={() => setSheet({ kind: 'start', day: d.dayIndex })}
+              onOpenLeg={(k) => setSheet({ kind: 'leg', day: d.dayIndex, k })}
+              onOpenEnd={() => setSheet({ kind: 'end', day: d.dayIndex })}
+            />
+          </div>
+        </section>
+      ))}
+
+      {/* Add a place: to the day in view. The badge counts places collected but on no day yet. */}
+      <button
+        type="button"
+        className="tl-fab"
+        onClick={() => setSheet({ kind: 'place' })}
+        aria-label={`${t('tl.placeSheet')}${pool.length ? ` · ${t('tl.pool', { n: pool.length })}` : ''}${poolNeedsCare ? ` · ${t('tl.fixedPool')}` : ''}`}>
+        <PlusIcon />
+        {pool.length > 0 && (
+          <span className={`tl-fab-badge${poolNeedsCare ? ' is-warn' : ''}`} aria-hidden="true">
+            {pool.length}
+          </span>
+        )}
+      </button>
+
+      {sheet?.kind === 'start' && <StartSheet isOpen onClose={close} plan={plan} home={home} dayIndex={sheet.day} onChange={edit} onOpenSettings={() => leave('/settings')} />}
+      {sheet?.kind === 'leg' && <LegSheet isOpen onClose={close} plan={plan} dayIndex={sheet.day} k={sheet.k} onChange={edit} />}
+      {sheet?.kind === 'end' && <EndSheet isOpen onClose={close} plan={plan} home={home} dayIndex={sheet.day} onChange={edit} onOpenPlace={setOpenPlace} onOpenSettings={() => leave('/settings')} />}
+      {sheet?.kind === 'place' && (
+        <PlaceSheet
+          isOpen
+          onClose={close}
+          plan={plan}
+          initialDay={targetDay}
+          onChange={edit}
+          onOpenPlace={setOpenPlace}
+          onNotice={setNotice}
+          onAdded={showDay}
+        />
+      )}
+      {sheet?.kind === 'map' && <SendSheet key={`map${sheet.day}`} isOpen onClose={close} plan={plan} home={home} dayIndex={sheet.day} mode="map" />}
+      {sheet?.kind === 'send' && <SendSheet key={`send${targetDay}`} isOpen onClose={close} plan={plan} home={home} dayIndex={targetDay} mode="send" />}
 
       <VisitDialog plan={plan} placeRef={openPlace} onChange={edit} onClose={() => setOpenPlace(null)} />
       <RecommendDialog isOpen={recommending} plan={plan} home={home} book={book.current} onApply={edit} onClose={() => setRecommending(false)} />
