@@ -1,7 +1,6 @@
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { Selector } from '@astryxdesign/core/Selector';
-import { TimeInput } from '@astryxdesign/core/TimeInput';
 import type { Home, Trip } from '@tteonaljido/shared';
 import { t } from '../../lib/i18n';
 import { addPlace, lodgingPlaces, setEndBy, setLodging } from '../../lib/trips';
@@ -11,8 +10,8 @@ import { Sheet } from '../Sheet';
 import { EndpointField } from '../EndpointField';
 import { FieldPrefix } from '../FieldPrefix';
 import { LodgingNoteFields } from '../NotesContext';
+import { TimeSelect } from '../TimeSelect';
 
-type ISOTime = Parameters<NonNullable<Parameters<typeof TimeInput>[0]['onChange']>>[0];
 
 /**
  * The day's end card. A night: ① which lodging (an existing one, or find a new one right here) → ② the time to be
@@ -23,15 +22,7 @@ export function EndSheet({ isOpen, onClose, plan, home, dayIndex, onChange, onOp
   const endLabel = endName ?? t('days.lodgingUnset');
   const endBy = (
     <FieldPrefix prefix={day.endBy ? t('tl.endByPh') : null}>
-      <TimeInput
-        label={t('days.endBy', { end: endLabel })}
-        isLabelHidden
-        placeholder={t('tl.endByPh')}
-        value={(day.endBy ?? undefined) as ISOTime}
-        increment={30}
-        hasClear
-        onChange={(v) => onChange(setEndBy(plan, day.dayIndex, v ? String(v).slice(0, 5) : null))}
-      />
+      <TimeSelect label={t('days.endBy', { end: endLabel })} placeholder={t('tl.endByPh')} clearable value={day.endBy} onChange={(v) => onChange(setEndBy(plan, day.dayIndex, v))} />
     </FieldPrefix>
   );
   return (

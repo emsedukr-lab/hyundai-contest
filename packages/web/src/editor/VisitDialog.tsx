@@ -4,7 +4,6 @@ import { DateInput } from '@astryxdesign/core/DateInput';
 import { SegmentedControl, SegmentedControlItem } from '@astryxdesign/core/SegmentedControl';
 import { Selector } from '@astryxdesign/core/Selector';
 import { Switch } from '@astryxdesign/core/Switch';
-import { TimeInput } from '@astryxdesign/core/TimeInput';
 import { Token } from '@astryxdesign/core/Token';
 import { useEffect, useState, type ReactNode } from 'react';
 import type { OpeningHours, Place, Trip, Visit } from '@tteonaljido/shared';
@@ -15,10 +14,8 @@ import { LodgingNoteFields, PlaceMemoField } from './NotesContext';
 import { CATEGORY_LABEL, CATEGORY_OPTIONS } from './PlaceSearch';
 import { Sheet } from './Sheet';
 import './visitSheet.css';
+import { TimeSelect } from './TimeSelect';
 
-type ISOTime = Parameters<NonNullable<Parameters<typeof TimeInput>[0]['onChange']>>[0];
-const iso = (s: string | null | undefined) => (s ?? undefined) as ISOTime;
-const hhmm = (v: ISOTime) => (v ? String(v).slice(0, 5) : null);
 const WEEKDAYS = ['visit.weekday.1', 'visit.weekday.2', 'visit.weekday.3', 'visit.weekday.4', 'visit.weekday.5', 'visit.weekday.6', 'visit.weekday.7'] as const;
 const ALL_DAYS = ['1', '2', '3', '4', '5', '6', '7'];
 const STAY_PRESETS = [30, 60, 90, 120, 180];
@@ -115,8 +112,7 @@ export function VisitDialog({
     else if (next === 'desired') setVisit({ desiredTime: base, fixed: null });
     else setVisit({ fixed: { time: toHalfHour(base), kind: 'USER' }, desiredTime: null, timeFlexible: false });
   };
-  const setTime = (v: ISOTime) => {
-    const time = hhmm(v);
+  const setTime = (time: string | null) => {
     if (!visit || !time) return;
     if (mode === 'fixed') setVisit({ fixed: { ...visit.fixed!, time: toHalfHour(time) } });
     else setVisit({ desiredTime: time });
@@ -201,13 +197,7 @@ export function VisitDialog({
             {mode !== 'free' && (
               <Row label="">
                 <div className="vd-time">
-                  <TimeInput
-                    label={mode === 'fixed' ? t('visit.fixedTime') : t('visit.desiredTime')}
-                    isLabelHidden
-                    value={iso(shownTime)}
-                    increment={mode === 'fixed' ? 30 : 15}
-                    onChange={setTime}
-                  />
+                  <TimeSelect label={mode === 'fixed' ? t('visit.fixedTime') : t('visit.desiredTime')} value={shownTime} onChange={setTime} />
                   {mode === 'fixed' && (
                     <button
                       type="button"
@@ -278,11 +268,11 @@ export function VisitDialog({
           {daily && (
             <>
               <div className="vd-pair">
-                <TimeInput label={t('visit.opens')} isLabelHidden value={iso(daily.open)} increment={30} onChange={(v) => v && setDaily(hhmm(v)!, daily.close)} />
+                <TimeSelect label={t('visit.opens')} value={daily.open} onChange={(v) => v && setDaily(v, daily.close)} />
                 <span className="vd-dash" aria-hidden="true">
                   –
                 </span>
-                <TimeInput label={t('visit.closes')} isLabelHidden value={iso(daily.close)} increment={30} onChange={(v) => v && setDaily(daily.open, hhmm(v)!)} />
+                <TimeSelect label={t('visit.closes')} value={daily.close} onChange={(v) => v && setDaily(daily.open, v)} />
               </div>
               <div className="vd-days" role="group" aria-label={t('visit.openDays')}>
                 {WEEKDAYS.map((key, i) => (

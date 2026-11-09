@@ -4,7 +4,6 @@ import { Card } from '@astryxdesign/core/Card';
 import { Selector } from '@astryxdesign/core/Selector';
 import { Spinner } from '@astryxdesign/core/Spinner';
 import { Switch } from '@astryxdesign/core/Switch';
-import { TimeInput } from '@astryxdesign/core/TimeInput';
 import type { Home, Trip } from '@tteonaljido/shared';
 import { CheckIcon, StarIcon } from '../components/shell/icons';
 import { shortDate } from '../lib/format';
@@ -19,8 +18,8 @@ import { RecommendPreview } from './RecommendDialog';
 import { CATEGORY_LABEL } from './PlaceSearch';
 import { TripInfoPanel } from './TripInfoPanel';
 import './timeline.css';
+import { TimeSelect } from './TimeSelect';
 
-type ISOTime = Parameters<NonNullable<Parameters<typeof TimeInput>[0]['onChange']>>[0];
 const STEPS: SetupStep[] = [1, 2, 3, 4];
 const TITLE: Record<SetupStep, 'setup.step1' | 'setup.step2' | 'setup.step3' | 'setup.step4'> = { 1: 'setup.step1', 2: 'setup.step2', 3: 'setup.step3', 4: 'setup.step4' };
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -157,13 +156,7 @@ export function TripSetup({
                         value={String(day)}
                         onChange={(d) => reserve(Number(d), v.fixed!.time)}
                       />
-                      <TimeInput
-                        label={t('setup.reserveTime')}
-                        isLabelHidden
-                        value={v.fixed!.time as ISOTime}
-                        increment={30}
-                        onChange={(x) => x && reserve(day, String(x).slice(0, 5))}
-                      />
+                      <TimeSelect label={t('setup.reserveTime')} value={v.fixed!.time} onChange={(x) => x && reserve(day, x)} />
                     </div>
                   )}
                 </Card>

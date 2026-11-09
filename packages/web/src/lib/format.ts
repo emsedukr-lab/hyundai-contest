@@ -29,3 +29,20 @@ export function shortDate(date: string) {
   const weekday = WEEKDAY[new Date(Date.UTC(y, m - 1, d)).getUTCDay()];
   return t('date.short', { month: lang === 'en' ? MONTH_EN[m - 1] : m, day: d, weekday });
 }
+
+/** "오후 1:30" / "1:30 PM" for an "HH:MM" time — the same reading the time picker and the cards use. */
+export function timeLabel(hhmm: string) {
+  const [h, m] = hhmm.split(':').map(Number);
+  return t('time.label', { ampm: h < 12 ? t('time.am') : t('time.pm'), h: h % 12 || 12, m: String(m).padStart(2, '0') });
+}
+
+/**
+ * The choices of a time picker (M47): every `step` minutes through the day (00:00 … 23:30 by default), plus the current
+ * value when it is off that grid (an older typed 10:15 still shows and stays chosen).
+ */
+export function timeOptions(step = 30, current?: string | null): string[] {
+  const out: string[] = [];
+  for (let m = 0; m < 24 * 60; m += step) out.push(`${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`);
+  if (current && /^\d\d:\d\d$/.test(current) && !out.includes(current)) out.push(current), out.sort();
+  return out;
+}

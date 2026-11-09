@@ -1,11 +1,10 @@
 import { createContext, useContext, useState } from 'react';
 import { TextInput } from '@astryxdesign/core/TextInput';
-import { TimeInput } from '@astryxdesign/core/TimeInput';
 import { t } from '../lib/i18n';
 import { MEMO_MAX, type PlaceNote, type TripNotes } from '../lib/notes';
 import { FieldPrefix } from './FieldPrefix';
+import { TimeSelect } from './TimeSelect';
 
-type ISOTime = Parameters<NonNullable<Parameters<typeof TimeInput>[0]['onChange']>>[0];
 type Patch = { [K in keyof PlaceNote]?: string | null };
 
 /** The trip's phone-only notes, shared by the editor's sections, sheets and dialogs — memos, and nights marked 미정. */
@@ -53,15 +52,7 @@ export function LodgingNoteFields({ placeRef }: { placeRef: string }) {
   const note = notes[placeRef] ?? {};
   const time = (key: 'checkIn' | 'checkOut', placeholder: string, short: string) => (
     <FieldPrefix prefix={note[key] ? short : null}>
-      <TimeInput
-        label={placeholder}
-        isLabelHidden
-        placeholder={placeholder}
-        increment={30}
-        hasClear
-        value={(note[key] ?? undefined) as ISOTime}
-        onChange={(v) => setNote(placeRef, { [key]: v ? String(v).slice(0, 5) : null })}
-      />
+      <TimeSelect label={placeholder} placeholder={placeholder} clearable value={note[key] ?? null} onChange={(v) => setNote(placeRef, { [key]: v })} />
     </FieldPrefix>
   );
   return (

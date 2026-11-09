@@ -711,6 +711,10 @@ const ko = {
   'visit.stayLess': '15분 줄이기',
   'visit.stayMore': '15분 늘리기',
   'visit.hoursTitle': '영업시간',
+  'time.am': '오전',
+  'time.pm': '오후',
+  'time.label': '{ampm} {h}:{m}',
+  'time.none': '없음',
 } as const satisfies Record<string, string>;
 
 export type Key = keyof typeof ko;
@@ -1420,6 +1424,10 @@ const en: Record<Key, string> = {
   'visit.stayLess': '15 minutes less',
   'visit.stayMore': '15 minutes more',
   'visit.hoursTitle': 'Opening hours',
+  'time.am': 'AM',
+  'time.pm': 'PM',
+  'time.label': '{h}:{m} {ampm}',
+  'time.none': 'None',
 };
 
 /** Both tables, for tests. */

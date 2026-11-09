@@ -3,15 +3,14 @@ import { FormLayout } from '@astryxdesign/core/FormLayout';
 import { NumberInput } from '@astryxdesign/core/NumberInput';
 import { SegmentedControl, SegmentedControlItem } from '@astryxdesign/core/SegmentedControl';
 import { HStack } from '@astryxdesign/core/Stack';
-import { TimeInput } from '@astryxdesign/core/TimeInput';
 import type { Home, Trip } from '@tteonaljido/shared';
 import { t } from '../../lib/i18n';
 import { setDepart } from '../../lib/trips';
 import { dayEnds } from '../dayInfo';
 import { Sheet } from '../Sheet';
 import { EndpointField } from '../EndpointField';
+import { TimeSelect } from '../TimeSelect';
 
-type ISOTime = Parameters<NonNullable<Parameters<typeof TimeInput>[0]['onChange']>>[0];
 
 /** 출발 card: day 1 picks where the trip starts and how its first time is set; later days set the departure time. */
 export function StartSheet({ isOpen, onClose, plan, home, dayIndex, onChange, onOpenSettings }: { isOpen: boolean; onClose: () => void; plan: Trip; home: Home | null; dayIndex: number; onChange: (p: Trip) => void; onOpenSettings: () => void }) {
@@ -31,22 +30,10 @@ export function StartSheet({ isOpen, onClose, plan, home, dayIndex, onChange, on
               <SegmentedControlItem value="ARRIVE_FIRST_STOP" label={t('editor.firstDay.arrive')} />
             </SegmentedControl>
             {fd.basis === 'DEPART_ORIGIN' ? (
-              <TimeInput
-                label={t('editor.departTime')}
-                isLabelHidden
-                increment={30}
-                value={fd.departTime as ISOTime}
-                onChange={(v) => v && onChange({ ...plan, firstDay: { basis: 'DEPART_ORIGIN', departTime: String(v).slice(0, 5) } })}
-              />
+              <TimeSelect label={t('editor.departTime')} value={fd.departTime} onChange={(v) => v && onChange({ ...plan, firstDay: { basis: 'DEPART_ORIGIN', departTime: v } })} />
             ) : (
               <HStack gap={2}>
-                <TimeInput
-                  label={t('editor.arriveTime')}
-                  isLabelHidden
-                  increment={30}
-                  value={fd.arriveTime as ISOTime}
-                  onChange={(v) => v && onChange({ ...plan, firstDay: { ...fd, arriveTime: String(v).slice(0, 5) } })}
-                />
+                <TimeSelect label={t('editor.arriveTime')} value={fd.arriveTime} onChange={(v) => v && onChange({ ...plan, firstDay: { ...fd, arriveTime: v } })} />
                 <NumberInput
                   label={t('editor.prepMinutes')}
                   isLabelHidden
@@ -60,15 +47,7 @@ export function StartSheet({ isOpen, onClose, plan, home, dayIndex, onChange, on
           </FormLayout>
         </>
       ) : (
-        <TimeInput
-          label={t('days.departFrom', { start: startName })}
-          isLabelHidden
-          placeholder={t('tl.departTime')}
-          value={(day.departTime ?? undefined) as ISOTime}
-          increment={30}
-          hasClear
-          onChange={(v) => onChange(setDepart(plan, day.dayIndex, v ? String(v).slice(0, 5) : null))}
-        />
+        <TimeSelect label={t('days.departFrom', { start: startName })} placeholder={t('tl.departTime')} clearable value={day.departTime} onChange={(v) => onChange(setDepart(plan, day.dayIndex, v))} />
       )}
     </Sheet>
   );

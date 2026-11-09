@@ -199,6 +199,9 @@
     --color-text-error: light-dark(#d82e08, #ff6a4d);
     --color-text-warning: light-dark(#a35500, #ff9f2e);
     --focus-outline-color: var(--color-accent);
+    --size-element-sm: 36px;
+    --size-element-md: 48px;
+    --size-element-lg: 56px;
     --shadow-low: 0px 1px 2px 0px #1314170a;
     --shadow-med: 0px 6px 24px 0px #00000014;
     --shadow-high: 0px 8px 32px 0px #00000029, 0px 2px 2px 0px #00000014;

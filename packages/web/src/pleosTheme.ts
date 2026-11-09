@@ -56,6 +56,11 @@ export const pleosTheme = defineTheme({
     '--color-text-warning': ['#a35500', '#ff9f2e'],
     // 포커스 = 강조(그래파이트), Pleos field/focused와 같은 계열.
     '--focus-outline-color': 'var(--color-accent)',
+    // 컨트롤 높이(M47, Pleos × 0.6): 작은 버튼 64dp → 36, 입력칸·드롭다운 small 80dp와 버튼 medium → 48, 큰 버튼 → 56.
+    // Astryx 기본(28·32·36)은 손가락에 작고, 48px 시각 선택·검색창과 한 줄에 놓이면 높이가 어긋났다.
+    '--size-element-sm': '36px',
+    '--size-element-md': '48px',
+    '--size-element-lg': '56px',
     // 모서리 사다리(차량 dp × 0.6).
     '--radius-inner': '10px',
     '--radius-element': '14px',
