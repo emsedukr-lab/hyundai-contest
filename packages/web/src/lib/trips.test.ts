@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { parseTransfer, sampleTrip, type Trip } from '@tteonaljido/shared';
-import { addPlace, addToDay, cleanLodgingTbd, moveToDay, placeRoom, assign, changeCategory, emptyPlan, isEndpointOnly, move, moveTo, endpointFromPreset, newDoc, nodeIssues, planWarnings, relinkLegs, rememberLegs, removePlace, savePlan, setDepart, setEndBy, setLeg, setEndpoint, setLodging, setOrigin, setPeriod, startFromPreset, toTransfer, unassign, type LegBook } from './trips';
+import { addPlace, addToDay, cleanLodgingTbd, cleanSetup, moveToDay, placeRoom, setReservation, setupReady, assign, changeCategory, emptyPlan, isEndpointOnly, move, moveTo, endpointFromPreset, newDoc, nodeIssues, planWarnings, relinkLegs, rememberLegs, removePlace, savePlan, setDepart, setEndBy, setLeg, setEndpoint, setLodging, setOrigin, setPeriod, startFromPreset, toTransfer, unassign, type LegBook } from './trips';
 
 // The warning assertions below check the Korean copy; jsdom reports navigator.language as en-US.
 vi.hoisted(() => Object.defineProperty(navigator, 'language', { value: 'ko-KR', configurable: true }));
@@ -360,5 +360,36 @@ describe('nights marked 미정 (M41, phone-only)', () => {
     const t0 = setLodging(sampleTrip(), 1, null); // night 1 empty, nights 2–3 have lodging, day 4 is the last day
     expect(cleanLodgingTbd([1, 2, 4, 9, 1, 'x'], t0)).toEqual([1]);
     expect(cleanLodgingTbd(undefined, t0)).toEqual([]);
+  });
+});
+
+describe('new-trip setup (M43)', () => {
+  it('step 1 needs a name and every night settled (lodging or 미정); step 2 needs a place', () => {
+    const t0 = { ...setLodging(sampleTrip(), 1, null), name: '' };
+    expect(setupReady(t0, [], 1).ok).toBe(false);
+    const named = { ...t0, name: '강릉' };
+    expect(setupReady(named, [], 1)).toMatchObject({ ok: false });
+    expect(setupReady(named, [1], 1).ok).toBe(true);
+    expect(setupReady({ ...emptyPlan(), visits: [] }, [], 2).ok).toBe(false);
+    expect(setupReady(sampleTrip(), [], 3).ok).toBe(true);
+  });
+  it('a reservation pins the visit to its day and time; lifting it frees the visit again', () => {
+    const t0 = sampleTrip();
+    const pooled = t0.visits.find((v) => v.unassignedReason !== null)!;
+    const booked = setReservation(t0, pooled.visitId, 2, '12:00');
+    const v = booked.visits.find((x) => x.visitId === pooled.visitId)!;
+    expect(v.fixed).toEqual({ time: '12:00', kind: 'RESERVATION' });
+    expect(v.timeFlexible).toBe(false);
+    expect(day(booked, 2).visitOrder).toContain(pooled.visitId);
+    const freed = setReservation(booked, pooled.visitId, null, null);
+    const f = freed.visits.find((x) => x.visitId === pooled.visitId)!;
+    expect(f.fixed).toBeNull();
+    expect(f.unassignedReason).not.toBeNull();
+  });
+  it('reads a stored setup state; anything else counts as done', () => {
+    expect(cleanSetup({ done: false, step: 3 })).toEqual({ done: false, step: 3 });
+    expect(cleanSetup({ done: false, step: 9 })).toEqual({ done: false, step: 1 });
+    expect(cleanSetup(undefined)).toBeNull();
+    expect(cleanSetup({ done: true, step: 4 })).toBeNull();
   });
 });

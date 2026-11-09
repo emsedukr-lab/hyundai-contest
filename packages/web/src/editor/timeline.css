@@ -716,3 +716,138 @@
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
 }
+
+/* Night lodging (M43): the search and the 미정 chip on one line; the chip sits centred on the 48px search bar. */
+.tl-lodging-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.tl-lodging-search {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.tl-chip.tl-lodging-tbd {
+  flex: none;
+  margin-top: 10px;
+  white-space: nowrap;
+}
+/* The read-only travel time in its sheet (M43): the minutes as the main fact. */
+.tl-leg-value {
+  font-size: 20px;
+  line-height: 1.4;
+  font-weight: 700;
+}
+.tl-leg-value.is-empty {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+/* New-trip setup (M43): a step header with four dots, one step at a time, buttons fixed at the bottom. */
+.tl-setup-head {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 16px;
+  padding-bottom: 12px;
+}
+.tl-setup-title {
+  margin: 0;
+  font-size: 24px;
+  line-height: 1.35;
+  font-weight: 700;
+}
+.tl-setup-dots {
+  display: flex;
+  gap: 6px;
+  padding-top: 8px;
+}
+.tl-setup-dot {
+  width: 28px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--color-border);
+}
+.tl-setup-dot.is-on {
+  background: var(--color-accent);
+}
+.tl-setup-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.tl-setup-hint {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+.tl-setup-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.tl-setup-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 8px;
+}
+.tl-setup-row-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.tl-setup-row .tl-chip {
+  flex: none;
+}
+.tl-setup-reserve {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding-top: 8px;
+}
+.tl-setup-progress {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  font-size: 16px;
+  line-height: 1.5;
+}
+.tl-setup-progress li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.tl-setup-progress li.is-wait {
+  color: var(--color-text-secondary);
+}
+.tl-setup-progress li.is-done {
+  font-weight: 600;
+}
+.tl-setup-progress-mark {
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  color: var(--color-accent);
+  font-weight: 700;
+}
+.tl-setup-skip {
+  align-self: flex-start;
+}
+.tl-setup-need {
+  max-width: 448px;
+  margin: 8px auto 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #f04452;
+  text-align: center;
+  pointer-events: none;
+}

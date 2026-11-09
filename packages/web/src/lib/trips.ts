@@ -37,6 +37,11 @@ export interface TripDoc {
    * nights (1…days-1) that still have no lodging; outside the plan's hash, never sent (the car sees an empty night).
    */
   lodgingTbd?: number[];
+  /**
+   * Phone-only (M43): where a new trip is in its step-by-step setup (1 정보 · 2 장소 · 3 예약·꼭 · 4 경로 추천). Until
+   * `done`, the editor shows the setup instead of the days. Missing on trips made before — those count as done.
+   */
+  setup?: TripSetupState;
 }
 
 const rand = () => Math.random().toString(36).slice(2, 10);
@@ -441,6 +446,44 @@ export function issueText(i: DayIssue): string {
     case 'OUTSIDE_HOURS': return t('timeline.outsideHours', { day, name: a, start: b, end: c });
     case 'PAST_END_BY': return t('timeline.pastEndBy', { day, end: a, endBy: b });
   }
+}
+
+export type SetupStep = 1 | 2 | 3 | 4;
+export interface TripSetupState {
+  done: boolean;
+  step: SetupStep;
+}
+
+/** A stored setup state, or null (done) when missing or malformed. */
+export function cleanSetup(raw: unknown): TripSetupState | null {
+  const r = raw as Partial<TripSetupState> | null | undefined;
+  if (!r || typeof r !== 'object' || r.done !== false) return null;
+  const step = [1, 2, 3, 4].includes(r.step as number) ? (r.step as SetupStep) : 1;
+  return { done: false, step };
+}
+
+/** Whether a setup step may move on, and if not, what is missing (shown under the step). */
+export function setupReady(plan: Trip, lodgingTbd: readonly number[], step: SetupStep): { ok: boolean; reason?: string } {
+  if (step === 1) {
+    if (!plan.name.trim()) return { ok: false, reason: t('setup.need.name') };
+    const open = plan.days.slice(0, -1).filter((d) => !d.lodgingPlaceRef && !lodgingTbd.includes(d.dayIndex)).length;
+    if (open > 0) return { ok: false, reason: t('setup.need.lodging', { n: open }) };
+  }
+  if (step === 2 && plan.visits.length === 0) return { ok: false, reason: t('setup.need.places') };
+  return { ok: true };
+}
+
+/**
+ * 예약 (M43): a reservation pins a visit to a day and time — fixed (RESERVATION), not movable by date or time, and put
+ * on that day. `day` null lifts it: the fixed time goes, the visit is free again and waits in 저장 목록.
+ */
+export function setReservation(plan: Trip, visitId: string, day: number | null, time: string | null): Trip {
+  if (day === null || time === null) {
+    const freed = updateVisit(plan, visitId, { fixed: null, timeFlexible: true, dateFlexible: true });
+    return freed.days.some((d) => d.visitOrder.includes(visitId)) ? unassign(freed, visitId) : freed;
+  }
+  const pinned = updateVisit(plan, visitId, { fixed: { time, kind: 'RESERVATION' }, timeFlexible: false, dateFlexible: false });
+  return moveToDay(pinned, visitId, day);
 }
 
 /** Keeps only nights that still exist and still have no lodging (a chosen lodging, or a shorter trip, ends 미정). */

@@ -71,17 +71,21 @@ function walk(start: number | null, items: [Visit, number | null][]): StopTime[]
   });
 }
 
-export function timeline(trip: Trip, dayIndex: number): StopTime[] {
+/**
+ * The day's stop times. `startAt` (minute of the day) replaces the planned departure — the phone uses it to recompute
+ * today "from now" on pull-to-refresh (M43); without it this is the shared rule the car mirrors.
+ */
+export function timeline(trip: Trip, dayIndex: number, startAt?: number): StopTime[] {
   const day = trip.days[dayIndex - 1];
   return walk(
-    departure(trip, dayIndex),
+    startAt ?? departure(trip, dayIndex),
     day.visitOrder.map((id, k) => [visitOf(trip, id), day.legs[k]?.minutes ?? null]),
   );
 }
 
-export function dayEnd(trip: Trip, dayIndex: number): number | null {
+export function dayEnd(trip: Trip, dayIndex: number, startAt?: number): number | null {
   const day = trip.days[dayIndex - 1];
-  const last = day.visitOrder.length === 0 ? departure(trip, dayIndex) : timeline(trip, dayIndex).at(-1)!.end;
+  const last = day.visitOrder.length === 0 ? (startAt ?? departure(trip, dayIndex)) : timeline(trip, dayIndex, startAt).at(-1)!.end;
   const leg = day.legs.at(-1);
   return last !== null && leg ? last + leg.minutes : null;
 }

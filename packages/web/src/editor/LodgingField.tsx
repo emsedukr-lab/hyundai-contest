@@ -56,26 +56,33 @@ export function LodgingField({ plan, dayIndex, onChange, showNotes = true }: { p
   const known = lodgingPlaces(plan);
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      <PlaceSearch
-        compact
-        lodgingOnly
-        isLabelHidden
-        label={t('tl.nightLodging', { day: dayIndex })}
-        placeholder={t('tl.nightLodging', { day: dayIndex })}
-        onPick={(p) => {
-          const added = addPlace(plan, p);
-          choose(setLodging(added, dayIndex, added.places[added.places.length - 1].placeRef));
-        }}
-      />
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-        {known.map((p) => (
-          <Button key={p.placeRef} label={p.name} variant="secondary" size="sm" onClick={() => choose(setLodging(plan, dayIndex, p.placeRef))} />
-        ))}
+      {/* One line: the search, and 미정 right beside it (M43). */}
+      <div className="tl-lodging-line">
+        <div className="tl-lodging-search">
+          <PlaceSearch
+            compact
+            lodgingOnly
+            isLabelHidden
+            label={t('tl.nightLodging', { day: dayIndex })}
+            placeholder={t('tl.nightLodging', { day: dayIndex })}
+            onPick={(p) => {
+              const added = addPlace(plan, p);
+              choose(setLodging(added, dayIndex, added.places[added.places.length - 1].placeRef));
+            }}
+          />
+        </div>
         {/* 미정: no lodging needed for this night yet — the card stops asking (toss chip: active = dark fill). */}
-        <button type="button" className={`tl-chip${tbd ? ' is-on' : ''}`} aria-pressed={tbd} aria-label={t('tl.lodgingTbdAria', { day: dayIndex })} onClick={() => setLodgingTbd(dayIndex, !tbd)}>
+        <button type="button" className={`tl-chip tl-lodging-tbd${tbd ? ' is-on' : ''}`} aria-pressed={tbd} aria-label={t('tl.lodgingTbdAria', { day: dayIndex })} onClick={() => setLodgingTbd(dayIndex, !tbd)}>
           {t('tl.lodgingTbdChip')}
         </button>
       </div>
+      {known.length > 0 && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+          {known.map((p) => (
+            <Button key={p.placeRef} label={p.name} variant="secondary" size="sm" onClick={() => choose(setLodging(plan, dayIndex, p.placeRef))} />
+          ))}
+        </div>
+      )}
       {/* toss text-field error: the helper line in red under the field, until a lodging or 미정 is chosen. */}
       {!tbd && <span className="tl-required-text">{t('tl.lodgingRequired')}</span>}
     </div>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Button } from '@astryxdesign/core/Button';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { List, ListItem } from '@astryxdesign/core/List';
 import { Text } from '@astryxdesign/core/Text';
@@ -15,32 +16,34 @@ import { Sheet } from '../Sheet';
 export type Notice = { tone: 'success' | 'error' | 'info'; text: string; undo?: () => void };
 
 /**
- * The floating + button's sheet (M40): every place goes to the whole trip first — "저장 목록", on no day yet — and a
- * day is chosen only in the place's details (or all at once with 경로 추천). Top to bottom: a search for new places
- * (the sheet stays open so several can be collected in a row), the places saved for this trip (tap → details, where
- * the day is set), and favorites shared by every trip (tap → saved to this trip).
+ * Collecting places for a trip (M40/M43) — the body of the + sheet and of the new-trip setup's step 2. Every place goes
+ * to the whole trip first ("저장 목록", on no day yet); a day is chosen only in the place's details or by 경로 추천.
+ * Top to bottom: a search for new places (several can be collected in a row), the places saved for this trip (tap →
+ * details; in setup each has 빼기), and favorites shared by every trip (tap → saved to this trip).
  */
-export function PlaceSheet({
-  isOpen,
-  onClose,
+export function PlaceCollector({
   plan,
   onChange,
   onOpenPlace,
   onNotice,
+  onBulkDone,
+  onRemovePlace,
 }: {
-  isOpen: boolean;
-  onClose: () => void;
   plan: Trip;
   onChange: (p: Trip) => void;
   onOpenPlace: (ref: string) => void;
   onNotice: (n: Notice) => void;
+  /** After a pasted batch was saved (the sheet closes). */
+  onBulkDone?: () => void;
+  /** Setup: each saved place gets 빼기 to drop it from the trip. */
+  onRemovePlace?: (placeRef: string) => void;
 }) {
   const [added, setAdded] = useState<string | null>(null);
   const [favs, setFavs] = useState<FavoritePlace[]>([]);
   const [favVersion, setFavVersion] = useState(0);
   useEffect(() => {
-    if (isOpen) void favorites.all().then(setFavs);
-  }, [isOpen, favVersion]);
+    void favorites.all().then(setFavs);
+  }, [favVersion]);
   // Newest first: what was just added sits right under the search.
   const pool = [...unassignedVisits(plan)].reverse();
   const inTrip = new Set(plan.places.map((p) => favoriteId(p)));
@@ -58,7 +61,7 @@ export function PlaceSheet({
     onChange(fit.reduce((pl, p) => addPlace(pl, p), plan));
     if (fit.length < places.length) full();
     else onNotice({ tone: 'success', text: t('tl.addedMany', { n: fit.length }) });
-    onClose();
+    onBulkDone?.();
   };
   const unfavorite = async (id: string) => {
     await favorites.remove(id);
@@ -66,7 +69,7 @@ export function PlaceSheet({
   };
 
   return (
-    <Sheet isOpen={isOpen} onClose={onClose} title={t('tl.placeSheet')} height="tall">
+    <>
       <h3 className="tl-sheet-section">{t('tl.searchNew')}</h3>
       <PlaceSearch
         isLabelHidden
@@ -95,7 +98,27 @@ export function PlaceSheet({
               const p = placeOf(plan, v.placeRef);
               const bits = [p ? CATEGORY_LABEL[p.category] : '', REASON_LABEL[v.unassignedReason ?? 'NOT_SCHEDULED_YET'], v.fixed ? `${t('common.fixedAt', { time: v.fixed.time })} · ${t('tl.fixedPool')}` : ''].filter(Boolean);
               // The day is set in the place's details.
-              return <ListItem key={v.visitId} label={p?.name ?? v.visitId} description={bits.join(' · ')} onClick={() => onOpenPlace(v.placeRef)} />;
+              return (
+                <ListItem
+                  key={v.visitId}
+                  label={p?.name ?? v.visitId}
+                  description={bits.join(' · ')}
+                  onClick={() => onOpenPlace(v.placeRef)}
+                  endContent={
+                    onRemovePlace ? (
+                      <Button
+                        label={t('tl.unassignShort')}
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onRemovePlace(v.placeRef);
+                        }}
+                      />
+                    ) : undefined
+                  }
+                />
+              );
             })}
           </List>
         </Card>
@@ -137,6 +160,29 @@ export function PlaceSheet({
           </List>
         </Card>
       )}
+    </>
+  );
+}
+
+/** The floating + button's sheet: collecting places for the trip (see PlaceCollector). */
+export function PlaceSheet({
+  isOpen,
+  onClose,
+  plan,
+  onChange,
+  onOpenPlace,
+  onNotice,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  plan: Trip;
+  onChange: (p: Trip) => void;
+  onOpenPlace: (ref: string) => void;
+  onNotice: (n: Notice) => void;
+}) {
+  return (
+    <Sheet isOpen={isOpen} onClose={onClose} title={t('tl.placeSheet')} height="tall">
+      <PlaceCollector plan={plan} onChange={onChange} onOpenPlace={onOpenPlace} onNotice={onNotice} onBulkDone={onClose} />
     </Sheet>
   );
 }

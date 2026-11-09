@@ -19,6 +19,7 @@ import { PlaceSheet, type Notice } from '../editor/sheets/PlaceSheet';
 import { SendSheet } from '../editor/sheets/SendSheet';
 import { StartSheet } from '../editor/sheets/StartSheet';
 import { TripInfoPanel } from '../editor/TripInfoPanel';
+import { TripSetup } from '../editor/TripSetup';
 import { VisitDialog } from '../editor/VisitDialog';
 import { TRIPS_CHANGED, trips } from '../lib/db';
 import { periodLabel, shortDate } from '../lib/format';
@@ -27,7 +28,7 @@ import { navigate } from '../lib/router';
 import { cleanNotes, setNote, type TripNotes } from '../lib/notes';
 import { allRuns, applyRun, cleanLegMeters, emptyRuns, fetchRun, runSignature } from '../lib/routeTimes';
 import { defaultHome } from '../lib/settings';
-import { cleanLodgingTbd, emptyPlan, legKeys, newDoc, nightsLabel, nowIso, placeOf, relinkLegs, rememberLegs, savePlan, unassign, unassignedVisits, visitOf, type LegBook, type TripDoc } from '../lib/trips';
+import { cleanLodgingTbd, cleanSetup, emptyPlan, legKeys, newDoc, nightsLabel, nowIso, placeOf, relinkLegs, rememberLegs, savePlan, unassign, unassignedVisits, visitOf, type LegBook, type TripDoc, type TripSetupState } from '../lib/trips';
 import '../editor/timeline.css';
 
 /** Which bottom sheet is open (one at a time; dialogs such as place details may stack above it). */
@@ -40,6 +41,9 @@ type SheetState =
   | { kind: 'send' }
   | null;
 
+/** This phone's calendar date as YYYY-MM-DD (to find "today" among the trip's days). */
+const localDate = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
 /** Pull distance (after resistance) at which letting go recalculates; the strip never grows past PULL_MAX. */
 const PULL_AT = 64;
 const PULL_MAX = 96;
@@ -51,7 +55,7 @@ const STUCK_AT = 56 + 56;
 const named = (p: Trip): Trip => (p.name.trim() ? p : { ...p, name: t('trip.defaultName') });
 
 /** Writes the trip to this phone (a new revision only when its content changed) and tells listening lists. */
-async function persist(doc: TripDoc, plan: Trip, home: Home | null, notes: TripNotes, legMeters: Record<string, number>, lodgingTbd: number[], fresh = false): Promise<TripDoc> {
+async function persist(doc: TripDoc, plan: Trip, home: Home | null, notes: TripNotes, legMeters: Record<string, number>, lodgingTbd: number[], setup: TripSetupState | null, fresh = false): Promise<TripDoc> {
   // Notes and distances are phone-only and outside the plan's hash: changing only those keeps the version the car knows.
   // A trip saved for the first time is v1, whatever was typed before (its blank starting doc was never stored).
   const next: TripDoc = {
@@ -59,6 +63,7 @@ async function persist(doc: TripDoc, plan: Trip, home: Home | null, notes: TripN
     notes: cleanNotes(notes, new Set(plan.places.map((p) => p.placeRef))),
     legMeters: cleanLegMeters(legMeters, plan),
     lodgingTbd: cleanLodgingTbd(lodgingTbd, plan),
+    setup: setup ?? undefined, // phone-only: where a new trip is in its step-by-step setup (M43)
   };
   await trips.put(next);
   window.dispatchEvent(new Event(TRIPS_CHANGED));
@@ -90,9 +95,17 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
   const [legMeters, setLegMeters] = useState<Record<string, number>>({});
   /** Phone-only: nights marked 미정 (no lodging needed yet, so no warning). */
   const [lodgingTbd, setLodgingTbdState] = useState<number[]>([]);
+  /** A new trip's step-by-step setup (M43); null once done (and for trips made before it). */
+  const [setup, setSetup] = useState<TripSetupState | null>(null);
+  const inSetupRef = useRef(false);
+  inSetupRef.current = !!setup && !setup.done; // pull-to-refresh has nothing to recalculate during setup
   /** Pull to refresh: how far the page is pulled down at the top, and whether a recalculation is running. */
   const [pull, setPull] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
+  /** When Kakao last answered (shown as "as of HH:MM" in the travel-time sheet). */
+  const [routeAt, setRouteAt] = useState<Date | null>(null);
+  /** Pull-to-refresh during the trip (M43): today's day recomputed from this minute — screen only, never saved. */
+  const [liveFrom, setLiveFrom] = useState<{ dayIndex: number; minute: number } | null>(null);
   /** 여행 정보 open for editing: a new trip starts open; a saved one shows its summary until expanded. */
   const [infoOpen, setInfoOpen] = useState(!tripId);
   /** The day whose header is stuck under the top bar (the + button adds there); day 1 while 여행 정보 is in view. */
@@ -106,14 +119,12 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
   /** Travel times typed this session by pair of places, so reordering does not throw them away. */
   const book = useRef<LegBook>(new Map());
   // The latest state for saves that happen outside a render: leaving by browser back (unmount) or the app going away.
-  const latest = useRef<{ doc: TripDoc | null; plan: Trip | null; notes: TripNotes; legMeters: Record<string, number>; lodgingTbd: number[]; dirty: boolean }>({ doc: null, plan: null, notes: {}, legMeters: {}, lodgingTbd: [], dirty: false });
-  latest.current = { doc, plan, notes, legMeters, lodgingTbd, dirty };
+  const latest = useRef<{ doc: TripDoc | null; plan: Trip | null; notes: TripNotes; legMeters: Record<string, number>; lodgingTbd: number[]; setup: TripSetupState | null; dirty: boolean }>({ doc: null, plan: null, notes: {}, legMeters: {}, lodgingTbd: [], setup: null, dirty: false });
+  latest.current = { doc, plan, notes, legMeters, lodgingTbd, setup, dirty };
   /** Auto travel times: only after the user changed something, each empty stretch asked once, stopped if unavailable. */
   const edited = useRef(false);
   const asked = useRef(new Set<string>());
   const routeOff = useRef(false);
-  /** Leg keys whose time the user cleared on purpose: the automatic fill leaves them empty (refresh still fills them). */
-  const keepEmpty = useRef(new Set<string>());
   /** Not stored yet (a new trip until its first save); once deleting, nothing may write the trip back. */
   const fresh = useRef(!tripId);
   const deleting = useRef(false);
@@ -129,7 +140,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
       if (deleting.current || !now.dirty || !now.doc || !now.plan) return null;
       now.dirty = false;
       lastSaved.current = { plan: now.plan, notes: now.notes, legMeters: now.legMeters, lodgingTbd: now.lodgingTbd };
-      const next = await persist(now.doc, now.plan, home, now.notes, now.legMeters, now.lodgingTbd, fresh.current);
+      const next = await persist(now.doc, now.plan, home, now.notes, now.legMeters, now.lodgingTbd, now.setup, fresh.current);
       fresh.current = false;
       latest.current.doc = next; // edits made while saving stay marked as unsaved
       return next;
@@ -147,6 +158,8 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
       setNotes(cleanNotes(d.notes));
       setLegMeters(cleanLegMeters(d.legMeters, d.plan));
       setLodgingTbdState(cleanLodgingTbd(d.lodgingTbd, d.plan));
+      // A brand-new trip starts its step-by-step setup; a saved one resumes where it was (or is done).
+      setSetup(tripId ? cleanSetup(d.setup) : { done: false, step: 1 });
       book.current = new Map();
       rememberLegs(d.plan, book.current);
       setPlan(d.plan);
@@ -207,9 +220,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
   const askKakao = async (mode: 'auto' | 'refresh'): Promise<number | null> => {
     const cur = latest.current.plan;
     if (!cur || (mode === 'auto' && routeOff.current)) return 0;
-    if (mode === 'refresh') keepEmpty.current.clear(); // recalculating everything is an explicit ask, cleared legs too
-    const skip = keepEmpty.current;
-    const runs = mode === 'refresh' ? allRuns(cur, home) : emptyRuns(cur, home).filter((r) => !asked.current.has(runSignature(r)) && r.keys.some((k) => !skip.has(k)));
+    const runs = mode === 'refresh' ? allRuns(cur, home) : emptyRuns(cur, home).filter((r) => !asked.current.has(runSignature(r)));
     let filled = 0;
     for (const run of runs) {
       asked.current.add(runSignature(run));
@@ -220,7 +231,8 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
       }
       const now = latest.current.plan;
       if (!now) return filled;
-      const out = applyRun(now, run, result, { overwrite: mode === 'refresh', skip });
+      setRouteAt(new Date()); // Kakao answered: the times are as of now
+      const out = applyRun(now, run, result, { overwrite: mode === 'refresh' });
       if (Object.entries(out.meters).some(([k, m]) => latest.current.legMeters[k] !== m)) {
         const merged = { ...latest.current.legMeters, ...out.meters };
         latest.current.legMeters = merged;
@@ -244,7 +256,17 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
     setRefreshing(true);
     const n = await askKakao('refresh');
     setRefreshing(false);
-    setNotice(n === null ? { tone: 'error', text: t('tl.autoLegsOff') } : n ? { tone: 'success', text: t('tl.refreshDone', { n }) } : { tone: 'info', text: t('tl.refreshNone') });
+    if (n === null) return setNotice({ tone: 'error', text: t('tl.autoLegsOff') });
+    // M43: during the trip, today is recomputed as if leaving now — on this screen only (the plan keeps its times).
+    const at = new Date();
+    const clock = `${String(at.getHours()).padStart(2, '0')}:${String(at.getMinutes()).padStart(2, '0')}`;
+    const cur = latest.current.plan;
+    const today = cur?.days.find((d) => d.date === localDate(at));
+    if (today) {
+      setLiveFrom({ dayIndex: today.dayIndex, minute: at.getHours() * 60 + at.getMinutes() });
+      return setNotice({ tone: 'success', text: t('tl.liveRecalc', { day: today.dayIndex, time: clock }) });
+    }
+    setNotice(n ? { tone: 'success', text: t('tl.refreshDoneAt', { n, time: clock }) } : { tone: 'info', text: t('tl.refreshNone') });
   };
   const refreshRef = useRef(refreshAll);
   refreshRef.current = refreshAll;
@@ -262,7 +284,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
     const covered = () => [...document.querySelectorAll<HTMLElement>('[role="dialog"], [role="alertdialog"], [role="menu"], dialog')].some(shown);
     const onStart = (e: TouchEvent) => {
       g = null;
-      if (e.touches.length !== 1 || window.scrollY > 0 || covered() || (e.target as Element).closest?.('.tl-handle')) return;
+      if (inSetupRef.current || e.touches.length !== 1 || window.scrollY > 0 || covered() || (e.target as Element).closest?.('.tl-handle')) return;
       g = { x0: e.touches[0].clientX, y0: e.touches[0].clientY, pulling: false, dist: 0 };
     };
     const onMove = (e: TouchEvent) => {
@@ -319,7 +341,11 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
   const nightCount = plan.days.length - 1;
   const missingNights = plan.days.slice(0, -1).filter((d) => !d.lodgingPlaceRef && !lodgingTbd.includes(d.dayIndex)).length; // 미정 nights are fine
   const tbdNights = plan.days.slice(0, -1).filter((d) => !d.lodgingPlaceRef && lodgingTbd.includes(d.dayIndex)).length;
+  /** A new trip still in its step-by-step setup (M43): the days stay hidden until the route plan is applied. */
+  const inSetup = !!setup && !setup.done;
   const pool = unassignedVisits(plan);
+  /** Legs Kakao can measure (both ends located; home only with an address in 설정) — the rest the car's navigation times. */
+  const askableLegs = new Set(allRuns(plan, home).flatMap((r) => r.keys));
   const poolNeedsCare = pool.some((v) => v.fixed);
   const targetDay = plan.days.some((d) => d.dayIndex === focusDay) ? focusDay : plan.days[0].dayIndex;
 
@@ -330,6 +356,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
     setPlan(linked);
     setDirty(true);
     edited.current = true;
+    setLiveFrom(null); // a "from now" view no longer matches an edited plan
     setNotice((n) => (n?.undo ? null : n)); // once something else changed, an old 되돌리기 would undo that too
   };
   const fail = (m: string) => setNotice({ tone: 'error', text: m });
@@ -361,7 +388,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
 
   const save = async () => {
     const wasDirty = dirty;
-    latest.current = { doc, plan, notes, legMeters, lodgingTbd, dirty: true };
+    latest.current = { doc, plan, notes, legMeters, lodgingTbd, setup, dirty: true };
     const next = (await saveNow()) ?? doc;
     setDoc(next);
     if (unchangedSinceSave()) {
@@ -443,7 +470,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
           />
         </>
       }
-      cta={cta}>
+      cta={inSetup ? undefined : cta}>
       {(pull > 0 || refreshing) && (
         <div className="tl-ptr" style={{ height: refreshing ? 48 : pull }} role="status">
           {refreshing ? (
@@ -487,98 +514,132 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
         )}
       </div>
 
-      <section id="trip-info" aria-labelledby="trip-info-h">
-        <h2 id="trip-info-h" className="tl-sechead">
-          <span className="tl-sechead-title">{t('tl.basicsTitle')}</span>
-          {missingNights > 0 && !infoOpen && <span className="tl-dot" role="img" aria-label={t('tl.dayAttention')} />}
-          <button type="button" className="tl-textbtn tl-toggle" aria-expanded={infoOpen} aria-controls="trip-info-body" onClick={() => setInfoOpen((o) => !o)}>
-            {infoOpen ? t('tl.collapse') : t('tl.expand')}
-            <span className={`tl-chev${infoOpen ? ' is-open' : ''}`} aria-hidden="true">
-              <ChevronIcon />
-            </span>
-          </button>
-        </h2>
-        <div id="trip-info-body" style={{ paddingTop: 16, paddingBottom: 8 }}>
-          {infoOpen ? (
-            <TripInfoPanel plan={plan} home={home} onChange={edit} onOpenSettings={() => leave('/settings')} />
-          ) : (
-            // Collapsed (a saved trip): the trip's frame at a glance; tap to open it for editing.
-            <div className="tn-pad">
-              <button type="button" className="tl-infocard tl-infosummary" onClick={() => setInfoOpen(true)} aria-label={`${t('tl.basicsTitle')} · ${t('tl.expand')}`}>
-                <span className="tl-name">{plan.name || t('editor.name')}</span>
-                <span className="tl-line">{`${periodLabel(plan.startDate, plan.endDate)} · ${nightsLabel(plan)}`}</span>
-                <span className="tl-meta">{t('tl.routeLine', { start: t('tl.start'), from: endpointName(plan, plan.origin), end: t('tl.home'), to: endpointName(plan, plan.finalDestination) })}</span>
-                {nightCount > 0 &&
-                  (missingNights > 0 ? (
-                    <span className="tl-required-text">{t('tl.lodgingMissing', { n: missingNights })}</span>
-                  ) : (
-                    <span className="tl-meta">
-                      {tbdNights > 0 ? t('tl.lodgingCountTbd', { set: nightCount - tbdNights, nights: nightCount, tbd: tbdNights }) : t('tl.lodgingCount', { set: nightCount, nights: nightCount })}
-                    </span>
-                  ))}
-              </button>
-            </div>
-          )}
-        </div>
-      </section>
-
-      {plan.days.map((d) => (
-        <section key={d.dayIndex} id={`day-${d.dayIndex}`} data-day={d.dayIndex} aria-labelledby={`day-${d.dayIndex}-h`}>
-          <h2 id={`day-${d.dayIndex}-h`} className="tl-sechead">
-            <span className="tl-sechead-title">{`${t('common.day', { day: d.dayIndex })} · ${shortDate(d.date)}`}</span>
-            {attention.has(d.dayIndex) && <span className="tl-dot" role="img" aria-label={t('tl.dayAttention')} />}
-            <span style={{ marginLeft: 'auto' }}>
-              <Button label={t('tl.map')} variant="secondary" size="sm" onClick={() => setSheet({ kind: 'map', day: d.dayIndex })} />
-            </span>
+      {inSetup ? (
+        <TripSetup
+          plan={plan}
+          home={home}
+          step={setup!.step}
+          onStep={(step) => {
+            setSetup({ done: false, step });
+            setDirty(true);
+          }}
+          onChange={edit}
+          onOpenPlace={setOpenPlace}
+          onNotice={setNotice}
+          onOpenSettings={() => leave('/settings')}
+          onFinish={(result) => {
+            if (result) {
+              rememberLegs(result.plan, book.current); // so edit() keeps the Kakao times on the new legs
+              setRouteAt(new Date());
+              edit(result.plan);
+              const merged = { ...latest.current.legMeters, ...result.meters };
+              latest.current.legMeters = merged;
+              setLegMeters(merged);
+            }
+            setSetup(null); // done: from here the trip shows its days
+            setDirty(true);
+            setInfoOpen(false);
+            window.scrollTo({ top: 0 });
+          }}
+        />
+      ) : (
+        <>
+        <section id="trip-info" aria-labelledby="trip-info-h">
+          <h2 id="trip-info-h" className="tl-sechead">
+            <span className="tl-sechead-title">{t('tl.basicsTitle')}</span>
+            {missingNights > 0 && !infoOpen && <span className="tl-dot" role="img" aria-label={t('tl.dayAttention')} />}
+            <button type="button" className="tl-textbtn tl-toggle" aria-expanded={infoOpen} aria-controls="trip-info-body" onClick={() => setInfoOpen((o) => !o)}>
+              {infoOpen ? t('tl.collapse') : t('tl.expand')}
+              <span className={`tl-chev${infoOpen ? ' is-open' : ''}`} aria-hidden="true">
+                <ChevronIcon />
+              </span>
+            </button>
           </h2>
-          {/* The last day leaves room so its end card can scroll clear of the floating + button. */}
-          <div style={{ paddingTop: 12, paddingBottom: d.dayIndex === plan.days[plan.days.length - 1].dayIndex ? 88 : 16 }}>
-            <DayTimeline
-              plan={plan}
-              home={home}
-              dayIndex={d.dayIndex}
-              onChange={edit}
-              onError={fail}
-              onOpenPlace={setOpenPlace}
-              onOpenStart={() => setSheet({ kind: 'start', day: d.dayIndex })}
-              onOpenLeg={(k) => setSheet({ kind: 'leg', day: d.dayIndex, k })}
-              onOpenEnd={() => setSheet({ kind: 'end', day: d.dayIndex })}
-              onRemoveStop={removeStop}
-              legMeters={legMeters}
-            />
+          <div id="trip-info-body" style={{ paddingTop: 16, paddingBottom: 8 }}>
+            {infoOpen ? (
+              <TripInfoPanel plan={plan} home={home} onChange={edit} onOpenSettings={() => leave('/settings')} />
+            ) : (
+              // Collapsed (a saved trip): the trip's frame at a glance; tap to open it for editing.
+              <div className="tn-pad">
+                <button type="button" className="tl-infocard tl-infosummary" onClick={() => setInfoOpen(true)} aria-label={`${t('tl.basicsTitle')} · ${t('tl.expand')}`}>
+                  <span className="tl-name">{plan.name || t('editor.name')}</span>
+                  <span className="tl-line">{`${periodLabel(plan.startDate, plan.endDate)} · ${nightsLabel(plan)}`}</span>
+                  <span className="tl-meta">{t('tl.routeLine', { start: t('tl.start'), from: endpointName(plan, plan.origin), end: t('tl.home'), to: endpointName(plan, plan.finalDestination) })}</span>
+                  {nightCount > 0 &&
+                    (missingNights > 0 ? (
+                      <span className="tl-required-text">{t('tl.lodgingMissing', { n: missingNights })}</span>
+                    ) : (
+                      <span className="tl-meta">
+                        {tbdNights > 0 ? t('tl.lodgingCountTbd', { set: nightCount - tbdNights, nights: nightCount, tbd: tbdNights }) : t('tl.lodgingCount', { set: nightCount, nights: nightCount })}
+                      </span>
+                    ))}
+                </button>
+              </div>
+            )}
           </div>
         </section>
-      ))}
 
-      {/* Add a place: to the whole trip (its day is set in the place's details). The badge counts places on no day yet. */}
-      <button
-        type="button"
-        className={`tl-fab${notice?.undo ? ' is-raised' : ''}`}
-        onClick={() => setSheet({ kind: 'place' })}
-        aria-label={`${t('tl.placeSheet')}${pool.length ? ` · ${t('tl.pool', { n: pool.length })}` : ''}${poolNeedsCare ? ` · ${t('tl.fixedPool')}` : ''}`}>
-        <PlusIcon />
-        {pool.length > 0 && (
-          <span className={`tl-fab-badge${poolNeedsCare ? ' is-warn' : ''}`} aria-hidden="true">
-            {pool.length}
-          </span>
-        )}
-      </button>
+        {plan.days.map((d) => (
+          <section key={d.dayIndex} id={`day-${d.dayIndex}`} data-day={d.dayIndex} aria-labelledby={`day-${d.dayIndex}-h`}>
+            <h2 id={`day-${d.dayIndex}-h`} className="tl-sechead">
+              <span className="tl-sechead-title">{`${t('common.day', { day: d.dayIndex })} · ${shortDate(d.date)}`}</span>
+              {attention.has(d.dayIndex) && <span className="tl-dot" role="img" aria-label={t('tl.dayAttention')} />}
+              <span style={{ marginLeft: 'auto' }}>
+                <Button label={t('tl.map')} variant="secondary" size="sm" onClick={() => setSheet({ kind: 'map', day: d.dayIndex })} />
+              </span>
+            </h2>
+            {/* The last day leaves room so its end card can scroll clear of the floating + button. */}
+            <div style={{ paddingTop: 12, paddingBottom: d.dayIndex === plan.days[plan.days.length - 1].dayIndex ? 88 : 16 }}>
+              <DayTimeline
+                plan={plan}
+                home={home}
+                dayIndex={d.dayIndex}
+                onChange={edit}
+                onError={fail}
+                onOpenPlace={setOpenPlace}
+                onOpenStart={() => setSheet({ kind: 'start', day: d.dayIndex })}
+                onOpenLeg={(k) => setSheet({ kind: 'leg', day: d.dayIndex, k })}
+                onOpenEnd={() => setSheet({ kind: 'end', day: d.dayIndex })}
+                onRemoveStop={removeStop}
+                legMeters={legMeters}
+                startAt={liveFrom?.dayIndex === d.dayIndex ? liveFrom.minute : undefined}
+              askable={askableLegs}
+              />
+            </div>
+          </section>
+        ))}
+
+        {/* Add a place: to the whole trip (its day is set in the place's details). The badge counts places on no day yet. */}
+        <button
+          type="button"
+          className={`tl-fab${notice?.undo ? ' is-raised' : ''}`}
+          onClick={() => setSheet({ kind: 'place' })}
+          aria-label={`${t('tl.placeSheet')}${pool.length ? ` · ${t('tl.pool', { n: pool.length })}` : ''}${poolNeedsCare ? ` · ${t('tl.fixedPool')}` : ''}`}>
+          <PlusIcon />
+          {pool.length > 0 && (
+            <span className={`tl-fab-badge${poolNeedsCare ? ' is-warn' : ''}`} aria-hidden="true">
+              {pool.length}
+            </span>
+          )}
+        </button>
+        </>
+      )}
 
       {sheet?.kind === 'start' && <StartSheet isOpen onClose={close} plan={plan} home={home} dayIndex={sheet.day} onChange={edit} onOpenSettings={() => leave('/settings')} />}
-      {sheet?.kind === 'leg' && <LegSheet
+      {sheet?.kind === 'leg' && (
+        <LegSheet
           isOpen
           onClose={close}
           plan={plan}
           dayIndex={sheet.day}
           k={sheet.k}
           legMeters={legMeters}
-          onChange={(p) => {
-            // A time cleared on purpose stays empty (the car shows '확인 필요'); typing one again lifts that.
-            const key = legKeys(plan, sheet.day)[sheet.k];
-            if (key) (p.days[sheet.day - 1]?.legs[sheet.k] ? keepEmpty.current.delete(key) : keepEmpty.current.add(key));
-            edit(p);
-          }}
-        />}
+          askable={askableLegs.has(legKeys(plan, sheet.day)[sheet.k] ?? '')}
+          routeAt={routeAt}
+          refreshing={refreshing}
+          onRecalc={() => void refreshAll()}
+        />
+      )}
       {sheet?.kind === 'end' && <EndSheet isOpen onClose={close} plan={plan} home={home} dayIndex={sheet.day} onChange={edit} onOpenPlace={setOpenPlace} onOpenSettings={() => leave('/settings')} />}
       {sheet?.kind === 'place' && (
         <PlaceSheet isOpen onClose={close} plan={plan} onChange={edit} onOpenPlace={setOpenPlace} onNotice={setNotice} />

@@ -28,6 +28,10 @@ interface Props {
   onRemoveStop: (visitId: string) => void;
   /** Phone-only recommended-route length by leg key (metres), from Kakao. */
   legMeters: Record<string, number>;
+  /** Pull-to-refresh during the trip (M43): this day recomputed as if leaving at this minute (screen only). */
+  startAt?: number;
+  /** Leg keys Kakao can measure; the others are timed by the car's navigation (no typing since M43). */
+  askable?: ReadonlySet<string>;
 }
 
 /**
@@ -37,7 +41,7 @@ interface Props {
  * Stops reorder by dragging their handle (pointer or keyboard); swiping a stop to the left takes it off the day. Fixed
  * visits never move on their own.
  */
-export function DayTimeline({ plan, home, dayIndex, onChange, onError, onOpenPlace, onOpenStart, onOpenLeg, onOpenEnd, onRemoveStop, legMeters }: Props) {
+export function DayTimeline({ plan, home, dayIndex, onChange, onError, onOpenPlace, onOpenStart, onOpenLeg, onOpenEnd, onRemoveStop, legMeters, startAt, askable }: Props) {
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }));
   const { day, i, isFirst, isLast, startName, endName } = dayEnds(plan, dayIndex);
   const { notes, lodgingTbd } = useNotes();
@@ -45,10 +49,10 @@ export function DayTimeline({ plan, home, dayIndex, onChange, onError, onOpenPla
   const lodgingNote = !isLast && day.lodgingPlaceRef ? notes[day.lodgingPlaceRef] : undefined;
   const prevCheckOut = !isFirst ? notes[plan.days[i - 1]?.lodgingPlaceRef ?? '']?.checkOut : undefined;
   const lodgingTimes = [lodgingNote?.checkIn ? t('tl.checkInAt', { time: lodgingNote.checkIn }) : '', lodgingNote?.checkOut ? t('tl.checkOutAt', { time: lodgingNote.checkOut }) : ''].filter(Boolean).join(' · ');
-  const times = useMemo(() => Object.fromEntries(timeline(plan, day.dayIndex).map((st) => [st.visitId, st])), [plan, day.dayIndex]);
+  const times = useMemo(() => Object.fromEntries(timeline(plan, day.dayIndex, startAt).map((st) => [st.visitId, st])), [plan, day.dayIndex, startAt]);
   const issues = useMemo(() => nodeIssues(plan, day.dayIndex), [plan, day.dayIndex]);
   const keys = useMemo(() => legKeys(plan, day.dayIndex), [plan, day.dayIndex]);
-  const endAt = dayEnd(plan, day.dayIndex);
+  const endAt = dayEnd(plan, day.dayIndex, startAt);
   const clock = (m: number) => (m < 0 ? t('days.prevDay') : hhmm(m));
   const safe = (f: () => Trip) => {
     try {
@@ -78,7 +82,9 @@ export function DayTimeline({ plan, home, dayIndex, onChange, onError, onOpenPla
 
   // 출발
   const fd = plan.firstDay;
-  const startTime = isFirst
+  const startTime = startAt !== undefined
+    ? t('tl.liveFrom', { time: hhmm(startAt) })
+    : isFirst
     ? fd.basis === 'DEPART_ORIGIN'
       ? t('tl.departAt', { time: fd.departTime })
       : t('tl.arriveBasis', { time: fd.arriveTime })
@@ -100,13 +106,15 @@ export function DayTimeline({ plan, home, dayIndex, onChange, onError, onOpenPla
     const { from, to } = legEnds(plan, day.dayIndex, k);
     const m = keys[k] ? legMeters[keys[k]!] : undefined;
     const km = l && m ? ` · ${kmLabel(m)}` : '';
+    // Empty: Kakao hasn't answered yet (a warning), or the leg can't be asked at all — the car's navigation times it (neutral).
+    const byCar = !l && !(keys[k] && askable?.has(keys[k]!));
     return (
       <div className="tl-row" key={`leg${k}`}>
         <div className="tl-rail" />
         <div className="tl-legrow">
-          <button type="button" className={`tl-leg${l ? '' : ' is-missing'}`} aria-label={`${t('tl.legTitle')} · ${t('tl.legRoute', { from, to })}`} onClick={() => onOpenLeg(k)}>
+          <button type="button" className={`tl-leg${l || byCar ? '' : ' is-missing'}`} aria-label={`${t('tl.legTitle')} · ${t('tl.legRoute', { from, to })}`} onClick={() => onOpenLeg(k)}>
             <span aria-hidden="true">↓</span>
-            {l ? `${t('tl.legMinutes', { duration: minutesLabel(l.minutes) })}${km}` : `${t('tl.legMissing')} · ${t('days.needsCheck')}`}
+            {l ? `${t('tl.legMinutes', { duration: minutesLabel(l.minutes) })}${km}` : byCar ? t('tl.legByCar') : t('tl.legPending')}
           </button>
         </div>
       </div>

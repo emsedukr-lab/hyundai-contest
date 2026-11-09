@@ -82,8 +82,15 @@ export function HomePage() {
                       // badges ride on the title line so the summary gets the full width on a 360pt screen
                       <span style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6 }}>
                         <span>{d.plan.name}</span>
-                        <Badge variant="neutral" label={`v${d.revision}`} />
-                        {unassigned > 0 && <Badge variant="warning" label={t('home.unassignedBadge', { n: unassigned })} />}
+                        {d.setup && !d.setup.done ? (
+                          // still in its step-by-step setup (M43)
+                          <Badge variant="info" label={t('setup.homeBadge', { step: d.setup.step })} />
+                        ) : (
+                          <>
+                            <Badge variant="neutral" label={`v${d.revision}`} />
+                            {unassigned > 0 && <Badge variant="warning" label={t('home.unassignedBadge', { n: unassigned })} />}
+                          </>
+                        )}
                       </span>
                     }
                     subtitle={

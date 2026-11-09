@@ -1,14 +1,18 @@
 import { Button } from '@astryxdesign/core/Button';
-import { NumberInput } from '@astryxdesign/core/NumberInput';
 import { Text } from '@astryxdesign/core/Text';
 import type { Trip } from '@tteonaljido/shared';
 import { t } from '../../lib/i18n';
 import { kmLabel } from '../../lib/routeTimes';
-import { legKeys, setLeg } from '../../lib/trips';
+import { minutesLabel } from '../../lib/format';
+import { legKeys } from '../../lib/trips';
 import { dayEnds, legEnds } from '../dayInfo';
 import { Sheet } from '../Sheet';
 
-/** 이동 시간 between two neighbours on the timeline. Empty is allowed: the car then marks the leg 'Check'. */
+/**
+ * 이동 시간 between two neighbours on the timeline — read-only (M43): times come from Kakao directions (the
+ * navigation route search), never typed. A leg Kakao can't measure (a place without a location, or home without an
+ * address in 설정) stays empty and the car's navigation times it on the road.
+ */
 export function LegSheet({
   isOpen,
   onClose,
@@ -16,7 +20,10 @@ export function LegSheet({
   dayIndex,
   k,
   legMeters,
-  onChange,
+  askable,
+  routeAt,
+  refreshing,
+  onRecalc,
 }: {
   isOpen: boolean;
   onClose: () => void;
@@ -24,29 +31,43 @@ export function LegSheet({
   dayIndex: number;
   k: number;
   legMeters: Record<string, number>;
-  onChange: (p: Trip) => void;
+  /** Both ends have a location Kakao may be asked about. */
+  askable: boolean;
+  /** When Kakao last answered in this session (for the "as of" line). */
+  routeAt: Date | null;
+  refreshing: boolean;
+  onRecalc: () => void;
 }) {
   const { day } = dayEnds(plan, dayIndex);
   const { from, to } = legEnds(plan, dayIndex, k);
   const key = legKeys(plan, day.dayIndex)[k];
   const meters = key ? legMeters[key] : undefined;
+  const leg = day.legs[k];
+  const at = routeAt ? `${String(routeAt.getHours()).padStart(2, '0')}:${String(routeAt.getMinutes()).padStart(2, '0')}` : null;
   return (
-    <Sheet isOpen={isOpen} onClose={onClose} title={t('tl.legTitle')} footer={<Button label={t('tl.done')} variant="primary" size="lg" width="100%" onClick={onClose} />}>
+    <Sheet
+      isOpen={isOpen}
+      onClose={onClose}
+      title={t('tl.legTitle')}
+      footer={
+        <div style={{ display: 'flex', gap: 8, width: '100%' }}>
+          <Button label={t('tl.recalcShort')} variant="secondary" size="lg" isLoading={refreshing} isDisabled={!askable} onClick={onRecalc} />
+          <div style={{ flex: '1 1 auto' }}>
+            <Button label={t('tl.done')} variant="primary" size="lg" width="100%" onClick={onClose} />
+          </div>
+        </div>
+      }>
       <Text type="label">{t('tl.legRoute', { from, to })}</Text>
-      {!!meters && (
+      {leg ? (
+        <span className="tl-leg-value">{`${t('tl.legMinutes', { duration: minutesLabel(leg.minutes) })}${meters ? ` · ${kmLabel(meters)}` : ''}`}</span>
+      ) : (
+        <span className="tl-leg-value is-empty">{askable ? t('tl.legPending') : t('tl.legNotAskable')}</span>
+      )}
+      {askable && (
         <Text type="supporting" color="secondary">
-          {t('tl.legDistance', { km: kmLabel(meters) })}
+          {at ? t('tl.legKakaoAt', { time: at }) : t('tl.legKakao')}
         </Text>
       )}
-      <NumberInput
-        label={t('tl.legInput')}
-        isLabelHidden
-        value={day.legs[k]?.minutes ?? null}
-        placeholder={t('tl.legInput')}
-        hasClear
-        isIntegerOnly
-        onChange={(v: number | null) => onChange(setLeg(plan, day.dayIndex, k, v === null || !Number.isFinite(v) ? null : Math.max(0, Math.min(1440, Math.round(v)))))}
-      />
     </Sheet>
   );
 }

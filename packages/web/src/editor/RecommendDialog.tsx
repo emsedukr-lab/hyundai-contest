@@ -10,7 +10,7 @@ import { hhmm, timeline, type Home, type Trip } from '@tteonaljido/shared';
 import { dateLabel } from '../lib/format';
 import { t } from '../lib/i18n';
 import { placeOf, relinkLegs, visitOf, type LegBook } from '../lib/trips';
-import { missingLodgingDays, recommendRoute, summarizeRecommendation } from '../lib/recommend';
+import { missingLodgingDays, recommendRoute, summarizeRecommendation, type RecommendationDiff } from '../lib/recommend';
 
 /**
  * Previews an auto route recommendation and lets the user apply or cancel (요청: "확인·수정 여지"). If a night has no
@@ -43,8 +43,6 @@ export function RecommendDialog({
     setProceeded(false);
     onClose();
   };
-  const clock = (m: number) => (m < 0 ? t('days.prevDay') : hhmm(m));
-
   const lodgingStep = gaps.length > 0 && !proceeded;
 
   return (
@@ -72,48 +70,7 @@ export function RecommendDialog({
             <Banner status="info" title={t('recommend.noChanges')} />
           )}
 
-          <VStack gap={3}>
-            {display.days.map((d) => {
-              const times = timeline(display, d.dayIndex);
-              return (
-                <VStack gap={1} key={d.dayIndex}>
-                  <Text type="label">{`${t('common.day', { day: d.dayIndex })} · ${dateLabel(d.date)}`}</Text>
-                  {d.visitOrder.length === 0 ? (
-                    <Text type="supporting" color="secondary">
-                      {t('days.empty')}
-                    </Text>
-                  ) : (
-                    d.visitOrder.map((id, k) => {
-                      const v = visitOf(display, id)!;
-                      const p = placeOf(display, v.placeRef);
-                      const ch = diff.changes.find((c) => c.visitId === id);
-                      const st = times[k];
-                      return (
-                        <Card key={id} padding={2}>
-                          <VStack gap={0.5}>
-                            <HStack gap={1} vAlign="center" wrap="wrap">
-                              <Text type="supporting">{`${k + 1}. ${p?.name ?? id}`}</Text>
-                              {ch?.newlyAssigned && <Badge variant="info" label={t('recommend.newBadge')} />}
-                              {ch?.moved && ch.fromDay !== null && ch.fromDay !== d.dayIndex && <Badge variant="neutral" label={t('recommend.movedFrom', { from: ch.fromDay })} />}
-                              {v.importance === 'MUST' && <Badge variant="warning" label={t('common.must')} />}
-                              {v.fixed && <Badge variant="info" label={t('common.fixedAt', { time: v.fixed.time })} />}
-                            </HStack>
-                            <Text type="supporting" color="secondary">
-                              {st?.arrive !== null && st?.arrive !== undefined
-                                ? st.arrive === st.start
-                                  ? t('days.arriveOnly', { arrive: clock(st.arrive) })
-                                  : t('days.times', { arrive: clock(st.arrive), start: clock(st.start!) })
-                                : t('days.timeCheck')}
-                            </Text>
-                          </VStack>
-                        </Card>
-                      );
-                    })
-                  )}
-                </VStack>
-              );
-            })}
-          </VStack>
+          <RecommendPreview display={display} diff={diff} />
 
           <HStack gap={2}>
             <Button label={t('common.cancel')} variant="secondary" onClick={close} />
@@ -133,5 +90,54 @@ export function RecommendDialog({
         </VStack>
       )}
     </Dialog>
+  );
+}
+
+/** The proposed days, stop by stop with their times and what changed — shared by this dialog and the new-trip setup (M43). */
+export function RecommendPreview({ display, diff }: { display: Trip; diff: RecommendationDiff }) {
+  const clock = (m: number) => (m < 0 ? t('days.prevDay') : hhmm(m));
+  return (
+    <VStack gap={3}>
+      {display.days.map((d) => {
+        const times = timeline(display, d.dayIndex);
+        return (
+          <VStack gap={1} key={d.dayIndex}>
+            <Text type="label">{`${t('common.day', { day: d.dayIndex })} · ${dateLabel(d.date)}`}</Text>
+            {d.visitOrder.length === 0 ? (
+              <Text type="supporting" color="secondary">
+                {t('days.empty')}
+              </Text>
+            ) : (
+              d.visitOrder.map((id, k) => {
+                const v = visitOf(display, id)!;
+                const p = placeOf(display, v.placeRef);
+                const ch = diff.changes.find((c) => c.visitId === id);
+                const st = times[k];
+                return (
+                  <Card key={id} padding={2}>
+                    <VStack gap={0.5}>
+                      <HStack gap={1} vAlign="center" wrap="wrap">
+                        <Text type="supporting">{`${k + 1}. ${p?.name ?? id}`}</Text>
+                        {ch?.newlyAssigned && <Badge variant="info" label={t('recommend.newBadge')} />}
+                        {ch?.moved && ch.fromDay !== null && ch.fromDay !== d.dayIndex && <Badge variant="neutral" label={t('recommend.movedFrom', { from: ch.fromDay })} />}
+                        {v.importance === 'MUST' && <Badge variant="warning" label={t('common.must')} />}
+                        {v.fixed && <Badge variant="info" label={t('common.fixedAt', { time: v.fixed.time })} />}
+                      </HStack>
+                      <Text type="supporting" color="secondary">
+                        {st?.arrive !== null && st?.arrive !== undefined
+                          ? st.arrive === st.start
+                            ? t('days.arriveOnly', { arrive: clock(st.arrive) })
+                            : t('days.times', { arrive: clock(st.arrive), start: clock(st.start!) })
+                          : t('days.timeCheck')}
+                      </Text>
+                    </VStack>
+                  </Card>
+                );
+              })
+            )}
+          </VStack>
+        );
+      })}
+    </VStack>
   );
 }

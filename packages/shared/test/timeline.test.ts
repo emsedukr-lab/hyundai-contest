@@ -24,6 +24,14 @@ describe('timetable (same rules as the car)', () => {
     expect(dayEnd(withPrep, 2)).toBe(dayEnd(sample, 2));
   });
 
+  it('recomputes a day from another start (the phone "from now" view), still waiting for fixed times (M43)', () => {
+    const base = Object.fromEntries(timeline(sample, 2).map((s) => [s.visitId, s]));
+    const later = Object.fromEntries(timeline(sample, 2, minutes('10:00')).map((s) => [s.visitId, s]));
+    expect(later.v4.arrive! - base.v4.arrive!).toBe(minutes('10:00') - minutes('09:30'));
+    expect(later.v5.start).toBe(minutes('13:00')); // the reservation still holds
+    expect(dayEnd(sample, 2, minutes('10:00'))).toBe(dayEnd(sample, 2)); // and re-anchors the rest of the day
+  });
+
   it('reports unknown legs instead of guessing', () => {
     expect(departure(sample, 1)).toBe(minutes('08:00'));
     expect(timeline(sample, 1)[0].arrive).toBeNull();
