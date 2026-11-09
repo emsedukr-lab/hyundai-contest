@@ -595,6 +595,11 @@ const ko = {
   'tl.autoLegsDone': '카카오 길찾기로 이동시간 {n}구간을 채웠어요',
   'tl.autoLegsNone': '채울 수 있는 빈 구간이 없어요',
   'tl.autoLegsOff': '지금은 카카오 길찾기를 쓸 수 없어요',
+  'tl.expand': '펼치기',
+  'tl.collapse': '접기',
+  'tl.lodgingCount': '숙소 {set}/{nights}박',
+  'tl.lodgingMissing': '숙소 미정 {n}박',
+  'tl.routeLine': '{start} {from} → {end} {to}',
   'privacy.route.label': '이동시간 계산',
   'privacy.route.text': '경로가 바뀐 구간의 출발·도착 좌표만 중계 서버를 거쳐 카카오모빌리티 길찾기로 보내 이동시간을 받아요 · 집을 지나는 구간은 보내지 않고, 저장·기록하지 않아요',
 } as const satisfies Record<string, string>;
@@ -1190,6 +1195,11 @@ const en: Record<Key, string> = {
   'tl.autoLegsDone': 'Filled {n} {n|leg|legs} from Kakao directions',
   'tl.autoLegsNone': 'No empty legs to fill',
   'tl.autoLegsOff': 'Kakao directions aren\'t available right now',
+  'tl.expand': 'Expand',
+  'tl.collapse': 'Collapse',
+  'tl.lodgingCount': 'Lodging {set}/{nights} {nights|night|nights}',
+  'tl.lodgingMissing': '{n} {n|night|nights} without lodging',
+  'tl.routeLine': '{start} {from} → {end} {to}',
   'privacy.route.label': 'Travel times',
   'privacy.route.text': 'Only the start and end coordinates of legs whose route changed go through our relay to Kakao Mobility directions for a driving time · legs touching home are never sent, and nothing is stored or logged',
 };

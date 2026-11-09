@@ -169,7 +169,7 @@ export function DayTimeline({ plan, home, dayIndex, onChange, onError, onOpenPla
 
 type StopTime = ReturnType<typeof timeline>[number] | undefined;
 
-/** One stop: number on the rail, the card opens its details; the handle drags, ⋯ moves or takes it off the day. */
+/** One stop: number on the rail, the card opens its details; ⋯ moves or takes it off the day; the drag handle sits at the far right. */
 function StopCard({
   plan,
   id,
@@ -236,9 +236,6 @@ function StopCard({
           {fixedSlot && <span className="tl-warn-text">{t('tl.fixedSlot')}</span>}
         </button>
         <div className="tl-card-end">
-          <button type="button" className="tl-handle" aria-label={t('days.drag')} {...attributes} {...listeners}>
-            <GripIcon />
-          </button>
           <DropdownMenu
             items={[
               { label: t('days.up'), isDisabled: k === 0, onClick: () => onMove(-1) },
@@ -253,6 +250,9 @@ function StopCard({
               </button>
             )}
           />
+          <button type="button" className="tl-handle" aria-label={t('days.drag')} {...attributes} {...listeners}>
+            <GripIcon />
+          </button>
         </div>
       </div>
     </div>

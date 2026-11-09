@@ -6,8 +6,9 @@ import { Button } from '@astryxdesign/core/Button';
 import { DropdownMenu } from '@astryxdesign/core/DropdownMenu';
 import { Spinner } from '@astryxdesign/core/Spinner';
 import { dayIssues, type Home, type Trip } from '@tteonaljido/shared';
-import { MoreIcon, PencilIcon, PlusIcon } from '../components/shell/icons';
+import { ChevronIcon, MoreIcon, PencilIcon, PlusIcon } from '../components/shell/icons';
 import { PushScreen } from '../components/shell/Screens';
+import { endpointName } from '../editor/dayInfo';
 import { DayTimeline } from '../editor/DayTimeline';
 import { NotesContext } from '../editor/NotesContext';
 import { RecommendDialog } from '../editor/RecommendDialog';
@@ -20,7 +21,7 @@ import { StartSheet } from '../editor/sheets/StartSheet';
 import { TripInfoPanel } from '../editor/TripInfoPanel';
 import { VisitDialog } from '../editor/VisitDialog';
 import { TRIPS_CHANGED, trips } from '../lib/db';
-import { shortDate } from '../lib/format';
+import { periodLabel, shortDate } from '../lib/format';
 import { t } from '../lib/i18n';
 import { navigate } from '../lib/router';
 import { cleanNotes, setNote, type TripNotes } from '../lib/notes';
@@ -75,6 +76,8 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
   const [dirty, setDirty] = useState(false);
   /** Phone-only memos and lodging check-in/out, by place (saved with the trip, never sent to the car). */
   const [notes, setNotes] = useState<TripNotes>({});
+  /** 여행 정보 open for editing: a new trip starts open; a saved one shows its summary until expanded. */
+  const [infoOpen, setInfoOpen] = useState(!tripId);
   /** The day whose header is stuck under the top bar (the + button adds there); day 1 while 여행 정보 is in view. */
   const [focusDay, setFocusDay] = useState(1);
   const [sheet, setSheet] = useState<SheetState>(null);
@@ -212,6 +215,8 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
   }, [plan]);
   if (!plan || !doc) return <Spinner />;
 
+  const nightCount = plan.days.length - 1;
+  const missingNights = plan.days.slice(0, -1).filter((d) => !d.lodgingPlaceRef).length;
   const pool = unassignedVisits(plan);
   const poolNeedsCare = pool.some((v) => v.fixed);
   const targetDay = plan.days.some((d) => d.dayIndex === focusDay) ? focusDay : plan.days[0].dayIndex;
@@ -269,7 +274,14 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
   ];
 
   const title = (
-    <button type="button" className="tl-title" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} aria-label={t('tl.editBasics')}>
+    <button
+      type="button"
+      className="tl-title"
+      onClick={() => {
+        setInfoOpen(true);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }}
+      aria-label={t('tl.editBasics')}>
       <span className="tl-title-name">
         <span>{plan.name || (tripId ? t('editor.titleEdit') : t('editor.titleNew'))}</span>
         <PencilIcon />
@@ -314,9 +326,33 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
       <section id="trip-info" aria-labelledby="trip-info-h">
         <h2 id="trip-info-h" className="tl-sechead">
           <span className="tl-sechead-title">{t('tl.basicsTitle')}</span>
+          {missingNights > 0 && !infoOpen && <span className="tl-dot" role="img" aria-label={t('tl.dayAttention')} />}
+          <button type="button" className="tl-textbtn tl-toggle" aria-expanded={infoOpen} aria-controls="trip-info-body" onClick={() => setInfoOpen((o) => !o)}>
+            {infoOpen ? t('tl.collapse') : t('tl.expand')}
+            <span className={`tl-chev${infoOpen ? ' is-open' : ''}`} aria-hidden="true">
+              <ChevronIcon />
+            </span>
+          </button>
         </h2>
-        <div style={{ paddingTop: 16, paddingBottom: 8 }}>
-          <TripInfoPanel plan={plan} home={home} onChange={edit} onOpenSettings={() => leave('/settings')} />
+        <div id="trip-info-body" style={{ paddingTop: 16, paddingBottom: 8 }}>
+          {infoOpen ? (
+            <TripInfoPanel plan={plan} home={home} onChange={edit} onOpenSettings={() => leave('/settings')} />
+          ) : (
+            // Collapsed (a saved trip): the trip's frame at a glance; tap to open it for editing.
+            <div className="tn-pad">
+              <button type="button" className="tl-infocard tl-infosummary" onClick={() => setInfoOpen(true)} aria-label={`${t('tl.basicsTitle')} · ${t('tl.expand')}`}>
+                <span className="tl-name">{plan.name || t('editor.name')}</span>
+                <span className="tl-line">{`${periodLabel(plan.startDate, plan.endDate)} · ${nightsLabel(plan)}`}</span>
+                <span className="tl-meta">{t('tl.routeLine', { start: t('tl.start'), from: endpointName(plan, plan.origin), end: t('tl.home'), to: endpointName(plan, plan.finalDestination) })}</span>
+                {nightCount > 0 &&
+                  (missingNights > 0 ? (
+                    <span className="tl-warn-text">{t('tl.lodgingMissing', { n: missingNights })}</span>
+                  ) : (
+                    <span className="tl-meta">{t('tl.lodgingCount', { set: nightCount, nights: nightCount })}</span>
+                  ))}
+              </button>
+            </div>
+          )}
         </div>
       </section>
 
