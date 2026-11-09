@@ -14,7 +14,7 @@ import './nextTrip.css';
  * line with numbered stops as the editor — the day ahead in blue, the other days quiet. Below, what still needs doing
  * (orange) or the last version sent to the car. The whole card opens the trip.
  */
-export function NextTrip({ doc, sent }: { doc: TripDoc; sent?: SendLogEntry }) {
+export function NextTrip({ doc, sent, overlaps = 0 }: { doc: TripDoc; sent?: SendLogEntry; overlaps?: number }) {
   const { plan } = doc;
   const when = tripWhen(plan.startDate, plan.endDate, todayIn(plan.timezone));
   const sketch = tripSketch(plan, { width: 300, height: 176, pad: 16 });
@@ -22,7 +22,11 @@ export function NextTrip({ doc, sent }: { doc: TripDoc; sent?: SendLogEntry }) {
   const tbd = doc.lodgingTbd ?? [];
   const lodgingEmpty = plan.days.slice(0, -1).filter((d) => !d.lodgingPlaceRef && !tbd.includes(d.dayIndex)).length;
   const inSetup = doc.setup && !doc.setup.done;
-  const todo = [unassigned > 0 ? t('home.unassignedBadge', { n: unassigned }) : null, lodgingEmpty > 0 ? t('home.next.lodgingEmpty', { n: lodgingEmpty }) : null].filter(Boolean);
+  const todo = [
+    unassigned > 0 ? t('home.unassignedBadge', { n: unassigned }) : null,
+    lodgingEmpty > 0 ? t('home.next.lodgingEmpty', { n: lodgingEmpty }) : null,
+    overlaps > 0 ? t('home.overlap', { n: overlaps }) : null, // M49: other trips on the same dates
+  ].filter(Boolean);
   const href = `/trips/${doc.tripId}`;
 
   return (

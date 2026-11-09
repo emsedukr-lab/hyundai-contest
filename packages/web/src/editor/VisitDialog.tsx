@@ -163,7 +163,7 @@ export function VisitDialog({
   );
 
   return (
-    <Sheet isOpen={!!placeRef} onClose={onClose} title={place.name} height="tall" footer={footer}>
+    <Sheet isOpen={!!placeRef} onClose={onClose} title={place.name} footer={footer}>
       <div className="vd">
         <div className="vd-head">
           <p className="vd-sub">{[CATEGORY_LABEL[place.category], place.address].filter(Boolean).join(' · ')}</p>

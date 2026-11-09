@@ -17,7 +17,7 @@ export function StartSheet({ isOpen, onClose, plan, home, dayIndex, onChange, on
   const { day, isFirst, startName } = dayEnds(plan, dayIndex);
   const fd = plan.firstDay;
   return (
-    <Sheet isOpen={isOpen} onClose={onClose} title={t('tl.start')} height="tall" footer={<Button label={t('tl.done')} variant="primary" size="lg" width="100%" onClick={onClose} />}>
+    <Sheet isOpen={isOpen} onClose={onClose} title={t('tl.start')} footer={<Button label={t('tl.done')} variant="primary" size="lg" width="100%" onClick={onClose} />}>
       {isFirst ? (
         <>
           <EndpointField which="origin" compact plan={plan} home={home} onChange={onChange} onOpenSettings={onOpenSettings} />

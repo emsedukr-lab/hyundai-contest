@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { parseTransfer, sampleTrip, type Trip } from '@tteonaljido/shared';
-import { addPlace, addToDay, cleanLodgingTbd, cleanSetup, moveToDay, placeRoom, setReservation, setupReady, assign, changeCategory, emptyPlan, isEndpointOnly, move, moveTo, endpointFromPreset, newDoc, nodeIssues, planWarnings, relinkLegs, rememberLegs, removePlace, savePlan, setDepart, setEndBy, setLeg, setEndpoint, setLodging, setOrigin, setPeriod, startFromPreset, toTransfer, unassign, type LegBook } from './trips';
+import { fillNights, laterEmptyNights, lodgingSuggestions, addPlace, addToDay, cleanLodgingTbd, cleanSetup, moveToDay, placeRoom, setReservation, setupReady, assign, changeCategory, emptyPlan, isEndpointOnly, move, moveTo, endpointFromPreset, newDoc, nodeIssues, planWarnings, relinkLegs, rememberLegs, removePlace, savePlan, setDepart, setEndBy, setLeg, setEndpoint, setLodging, setOrigin, setPeriod, startFromPreset, toTransfer, unassign, type LegBook } from './trips';
 
 // The warning assertions below check the Korean copy; jsdom reports navigator.language as en-US.
 vi.hoisted(() => Object.defineProperty(navigator, 'language', { value: 'ko-KR', configurable: true }));
@@ -391,5 +391,28 @@ describe('new-trip setup (M43)', () => {
     expect(cleanSetup({ done: false, step: 9 })).toEqual({ done: false, step: 1 });
     expect(cleanSetup(undefined)).toBeNull();
     expect(cleanSetup({ done: true, step: 4 })).toBeNull();
+  });
+});
+
+describe('이어서 묵기 (M49)', () => {
+  // sample: night 1 skybay, night 2 shilla, night 3 topsten; clear nights 2 and 3 to plan them
+  const base = setLodging(setLodging(sampleTrip(), 2, null), 3, null);
+
+  it('offers the nearest earlier night first, then later nights, then the other lodging places, each once', () => {
+    const s2 = lodgingSuggestions(base, 2).map((p) => p.placeRef);
+    expect(s2[0]).toBe('skybay'); // night 1's hotel, the one you are already in
+    expect(new Set(s2).size).toBe(s2.length);
+    expect(s2).toEqual(expect.arrayContaining(['shilla', 'topsten'])); // the trip's other lodgings still offered
+    const t = setLodging(base, 3, 'topsten');
+    expect(lodgingSuggestions(t, 2).map((p) => p.placeRef).slice(0, 2)).toEqual(['skybay', 'topsten']);
+  });
+
+  it('fills only the later empty nights that were not left 미정', () => {
+    expect(laterEmptyNights(base, 1, [])).toEqual([2, 3]);
+    expect(laterEmptyNights(base, 1, [2])).toEqual([3]); // 미정 stays 미정
+    expect(laterEmptyNights(base, 3, [])).toEqual([]); // the last night: nothing after it (the last day has no night)
+    const filled = fillNights(base, laterEmptyNights(base, 1, []), 'skybay');
+    expect(filled.days.slice(0, -1).map((d) => d.lodgingPlaceRef)).toEqual(['skybay', 'skybay', 'skybay']);
+    expect(filled.days.at(-1)!.lodgingPlaceRef).toBeNull();
   });
 });

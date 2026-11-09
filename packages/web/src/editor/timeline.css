@@ -955,3 +955,30 @@
     transition: none;
   }
 }
+
+/* 이어서 묵기 (M49): a quiet label and lodging chips (bed icon + name); the nearest earlier night's hotel first. */
+.tl-lodging-suggest {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.tl-lodging-suggest-label {
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--color-text-secondary);
+}
+.tl-chip.tl-lodging-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tl-chip.tl-lodging-chip svg {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  color: var(--color-icon-secondary);
+}

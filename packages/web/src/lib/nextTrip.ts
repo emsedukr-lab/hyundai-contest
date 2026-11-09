@@ -23,3 +23,26 @@ export function pickNextTrip(docs: TripDoc[]): TripDoc | null {
   const upcoming = docs.filter((d) => d.plan.startDate > today(d)).sort((a, b) => a.plan.startDate.localeCompare(b.plan.startDate));
   return upcoming[0] ?? docs[0];
 }
+
+/**
+ * '다른 여행' order (M49): trips still ahead or under way by departure date (then end date, then name), then past trips
+ * with the most recent first — so the list reads on in time below the next-trip card.
+ */
+export function sortOtherTrips(docs: TripDoc[]): TripDoc[] {
+  const past = (d: TripDoc) => d.plan.endDate < todayIn(d.plan.timezone);
+  const byStart = (a: TripDoc, b: TripDoc) =>
+    a.plan.startDate.localeCompare(b.plan.startDate) || a.plan.endDate.localeCompare(b.plan.endDate) || a.plan.name.localeCompare(b.plan.name, 'ko');
+  const ahead = docs.filter((d) => !past(d)).sort(byStart);
+  const done = docs.filter(past).sort((a, b) => byStart(b, a));
+  return [...ahead, ...done];
+}
+
+/** For each trip, the other trips whose dates overlap it (a.start ≤ b.end and b.start ≤ a.end) — M49. */
+export function dateOverlaps(docs: TripDoc[]): Map<string, TripDoc[]> {
+  const out = new Map<string, TripDoc[]>();
+  for (const a of docs) {
+    const others = docs.filter((b) => b !== a && a.plan.startDate <= b.plan.endDate && b.plan.startDate <= a.plan.endDate);
+    if (others.length) out.set(a.tripId, others);
+  }
+  return out;
+}

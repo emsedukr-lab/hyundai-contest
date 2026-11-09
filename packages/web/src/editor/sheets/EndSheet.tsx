@@ -9,6 +9,7 @@ import { PlaceSearch } from '../PlaceSearch';
 import { Sheet } from '../Sheet';
 import { EndpointField } from '../EndpointField';
 import { FieldPrefix } from '../FieldPrefix';
+import { LodgingSuggest } from '../LodgingSuggest';
 import { LodgingNoteFields } from '../NotesContext';
 import { TimeSelect } from '../TimeSelect';
 
@@ -26,7 +27,7 @@ export function EndSheet({ isOpen, onClose, plan, home, dayIndex, onChange, onOp
     </FieldPrefix>
   );
   return (
-    <Sheet isOpen={isOpen} onClose={onClose} title={isLast ? t('tl.home') : t('days.lodging', { day: day.dayIndex })} height="tall" footer={<Button label={t('tl.done')} variant="primary" size="lg" width="100%" onClick={onClose} />}>
+    <Sheet isOpen={isOpen} onClose={onClose} title={isLast ? t('tl.home') : t('days.lodging', { day: day.dayIndex })} footer={<Button label={t('tl.done')} variant="primary" size="lg" width="100%" onClick={onClose} />}>
       {isLast ? (
         <>
           <EndpointField which="finalDestination" compact plan={plan} home={home} onChange={onChange} onOpenSettings={onOpenSettings} />
@@ -46,6 +47,8 @@ export function EndSheet({ isOpen, onClose, plan, home, dayIndex, onChange, onOp
             value={day.lodgingPlaceRef ?? ''}
             onChange={(ref) => onChange(setLodging(plan, day.dayIndex, ref || null))}
           />
+          {/* 이어서 묵기 (M49): empty → the trip's lodgings as chips (previous night first); chosen → fill the nights after. */}
+          <LodgingSuggest plan={plan} dayIndex={day.dayIndex} onChange={onChange} />
           {day.lodgingPlaceRef && <LodgingNoteFields placeRef={day.lodgingPlaceRef} />}
           {day.lodgingPlaceRef && (
             <div>

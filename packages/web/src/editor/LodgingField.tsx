@@ -1,17 +1,18 @@
 import { useState } from 'react';
-import { Button } from '@astryxdesign/core/Button';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import type { Trip } from '@tteonaljido/shared';
 import { CloseIcon } from '../components/shell/icons';
 import { t } from '../lib/i18n';
-import { addPlace, lodgingPlaces, placeOf, setLodging } from '../lib/trips';
+import { addPlace, placeOf, setLodging } from '../lib/trips';
 import { LodgingNoteFields, useNotes } from './NotesContext';
+import { LodgingSuggest } from './LodgingSuggest';
 import { PlaceSearch } from './PlaceSearch';
 
 /**
  * The body of one night's card on the 여행 정보 rail (lodging is usually booked before the days are planned).
  * Chosen: the lodging's name like a timeline card, its check-in/out and memo as grey lines, and the fields for them
- * opened on demand. Empty: a search field ("1일차 숙소") plus the trip's lodgings as one-tap choices.
+ * opened on demand, and a chip to put it on the empty nights after (M49). Empty: a search field ("1일차 숙소"), 미정, and
+ * the trip's lodgings as chips, the previous night's first (M49).
  */
 export function LodgingField({ plan, dayIndex, onChange, showNotes = true }: { plan: Trip; dayIndex: number; onChange: (p: Trip) => void; showNotes?: boolean }) {
   const { notes, lodgingTbd, setLodgingTbd } = useNotes();
@@ -36,6 +37,8 @@ export function LodgingField({ plan, dayIndex, onChange, showNotes = true }: { p
           </span>
           <IconButton label={t('tl.clearLodging')} icon={<CloseIcon />} variant="ghost" size="sm" onClick={() => onChange(setLodging(plan, dayIndex, null))} />
         </div>
+        {/* 이어서 묵기 (M49): fill the empty nights after this one with the same lodging. */}
+        <LodgingSuggest plan={plan} dayIndex={dayIndex} onChange={onChange} />
         {showNotes && times && <span className="tl-memo">{times}</span>}
         {showNotes && note?.memo && <span className="tl-memo">{note.memo}</span>}
         {showNotes &&
@@ -53,7 +56,6 @@ export function LodgingField({ plan, dayIndex, onChange, showNotes = true }: { p
       </div>
     );
   }
-  const known = lodgingPlaces(plan);
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
       {/* One line: the search, and 미정 right beside it (M43). */}
@@ -76,13 +78,8 @@ export function LodgingField({ plan, dayIndex, onChange, showNotes = true }: { p
           {t('tl.lodgingTbdChip')}
         </button>
       </div>
-      {known.length > 0 && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-          {known.map((p) => (
-            <Button key={p.placeRef} label={p.name} variant="secondary" size="sm" onClick={() => choose(setLodging(plan, dayIndex, p.placeRef))} />
-          ))}
-        </div>
-      )}
+      {/* 이어서 묵기 (M49): the trip's lodgings as chips, the previous night's first. */}
+      <LodgingSuggest plan={plan} dayIndex={dayIndex} onChange={onChange} />
       {/* toss text-field error: the helper line in red under the field, until a lodging or 미정 is chosen. */}
       {!tbd && <span className="tl-required-text">{t('tl.lodgingRequired')}</span>}
     </div>

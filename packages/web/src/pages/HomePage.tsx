@@ -4,7 +4,7 @@ import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { sampleTrip, type Trip } from '@tteonaljido/shared';
 import { InstallHint } from '../components/InstallHint';
 import { NextTrip } from '../components/NextTrip';
-import { pickNextTrip } from '../lib/nextTrip';
+import { dateOverlaps, pickNextTrip, sortOtherTrips } from '../lib/nextTrip';
 import { PlusIcon } from '../components/shell/icons';
 import { Row, Section } from '../components/shell/rows';
 import { Tag } from '../components/shell/Tag';
@@ -56,7 +56,14 @@ export function HomePage() {
   };
 
   const next = docs ? pickNextTrip(docs) : null;
-  const others = (docs ?? []).filter((d) => d !== next);
+  // M49: a clear order below the next-trip card (by departure, past trips last) and a mark on trips whose dates overlap.
+  const others = sortOtherTrips((docs ?? []).filter((d) => d !== next));
+  const overlaps = dateOverlaps(docs ?? []);
+  const overlapLine = (id: string) => {
+    const o = overlaps.get(id);
+    if (!o) return '';
+    return ` · ${o.length === 1 ? t('home.overlapWith', { name: o[0].plan.name }) : t('home.overlapWithMany', { name: o[0].plan.name, n: o.length - 1 })}`;
+  };
   const newTrip = (
     <button type="button" className="tn-headbtn" onClick={() => navigate('/trips/new')} aria-label={t('trips.create')}>
       <PlusIcon />
@@ -80,7 +87,7 @@ export function HomePage() {
       )}
       {next && (
         <Section title={t('home.next.title')}>
-          <NextTrip doc={next} sent={lastSends[next.tripId]} />
+          <NextTrip doc={next} sent={lastSends[next.tripId]} overlaps={overlaps.get(next.tripId)?.length ?? 0} />
         </Section>
       )}
       {others.length > 0 && (
@@ -107,12 +114,14 @@ export function HomePage() {
                             {unassigned > 0 && <Tag tone="warn">{t('home.unassignedBadge', { n: unassigned })}</Tag>}
                           </>
                         )}
+                        {overlaps.has(d.tripId) && <Tag tone="warn">{t('home.overlap', { n: overlaps.get(d.tripId)!.length })}</Tag>}
                       </span>
                     }
                     // '3박 4일' keeps its space unbroken so the nights never split across lines
                     subtitle={
                       t('common.tripSummary', { period: periodLabel(d.plan.startDate, d.plan.endDate), nights: nightsLabel(d.plan).replace(/ /g, '\u00a0'), places: d.plan.places.length }) +
-                      (sent ? ` · ${t('home.lastSend', { version: sent.revision, date: dateLabel(dayOf(sent.at)) })}` : '')
+                      (sent ? ` · ${t('home.lastSend', { version: sent.revision, date: dateLabel(dayOf(sent.at)) })}` : '') +
+                      overlapLine(d.tripId)
                     }
                     chevron
                   />

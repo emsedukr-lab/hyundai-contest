@@ -7,7 +7,8 @@ import './timeline.css';
 /**
  * The editor's bottom sheet: Astryx BottomSheet (focus trap, swipe/scrim/Escape dismissal, stacking) with the header
  * and footer it leaves to the caller — a title and close button on top, an optional action row kept in reach below.
- * Edits inside apply live, like the rest of the editor, so closing never loses anything.
+ * Edits inside apply live, like the rest of the editor, so closing never loses anything. It rises only as far as its
+ * content needs (`hug`, up to 92dvh, M49); the add-place sheet stays `tall` for Astryx's keyboard handling.
  */
 export function Sheet({
   isOpen,
@@ -15,7 +16,7 @@ export function Sheet({
   title,
   children,
   footer,
-  height = 'capped',
+  height = 'hug',
 }: {
   isOpen: boolean;
   onClose: () => void;

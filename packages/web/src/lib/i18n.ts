@@ -716,6 +716,11 @@ const ko = {
   'time.label': '{ampm} {h}:{m}',
   'time.none': '없음',
   'tl.departFree': '출발 시각 자유',
+  'tl.lodgingSuggest': '이어서 묵기',
+  'tl.lodgingFillLater': '이후 {n}박도 이 숙소로',
+  'home.overlap': '날짜 겹침 {n}',
+  'home.overlapWith': '{name}과(와) 겹침',
+  'home.overlapWithMany': '{name} 외 {n}개와 겹침',
 } as const satisfies Record<string, string>;
 
 export type Key = keyof typeof ko;
@@ -1430,6 +1435,11 @@ const en: Record<Key, string> = {
   'time.label': '{h}:{m} {ampm}',
   'time.none': 'None',
   'tl.departFree': 'Leave any time',
+  'tl.lodgingSuggest': 'Stay on at',
+  'tl.lodgingFillLater': 'Stay here the next {n} {n|night|nights} too',
+  'home.overlap': '{n} {n|overlap|overlaps}',
+  'home.overlapWith': 'overlaps {name}',
+  'home.overlapWithMany': 'overlaps {name} and {n} more',
 };
 
 /** Both tables, for tests. */

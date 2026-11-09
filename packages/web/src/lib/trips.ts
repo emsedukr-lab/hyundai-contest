@@ -413,6 +413,29 @@ export const visitOf = (plan: Trip, id: string) => plan.visits.find((v) => v.vis
 export const unassignedVisits = (plan: Trip) => plan.visits.filter((v) => v.unassignedReason !== null);
 export const lodgingPlaces = (plan: Trip) => plan.places.filter((p) => p.category === 'LODGING');
 
+/* ---------- 이어서 묵기 (M49): the same lodging over several nights ---------- */
+
+/**
+ * Lodgings to offer for night `dayIndex`: the nights before it first (the nearest night first — usually the hotel you are
+ * already in), then the nights after it, then the trip's other lodging places. Each place once; nights only (the last
+ * day has none).
+ */
+export function lodgingSuggestions(plan: Trip, dayIndex: number) {
+  const nights = plan.days.slice(0, -1);
+  const before = nights.filter((d) => d.dayIndex < dayIndex).reverse();
+  const after = nights.filter((d) => d.dayIndex > dayIndex);
+  const refs = [...before, ...after].map((d) => d.lodgingPlaceRef).filter((r): r is string => !!r);
+  const ordered = [...refs, ...lodgingPlaces(plan).map((p) => p.placeRef)];
+  return [...new Set(ordered)].map((ref) => placeOf(plan, ref)).filter((p): p is NonNullable<typeof p> => !!p);
+}
+
+/** The nights after `dayIndex` that still have no lodging and were not left 미정 on purpose. */
+export const laterEmptyNights = (plan: Trip, dayIndex: number, tbd: readonly number[]) =>
+  plan.days.slice(0, -1).filter((d) => d.dayIndex > dayIndex && !d.lodgingPlaceRef && !tbd.includes(d.dayIndex)).map((d) => d.dayIndex);
+
+/** Puts one lodging on several nights at once. */
+export const fillNights = (plan: Trip, nights: readonly number[], placeRef: string): Trip => nights.reduce((p, n) => setLodging(p, n, placeRef), plan);
+
 export const nightsLabel = (plan: Trip) => {
   const n = plan.days.length;
   return n === 1 ? t('trip.dayTrip') : t('trip.nights', { nights: n - 1, days: n });

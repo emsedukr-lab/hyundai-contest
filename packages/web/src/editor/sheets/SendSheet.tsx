@@ -29,7 +29,7 @@ export function SendSheet({ isOpen, onClose, plan, home, dayIndex, mode }: { isO
   const shown = plan.days.find((d) => String(d.dayIndex) === day)?.dayIndex ?? plan.days[0].dayIndex;
   const checks = mode === 'send' ? planWarnings(plan, home, lodgingTbd).filter((w) => w.level === 'warning') : [];
   return (
-    <Sheet isOpen={isOpen} onClose={onClose} title={mode === 'send' ? t('tl.sendTitle') : t('tl.mapTitle')} height="tall">
+    <Sheet isOpen={isOpen} onClose={onClose} title={mode === 'send' ? t('tl.sendTitle') : t('tl.mapTitle')}>
       {plan.days.length > 1 && (
         // A day picker, not a tab strip: no sideways scroll button to cover a day's name on long trips.
         <Selector
