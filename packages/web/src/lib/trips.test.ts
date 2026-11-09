@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { parseTransfer, sampleTrip, type Trip } from '@tteonaljido/shared';
-import { addPlace, addToDay, moveToDay, placeRoom, assign, changeCategory, emptyPlan, isEndpointOnly, move, moveTo, endpointFromPreset, newDoc, nodeIssues, planWarnings, relinkLegs, rememberLegs, removePlace, savePlan, setDepart, setEndBy, setLeg, setEndpoint, setLodging, setOrigin, setPeriod, startFromPreset, toTransfer, unassign, type LegBook } from './trips';
+import { addPlace, addToDay, cleanLodgingTbd, moveToDay, placeRoom, assign, changeCategory, emptyPlan, isEndpointOnly, move, moveTo, endpointFromPreset, newDoc, nodeIssues, planWarnings, relinkLegs, rememberLegs, removePlace, savePlan, setDepart, setEndBy, setLeg, setEndpoint, setLodging, setOrigin, setPeriod, startFromPreset, toTransfer, unassign, type LegBook } from './trips';
 
 // The warning assertions below check the Korean copy; jsdom reports navigator.language as en-US.
 vi.hoisted(() => Object.defineProperty(navigator, 'language', { value: 'ko-KR', configurable: true }));
@@ -345,5 +345,20 @@ describe('a place gets its day only from its details (moveToDay, M40)', () => {
     const t0 = sampleTrip();
     const id = day(t0, 2).visitOrder[0];
     expect(moveToDay(t0, id, 2)).toBe(t0);
+  });
+});
+
+describe('nights marked 미정 (M41, phone-only)', () => {
+  it('silence the missing-lodging warning for that night only', () => {
+    const t0 = setLodging(setLodging(sampleTrip(), 1, null), 2, null);
+    const texts = (tbd: number[]) => planWarnings(t0, null, tbd).map((w) => w.text);
+    expect(texts([]).filter((x) => x.includes('숙소')).length).toBe(2);
+    expect(texts([1]).filter((x) => x.includes('숙소')).length).toBe(1);
+    expect(texts([1, 2]).filter((x) => x.includes('숙소')).length).toBe(0);
+  });
+  it('keep only nights that exist and still have no lodging', () => {
+    const t0 = setLodging(sampleTrip(), 1, null); // night 1 empty, nights 2–3 have lodging, day 4 is the last day
+    expect(cleanLodgingTbd([1, 2, 4, 9, 1, 'x'], t0)).toEqual([1]);
+    expect(cleanLodgingTbd(undefined, t0)).toEqual([]);
   });
 });

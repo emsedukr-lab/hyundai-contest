@@ -8,6 +8,7 @@ import { t } from '../lib/i18n';
 import { setPeriod } from '../lib/trips';
 import { EndpointField } from './EndpointField';
 import { LodgingField } from './LodgingField';
+import { useNotes } from './NotesContext';
 import './timeline.css';
 
 type Range = NonNullable<Parameters<typeof DateRangeInput>[0]['value']>;
@@ -18,6 +19,7 @@ type Range = NonNullable<Parameters<typeof DateRangeInput>[0]['value']>;
  * lodging → 귀가, each a grey card with a small kicker. Everything is edited right here (no popup).
  */
 export function TripInfoPanel({ plan, home, onChange, onOpenSettings }: { plan: Trip; home: Home | null; onChange: (p: Trip) => void; onOpenSettings: () => void }) {
+  const { lodgingTbd } = useNotes();
   const [error, setError] = useState<string | null>(null);
   const nights = plan.days.slice(0, -1);
   return (
@@ -68,14 +70,17 @@ export function TripInfoPanel({ plan, home, onChange, onOpenSettings }: { plan: 
             </div>
           </div>
         </div>
-        {nights.map((d, i) => (
+        {nights.map((d, i) => {
+          // No lodging yet, and not marked 미정: the toss input-error look (red 1.5px border, red helper line).
+          const required = !d.lodgingPlaceRef && !lodgingTbd.includes(d.dayIndex);
+          return (
           <div className="tl-row" key={d.dayIndex}>
             <div className="tl-rail">
-              <span className={`tl-marker${d.lodgingPlaceRef ? '' : ' is-warn'}`} aria-hidden="true">
+              <span className={`tl-marker${required ? ' is-required' : ''}`} aria-hidden="true">
                 <BedIcon />
               </span>
             </div>
-            <div className={`tl-card${d.lodgingPlaceRef ? '' : ' is-warn'}`}>
+            <div className={`tl-card${required ? ' is-required' : ''}`}>
               <div className="tl-card-body">
                 <span className="tl-kicker">{`${t('tl.nightLodging', { day: d.dayIndex })} · ${shortDate(d.date)}`}</span>
                 <LodgingField
@@ -88,7 +93,8 @@ export function TripInfoPanel({ plan, home, onChange, onOpenSettings }: { plan: 
               </div>
             </div>
           </div>
-        ))}
+          );
+        })}
         <div className="tl-row is-last">
           <div className="tl-rail">
             <span className="tl-marker" aria-hidden="true">

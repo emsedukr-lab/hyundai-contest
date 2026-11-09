@@ -40,7 +40,7 @@ interface Props {
 export function DayTimeline({ plan, home, dayIndex, onChange, onError, onOpenPlace, onOpenStart, onOpenLeg, onOpenEnd, onRemoveStop, legMeters }: Props) {
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }));
   const { day, i, isFirst, isLast, startName, endName } = dayEnds(plan, dayIndex);
-  const { notes } = useNotes();
+  const { notes, lodgingTbd } = useNotes();
   // Phone-only notes shown in grey: the night's lodging (check-in/out, memo) and, on the next morning, its check-out.
   const lodgingNote = !isLast && day.lodgingPlaceRef ? notes[day.lodgingPlaceRef] : undefined;
   const prevCheckOut = !isFirst ? notes[plan.days[i - 1]?.lodgingPlaceRef ?? '']?.checkOut : undefined;
@@ -88,8 +88,11 @@ export function DayTimeline({ plan, home, dayIndex, onChange, onError, onOpenPla
 
   // 끝: a night's lodging, or home/the final place on the last day
   const lodgingMissing = !isLast && endName === null;
+  // 미정 (M41): the night needs no lodging yet — a quiet grey line instead of the red 'choose lodging' card.
+  const lodgingTbdHere = lodgingMissing && lodgingTbd.includes(day.dayIndex);
+  const lodgingRequired = lodgingMissing && !lodgingTbdHere;
   const lastLodging = isLast && !!day.lodgingPlaceRef;
-  const endWarn = lodgingMissing || lastLodging;
+  const endWarn = lastLodging;
   const endTimes = [endAt !== null ? t('days.dayEnd', { time: clock(endAt) }) : '', day.endBy ? t('tl.endBy', { time: day.endBy }) : ''].filter(Boolean).join(' · ');
 
   const leg = (k: number) => {
@@ -164,14 +167,20 @@ export function DayTimeline({ plan, home, dayIndex, onChange, onError, onOpenPla
 
       <div className="tl-row is-last">
         <div className="tl-rail">
-          <span className={`tl-marker${endWarn ? ' is-warn' : ''}`} aria-hidden="true">
+          <span className={`tl-marker${lodgingRequired ? ' is-required' : endWarn ? ' is-warn' : ''}`} aria-hidden="true">
             {isLast ? <FlagIcon /> : <BedIcon />}
           </span>
         </div>
-        <div className={`tl-card${issues.end.length ? ' is-error' : endWarn ? ' is-warn' : ''}`}>
+        <div className={`tl-card${issues.end.length ? ' is-error' : lodgingRequired ? ' is-required' : endWarn ? ' is-warn' : ''}`}>
           <button type="button" className="tl-card-main" onClick={onOpenEnd}>
             <span className="tl-kicker">{isLast ? t('tl.home') : t('common.lodging')}</span>
-            {lodgingMissing ? <span className="tl-name tl-warn-text" style={{ fontSize: 17 }}>{t('tl.lodgingUnset')}</span> : <span className="tl-name">{endName}</span>}
+            {lodgingTbdHere ? (
+              <span className="tl-name tl-meta" style={{ fontSize: 17 }}>{t('tl.lodgingTbd')}</span>
+            ) : lodgingMissing ? (
+              <span className="tl-name tl-required-text" style={{ fontSize: 17 }}>{t('tl.lodgingUnset')}</span>
+            ) : (
+              <span className="tl-name">{endName}</span>
+            )}
             {endTimes && <span className="tl-line">{endTimes}</span>}
             {lodgingTimes && <span className="tl-memo">{lodgingTimes}</span>}
             {lodgingNote?.memo && <span className="tl-memo">{lodgingNote.memo}</span>}

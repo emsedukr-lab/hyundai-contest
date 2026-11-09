@@ -8,8 +8,13 @@ import { FieldPrefix } from './FieldPrefix';
 type ISOTime = Parameters<NonNullable<Parameters<typeof TimeInput>[0]['onChange']>>[0];
 type Patch = { [K in keyof PlaceNote]?: string | null };
 
-/** The trip's phone-only notes, shared by the editor's sections, sheets and dialogs. */
-export const NotesContext = createContext<{ notes: TripNotes; setNote: (placeRef: string, patch: Patch) => void }>({ notes: {}, setNote: () => undefined });
+/** The trip's phone-only notes, shared by the editor's sections, sheets and dialogs — memos, and nights marked 미정. */
+export const NotesContext = createContext<{
+  notes: TripNotes;
+  setNote: (placeRef: string, patch: Patch) => void;
+  lodgingTbd: number[];
+  setLodgingTbd: (dayIndex: number, on: boolean) => void;
+}>({ notes: {}, setNote: () => undefined, lodgingTbd: [], setLodgingTbd: () => undefined });
 export const useNotes = () => useContext(NotesContext);
 
 /**

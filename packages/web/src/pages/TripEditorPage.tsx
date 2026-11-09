@@ -27,7 +27,7 @@ import { navigate } from '../lib/router';
 import { cleanNotes, setNote, type TripNotes } from '../lib/notes';
 import { allRuns, applyRun, cleanLegMeters, emptyRuns, fetchRun, runSignature } from '../lib/routeTimes';
 import { defaultHome } from '../lib/settings';
-import { emptyPlan, legKeys, newDoc, nightsLabel, nowIso, placeOf, relinkLegs, rememberLegs, savePlan, unassign, unassignedVisits, visitOf, type LegBook, type TripDoc } from '../lib/trips';
+import { cleanLodgingTbd, emptyPlan, legKeys, newDoc, nightsLabel, nowIso, placeOf, relinkLegs, rememberLegs, savePlan, unassign, unassignedVisits, visitOf, type LegBook, type TripDoc } from '../lib/trips';
 import '../editor/timeline.css';
 
 /** Which bottom sheet is open (one at a time; dialogs such as place details may stack above it). */
@@ -51,13 +51,14 @@ const STUCK_AT = 56 + 56;
 const named = (p: Trip): Trip => (p.name.trim() ? p : { ...p, name: t('trip.defaultName') });
 
 /** Writes the trip to this phone (a new revision only when its content changed) and tells listening lists. */
-async function persist(doc: TripDoc, plan: Trip, home: Home | null, notes: TripNotes, legMeters: Record<string, number>, fresh = false): Promise<TripDoc> {
+async function persist(doc: TripDoc, plan: Trip, home: Home | null, notes: TripNotes, legMeters: Record<string, number>, lodgingTbd: number[], fresh = false): Promise<TripDoc> {
   // Notes and distances are phone-only and outside the plan's hash: changing only those keeps the version the car knows.
   // A trip saved for the first time is v1, whatever was typed before (its blank starting doc was never stored).
   const next: TripDoc = {
     ...(fresh ? await newDoc({ ...named(plan), tripId: doc.tripId, revision: 1, updatedAt: nowIso() }, home) : await savePlan(doc, named(plan), home)),
     notes: cleanNotes(notes, new Set(plan.places.map((p) => p.placeRef))),
     legMeters: cleanLegMeters(legMeters, plan),
+    lodgingTbd: cleanLodgingTbd(lodgingTbd, plan),
   };
   await trips.put(next);
   window.dispatchEvent(new Event(TRIPS_CHANGED));
@@ -87,6 +88,8 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
   const [notes, setNotes] = useState<TripNotes>({});
   /** Phone-only recommended-route length per leg key (metres), from Kakao; shown as "· 7.3km" on the travel pills. */
   const [legMeters, setLegMeters] = useState<Record<string, number>>({});
+  /** Phone-only: nights marked 미정 (no lodging needed yet, so no warning). */
+  const [lodgingTbd, setLodgingTbdState] = useState<number[]>([]);
   /** Pull to refresh: how far the page is pulled down at the top, and whether a recalculation is running. */
   const [pull, setPull] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
@@ -103,8 +106,8 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
   /** Travel times typed this session by pair of places, so reordering does not throw them away. */
   const book = useRef<LegBook>(new Map());
   // The latest state for saves that happen outside a render: leaving by browser back (unmount) or the app going away.
-  const latest = useRef<{ doc: TripDoc | null; plan: Trip | null; notes: TripNotes; legMeters: Record<string, number>; dirty: boolean }>({ doc: null, plan: null, notes: {}, legMeters: {}, dirty: false });
-  latest.current = { doc, plan, notes, legMeters, dirty };
+  const latest = useRef<{ doc: TripDoc | null; plan: Trip | null; notes: TripNotes; legMeters: Record<string, number>; lodgingTbd: number[]; dirty: boolean }>({ doc: null, plan: null, notes: {}, legMeters: {}, lodgingTbd: [], dirty: false });
+  latest.current = { doc, plan, notes, legMeters, lodgingTbd, dirty };
   /** Auto travel times: only after the user changed something, each empty stretch asked once, stopped if unavailable. */
   const edited = useRef(false);
   const asked = useRef(new Set<string>());
@@ -115,8 +118,9 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
   const fresh = useRef(!tripId);
   const deleting = useRef(false);
   /** What the last save wrote, to tell whether anything changed while it ran (a Kakao fill landing mid-save). */
-  const lastSaved = useRef<{ plan: Trip | null; notes: TripNotes | null; legMeters: Record<string, number> | null }>({ plan: null, notes: null, legMeters: null });
-  const unchangedSinceSave = () => latest.current.plan === lastSaved.current.plan && latest.current.notes === lastSaved.current.notes && latest.current.legMeters === lastSaved.current.legMeters;
+  const lastSaved = useRef<{ plan: Trip | null; notes: TripNotes | null; legMeters: Record<string, number> | null; lodgingTbd: number[] | null }>({ plan: null, notes: null, legMeters: null, lodgingTbd: null });
+  const unchangedSinceSave = () =>
+    latest.current.plan === lastSaved.current.plan && latest.current.notes === lastSaved.current.notes && latest.current.legMeters === lastSaved.current.legMeters && latest.current.lodgingTbd === lastSaved.current.lodgingTbd;
   /** Saves run one after another so two of them never race on the same revision. */
   const queue = useRef<Promise<unknown>>(Promise.resolve());
   const saveNow = (): Promise<TripDoc | null> => {
@@ -124,8 +128,8 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
       const now = latest.current;
       if (deleting.current || !now.dirty || !now.doc || !now.plan) return null;
       now.dirty = false;
-      lastSaved.current = { plan: now.plan, notes: now.notes, legMeters: now.legMeters };
-      const next = await persist(now.doc, now.plan, home, now.notes, now.legMeters, fresh.current);
+      lastSaved.current = { plan: now.plan, notes: now.notes, legMeters: now.legMeters, lodgingTbd: now.lodgingTbd };
+      const next = await persist(now.doc, now.plan, home, now.notes, now.legMeters, now.lodgingTbd, fresh.current);
       fresh.current = false;
       latest.current.doc = next; // edits made while saving stay marked as unsaved
       return next;
@@ -142,6 +146,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
       setDoc(d);
       setNotes(cleanNotes(d.notes));
       setLegMeters(cleanLegMeters(d.legMeters, d.plan));
+      setLodgingTbdState(cleanLodgingTbd(d.lodgingTbd, d.plan));
       book.current = new Map();
       rememberLegs(d.plan, book.current);
       setPlan(d.plan);
@@ -307,12 +312,13 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
   const attention = useMemo(() => {
     if (!plan) return new Set<number>();
     const last = plan.days.length - 1;
-    return new Set(plan.days.filter((d, i) => (i < last && !d.lodgingPlaceRef) || dayIssues(plan, d.dayIndex).some((x) => x.severity === 'CONFLICT')).map((d) => d.dayIndex));
-  }, [plan]);
+    return new Set(plan.days.filter((d, i) => (i < last && !d.lodgingPlaceRef && !lodgingTbd.includes(d.dayIndex)) || dayIssues(plan, d.dayIndex).some((x) => x.severity === 'CONFLICT')).map((d) => d.dayIndex));
+  }, [plan, lodgingTbd]);
   if (!plan || !doc) return <Spinner />;
 
   const nightCount = plan.days.length - 1;
-  const missingNights = plan.days.slice(0, -1).filter((d) => !d.lodgingPlaceRef).length;
+  const missingNights = plan.days.slice(0, -1).filter((d) => !d.lodgingPlaceRef && !lodgingTbd.includes(d.dayIndex)).length; // 미정 nights are fine
+  const tbdNights = plan.days.slice(0, -1).filter((d) => !d.lodgingPlaceRef && lodgingTbd.includes(d.dayIndex)).length;
   const pool = unassignedVisits(plan);
   const poolNeedsCare = pool.some((v) => v.fixed);
   const targetDay = plan.days.some((d) => d.dayIndex === focusDay) ? focusDay : plan.days[0].dayIndex;
@@ -345,11 +351,17 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
       setNotes((n) => setNote(n, placeRef, patch));
       setDirty(true);
     },
+    lodgingTbd,
+    /** 미정 on a night: its lodging is no longer required (no red card, no warning); choosing a lodging lifts it. */
+    setLodgingTbd: (dayIndex: number, on: boolean) => {
+      setLodgingTbdState((cur) => (on ? [...new Set([...cur, dayIndex])].sort((a, b) => a - b) : cur.filter((n) => n !== dayIndex)));
+      setDirty(true);
+    },
   };
 
   const save = async () => {
     const wasDirty = dirty;
-    latest.current = { doc, plan, notes, legMeters, dirty: true };
+    latest.current = { doc, plan, notes, legMeters, lodgingTbd, dirty: true };
     const next = (await saveNow()) ?? doc;
     setDoc(next);
     if (unchangedSinceSave()) {
@@ -366,7 +378,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
     if (dirty) await save(); // keep unsaved edits in the original too, not only in the copy
     const clone: Trip = { ...structuredClone(plan), tripId: crypto.randomUUID(), name: t('trip.copyName', { name: named(plan).name }).slice(0, 60), revision: 1, updatedAt: nowIso() };
     // The copy keeps its memos and distances (same places, same legs).
-    const nd: TripDoc = { ...(await newDoc(clone, home)), notes: cleanNotes(notes), legMeters: cleanLegMeters(legMeters, clone) };
+    const nd: TripDoc = { ...(await newDoc(clone, home)), notes: cleanNotes(notes), legMeters: cleanLegMeters(legMeters, clone), lodgingTbd: cleanLodgingTbd(lodgingTbd, clone) };
     await trips.put(nd);
     navigate(`/trips/${nd.tripId}`);
   };
@@ -498,9 +510,11 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
                 <span className="tl-meta">{t('tl.routeLine', { start: t('tl.start'), from: endpointName(plan, plan.origin), end: t('tl.home'), to: endpointName(plan, plan.finalDestination) })}</span>
                 {nightCount > 0 &&
                   (missingNights > 0 ? (
-                    <span className="tl-warn-text">{t('tl.lodgingMissing', { n: missingNights })}</span>
+                    <span className="tl-required-text">{t('tl.lodgingMissing', { n: missingNights })}</span>
                   ) : (
-                    <span className="tl-meta">{t('tl.lodgingCount', { set: nightCount, nights: nightCount })}</span>
+                    <span className="tl-meta">
+                      {tbdNights > 0 ? t('tl.lodgingCountTbd', { set: nightCount - tbdNights, nights: nightCount, tbd: tbdNights }) : t('tl.lodgingCount', { set: nightCount, nights: nightCount })}
+                    </span>
                   ))}
               </button>
             </div>

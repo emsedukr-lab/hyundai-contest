@@ -364,7 +364,7 @@ export function ConnectPage() {
             {docs.length === 0 && <Banner status="info" title={t('common.noTrips')} description={t('connect.pick.empty')} />}
             <VStack gap={2}>
               {docs.map((d) => {
-                const warnings = planWarnings(d.plan, home).filter((w) => w.level === 'warning').length;
+                const warnings = planWarnings(d.plan, home, d.lodgingTbd).filter((w) => w.level === 'warning').length;
                 return (
                   <SelectableCard key={d.tripId} label={d.plan.name} isSelected={picked === d.tripId} onChange={(on) => setPicked(on ? d.tripId : null)}>
                     <VStack gap={1}>
@@ -446,7 +446,7 @@ export function ConnectPage() {
             </Card>
             {(() => {
               // The conflicts the car would also flag — shown once more right before sending, so nothing surprises on arrival.
-              const warnings = planWarnings(doc.plan, home).filter((w) => w.level === 'warning');
+              const warnings = planWarnings(doc.plan, home, doc.lodgingTbd).filter((w) => w.level === 'warning');
               return warnings.length === 0 ? null : (
                 <VStack gap={1}>
                   <Text type="label">{t('connect.approve.conflicts', { n: warnings.length })}</Text>

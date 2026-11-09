@@ -676,3 +676,43 @@
   font-weight: 600;
   color: var(--color-text-accent, var(--color-accent));
 }
+
+/*
+ * A night without lodging (M41) — toss text-field error instead of the brown warning: a 1.5px red-500 #F04452 border
+ * on a flat card (no tint), the bed marker in the same red, and the helper line in red under the field. A night marked
+ * 미정 drops all of it.
+ */
+.tl-card.is-required {
+  border-color: #f04452;
+}
+.tl-marker.is-required {
+  border-color: #f04452;
+  color: #f04452;
+}
+.tl-required-text {
+  font-size: 13px;
+  line-height: 1.5;
+  color: #f04452;
+}
+/* The 미정 chip: same size and grey as the lodging choices beside it; on = toss chip active (dark fill, light text). */
+.tl-chip {
+  height: 28px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 14px;
+  background: light-dark(rgba(27, 27, 34, 0.1), rgba(224, 226, 236, 0.2));
+  color: var(--color-text-primary);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 28px;
+  cursor: pointer;
+}
+.tl-chip.is-on {
+  background: var(--color-background-inverted);
+  color: var(--color-background-body);
+}
+.tl-chip:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}

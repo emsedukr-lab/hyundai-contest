@@ -32,6 +32,11 @@ export interface TripDoc {
   notes?: TripNotes;
   /** Phone-only recommended-route length per leg ("from>to" → metres), from Kakao directions; never part of the transfer. */
   legMeters?: Record<string, number>;
+  /**
+   * Phone-only (M41): nights whose lodging the user marked 미정 — no lodging needed yet, so no warning. Day indexes of
+   * nights (1…days-1) that still have no lodging; outside the plan's hash, never sent (the car sees an empty night).
+   */
+  lodgingTbd?: number[];
 }
 
 const rand = () => Math.random().toString(36).slice(2, 10);
@@ -438,12 +443,20 @@ export function issueText(i: DayIssue): string {
   }
 }
 
+/** Keeps only nights that still exist and still have no lodging (a chosen lodging, or a shorter trip, ends 미정). */
+export function cleanLodgingTbd(raw: unknown, plan: Trip): number[] {
+  if (!Array.isArray(raw)) return [];
+  const open = new Set(plan.days.slice(0, -1).filter((d) => !d.lodgingPlaceRef).map((d) => d.dayIndex));
+  return [...new Set(raw.filter((n): n is number => typeof n === 'number' && open.has(n)))].sort((a, b) => a - b);
+}
+
 /** Advice shown while editing. Nothing here blocks saving or sending; the car re-checks everything. */
-export function planWarnings(plan: Trip, home: Home | null): Warning[] {
+export function planWarnings(plan: Trip, home: Home | null, lodgingTbd: readonly number[] = []): Warning[] {
   const out: Warning[] = [];
   const last = plan.days.length - 1;
   plan.days.forEach((d, i) => {
-    if (i < last && !d.lodgingPlaceRef) out.push({ level: 'warning', text: t('trip.warn.noLodging', { day: d.dayIndex }) });
+    // A night marked 미정 needs no lodging (M41).
+    if (i < last && !d.lodgingPlaceRef && !lodgingTbd.includes(d.dayIndex)) out.push({ level: 'warning', text: t('trip.warn.noLodging', { day: d.dayIndex }) });
     if (i === last && d.lodgingPlaceRef) out.push({ level: 'warning', text: t('trip.warn.lastLodging') });
   });
   for (const v of plan.visits) {

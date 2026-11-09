@@ -14,7 +14,13 @@ import { PlaceSearch } from './PlaceSearch';
  * opened on demand. Empty: a search field ("1일차 숙소") plus the trip's lodgings as one-tap choices.
  */
 export function LodgingField({ plan, dayIndex, onChange, showNotes = true }: { plan: Trip; dayIndex: number; onChange: (p: Trip) => void; showNotes?: boolean }) {
-  const { notes } = useNotes();
+  const { notes, lodgingTbd, setLodgingTbd } = useNotes();
+  const tbd = lodgingTbd.includes(dayIndex);
+  /** Choosing a lodging ends 미정 for that night. */
+  const choose = (next: Trip) => {
+    if (tbd) setLodgingTbd(dayIndex, false);
+    onChange(next);
+  };
   const [editing, setEditing] = useState(false);
   const day = plan.days.find((d) => d.dayIndex === dayIndex);
   const chosen = placeOf(plan, day?.lodgingPlaceRef ?? '');
@@ -58,16 +64,20 @@ export function LodgingField({ plan, dayIndex, onChange, showNotes = true }: { p
         placeholder={t('tl.nightLodging', { day: dayIndex })}
         onPick={(p) => {
           const added = addPlace(plan, p);
-          onChange(setLodging(added, dayIndex, added.places[added.places.length - 1].placeRef));
+          choose(setLodging(added, dayIndex, added.places[added.places.length - 1].placeRef));
         }}
       />
-      {known.length > 0 && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-          {known.map((p) => (
-            <Button key={p.placeRef} label={p.name} variant="secondary" size="sm" onClick={() => onChange(setLodging(plan, dayIndex, p.placeRef))} />
-          ))}
-        </div>
-      )}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+        {known.map((p) => (
+          <Button key={p.placeRef} label={p.name} variant="secondary" size="sm" onClick={() => choose(setLodging(plan, dayIndex, p.placeRef))} />
+        ))}
+        {/* 미정: no lodging needed for this night yet — the card stops asking (toss chip: active = dark fill). */}
+        <button type="button" className={`tl-chip${tbd ? ' is-on' : ''}`} aria-pressed={tbd} aria-label={t('tl.lodgingTbdAria', { day: dayIndex })} onClick={() => setLodgingTbd(dayIndex, !tbd)}>
+          {t('tl.lodgingTbdChip')}
+        </button>
+      </div>
+      {/* toss text-field error: the helper line in red under the field, until a lodging or 미정 is chosen. */}
+      {!tbd && <span className="tl-required-text">{t('tl.lodgingRequired')}</span>}
     </div>
   );
 }

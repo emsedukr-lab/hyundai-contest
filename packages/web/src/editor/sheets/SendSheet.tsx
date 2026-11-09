@@ -8,6 +8,7 @@ import { navigate } from '../../lib/router';
 import { planWarnings } from '../../lib/trips';
 import { KakaoMap } from '../KakaoMap';
 import { Sheet } from '../Sheet';
+import { useNotes } from '../NotesContext';
 
 const hasOpenConnection = () => {
   try {
@@ -22,10 +23,11 @@ const hasOpenConnection = () => {
  * starts — always from the car's QR, so the phone shows the steps instead of a send button.
  */
 export function SendSheet({ isOpen, onClose, plan, home, dayIndex, mode }: { isOpen: boolean; onClose: () => void; plan: Trip; home: Home | null; dayIndex: number; mode: 'send' | 'map' }) {
+  const { lodgingTbd } = useNotes();
   const [day, setDay] = useState(String(dayIndex));
   const [resumable] = useState(hasOpenConnection);
   const shown = plan.days.find((d) => String(d.dayIndex) === day)?.dayIndex ?? plan.days[0].dayIndex;
-  const checks = mode === 'send' ? planWarnings(plan, home).filter((w) => w.level === 'warning') : [];
+  const checks = mode === 'send' ? planWarnings(plan, home, lodgingTbd).filter((w) => w.level === 'warning') : [];
   return (
     <Sheet isOpen={isOpen} onClose={onClose} title={mode === 'send' ? t('tl.sendTitle') : t('tl.mapTitle')} height="tall">
       {plan.days.length > 1 && (
