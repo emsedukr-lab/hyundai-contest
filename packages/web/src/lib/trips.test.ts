@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { parseTransfer, sampleTrip, type Trip } from '@tteonaljido/shared';
-import { fillNights, laterEmptyNights, lodgingSuggestions, addPlace, addToDay, cleanLodgingTbd, cleanSetup, moveToDay, placeRoom, setReservation, setupReady, assign, changeCategory, emptyPlan, isEndpointOnly, move, moveTo, endpointFromPreset, newDoc, nodeIssues, planWarnings, relinkLegs, rememberLegs, removePlace, savePlan, setDepart, setEndBy, setLeg, setEndpoint, setLodging, setOrigin, setPeriod, startFromPreset, toTransfer, unassign, type LegBook } from './trips';
+import { suggestVisitTime, updateVisit, fillNights, laterEmptyNights, lodgingSuggestions, addPlace, addToDay, cleanLodgingTbd, cleanSetup, moveToDay, placeRoom, setReservation, setupReady, assign, changeCategory, emptyPlan, isEndpointOnly, move, moveTo, endpointFromPreset, newDoc, nodeIssues, planWarnings, relinkLegs, rememberLegs, removePlace, savePlan, setDepart, setEndBy, setLeg, setEndpoint, setLodging, setOrigin, setPeriod, startFromPreset, toTransfer, unassign, type LegBook } from './trips';
 
 // The warning assertions below check the Korean copy; jsdom reports navigator.language as en-US.
 vi.hoisted(() => Object.defineProperty(navigator, 'language', { value: 'ko-KR', configurable: true }));
@@ -414,5 +414,33 @@ describe('이어서 묵기 (M49)', () => {
     const filled = fillNights(base, laterEmptyNights(base, 1, []), 'skybay');
     expect(filled.days.slice(0, -1).map((d) => d.lodgingPlaceRef)).toEqual(['skybay', 'skybay', 'skybay']);
     expect(filled.days.at(-1)!.lodgingPlaceRef).toBeNull();
+  });
+});
+
+describe('suggested stop time (M50)', () => {
+  const t0 = sampleTrip();
+  const d2 = t0.days[1].visitOrder; // day 2: v4 v5(fixed 13:00) v6 v7
+
+  it('suggests 09:00 for the first stop and a place on no day', () => {
+    expect(suggestVisitTime(t0, d2[0])).toBe('09:00');
+    expect(suggestVisitTime(t0, 'no-such-visit')).toBe('09:00');
+  });
+
+  it('is one hour after the nearest earlier timed stop, on the half hour, at most 23:30', () => {
+    const fixed = t0.visits.find((v) => v.visitId === d2[1])!.fixed!.time;
+    const plus1 = `${String(Number(fixed.slice(0, 2)) + 1).padStart(2, '0')}:${fixed.slice(3)}`;
+    expect(suggestVisitTime(t0, d2[2])).toBe(plus1);
+    expect(suggestVisitTime(t0, d2[3])).toBe(plus1); // the stop between has no time of its own: look further back
+    const odd = updateVisit(t0, d2[2], { desiredTime: '14:10' });
+    expect(suggestVisitTime(odd, d2[3])).toBe('15:30'); // 15:10 rounds up to the half hour
+    const late = updateVisit(t0, d2[2], { desiredTime: '23:10' });
+    expect(suggestVisitTime(late, d2[3])).toBe('23:30');
+  });
+
+  it('for a stop about to join a day, looks at every stop already on it', () => {
+    const fixed = t0.visits.find((v) => v.visitId === d2[1])!.fixed!.time;
+    const plus1 = `${String(Number(fixed.slice(0, 2)) + 1).padStart(2, '0')}:${fixed.slice(3)}`;
+    expect(suggestVisitTime(t0, 'not-on-day-2-yet', 2)).toBe(plus1);
+    expect(suggestVisitTime(t0, 'x', 99)).toBe('09:00');
   });
 });

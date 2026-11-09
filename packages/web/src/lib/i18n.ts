@@ -721,6 +721,10 @@ const ko = {
   'home.overlap': '날짜 겹침 {n}',
   'home.overlapWith': '{name}과(와) 겹침',
   'home.overlapWithMany': '{name} 외 {n}개와 겹침',
+  'time.period': '오전·오후',
+  'time.dawnShow': '새벽 시간 보기 (0:00~5:30)',
+  'time.dawnHide': '새벽 시간 접기',
+  'time.suggested': '추천 {time}',
 } as const satisfies Record<string, string>;
 
 export type Key = keyof typeof ko;
@@ -1440,6 +1444,10 @@ const en: Record<Key, string> = {
   'home.overlap': '{n} {n|overlap|overlaps}',
   'home.overlapWith': 'overlaps {name}',
   'home.overlapWithMany': 'overlaps {name} and {n} more',
+  'time.period': 'AM or PM',
+  'time.dawnShow': 'Show early hours (0:00–5:30)',
+  'time.dawnHide': 'Hide early hours',
+  'time.suggested': 'Suggested {time}',
 };
 
 /** Both tables, for tests. */

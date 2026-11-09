@@ -10,7 +10,7 @@ import { shortDate } from '../lib/format';
 import { t } from '../lib/i18n';
 import { recommendRoute, summarizeRecommendation } from '../lib/recommend';
 import { allRuns, applyRun, fetchRun } from '../lib/routeTimes';
-import { placeOf, removePlace, setReservation, setupReady, updateVisit, type SetupStep } from '../lib/trips';
+import { placeOf, removePlace, setReservation, setupReady, suggestVisitTime, updateVisit, type SetupStep } from '../lib/trips';
 import { useNotes } from './NotesContext';
 import { PlaceCollector } from './sheets/PlaceSheet';
 import type { Notice } from './sheets/PlaceSheet';
@@ -145,7 +145,7 @@ export function TripSetup({
                       {t('common.must')}
                     </button>
                   </div>
-                  <Switch label={t('setup.reserved')} value={booked} onChange={(on) => (on ? reserve(day, v.fixed?.time ?? '12:00') : onChange(setReservation(plan, v.visitId, null, null)))} />
+                  <Switch label={t('setup.reserved')} value={booked} onChange={(on) => (on ? reserve(day, v.fixed?.time ?? suggestVisitTime(plan, v.visitId, day)) : onChange(setReservation(plan, v.visitId, null, null)))} />
                   {booked && (
                     <div className="tl-setup-reserve">
                       <Selector
@@ -156,7 +156,7 @@ export function TripSetup({
                         value={String(day)}
                         onChange={(d) => reserve(Number(d), v.fixed!.time)}
                       />
-                      <TimeSelect label={t('setup.reserveTime')} value={v.fixed!.time} onChange={(x) => x && reserve(day, x)} />
+                      <TimeSelect label={t('setup.reserveTime')} value={v.fixed!.time} suggest={suggestVisitTime(plan, v.visitId, day)} onChange={(x) => x && reserve(day, x)} />
                     </div>
                   )}
                 </Card>

@@ -30,10 +30,13 @@ export function shortDate(date: string) {
   return t('date.short', { month: lang === 'en' ? MONTH_EN[m - 1] : m, day: d, weekday });
 }
 
+/** 12-hour clock, but midnight reads 0 (오전 0:30), so it never looks like noon's 12:30 in the 오후 tab (M50). */
+const clockHour = (h: number) => (h === 0 ? 0 : h % 12 || 12);
+
 /** "오후 1:30" / "1:30 PM" for an "HH:MM" time — the same reading the time picker and the cards use. */
 export function timeLabel(hhmm: string) {
   const [h, m] = hhmm.split(':').map(Number);
-  return t('time.label', { ampm: h < 12 ? t('time.am') : t('time.pm'), h: h % 12 || 12, m: String(m).padStart(2, '0') });
+  return t('time.label', { ampm: h < 12 ? t('time.am') : t('time.pm'), h: clockHour(h), m: String(m).padStart(2, '0') });
 }
 
 /**
@@ -46,3 +49,36 @@ export function timeOptions(step = 30, current?: string | null): string[] {
   if (current && /^\d\d:\d\d$/.test(current) && !out.includes(current)) out.push(current), out.sort();
   return out;
 }
+
+export type DayPeriod = 'am' | 'pm';
+
+/** 오전 (before noon) or 오후 for an "HH:MM" time. */
+export const periodOf = (hhmm: string): DayPeriod => (Number(hhmm.slice(0, 2)) < 12 ? 'am' : 'pm');
+
+/** Minutes after midnight → "HH:MM". */
+const hhmmOf = (m: number) => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+
+/**
+ * The chips of one tab of the time picker (M50): 오전 shows 06:00–11:30 (the dawn hours 00:00–05:30 only when `dawn`),
+ * 오후 12:00–23:30, every `step` minutes. The current value is added when it is off that grid and in this tab, so an older
+ * typed 10:15 still shows chosen.
+ */
+export function pickerTimes(period: DayPeriod, opts: { step?: number; dawn?: boolean; current?: string | null } = {}): string[] {
+  const step = opts.step ?? 30;
+  const from = period === 'pm' ? 12 * 60 : opts.dawn ? 0 : 6 * 60;
+  const to = period === 'pm' ? 24 * 60 : 12 * 60;
+  const out: string[] = [];
+  for (let m = from; m < to; m += step) out.push(hhmmOf(m));
+  const c = opts.current;
+  if (c && /^\d\d:\d\d$/.test(c) && periodOf(c) === period && !out.includes(c)) {
+    const inShown = period === 'pm' || opts.dawn || Number(c.slice(0, 2)) >= 6;
+    if (inShown) out.push(c), out.sort();
+  }
+  return out;
+}
+
+/** The short chip text: "9:00", "12:30" (the tab already says 오전/오후). */
+export const chipLabel = (hhmm: string) => {
+  const [h, m] = hhmm.split(':').map(Number);
+  return `${clockHour(h)}:${String(m).padStart(2, '0')}`;
+};

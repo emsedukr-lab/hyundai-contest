@@ -433,6 +433,28 @@ export function lodgingSuggestions(plan: Trip, dayIndex: number) {
 export const laterEmptyNights = (plan: Trip, dayIndex: number, tbd: readonly number[]) =>
   plan.days.slice(0, -1).filter((d) => d.dayIndex > dayIndex && !d.lodgingPlaceRef && !tbd.includes(d.dayIndex)).map((d) => d.dayIndex);
 
+/**
+ * The time to suggest for a stop (M50): one hour after the nearest earlier stop on the same day that has a time of its
+ * own (fixed, else desired), on the half-hour grid and no later than 23:30; '09:00' for the first stop, a stop with no
+ * timed stop before it, or a place on no day yet.
+ */
+export function suggestVisitTime(plan: Trip, visitId: string, dayIndex?: number): string {
+  // `dayIndex`: the day the stop is about to join (새 여행 ③ 예약), where it lands after every stop already there.
+  const day = dayIndex !== undefined ? plan.days.find((d) => d.dayIndex === dayIndex) : plan.days.find((d) => d.visitOrder.includes(visitId));
+  if (!day) return '09:00';
+  const at = day.visitOrder.indexOf(visitId);
+  const before = (at >= 0 ? day.visitOrder.slice(0, at) : day.visitOrder).reverse();
+  for (const id of before) {
+    const v = visitOf(plan, id);
+    const time = v?.fixed?.time ?? v?.desiredTime;
+    if (time) {
+      const m = Math.min(23 * 60 + 30, Math.ceil((Number(time.slice(0, 2)) * 60 + Number(time.slice(3, 5)) + 60) / 30) * 30);
+      return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+    }
+  }
+  return '09:00';
+}
+
 /** Puts one lodging on several nights at once. */
 export const fillNights = (plan: Trip, nights: readonly number[], placeRef: string): Trip => nights.reduce((p, n) => setLodging(p, n, placeRef), plan);
 

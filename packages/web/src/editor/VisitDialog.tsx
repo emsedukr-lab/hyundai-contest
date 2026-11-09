@@ -9,7 +9,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import type { OpeningHours, Place, Trip, Visit } from '@tteonaljido/shared';
 import { dateLabel, minutesLabel, shortDate } from '../lib/format';
 import { t } from '../lib/i18n';
-import { REASON_LABEL, changeCategory, moveToDay, removePlace, updatePlace, updateVisit } from '../lib/trips';
+import { REASON_LABEL, changeCategory, moveToDay, removePlace, suggestVisitTime, updatePlace, updateVisit } from '../lib/trips';
 import { LodgingNoteFields, PlaceMemoField } from './NotesContext';
 import { CATEGORY_LABEL, CATEGORY_OPTIONS } from './PlaceSearch';
 import { Sheet } from './Sheet';
@@ -107,7 +107,7 @@ export function VisitDialog({
   const setMode = (next: TimeMode) => {
     if (!visit || next === mode) return;
     if (shownTime) setLastTime(shownTime);
-    const base = shownTime ?? lastTime ?? '12:00';
+    const base = shownTime ?? lastTime ?? suggestVisitTime(plan, visit.visitId); // M50: an hour after the stop before
     if (next === 'free') setVisit({ desiredTime: null, fixed: null });
     else if (next === 'desired') setVisit({ desiredTime: base, fixed: null });
     else setVisit({ fixed: { time: toHalfHour(base), kind: 'USER' }, desiredTime: null, timeFlexible: false });
@@ -197,7 +197,7 @@ export function VisitDialog({
             {mode !== 'free' && (
               <Row label="">
                 <div className="vd-time">
-                  <TimeSelect label={mode === 'fixed' ? t('visit.fixedTime') : t('visit.desiredTime')} value={shownTime} onChange={setTime} />
+                  <TimeSelect label={mode === 'fixed' ? t('visit.fixedTime') : t('visit.desiredTime')} value={shownTime} suggest={suggestVisitTime(plan, visit.visitId)} onChange={setTime} />
                   {mode === 'fixed' && (
                     <button
                       type="button"
