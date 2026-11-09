@@ -1,15 +1,15 @@
 {
-  "at": "2026-11-09T17:54:22.533Z",
+  "at": "2026-11-09T19:46:27.992Z",
   "base": "https://tteonaljido.tteonaljido-worker.workers.dev",
   "serial": "emulator-5580",
   "results": [
     {
       "ok": true,
-      "what": "car app (release 0.2.0) and mobile web (deployed) are both open: car has no trips, phone has \"강릉 3박 4일\""
+      "what": "car app (release 0.3.0) and mobile web (deployed) are both open: car has no trips, phone has \"강릉 3박 4일\""
     },
     {
       "ok": true,
-      "what": "car shows a one-time QR for the deployed server (https://tteonaljido.tteonaljido-worker.workers.dev/c#v1.AlxU…)"
+      "what": "car shows a one-time QR for the deployed server (https://tteonaljido.tteonaljido-worker.workers.dev/c#v1.cSC0…)"
     },
     {
       "ok": true,
@@ -17,7 +17,7 @@
     },
     {
       "ok": true,
-      "what": "phone and car show the same confirm code (342 621)"
+      "what": "phone and car show the same confirm code (292 995)"
     },
     {
       "ok": true,
@@ -45,7 +45,7 @@
     },
     {
       "ok": true,
-      "what": "car shows a one-time QR for the deployed server (https://tteonaljido.tteonaljido-worker.workers.dev/c#v1.Unk7…)"
+      "what": "car shows a one-time QR for the deployed server (https://tteonaljido.tteonaljido-worker.workers.dev/c#v1.9CJ-…)"
     },
     {
       "ok": true,

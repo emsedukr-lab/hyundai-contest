@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- M55: the phone app's canvas and tag colors (packages/web shell.css), so car and phone read alike.
+     Tag text keeps 4.5:1 on its tinted background. -->
+<resources>
+    <color name="tn_canvas">#F7F8FA</color>
+    <color name="tn_ok_bg">#2402C265</color>
+    <color name="tn_ok_fg">#05701E</color>
+    <color name="tn_warn_bg">#24FF8A00</color>
+    <color name="tn_warn_fg">#A35500</color>
+    <color name="tn_error_bg">#1FFF3B1F</color>
+    <color name="tn_error_fg">#D82E08</color>
+    <color name="tn_accent_bg">#1A0064FF</color>
+    <color name="tn_accent_fg">#0064FF</color>
+    <color name="tn_bar">#0A131417</color>
+</resources>

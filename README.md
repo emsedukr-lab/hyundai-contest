@@ -7,8 +7,8 @@
 - 차량 앱: Kotlin · Jetpack Compose · Pleos Connect 2.1.5 디자인 토큰 · NaviHelper 3.0.5
 - 모바일 웹: React 19 · Astryx 컴포넌트 + Pleos 모바일 테마 · 이 브라우저에만 저장 (계정 없음)
 - 중계 서버: Cloudflare Worker + Durable Object · 종단간 암호화 (서버는 내용을 볼 수 없음) · 카카오 장소 검색·길찾기 중계 (저장·로그 없음)
-- 배포: **https://tteonaljido.tteonaljido-worker.workers.dev** (모바일 웹 + API, 개인정보 안내 `/privacy`). 현재 M54 (2026-11-10)
-- 시연 영상: [`media/demo/떠날지도_시연.mp4`](media/demo/떠날지도_시연.mp4) (3분 45초, 2026-11-10) — 새 여행의 동선 자동 구성부터 차량 불러오기·내비 안내까지, release APK 0.2.0(Pleos 에뮬레이터)와 휴대폰 브라우저를 배포 서버로 연결한 실제 화면 녹화
+- 배포: **https://tteonaljido.tteonaljido-worker.workers.dev** (모바일 웹 + API, 개인정보 안내 `/privacy`). 현재 M55 (2026-11-10, 차량 앱 화면을 휴대폰과 같은 디자인으로 재구성)
+- 시연 영상: [`media/demo/떠날지도_시연.mp4`](media/demo/떠날지도_시연.mp4) (3분 42초, 2026-11-10 M55 재녹화) — 새 여행의 동선 자동 구성부터 차량 불러오기·내비 안내까지, release APK 0.3.0(Pleos 에뮬레이터)와 휴대폰 브라우저를 배포 서버로 연결한 실제 화면 녹화
 - 세로 숏폼: [`media/demo/떠날지도_숏폼.mp4`](media/demo/떠날지도_숏폼.mp4) (56초, 1080×1920) — 같은 녹화에서 편집, 게시 문구는 `submission/숏폼_게시문구.md`
 - 시연 영상은 2026-11-10 지금 화면으로 다시 녹화했습니다. 숏폼은 아직 2026-11-05 녹화본(휴대폰은 예전 화면)입니다.
 
@@ -50,7 +50,7 @@
 
 | 파일 | 상태 |
 |---|---|
-| `apk/떠날지도_release.apk` | 서명된 release (prod, 서버 `https://tteonaljido.tteonaljido-worker.workers.dev`). 버전 0.2.0(2), 2026-11-10 Pleos 가이드 점검 후 재빌드: 주행가능거리용 `CAR_DRIVE`(읽기), 로터리 미지원 선언, 적응형 아이콘, 서명 v2+v3. 제출 시 `팀명_떠날지도_release.apk`로 이름 변경. 해시는 `apk/SHA256SUMS.txt` |
+| `apk/떠날지도_release.apk` | 서명된 release (prod, 서버 `https://tteonaljido.tteonaljido-worker.workers.dev`). 버전 0.3.0(3), 2026-11-10 M55 차량 화면 재구성 후 재빌드(서명 v2+v3). 0.2.0에서 반영한 Pleos 가이드 점검(주행가능거리용 `CAR_DRIVE` 읽기, 로터리 미지원 선언, 적응형 아이콘) 포함. 제출 시 `팀명_떠날지도_release.apk`로 이름 변경. 해시는 `apk/SHA256SUMS.txt` |
 | `car/app/build/outputs/apk/dev/debug/app-dev-debug.apk` | 로컬 개발용 (`./gradlew :app:assembleDevDebug`) |
 
 ## 실행 방법
@@ -102,7 +102,7 @@ npx tsx tools/compose-demo.mts               # 녹화 → media/demo/떠날지�
 npx tsx tools/compose-shorts.mts             # 녹화 → media/demo/떠날지도_숏폼.mp4 (세로)
 ```
 
-2026-11-10(M54) 기준 TypeScript 234개와 Kotlin 137개가 모두 통과하고, 모바일 E2E(`npm run e2e`)도 통과합니다. 같은 날 서명 release APK 0.2.0과 배포 서버·모바일 웹의 실제 연동(`tools/live-pair.mts`, 15항목)과 내비 경로 안내까지 확인했습니다 — 화면은 `docs/evidence/live-pair/overview.png`. 전송 스키마를 바꾸면 `npm run schema`로 JSON Schema·fixture를 다시 만들고 TS·Kotlin 시험을 모두 돌립니다.
+2026-11-10(M55) 기준 TypeScript 234개와 Kotlin 146개가 모두 통과하고, 모바일 E2E(`npm run e2e`)와 차량 에뮬레이터 E2E(`tools/e2e-car.mts`, 16항목)도 통과합니다. 같은 날 서명 release APK 0.3.0과 배포 서버·모바일 웹의 실제 연동(`tools/live-pair.mts`, 15항목)과 내비 경로 안내까지 확인했습니다 — 화면은 `docs/evidence/live-pair/overview.png`. 전송 스키마를 바꾸면 `npm run schema`로 JSON Schema·fixture를 다시 만들고 TS·Kotlin 시험을 모두 돌립니다.
 
 ## 배포
 
@@ -149,7 +149,7 @@ APK(`apk/`)와 시연 영상(`media/demo/`)도 함께 제출합니다. 마감(20
 | [02 기술 구조](docs/02_기술_구조.md) | 프로토콜·암호화·스키마·재검증·내비 연동·모바일 웹·시험·배포, 지속 동기화·주차 시간 추정 설계(미구현) |
 | [03 개인정보 설계](docs/03_개인정보_설계.md) | 데이터 위치·보관 기간, 카카오로 보내는 좌표, 집 주소 동의, 삭제, 위협 모델 |
 | [04 디자인 시스템](docs/04_디자인_시스템.md) | 차량 Pleos 토큰·컴포넌트, QR 규격, 휴대폰 Pleos 모바일 테마와 화면, 대비·인식 시험 |
-| [05 개발 계획](docs/05_개발_계획.md) | 마일스톤(M0~M54), 실제와 시연의 구분, 위험, 남은 작업 |
+| [05 개발 계획](docs/05_개발_계획.md) | 마일스톤(M0~M55), 실제와 시연의 구분, 위험, 남은 작업 |
 | [06 시연 시나리오](docs/06_시연_시나리오.md) | PT 대본, 장애 대응, 정직하게 밝힐 범위 |
 
 공식 디자인 자료와 추출 방법은 [design/README.md](design/README.md), 공모전·Pleos 조사는 `docs/research/`에 있습니다.
