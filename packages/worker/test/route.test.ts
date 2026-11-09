@@ -21,14 +21,14 @@ describe('이동시간 경로 요청 (route)', () => {
   });
 
   it('turns section seconds into minutes per leg (same spot = 0)', async () => {
-    const fetcher = kakao({ routes: [{ result_code: 0, sections: [{ duration: 610 }, { duration: 1500 }] }] });
+    const fetcher = kakao({ routes: [{ result_code: 0, sections: [{ duration: 610, distance: 7342 }, { duration: 1500, distance: 16050.4 }] }] });
     const res = await routeDurations({ points: [gyeongpo, anmok, sameAsAnmok, jumunjin] }, 'key', fetcher);
-    expect(await res.json()).toEqual({ provider: 'KAKAO', minutes: [11, 0, 25] });
+    expect(await res.json()).toEqual({ provider: 'KAKAO', minutes: [11, 0, 25], meters: [7342, 0, 16050] });
   });
 
   it('no drivable route leaves the legs empty; Kakao refusing is an unavailable answer', async () => {
     const none = await routeDurations({ points: [gyeongpo, jumunjin] }, 'key', kakao({ routes: [{ result_code: 104 }] }));
-    expect(await none.json()).toEqual({ provider: 'KAKAO', minutes: [null] });
+    expect(await none.json()).toEqual({ provider: 'KAKAO', minutes: [null], meters: [null] });
     const denied = await routeDurations({ points: [gyeongpo, jumunjin] }, 'key', kakao({ msg: 'denied' }, 401));
     expect(denied.status).toBe(502);
     const noKey = await routeDurations({ points: [gyeongpo, jumunjin] }, undefined, kakao({}));

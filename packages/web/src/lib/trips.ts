@@ -30,6 +30,8 @@ export interface TripDoc {
   home: Home | null;
   /** Phone-only notes per place (memo, lodging check-in/out); never part of the transfer. */
   notes?: TripNotes;
+  /** Phone-only recommended-route length per leg ("from>to" → metres), from Kakao directions; never part of the transfer. */
+  legMeters?: Record<string, number>;
 }
 
 const rand = () => Math.random().toString(36).slice(2, 10);

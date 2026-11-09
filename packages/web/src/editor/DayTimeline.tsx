@@ -1,15 +1,15 @@
-import { useMemo } from 'react';
-import { DndContext, KeyboardSensor, PointerSensor, closestCenter, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
+import { useMemo, useRef, useState, type KeyboardEvent, type MouseEvent, type PointerEvent, type ReactNode } from 'react';
+import { DndContext, KeyboardSensor, PointerSensor, closestCenter, useSensor, useSensors, type Announcements, type DragEndEvent, type UniqueIdentifier } from '@dnd-kit/core';
 import { SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Badge } from '@astryxdesign/core/Badge';
 import { Banner } from '@astryxdesign/core/Banner';
-import { DropdownMenu } from '@astryxdesign/core/DropdownMenu';
 import { dayEnd, hhmm, timeline, type DayIssue, type Home, type Trip } from '@tteonaljido/shared';
-import { BedIcon, FlagIcon, GripIcon, MoreIcon } from '../components/shell/icons';
+import { BedIcon, FlagIcon, GripIcon } from '../components/shell/icons';
 import { minutesLabel, shortDate } from '../lib/format';
 import { t } from '../lib/i18n';
-import { issueText, move, moveTo, nodeIssues, placeOf, unassign, visitOf } from '../lib/trips';
+import { kmLabel } from '../lib/routeTimes';
+import { issueText, legKeys, moveTo, nodeIssues, placeOf, visitOf } from '../lib/trips';
 import { dayEnds, legEnds } from './dayInfo';
 import { useNotes } from './NotesContext';
 import './timeline.css';
@@ -24,15 +24,20 @@ interface Props {
   onOpenStart: () => void;
   onOpenLeg: (k: number) => void;
   onOpenEnd: () => void;
+  /** Takes a stop off this day (back to 보관함); the editor offers 되돌리기. */
+  onRemoveStop: (visitId: string) => void;
+  /** Phone-only recommended-route length by leg key (metres), from Kakao. */
+  legMeters: Record<string, number>;
 }
 
 /**
  * One day as a vertical route: 출발 → (이동 → 장소)… → 이동 → 숙소 (or 귀가 on the last day); places are added with the
  * editor's floating + button. Every
  * problem shows on the node it is about — a tinted card edge and one line of text — instead of a list at the bottom.
- * Stops reorder by their handle (pointer or keyboard) or the ⋯ menu; fixed visits never move on their own.
+ * Stops reorder by dragging their handle (pointer or keyboard); swiping a stop to the left takes it off the day. Fixed
+ * visits never move on their own.
  */
-export function DayTimeline({ plan, home, dayIndex, onChange, onError, onOpenPlace, onOpenStart, onOpenLeg, onOpenEnd }: Props) {
+export function DayTimeline({ plan, home, dayIndex, onChange, onError, onOpenPlace, onOpenStart, onOpenLeg, onOpenEnd, onRemoveStop, legMeters }: Props) {
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }));
   const { day, i, isFirst, isLast, startName, endName } = dayEnds(plan, dayIndex);
   const { notes } = useNotes();
@@ -42,6 +47,7 @@ export function DayTimeline({ plan, home, dayIndex, onChange, onError, onOpenPla
   const lodgingTimes = [lodgingNote?.checkIn ? t('tl.checkInAt', { time: lodgingNote.checkIn }) : '', lodgingNote?.checkOut ? t('tl.checkOutAt', { time: lodgingNote.checkOut }) : ''].filter(Boolean).join(' · ');
   const times = useMemo(() => Object.fromEntries(timeline(plan, day.dayIndex).map((st) => [st.visitId, st])), [plan, day.dayIndex]);
   const issues = useMemo(() => nodeIssues(plan, day.dayIndex), [plan, day.dayIndex]);
+  const keys = useMemo(() => legKeys(plan, day.dayIndex), [plan, day.dayIndex]);
   const endAt = dayEnd(plan, day.dayIndex);
   const clock = (m: number) => (m < 0 ? t('days.prevDay') : hhmm(m));
   const safe = (f: () => Trip) => {
@@ -57,6 +63,17 @@ export function DayTimeline({ plan, home, dayIndex, onChange, onError, onOpenPla
     const from = day.visitOrder.indexOf(String(active.id));
     const to = day.visitOrder.indexOf(String(over.id));
     if (from >= 0 && to >= 0) safe(() => moveTo(plan, day.dayIndex, from, to));
+  };
+  // Screen-reader text for the drag handle, in the app's language (dnd-kit's defaults are English only).
+  const nameOf = (id: UniqueIdentifier) => {
+    const v = visitOf(plan, String(id));
+    return (v && placeOf(plan, v.placeRef)?.name) ?? '';
+  };
+  const announcements: Announcements = {
+    onDragStart: ({ active }) => t('tl.dragPicked', { name: nameOf(active.id) }),
+    onDragOver: ({ active, over }) => (over ? t('tl.dragMoved', { name: nameOf(active.id), n: day.visitOrder.indexOf(String(over.id)) + 1 }) : undefined),
+    onDragEnd: ({ active, over }) => (over ? t('tl.dragMoved', { name: nameOf(active.id), n: day.visitOrder.indexOf(String(over.id)) + 1 }) : undefined),
+    onDragCancel: () => t('tl.dragCanceled'),
   };
 
   // 출발
@@ -78,13 +95,15 @@ export function DayTimeline({ plan, home, dayIndex, onChange, onError, onOpenPla
   const leg = (k: number) => {
     const l = day.legs[k];
     const { from, to } = legEnds(plan, day.dayIndex, k);
+    const m = keys[k] ? legMeters[keys[k]!] : undefined;
+    const km = l && m ? ` · ${kmLabel(m)}` : '';
     return (
       <div className="tl-row" key={`leg${k}`}>
         <div className="tl-rail" />
         <div className="tl-legrow">
           <button type="button" className={`tl-leg${l ? '' : ' is-missing'}`} aria-label={`${t('tl.legTitle')} · ${t('tl.legRoute', { from, to })}`} onClick={() => onOpenLeg(k)}>
             <span aria-hidden="true">↓</span>
-            {l ? t('tl.legMinutes', { duration: minutesLabel(l.minutes) }) : `${t('tl.legMissing')} · ${t('days.needsCheck')}`}
+            {l ? `${t('tl.legMinutes', { duration: minutesLabel(l.minutes) })}${km}` : `${t('tl.legMissing')} · ${t('days.needsCheck')}`}
           </button>
         </div>
       </div>
@@ -118,7 +137,11 @@ export function DayTimeline({ plan, home, dayIndex, onChange, onError, onOpenPla
         </div>
       </div>
 
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={onDragEnd}
+        accessibility={{ announcements, screenReaderInstructions: { draggable: t('tl.dragHelp') } }}>
         <SortableContext items={day.visitOrder} strategy={verticalListSortingStrategy}>
           {day.visitOrder.map((id, k) => [
             leg(k),
@@ -127,13 +150,11 @@ export function DayTimeline({ plan, home, dayIndex, onChange, onError, onOpenPla
               plan={plan}
               id={id}
               k={k}
-              count={day.visitOrder.length}
               time={times[id]}
               clock={clock}
               issues={issues.byVisit[id] ?? []}
               onOpen={(ref) => onOpenPlace(ref)}
-              onMove={(dir) => safe(() => move(plan, day.dayIndex, k, dir))}
-              onUnassign={() => safe(() => unassign(plan, id))}
+              onRemove={() => onRemoveStop(id)}
             />,
           ])}
         </SortableContext>
@@ -169,29 +190,25 @@ export function DayTimeline({ plan, home, dayIndex, onChange, onError, onOpenPla
 
 type StopTime = ReturnType<typeof timeline>[number] | undefined;
 
-/** One stop: number on the rail, the card opens its details; ⋯ moves or takes it off the day; the drag handle sits at the far right. */
+/** One stop: number on the rail; tapping the card opens its details, swiping it left takes it off the day, and the drag handle at the far right reorders. */
 function StopCard({
   plan,
   id,
   k,
-  count,
   time,
   clock,
   issues,
   onOpen,
-  onMove,
-  onUnassign,
+  onRemove,
 }: {
   plan: Trip;
   id: string;
   k: number;
-  count: number;
   time: StopTime;
   clock: (m: number) => string;
   issues: DayIssue[];
   onOpen: (ref: string) => void;
-  onMove: (dir: -1 | 1) => void;
-  onUnassign: () => void;
+  onRemove: () => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
   const { notes } = useNotes();
@@ -216,7 +233,7 @@ function StopCard({
           {k + 1}
         </span>
       </div>
-      <div className={`tl-card${conflict ? ' is-error' : fixedSlot ? ' is-warn' : ''}`}>
+      <SwipeToRemove cardClass={conflict ? ' is-error' : fixedSlot ? ' is-warn' : ''} actionLabel={t('tl.unassignPlace', { name: p.name })} onRemove={onRemove}>
         <button type="button" className="tl-card-main" onClick={() => onOpen(p.placeRef)}>
           <span className="tl-name-row">
             <span className="tl-name">{p.name}</span>
@@ -236,24 +253,105 @@ function StopCard({
           {fixedSlot && <span className="tl-warn-text">{t('tl.fixedSlot')}</span>}
         </button>
         <div className="tl-card-end">
-          <DropdownMenu
-            items={[
-              { label: t('days.up'), isDisabled: k === 0, onClick: () => onMove(-1) },
-              { label: t('days.down'), isDisabled: k === count - 1, onClick: () => onMove(1) },
-              { type: 'divider' as const },
-              { label: t('tl.unassign'), onClick: onUnassign },
-            ]}
-            presentation="popover"
-            renderTrigger={(props) => (
-              <button type="button" className="tn-iconbtn" aria-label={t('tl.more', { name: p.name })} {...props}>
-                <MoreIcon />
-              </button>
-            )}
-          />
           <button type="button" className="tl-handle" aria-label={t('days.drag')} {...attributes} {...listeners}>
             <GripIcon />
           </button>
         </div>
+      </SwipeToRemove>
+    </div>
+  );
+}
+
+/** How far a half-swiped card rests open, showing its 빼기 button. */
+const OPEN_AT = -88;
+
+/**
+ * A card that slides left to reveal a red 빼기 behind it. Past 45% of its width (or a quick fling) it is removed on
+ * release; a shorter swipe rests open so 빼기 can be tapped, and tapping the card or Esc closes it again. Only a sideways
+ * gesture counts — vertical scrolling passes through (touch-action: pan-y) — and the drag handle is left to dnd-kit.
+ * The tap that ends a swipe never opens the card's details.
+ */
+function SwipeToRemove({ cardClass, actionLabel, onRemove, children }: { cardClass: string; actionLabel: string; onRemove: () => void; children: ReactNode }) {
+  const [x, setX] = useState(0);
+  const [sliding, setSliding] = useState(false);
+  const gesture = useRef<{ id: number; x0: number; y0: number; t0: number; base: number; width: number; sideways: boolean } | null>(null);
+  const swipedAt = useRef(-Infinity);
+  const card = useRef<HTMLDivElement>(null);
+
+  const remove = () => {
+    setSliding(false);
+    setX(-(card.current?.offsetWidth ?? 400));
+    window.setTimeout(onRemove, 160);
+  };
+  const onPointerDown = (e: PointerEvent<HTMLDivElement>) => {
+    if (e.button !== 0 || (e.target as Element).closest('.tl-handle')) return;
+    gesture.current = { id: e.pointerId, x0: e.clientX, y0: e.clientY, t0: e.timeStamp, base: x, width: e.currentTarget.offsetWidth, sideways: false };
+  };
+  const onPointerMove = (e: PointerEvent<HTMLDivElement>) => {
+    const g = gesture.current;
+    if (!g || g.id !== e.pointerId) return;
+    const dx = e.clientX - g.x0;
+    const dy = e.clientY - g.y0;
+    if (!g.sideways) {
+      if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+      if (Math.abs(dy) >= Math.abs(dx)) return void (gesture.current = null); // a scroll, not a swipe
+      g.sideways = true;
+      e.currentTarget.setPointerCapture(e.pointerId);
+      setSliding(true);
+    }
+    setX(Math.min(0, Math.max(-g.width, g.base + dx)));
+  };
+  const onPointerUp = (e: PointerEvent<HTMLDivElement>) => {
+    const g = gesture.current;
+    gesture.current = null;
+    if (!g?.sideways) return;
+    swipedAt.current = e.timeStamp;
+    setSliding(false);
+    const dx = e.clientX - g.x0;
+    const at = Math.min(0, g.base + dx);
+    const speed = dx / Math.max(1, e.timeStamp - g.t0); // px per ms; negative is leftward
+    if (at < -g.width * 0.45 || (speed < -0.8 && dx < -48)) remove();
+    else setX(at < OPEN_AT / 2 ? OPEN_AT : 0);
+  };
+  const onPointerCancel = () => {
+    const g = gesture.current;
+    gesture.current = null;
+    if (!g?.sideways) return;
+    setSliding(false);
+    setX(g.base);
+  };
+  const onClickCapture = (e: MouseEvent<HTMLDivElement>) => {
+    const afterSwipe = e.timeStamp - swipedAt.current < 400;
+    if (!afterSwipe && x === 0) return;
+    e.preventDefault();
+    e.stopPropagation();
+    if (!afterSwipe) setX(0); // tapping an open card closes it
+  };
+  const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'Escape' && x !== 0) {
+      e.stopPropagation();
+      setX(0);
+    }
+  };
+  const open = x !== 0;
+
+  return (
+    <div className={`tl-swipe${open || sliding ? ' is-open' : ''}`} onKeyDown={onKeyDown}>
+      <div className="tl-swipe-back" aria-hidden={!open}>
+        <button type="button" className="tl-swipe-action" tabIndex={open ? 0 : -1} aria-label={actionLabel} onClick={remove}>
+          {t('tl.unassignShort')}
+        </button>
+      </div>
+      <div
+        ref={card}
+        className={`tl-card tl-swipe-card${cardClass}`}
+        style={{ transform: x ? `translateX(${x}px)` : undefined, transition: sliding ? 'none' : undefined }}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerCancel}
+        onClickCapture={onClickCapture}>
+        {children}
       </div>
     </div>
   );

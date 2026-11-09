@@ -27,8 +27,23 @@ const hhmm = (v: ISOTime) => (v ? String(v).slice(0, 5) : null);
 const WEEKDAYS = ['visit.weekday.1', 'visit.weekday.2', 'visit.weekday.3', 'visit.weekday.4', 'visit.weekday.5', 'visit.weekday.6', 'visit.weekday.7'] as const;
 const ALL_DAYS = ['1', '2', '3', '4', '5', '6', '7'];
 
-/** Edits one place and its visit attributes (stay, importance, desired/fixed time, flexibility, hours). */
-export function VisitDialog({ plan, placeRef, onChange, onClose }: { plan: Trip; placeRef: string | null; onChange: (p: Trip) => void; onClose: () => void }) {
+/**
+ * Edits one place and its visit attributes (stay, importance, desired/fixed time, flexibility, hours). A stop on a day
+ * can be taken off it here too — the keyboard and screen-reader way to do what swiping the card does.
+ */
+export function VisitDialog({
+  plan,
+  placeRef,
+  onChange,
+  onUnassign,
+  onClose,
+}: {
+  plan: Trip;
+  placeRef: string | null;
+  onChange: (p: Trip) => void;
+  onUnassign: (visitId: string) => void;
+  onClose: () => void;
+}) {
   // Hooks first, before any early return (rules of hooks); each opened place starts without a pending delete.
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [pickDate, setPickDate] = useState<ISODateString | undefined>(undefined);
@@ -39,6 +54,9 @@ export function VisitDialog({ plan, placeRef, onChange, onClose }: { plan: Trip;
   const place = plan.places.find((p) => p.placeRef === placeRef);
   const visit = plan.visits.find((v) => v.placeRef === placeRef);
   if (!place) return null;
+  const onDay = !!visit && plan.days.some((d) => d.visitOrder.includes(visit.visitId));
+  // Kakao's local API has no opening hours; a place found through Kakao links to its Kakao Map page, which shows them.
+  const kakaoPage = place.source.provider === 'KAKAO' && place.source.externalId && /^\d+$/.test(place.source.externalId) ? `https://place.map.kakao.com/${place.source.externalId}` : null;
   const setVisit = (patch: Partial<Visit>) => visit && onChange(updateVisit(plan, visit.visitId, patch));
   const setPlace = (patch: Partial<Place>) => onChange(updatePlace(plan, place.placeRef, patch));
   const hours = place.hours;
@@ -110,6 +128,12 @@ export function VisitDialog({ plan, placeRef, onChange, onClose }: { plan: Trip;
               <Switch label={t('visit.timeFlexible')} value={visit.timeFlexible} isDisabled={!!visit.fixed} onChange={(v) => setVisit({ timeFlexible: v })} />
             </>
           ) : null}
+          {kakaoPage && (
+            <a className="tl-extlink" href={kakaoPage} target="_blank" rel="noopener noreferrer">
+              {t('tl.openKakaoHours')}
+              <span aria-hidden="true">↗</span>
+            </a>
+          )}
           <Switch
             label={t('visit.hours')}
             value={hours.status === 'USER_ENTERED'}
@@ -172,8 +196,20 @@ export function VisitDialog({ plan, placeRef, onChange, onClose }: { plan: Trip;
           </VStack>
         ) : (
           <HStack gap={2} hAlign="between">
-            {/* A quiet first step: red only on the confirm below, so the rare delete doesn't shout on every place. */}
-            <Button label={t('visit.delete')} variant="ghost" onClick={() => setConfirmDelete(true)} />
+            <HStack gap={1}>
+              {onDay && (
+                <Button
+                  label={t('tl.unassign')}
+                  variant="ghost"
+                  onClick={() => {
+                    onUnassign(visit!.visitId);
+                    onClose();
+                  }}
+                />
+              )}
+              {/* A quiet first step: red only on the confirm below, so the rare delete doesn't shout on every place. */}
+              <Button label={t('visit.delete')} variant="ghost" onClick={() => setConfirmDelete(true)} />
+            </HStack>
             <Button label={t('common.close')} variant="primary" onClick={onClose} />
           </HStack>
         )}

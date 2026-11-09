@@ -35,15 +35,20 @@ function knownPoints(plan: Trip, dayIndex: number): (Point | null)[] {
   return [start, ...stops, end];
 }
 
-/** Every run of empty, askable legs in the trip. */
-export function emptyRuns(plan: Trip): LegRun[] {
+/** Every run of empty, askable legs in the trip (automatic fill after a route change). */
+export const emptyRuns = (plan: Trip): LegRun[] => runs(plan, true);
+
+/** Every run of askable legs, filled or not (pull-to-refresh / 다시 계산: re-ask Kakao for the whole trip). */
+export const allRuns = (plan: Trip): LegRun[] => runs(plan, false);
+
+function runs(plan: Trip, onlyEmpty: boolean): LegRun[] {
   const runs: LegRun[] = [];
   for (const day of plan.days) {
     const pts = knownPoints(plan, day.dayIndex);
     const keys = legKeys(plan, day.dayIndex);
     let run: LegRun | null = null;
     day.legs.forEach((leg, k) => {
-      const ok = leg === null && pts[k] && pts[k + 1] && keys[k];
+      const ok = (!onlyEmpty || leg === null) && pts[k] && pts[k + 1] && keys[k];
       if (!ok) return void (run = null);
       if (!run || run.points.length >= MAX_POINTS) {
         run = { dayIndex: day.dayIndex, fromK: k, points: [pts[k]!], keys: [] };
@@ -56,31 +61,61 @@ export function emptyRuns(plan: Trip): LegRun[] {
   return runs;
 }
 
-/** Puts an answer into the plan: only legs still empty and still between the same two places get a time. */
-export function applyRun(plan: Trip, run: LegRun, minutes: (number | null)[]): { plan: Trip; filled: number } {
+/** Kakao's answer for one run: driving minutes and the recommended route's length in metres, per leg. */
+export interface RunResult {
+  minutes: (number | null)[];
+  meters: (number | null)[];
+}
+
+/**
+ * Puts an answer into the plan. Only legs still between the same two places are touched; without `overwrite` only
+ * empty ones get a time (automatic fill), with it every such leg is replaced (refresh). Distances come back as a map
+ * by leg key — phone-only, the transfer has no field for them.
+ */
+export function applyRun(plan: Trip, run: LegRun, result: RunResult, opts: { overwrite?: boolean } = {}): { plan: Trip; filled: number; meters: Record<string, number> } {
   const keys = legKeys(plan, run.dayIndex);
   const day = plan.days[run.dayIndex - 1];
   let next = plan;
   let filled = 0;
+  const meters: Record<string, number> = {};
   run.keys.forEach((key, i) => {
     const k = run.fromK + i;
-    const m = minutes[i];
-    if (!day || day.legs[k] !== null || keys[k] !== key || typeof m !== 'number') return;
+    if (!day || keys[k] !== key) return;
+    const d = result.meters[i];
+    if (typeof d === 'number') meters[key] = d;
+    const m = result.minutes[i];
+    if (typeof m !== 'number' || (!opts.overwrite && day.legs[k] !== null)) return;
+    if (day.legs[k]?.minutes === m) return void filled++; // already right
     next = setLeg(next, run.dayIndex, k, m);
     filled++;
   });
-  return { plan: next, filled };
+  return { plan: next, filled, meters };
 }
+
+/** Keeps only distances for legs that still exist (by key), so stale pairs don't pile up in the saved trip. */
+export function cleanLegMeters(raw: unknown, plan: Trip): Record<string, number> {
+  const out: Record<string, number> = {};
+  if (!raw || typeof raw !== 'object') return out;
+  const live = new Set(plan.days.flatMap((d) => legKeys(plan, d.dayIndex)).filter((k): k is string => !!k));
+  for (const [key, v] of Object.entries(raw as Record<string, unknown>)) if (live.has(key) && typeof v === 'number' && Number.isFinite(v) && v >= 0 && v < 2_000_000) out[key] = Math.round(v);
+  return out;
+}
+
+/** "7.3km" — one decimal, as the recommended route's length. */
+export const kmLabel = (m: number) => `${(m / 1000).toFixed(1)}km`;
 
 export const runSignature = (run: LegRun) => `${run.dayIndex}:${run.keys.join(',')}`;
 
 /** Asks the relay (which asks Kakao Mobility). null = directions unavailable right now. */
-export async function fetchRun(run: LegRun): Promise<(number | null)[] | null> {
+export async function fetchRun(run: LegRun): Promise<RunResult | null> {
   try {
     const res = await fetch('/api/v1/routes/durations', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ points: run.points }) });
     if (!res.ok) return null;
-    const data = (await res.json()) as { minutes?: unknown };
-    return Array.isArray(data.minutes) && data.minutes.length === run.keys.length ? data.minutes.map((m) => (typeof m === 'number' ? m : null)) : null;
+    const data = (await res.json()) as { minutes?: unknown; meters?: unknown };
+    const list = (v: unknown) => (Array.isArray(v) && v.length === run.keys.length ? v.map((m) => (typeof m === 'number' ? m : null)) : null);
+    const minutes = list(data.minutes);
+    if (!minutes) return null;
+    return { minutes, meters: list(data.meters) ?? run.keys.map(() => null) };
   } catch {
     return null;
   }

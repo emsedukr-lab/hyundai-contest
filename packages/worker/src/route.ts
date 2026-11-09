@@ -45,14 +45,15 @@ export function planRequest(points: Point[]): { route: Point[]; sectionOf: (numb
 
 const xy = (p: Point) => ({ x: p.lonE7 / 1e7, y: p.latE7 / 1e7 });
 
-/** `body` is `{ points: [{latE7, lonE7}, …] }` (2–25); the answer is `{ minutes: (number|null)[] }`, one per leg. */
+/** `body` is `{ points: [{latE7, lonE7}, …] }` (2–25); the answer is `{ minutes, meters }`, one entry per leg each. */
 export async function routeDurations(body: Record<string, unknown>, key: string | undefined, fetcher: typeof fetch = fetch): Promise<Response> {
   const points = body.points;
   if (!Array.isArray(points) || points.length < 2 || points.length > MAX_POINTS || !points.every(isPoint)) return error('BAD_REQUEST');
   if (!key) return json({ error: 'ROUTE_UNAVAILABLE' }, 503);
   const { route, sectionOf } = planRequest(points);
   const minutes: (number | null)[] = sectionOf.map((s) => (s === null ? 0 : null));
-  if (route.length < 2) return json({ provider: 'KAKAO', minutes });
+  const meters: (number | null)[] = sectionOf.map((s) => (s === null ? 0 : null));
+  if (route.length < 2) return json({ provider: 'KAKAO', minutes, meters });
   try {
     const res = await fetcher('https://apis-navi.kakaomobility.com/v1/waypoints/directions', {
       method: 'POST',
@@ -68,17 +69,20 @@ export async function routeDurations(body: Record<string, unknown>, key: string 
       signal: AbortSignal.timeout(6_000),
     });
     if (!res.ok) return json({ error: 'ROUTE_UNAVAILABLE' }, 502);
-    const data = (await res.json()) as { routes?: { result_code?: number; summary?: { duration?: number }; sections?: { duration?: number }[] }[] };
+    type Leg = { duration?: number; distance?: number };
+    const data = (await res.json()) as { routes?: { result_code?: number; summary?: Leg; sections?: Leg[] }[] };
     const r = data.routes?.[0];
     // No drivable route (an island, a closed road): the legs stay empty and the car marks them 'Check'.
-    if (!r || r.result_code !== 0) return json({ provider: 'KAKAO', minutes });
-    const secs = r.sections?.map((s) => s.duration) ?? (route.length === 2 ? [r.summary?.duration] : []);
+    if (!r || r.result_code !== 0) return json({ provider: 'KAKAO', minutes, meters });
+    const sections: Leg[] = r.sections ?? (route.length === 2 && r.summary ? [r.summary] : []);
+    const ok = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v) && v >= 0;
     sectionOf.forEach((s, i) => {
       if (s === null) return;
-      const d = secs[s];
-      if (typeof d === 'number' && Number.isFinite(d) && d >= 0) minutes[i] = Math.min(1440, Math.max(1, Math.ceil(d / 60)));
+      const sec = sections[s];
+      if (ok(sec?.duration)) minutes[i] = Math.min(1440, Math.max(1, Math.ceil(sec.duration / 60)));
+      if (ok(sec?.distance)) meters[i] = Math.round(sec.distance); // the recommended route's length, metres
     });
-    return json({ provider: 'KAKAO', minutes });
+    return json({ provider: 'KAKAO', minutes, meters });
   } catch {
     return json({ error: 'ROUTE_UNAVAILABLE' }, 502);
   }

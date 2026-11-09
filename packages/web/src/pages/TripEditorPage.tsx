@@ -6,7 +6,7 @@ import { Button } from '@astryxdesign/core/Button';
 import { DropdownMenu } from '@astryxdesign/core/DropdownMenu';
 import { Spinner } from '@astryxdesign/core/Spinner';
 import { dayIssues, type Home, type Trip } from '@tteonaljido/shared';
-import { ChevronIcon, MoreIcon, PencilIcon, PlusIcon } from '../components/shell/icons';
+import { ChevronIcon, CloseIcon, MoreIcon, PencilIcon, PlusIcon } from '../components/shell/icons';
 import { PushScreen } from '../components/shell/Screens';
 import { endpointName } from '../editor/dayInfo';
 import { DayTimeline } from '../editor/DayTimeline';
@@ -25,9 +25,9 @@ import { periodLabel, shortDate } from '../lib/format';
 import { t } from '../lib/i18n';
 import { navigate } from '../lib/router';
 import { cleanNotes, setNote, type TripNotes } from '../lib/notes';
-import { applyRun, emptyRuns, fetchRun, runSignature } from '../lib/routeTimes';
+import { allRuns, applyRun, cleanLegMeters, emptyRuns, fetchRun, runSignature } from '../lib/routeTimes';
 import { defaultHome } from '../lib/settings';
-import { emptyPlan, newDoc, nightsLabel, nowIso, relinkLegs, rememberLegs, savePlan, unassignedVisits, type LegBook, type TripDoc } from '../lib/trips';
+import { emptyPlan, newDoc, nightsLabel, nowIso, placeOf, relinkLegs, rememberLegs, savePlan, unassign, unassignedVisits, visitOf, type LegBook, type TripDoc } from '../lib/trips';
 import '../editor/timeline.css';
 
 /** Which bottom sheet is open (one at a time; dialogs such as place details may stack above it). */
@@ -40,6 +40,10 @@ type SheetState =
   | { kind: 'send' }
   | null;
 
+/** Pull distance (after resistance) at which letting go recalculates; the strip never grows past PULL_MAX. */
+const PULL_AT = 64;
+const PULL_MAX = 96;
+
 /** Section header height under the 56pt top bar: a day counts as "in view" once its header is stuck there. */
 const STUCK_AT = 56 + 56;
 
@@ -47,9 +51,13 @@ const STUCK_AT = 56 + 56;
 const named = (p: Trip): Trip => (p.name.trim() ? p : { ...p, name: t('trip.defaultName') });
 
 /** Writes the trip to this phone (a new revision only when its content changed) and tells listening lists. */
-async function persist(doc: TripDoc, plan: Trip, home: Home | null, notes: TripNotes): Promise<TripDoc> {
-  // Notes are phone-only and outside the plan's hash: changing only a memo keeps the version the car knows.
-  const next: TripDoc = { ...(await savePlan(doc, named(plan), home)), notes: cleanNotes(notes, new Set(plan.places.map((p) => p.placeRef))) };
+async function persist(doc: TripDoc, plan: Trip, home: Home | null, notes: TripNotes, legMeters: Record<string, number>): Promise<TripDoc> {
+  // Notes and distances are phone-only and outside the plan's hash: changing only those keeps the version the car knows.
+  const next: TripDoc = {
+    ...(await savePlan(doc, named(plan), home)),
+    notes: cleanNotes(notes, new Set(plan.places.map((p) => p.placeRef))),
+    legMeters: cleanLegMeters(legMeters, plan),
+  };
   await trips.put(next);
   window.dispatchEvent(new Event(TRIPS_CHANGED));
   return next;
@@ -76,6 +84,11 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
   const [dirty, setDirty] = useState(false);
   /** Phone-only memos and lodging check-in/out, by place (saved with the trip, never sent to the car). */
   const [notes, setNotes] = useState<TripNotes>({});
+  /** Phone-only recommended-route length per leg key (metres), from Kakao; shown as "· 7.3km" on the travel pills. */
+  const [legMeters, setLegMeters] = useState<Record<string, number>>({});
+  /** Pull to refresh: how far the page is pulled down at the top, and whether a recalculation is running. */
+  const [pull, setPull] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
   /** 여행 정보 open for editing: a new trip starts open; a saved one shows its summary until expanded. */
   const [infoOpen, setInfoOpen] = useState(!tripId);
   /** The day whose header is stuck under the top bar (the + button adds there); day 1 while 여행 정보 is in view. */
@@ -89,8 +102,8 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
   /** Travel times typed this session by pair of places, so reordering does not throw them away. */
   const book = useRef<LegBook>(new Map());
   // The latest state for saves that happen outside a render: leaving by browser back (unmount) or the app going away.
-  const latest = useRef<{ doc: TripDoc | null; plan: Trip | null; notes: TripNotes; dirty: boolean }>({ doc: null, plan: null, notes: {}, dirty: false });
-  latest.current = { doc, plan, notes, dirty };
+  const latest = useRef<{ doc: TripDoc | null; plan: Trip | null; notes: TripNotes; legMeters: Record<string, number>; dirty: boolean }>({ doc: null, plan: null, notes: {}, legMeters: {}, dirty: false });
+  latest.current = { doc, plan, notes, legMeters, dirty };
   /** Auto travel times: only after the user changed something, each empty stretch asked once, stopped if unavailable. */
   const edited = useRef(false);
   const asked = useRef(new Set<string>());
@@ -102,7 +115,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
       const now = latest.current;
       if (!now.dirty || !now.doc || !now.plan) return null;
       now.dirty = false;
-      const next = await persist(now.doc, now.plan, home, now.notes);
+      const next = await persist(now.doc, now.plan, home, now.notes, now.legMeters);
       latest.current.doc = next; // edits made while saving stay marked as unsaved
       return next;
     });
@@ -117,6 +130,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
       if (!d) return navigate('/', true);
       setDoc(d);
       setNotes(cleanNotes(d.notes));
+      setLegMeters(cleanLegMeters(d.legMeters, d.plan));
       book.current = new Map();
       rememberLegs(d.plan, book.current);
       setPlan(d.plan);
@@ -169,40 +183,102 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
   }, []);
 
   /**
-   * Fills empty legs from Kakao directions. Automatic after a route change (each stretch once, silent); from the menu it
-   * retries everything and says what happened. Answers land only where the leg is still empty and unchanged.
+   * Asks Kakao directions for travel times and distances. 'auto' runs after a route change: only empty legs, each stretch
+   * once, silent. 'refresh' (pull to refresh, or 이동시간·거리 다시 계산) re-asks every leg between known places and
+   * replaces its time — the way to bring typed or old estimates in line with the real route. Answers land only on legs
+   * still between the same two places; legs touching home are never asked (home stays on this phone).
    */
-  const fillLegs = async (manual: boolean) => {
+  const askKakao = async (mode: 'auto' | 'refresh'): Promise<number | null> => {
     const cur = latest.current.plan;
-    if (!cur || (!manual && routeOff.current)) return;
-    const runs = emptyRuns(cur).filter((r) => manual || !asked.current.has(runSignature(r)));
-    if (!runs.length) return manual ? setNotice({ tone: 'info', text: t('tl.autoLegsNone') }) : undefined;
+    if (!cur || (mode === 'auto' && routeOff.current)) return 0;
+    const runs = mode === 'refresh' ? allRuns(cur) : emptyRuns(cur).filter((r) => !asked.current.has(runSignature(r)));
     let filled = 0;
     for (const run of runs) {
       asked.current.add(runSignature(run));
-      const minutes = await fetchRun(run);
-      if (!minutes) {
+      const result = await fetchRun(run);
+      if (!result) {
         routeOff.current = true;
-        if (manual) setNotice({ tone: 'error', text: t('tl.autoLegsOff') });
-        return;
+        return null; // directions unavailable right now
       }
       const now = latest.current.plan;
-      if (!now) return;
-      const out = applyRun(now, run, minutes);
-      if (!out.filled) continue;
+      if (!now) return filled;
+      const out = applyRun(now, run, result, { overwrite: mode === 'refresh' });
+      if (Object.keys(out.meters).length) {
+        const merged = { ...latest.current.legMeters, ...out.meters };
+        latest.current.legMeters = merged;
+        setLegMeters(merged);
+        setDirty(true);
+      }
       filled += out.filled;
-      rememberLegs(out.plan, book.current);
-      latest.current.plan = out.plan;
-      setPlan(out.plan);
-      setDirty(true);
+      if (out.plan !== now) {
+        rememberLegs(out.plan, book.current);
+        latest.current.plan = out.plan;
+        setPlan(out.plan);
+        setDirty(true);
+      }
     }
     routeOff.current = false;
-    if (manual) setNotice({ tone: filled ? 'success' : 'info', text: filled ? t('tl.autoLegsDone', { n: filled }) : t('tl.autoLegsNone') });
+    return filled;
   };
+  /** Pull to refresh / menu: recalculate the whole trip and say what happened. */
+  const refreshAll = async () => {
+    if (refreshing) return;
+    setRefreshing(true);
+    const n = await askKakao('refresh');
+    setRefreshing(false);
+    setNotice(n === null ? { tone: 'error', text: t('tl.autoLegsOff') } : n ? { tone: 'success', text: t('tl.refreshDone', { n }) } : { tone: 'info', text: t('tl.refreshNone') });
+  };
+  const refreshRef = useRef(refreshAll);
+  refreshRef.current = refreshAll;
+
+  // Pull to refresh: at the very top of the editor, pulling down and letting go recalculates every leg with Kakao. Only
+  // a downward drag from scroll position 0 counts, never while a sheet, dialog or menu is open or a stop is being dragged.
+  useEffect(() => {
+    const root = document.documentElement;
+    const before = root.style.overscrollBehaviorY;
+    root.style.overscrollBehaviorY = 'contain'; // the browser's own pull-to-reload would leave the editor
+    let g: { x0: number; y0: number; pulling: boolean; dist: number } | null = null;
+    // Closed menus and dialogs stay in the DOM (hidden), so only a visible one counts.
+    const covered = () => [...document.querySelectorAll<HTMLElement>('[role="dialog"], [role="alertdialog"], [role="menu"], dialog')].some((el) => el.checkVisibility());
+    const onStart = (e: TouchEvent) => {
+      g = null;
+      if (e.touches.length !== 1 || window.scrollY > 0 || covered() || (e.target as Element).closest?.('.tl-handle')) return;
+      g = { x0: e.touches[0].clientX, y0: e.touches[0].clientY, pulling: false, dist: 0 };
+    };
+    const onMove = (e: TouchEvent) => {
+      if (!g) return;
+      const dx = e.touches[0].clientX - g.x0;
+      const dy = e.touches[0].clientY - g.y0;
+      if (!g.pulling) {
+        if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+        if (dy <= 0 || Math.abs(dx) >= dy || window.scrollY > 0) return void (g = null); // scrolling or swiping a card
+        g.pulling = true;
+      }
+      if (e.cancelable) e.preventDefault();
+      g.dist = Math.min(PULL_MAX, Math.max(0, dy) * 0.55);
+      setPull(g.dist);
+    };
+    const onEnd = () => {
+      if (g?.pulling && g.dist >= PULL_AT) void refreshRef.current();
+      if (g?.pulling) setPull(0);
+      g = null;
+    };
+    window.addEventListener('touchstart', onStart, { passive: true });
+    window.addEventListener('touchmove', onMove, { passive: false });
+    window.addEventListener('touchend', onEnd);
+    window.addEventListener('touchcancel', onEnd);
+    return () => {
+      root.style.overscrollBehaviorY = before;
+      window.removeEventListener('touchstart', onStart);
+      window.removeEventListener('touchmove', onMove);
+      window.removeEventListener('touchend', onEnd);
+      window.removeEventListener('touchcancel', onEnd);
+    };
+  }, []);
   // After an edit that left legs empty (a stop moved, added or removed; lodging or an end changed), fill them shortly after.
   useEffect(() => {
     if (!plan || !edited.current) return;
-    const timer = setTimeout(() => void fillLegs(false), 900);
+    const timer = setTimeout(() => void askKakao('auto'), 900);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [plan]);
@@ -227,8 +303,21 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
     setPlan(linked);
     setDirty(true);
     edited.current = true;
+    setNotice((n) => (n?.undo ? null : n)); // once something else changed, an old 되돌리기 would undo that too
   };
   const fail = (m: string) => setNotice({ tone: 'error', text: m });
+  /** Takes a stop off its day (it waits in 보관함) and offers 되돌리기, which puts the plan back as it was. */
+  const removeStop = (visitId: string) => {
+    const before = plan;
+    const v = visitOf(before, visitId);
+    if (!v) return;
+    try {
+      edit(unassign(before, visitId));
+    } catch (e) {
+      return fail((e as Error).message);
+    }
+    setNotice({ tone: 'info', text: t('tl.removedStop', { name: placeOf(before, v.placeRef)?.name ?? '' }), undo: () => edit(before) });
+  };
   const notesApi = {
     notes,
     setNote: (placeRef: string, patch: Parameters<typeof setNote>[2]) => {
@@ -240,7 +329,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
   const showDay = (day: number) => requestAnimationFrame(() => document.getElementById(`day-${day}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
 
   const save = async () => {
-    latest.current = { doc, plan, notes, dirty: true };
+    latest.current = { doc, plan, notes, legMeters, dirty: true };
     const next = (await saveNow()) ?? doc;
     setDoc(next);
     setPlan(next.plan);
@@ -267,7 +356,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
 
   const menuItems = [
     { label: t('recommend.button'), onClick: () => setRecommending(true) },
-    { label: t('tl.autoLegs'), onClick: () => void fillLegs(true) },
+    { label: t('tl.recalc'), onClick: () => void refreshAll() },
     ...(tripId ? [{ label: t('trip.duplicate'), onClick: () => void duplicate() }] : []),
     { label: t('share.button'), onClick: () => setSharing(true) },
     ...(tripId ? [{ type: 'divider' as const }, { label: t('editor.delete'), variant: 'destructive' as const, onClick: () => setConfirmDelete(true) }] : []),
@@ -317,11 +406,48 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
         </>
       }
       cta={cta}>
-      {notice && (
+      {(pull > 0 || refreshing) && (
+        <div className="tl-ptr" style={{ height: refreshing ? 48 : pull }} role="status">
+          {refreshing ? (
+            <>
+              <Spinner size="sm" />
+              {t('tl.refreshing')}
+            </>
+          ) : (
+            <>
+              <span className={`tl-ptr-arrow${pull >= PULL_AT ? ' is-ready' : ''}`} aria-hidden="true">
+                ↓
+              </span>
+              {pull >= PULL_AT ? t('tl.refreshRelease') : t('tl.refreshPull')}
+            </>
+          )}
+        </div>
+      )}
+      {notice && !notice.undo && (
         <div className="tn-pad" style={{ paddingTop: 12 }}>
           <Banner status={notice.tone} title={notice.text} isDismissable onDismiss={() => setNotice(null)} />
         </div>
       )}
+      {/* A notice with 되돌리기 floats above the bottom bar, so it is seen wherever the stop was swiped away. */}
+      <div role="status">
+        {notice?.undo && (
+          <div className="tl-snack">
+            <span className="tl-snack-text">{notice.text}</span>
+            <button
+              type="button"
+              className="tl-snack-action"
+              onClick={() => {
+                notice.undo?.();
+                setNotice(null);
+              }}>
+              {t('tl.undo')}
+            </button>
+            <button type="button" className="tl-snack-close" aria-label={t('common.close')} onClick={() => setNotice(null)}>
+              <CloseIcon />
+            </button>
+          </div>
+        )}
+      </div>
 
       <section id="trip-info" aria-labelledby="trip-info-h">
         <h2 id="trip-info-h" className="tl-sechead">
@@ -377,6 +503,8 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
               onOpenStart={() => setSheet({ kind: 'start', day: d.dayIndex })}
               onOpenLeg={(k) => setSheet({ kind: 'leg', day: d.dayIndex, k })}
               onOpenEnd={() => setSheet({ kind: 'end', day: d.dayIndex })}
+              onRemoveStop={removeStop}
+              legMeters={legMeters}
             />
           </div>
         </section>
@@ -385,7 +513,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
       {/* Add a place: to the day in view. The badge counts places collected but on no day yet. */}
       <button
         type="button"
-        className="tl-fab"
+        className={`tl-fab${notice?.undo ? ' is-raised' : ''}`}
         onClick={() => setSheet({ kind: 'place' })}
         aria-label={`${t('tl.placeSheet')}${pool.length ? ` · ${t('tl.pool', { n: pool.length })}` : ''}${poolNeedsCare ? ` · ${t('tl.fixedPool')}` : ''}`}>
         <PlusIcon />
@@ -397,7 +525,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
       </button>
 
       {sheet?.kind === 'start' && <StartSheet isOpen onClose={close} plan={plan} home={home} dayIndex={sheet.day} onChange={edit} onOpenSettings={() => leave('/settings')} />}
-      {sheet?.kind === 'leg' && <LegSheet isOpen onClose={close} plan={plan} dayIndex={sheet.day} k={sheet.k} onChange={edit} />}
+      {sheet?.kind === 'leg' && <LegSheet isOpen onClose={close} plan={plan} dayIndex={sheet.day} k={sheet.k} legMeters={legMeters} onChange={edit} />}
       {sheet?.kind === 'end' && <EndSheet isOpen onClose={close} plan={plan} home={home} dayIndex={sheet.day} onChange={edit} onOpenPlace={setOpenPlace} onOpenSettings={() => leave('/settings')} />}
       {sheet?.kind === 'place' && (
         <PlaceSheet
@@ -414,7 +542,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
       {sheet?.kind === 'map' && <SendSheet key={`map${sheet.day}`} isOpen onClose={close} plan={plan} home={home} dayIndex={sheet.day} mode="map" />}
       {sheet?.kind === 'send' && <SendSheet key={`send${targetDay}`} isOpen onClose={close} plan={plan} home={home} dayIndex={targetDay} mode="send" />}
 
-      <VisitDialog plan={plan} placeRef={openPlace} onChange={edit} onClose={() => setOpenPlace(null)} />
+      <VisitDialog plan={plan} placeRef={openPlace} onChange={edit} onUnassign={removeStop} onClose={() => setOpenPlace(null)} />
       <RecommendDialog isOpen={recommending} plan={plan} home={home} book={book.current} onApply={edit} onClose={() => setRecommending(false)} />
       <ShareDialog isOpen={sharing} doc={{ ...doc, plan: named(plan), home }} onClose={() => setSharing(false)} />
       <AlertDialog

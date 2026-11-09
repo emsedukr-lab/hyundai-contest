@@ -11,7 +11,8 @@ import { REASON_LABEL, addPlace, addToDay, assign, placeOf, unassignedVisits } f
 import { CATEGORY_LABEL, PlaceSearch, type NewPlace } from '../PlaceSearch';
 import { Sheet } from '../Sheet';
 
-export type Notice = { tone: 'success' | 'error' | 'info'; text: string };
+/** A banner message; `undo` adds a 되돌리기 button (e.g. after a stop was swiped off a day). */
+export type Notice = { tone: 'success' | 'error' | 'info'; text: string; undo?: () => void };
 
 /**
  * The floating + button's sheet: which day to add to (the day in view by default), then the places already collected
