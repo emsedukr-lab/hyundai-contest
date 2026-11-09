@@ -8,12 +8,12 @@ import { DownloadIcon, InfoIcon, PhoneIcon, PresetIcon, ShieldIcon, UploadIcon }
 import { Row, Section } from '../components/shell/rows';
 import { TabScreen } from '../components/shell/Screens';
 import { trips } from '../lib/db';
-import { cleanNotes } from '../lib/notes';
+import { checkBackupTrip } from '../lib/backup';
 import { t } from '../lib/i18n';
 import { navigate } from '../lib/router';
 import { PRESET_SLOTS, presetLabel, presetPlace } from '../lib/settings';
 import { docFromShare, importShare, isShareFile } from '../lib/share';
-import { newDoc, nowIso, type TripDoc } from '../lib/trips';
+import { nowIso, type TripDoc } from '../lib/trips';
 
 /**
  * 설정 tab: start places for new trips (집, 회사, 즐겨찾기 1–3), trip data (backup out, backup or a friend's share file in) and
@@ -39,7 +39,7 @@ export function SettingsPage() {
     a.href = url;
     a.download = t('home.backupFileName', { date: nowIso().slice(0, 10) });
     a.click();
-    URL.revokeObjectURL(url);
+    setTimeout(() => URL.revokeObjectURL(url), 30_000); // revoking at once can abort the download on some mobile browsers
   };
 
   const importFile = async (file: File) => {
@@ -54,13 +54,17 @@ export function SettingsPage() {
     try {
       const data = JSON.parse(text) as { format?: string; trips?: TripDoc[] };
       if (data.format !== 'tteonaljido-backup' || !Array.isArray(data.trips)) throw new Error('not a backup');
+      // Every trip is checked the way the car checks a transfer before anything is written: one broken entry would
+      // otherwise be stored and crash the trip list on every launch. All or nothing — no half-imported backup.
+      const checked = await Promise.all(data.trips.map((d) => checkBackupTrip(d)));
+      if (checked.some((d) => d === null)) throw new Error('not a backup');
+      const ok = checked as TripDoc[];
       // A backup replaces trips with the same id; warn before overwriting any.
       const existing = new Set(docs.map((d) => d.tripId));
-      const overwrites = data.trips.filter((d) => existing.has(d.tripId)).length;
+      const overwrites = ok.filter((d) => existing.has(d.tripId)).length;
       if (overwrites > 0 && !window.confirm(t('home.import.overwrite', { n: overwrites }))) return;
-      // Notes (memos, lodging check-in/out) are kept, re-checked like everything else in a backup file.
-      for (const d of data.trips) await trips.put({ ...(await newDoc({ ...d.plan, revision: d.revision, updatedAt: d.updatedAt }, d.home)), notes: cleanNotes(d.notes) });
-      setMessage(t('home.imported', { n: data.trips.length }));
+      for (const d of ok) await trips.put(d);
+      setMessage(t('home.imported', { n: ok.length }));
       await reload();
     } catch {
       setMessage(t('home.notBackup'));

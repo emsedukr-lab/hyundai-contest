@@ -56,3 +56,16 @@ describe('refresh (pull to refresh / 다시 계산)', () => {
     expect(kmLabel(450)).toBe('0.5km');
   });
 });
+
+describe('a travel time cleared on purpose', () => {
+  it('stays empty on the automatic fill (skip), while its distance is still kept', () => {
+    const t = move(sampleTrip(), 2, 0, 1);
+    const run = emptyRuns(t).find((r) => r.dayIndex === 2)!;
+    const minutes = run.keys.map(() => 12);
+    const meters = run.keys.map(() => 3000);
+    const out = applyRun(t, run, { minutes, meters }, { skip: new Set([run.keys[0]]) });
+    expect(day(out.plan, 2).legs[run.fromK]).toBeNull();
+    expect(out.filled).toBe(run.keys.length - 1);
+    expect(out.meters[run.keys[0]]).toBe(3000);
+  });
+});

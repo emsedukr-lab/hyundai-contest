@@ -72,7 +72,7 @@ export interface RunResult {
  * empty ones get a time (automatic fill), with it every such leg is replaced (refresh). Distances come back as a map
  * by leg key — phone-only, the transfer has no field for them.
  */
-export function applyRun(plan: Trip, run: LegRun, result: RunResult, opts: { overwrite?: boolean } = {}): { plan: Trip; filled: number; meters: Record<string, number> } {
+export function applyRun(plan: Trip, run: LegRun, result: RunResult, opts: { overwrite?: boolean; skip?: ReadonlySet<string> } = {}): { plan: Trip; filled: number; meters: Record<string, number> } {
   const keys = legKeys(plan, run.dayIndex);
   const day = plan.days[run.dayIndex - 1];
   let next = plan;
@@ -84,7 +84,7 @@ export function applyRun(plan: Trip, run: LegRun, result: RunResult, opts: { ove
     const d = result.meters[i];
     if (typeof d === 'number') meters[key] = d;
     const m = result.minutes[i];
-    if (typeof m !== 'number' || (!opts.overwrite && day.legs[k] !== null)) return;
+    if (typeof m !== 'number' || (!opts.overwrite && day.legs[k] !== null) || opts.skip?.has(key)) return;
     if (day.legs[k]?.minutes === m) return void filled++; // already right
     next = setLeg(next, run.dayIndex, k, m);
     filled++;

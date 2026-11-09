@@ -105,35 +105,50 @@ export async function confirmCode(rec: PairingRecord): Promise<PairingRecord> {
   return next;
 }
 
-/** Encrypts the chosen trip once and uploads it; a retry re-sends the identical ciphertext. */
-export async function send(rec: PairingRecord, doc: TripDoc, includeHome: boolean): Promise<PairingRecord> {
-  if (!rec.supportedSchemaVersions.includes(1)) throw new ApiError('UNSUPPORTED_SCHEMA');
-  let next = rec;
-  const sameChoice = rec.sealed && rec.tripId === doc.tripId && rec.revision === doc.revision && rec.includeHome === includeHome;
-  if (!sameChoice) {
-    const transfer = await toTransfer(doc, includeHome);
-    // The same check the car runs on arrival, done here so a bad trip is caught before it leaves the phone.
-    const checked = await parseTransfer(JSON.stringify(transfer));
-    if (!checked.ok) throw new ApiError('INVALID_LOCAL');
-    const plain = utf8(canonicalJson(transfer));
-    // Same limit the car and the relay apply, checked here so the user hears it before anything is sent.
-    if (plain.byteLength > PROTOCOL.limits.maxPlaintextBytes) throw new ApiError('PAYLOAD_TOO_LARGE', 413);
-    const keys = await sessionKeys(rec);
-    const sealed = await encrypt(keys.key, plain, aadFor(rec.sid, 1));
-    next = { ...rec, tripId: doc.tripId, revision: doc.revision, includeHome, sealed: { ...sealed, schemaVersion: 1 } };
-    await pairings.put(next);
+export const status = (rec: PairingRecord) => api<SessionView>('GET', `/sessions/${rec.sid}/status`, rec.mobileToken);
+
+/**
+ * Encrypts the chosen trip once and stores it before anything is sent, so every retry re-sends the identical ciphertext.
+ * The stored record decides, not the caller's copy: an earlier attempt may have sealed (and even delivered) a body whose
+ * response was lost.
+ */
+export async function seal(rec: PairingRecord, doc: TripDoc, includeHome: boolean): Promise<PairingRecord> {
+  const saved = await pairings.get(rec.sid);
+  if (!saved) throw new ApiError('NOT_FOUND'); // finished or dropped: don't bring a dead token back
+  if (!saved.supportedSchemaVersions.includes(1)) throw new ApiError('UNSUPPORTED_SCHEMA');
+  if (saved.sealed && saved.tripId === doc.tripId && saved.revision === doc.revision && saved.includeHome === includeHome) return saved;
+  if (saved.sealed) {
+    // A different choice may replace the earlier body only while the server holds nothing; once it landed, the stored body is what was sent.
+    const v = await status(saved);
+    if (v.state !== 'CLAIMED') throw new ApiError(v.state === 'EXPIRED' ? 'EXPIRED' : v.state === 'CANCELLED' ? 'INVALID_STATE' : 'PAYLOAD_CONFLICT');
   }
-  await api<SessionView>('PUT', `/sessions/${rec.sid}/payload`, rec.mobileToken, next.sealed);
+  const transfer = await toTransfer(doc, includeHome);
+  // The same check the car runs on arrival, done here so a bad trip is caught before it leaves the phone.
+  const checked = await parseTransfer(JSON.stringify(transfer));
+  if (!checked.ok) throw new ApiError('INVALID_LOCAL');
+  const plain = utf8(canonicalJson(transfer));
+  // Same limit the car and the relay apply, checked here so the user hears it before anything is sent.
+  if (plain.byteLength > PROTOCOL.limits.maxPlaintextBytes) throw new ApiError('PAYLOAD_TOO_LARGE', 413);
+  const keys = await sessionKeys(saved);
+  const sealed = await encrypt(keys.key, plain, aadFor(saved.sid, 1));
+  const next: PairingRecord = { ...saved, tripId: doc.tripId, revision: doc.revision, includeHome, sealed: { ...sealed, schemaVersion: 1 } };
+  await pairings.put(next);
   return next;
 }
 
-export const status = (rec: PairingRecord) => api<SessionView>('GET', `/sessions/${rec.sid}/status`, rec.mobileToken);
+/** Uploads the sealed trip. Safe to repeat: the server accepts the identical body again, during and after the session. */
+export async function upload(rec: PairingRecord): Promise<SessionView> {
+  if (!rec.sealed) throw new ApiError('INVALID_LOCAL');
+  return api<SessionView>('PUT', `/sessions/${rec.sid}/payload`, rec.mobileToken, rec.sealed);
+}
 
 export const cancel = (rec: PairingRecord) => api<SessionView>('POST', `/sessions/${rec.sid}/cancel`, rec.mobileToken);
 
 /** Records the end of a session (no car identifiers) and forgets its keys and token. */
 export async function finish(rec: PairingRecord, outcome: string) {
-  if (rec.tripId && rec.revision) await sendLog.add({ tripId: rec.tripId, revision: rec.revision, at: Date.now(), outcome });
+  // The stored copy names the trip that was actually sealed, even when the caller's copy is older.
+  const saved = (await pairings.get(rec.sid)) ?? rec;
+  if (saved.tripId && saved.revision) await sendLog.add({ tripId: saved.tripId, revision: saved.revision, at: Date.now(), outcome });
   await pairings.remove(rec.sid);
 }
 

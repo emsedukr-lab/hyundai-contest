@@ -39,6 +39,8 @@ sealed interface HandoffEvent {
     data class CodeReady(val code: String) : HandoffEvent
     data object PayloadReady : HandoffEvent
     data class PayloadRejected(val kind: FailKind, val resultCode: String) : HandoffEvent
+    /** The relay would not hand the payload over (a refusal, or server errors past the retries): nothing was judged, nothing is reported. */
+    data class FetchFailed(val kind: FailKind) : HandoffEvent
     data object Approve : HandoffEvent
     data class ApplyDone(val resultCode: String, val localId: String?) : HandoffEvent
     data object ApplyFailed : HandoffEvent
@@ -79,8 +81,9 @@ object CarHandoffMachine {
                 else -> Step(s)
             }
             is HandoffState.ShowingQr -> when (e) {
+                // Claimed: from here the server's deadline (upload window) counts, not the QR countdown; the code inherits it.
                 is HandoffEvent.View -> when {
-                    e.view.mobilePub != null && e.view.state != "CREATED" -> Step(s, listOf(Effect.ComputeCode(e.view.mobilePub)))
+                    e.view.mobilePub != null && e.view.state != "CREATED" -> Step(s.copy(deadline = if (e.view.deadline > 0) e.view.deadline else s.deadline), listOf(Effect.ComputeCode(e.view.mobilePub)))
                     else -> Step(s.copy(deadline = if (e.view.deadline > 0) e.view.deadline else s.deadline))
                 }
                 is HandoffEvent.CodeReady -> Step(HandoffState.Claimed(e.code, s.deadline))
@@ -90,7 +93,7 @@ object CarHandoffMachine {
             }
             is HandoffState.Claimed -> when (e) {
                 is HandoffEvent.View -> when (e.view.state) {
-                    "MOBILE_APPROVED", "CAR_APPLYING" -> Step(HandoffState.Receiving(s.code, s.deadline), listOf(Effect.FetchPayload))
+                    "MOBILE_APPROVED", "CAR_APPLYING" -> Step(HandoffState.Receiving(s.code, if (e.view.deadline > 0) e.view.deadline else s.deadline), listOf(Effect.FetchPayload))
                     else -> Step(s.copy(deadline = if (e.view.deadline > 0) e.view.deadline else s.deadline))
                 }
                 // With no network the countdown would otherwise sit at 0:00 forever; expire when the upload window passes.
@@ -101,6 +104,8 @@ object CarHandoffMachine {
             is HandoffState.Receiving -> when (e) {
                 is HandoffEvent.PayloadReady -> Step(HandoffState.Review(s.code, Long.MAX_VALUE))
                 is HandoffEvent.PayloadRejected -> Step(HandoffState.Failed(e.kind), listOf(Effect.ReportRejected(e.resultCode), Effect.Disconnect))
+                // The car gives up on a session it could not read from: cancel it so the phone is not left waiting.
+                is HandoffEvent.FetchFailed -> Step(HandoffState.Failed(e.kind), listOf(Effect.CancelRemote, Effect.Disconnect))
                 is HandoffEvent.View -> Step(s.copy(deadline = if (e.view.deadline > 0) e.view.deadline else s.deadline))
                 // Fetching the payload retries, but not past the window: give up instead of hanging on "수신 중".
                 is HandoffEvent.Tick -> if (e.now >= s.deadline) Step(HandoffState.Expired("RESULT"), listOf(Effect.Disconnect)) else Step(s)

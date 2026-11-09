@@ -17,7 +17,7 @@ import { CardListHeader } from '../components/toss/Card';
 import { pairings, trips, type PairingRecord } from '../lib/db';
 import { codeLabel, periodLabel } from '../lib/format';
 import { t } from '../lib/i18n';
-import { ApiError, cancel, claim, confirmCode, finish, openPairing, send, status, supportsWebCrypto } from '../lib/pairing';
+import { ApiError, cancel, claim, confirmCode, finish, openPairing, seal, status, supportsWebCrypto, upload } from '../lib/pairing';
 import { navigate } from '../lib/router';
 import { defaultHome } from '../lib/settings';
 import { newDoc, nightsLabel, nowIso, planWarnings, unassignedVisits, type TripDoc } from '../lib/trips';
@@ -27,6 +27,24 @@ type Stage = 'loading' | 'invalid' | 'unsupported' | 'intro' | 'code' | 'pick' |
 const STEPS = [t('connect.step.connect'), t('connect.step.code'), t('connect.step.pick'), t('connect.step.consent'), t('connect.step.send')];
 const STEP_OF: Partial<Record<Stage, number>> = { intro: 0, code: 1, pick: 2, consent: 3, approve: 4, status: 4 };
 const LAST_SID = 'tteonaljido.lastSid';
+
+/** Only for resuming via 연결 탭 › 이어서. Some private modes throw on sessionStorage; the connection itself works without it. */
+const lastSid = {
+  get: () => {
+    try {
+      return sessionStorage.getItem(LAST_SID);
+    } catch {
+      return null;
+    }
+  },
+  set: (sid: string) => {
+    try {
+      sessionStorage.setItem(LAST_SID, sid);
+    } catch {
+      /* no resume in this window */
+    }
+  },
+};
 
 const ERROR_TEXT: Record<string, string> = {
   ALREADY_CLAIMED: t('connect.error.alreadyClaimed'),
@@ -57,6 +75,15 @@ const RESULT_TEXT: Record<string, string> = {
   DECRYPT_FAILED: t('connect.result.decryptFailed'),
   STORAGE_ERROR: t('connect.result.storageError'),
 };
+
+/** The server holds (or held) this phone's upload. Only then may the phone say "sent": a sealed copy on the phone proves nothing. */
+const landed = (v: SessionView) =>
+  v.state === 'MOBILE_APPROVED' || v.state === 'CAR_APPLYING' || v.state === 'APPLIED' || v.state === 'REJECTED' || v.carFetched || (v.state === 'EXPIRED' && (v.expireReason === 'RESULT' || v.expireReason === 'UNCONFIRMED'));
+
+/** Nothing more will change. An UNCONFIRMED expiry still can: the car's late APPLIED report upgrades it until the server purges the session. */
+const settled = (v: SessionView) => isTerminal(v.state) && !(v.state === 'EXPIRED' && v.expireReason === 'UNCONFIRMED');
+
+const outcomeOf = (v: SessionView) => `${v.state}:${v.resultCode ?? v.expireReason ?? v.cancelReason ?? ''}`;
 
 /** What the phone may honestly claim at each server state: sending is not the same as being applied. */
 function statusText(v: SessionView): { title: string; detail: string; tone: 'info' | 'success' | 'warning' | 'error'; done: boolean } {
@@ -98,13 +125,19 @@ export function ConnectPage() {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [view, setView] = useState<SessionView | null>(null);
-  const [dead, setDead] = useState(false); // the session is gone (404/401): stop polling
+  const [dead, setDead] = useState(false); // the session is gone (404/401): stop polling, no more actions
+  const [sent, setSent] = useState(false); // the server confirmed the upload at least once on this page
   const scanSecret = useRef<string | null>(null);
+  const finished = useRef<string | null>(null); // the outcome already logged, so repeated polls don't log it again
+  const pollErr = useRef(false); // the banner shows a polling error (cleared by the next good poll), not an action's error
 
   const doc = useMemo(() => docs.find((d) => d.tripId === picked) ?? null, [docs, picked]);
   // Home lives in 설정 (one address for every trip); a trip's stored copy is not what gets sent.
   const home = defaultHome();
-  const fail = (e: unknown) => setErr(ERROR_TEXT[e instanceof ApiError ? e.code : 'NETWORK'] ?? t('connect.error.unknown'));
+  const fail = (e: unknown, fromPoll = false) => {
+    pollErr.current = fromPoll;
+    setErr(ERROR_TEXT[e instanceof ApiError ? e.code : 'NETWORK'] ?? t('connect.error.unknown'));
+  };
 
   // Read the QR fragment once, then remove it from the address bar and history.
   useEffect(() => {
@@ -120,15 +153,19 @@ export function ConnectPage() {
       }
       if (!supportsWebCrypto()) return setStage('unsupported');
       let r: PairingRecord | undefined;
-      if (link) {
-        scanSecret.current = link.scanSecret;
-        r = await openPairing(link);
-      } else {
-        const sid = sessionStorage.getItem(LAST_SID);
-        r = sid ? await pairings.get(sid) : undefined;
+      try {
+        if (link) {
+          scanSecret.current = link.scanSecret;
+          r = await openPairing(link);
+        } else {
+          const sid = lastSid.get();
+          r = sid ? await pairings.get(sid) : undefined;
+        }
+      } catch {
+        return setStage('unsupported'); // key generation or storage failed in this browser; scanning again here won't help
       }
       if (!r) return setStage('invalid');
-      sessionStorage.setItem(LAST_SID, r.sid);
+      lastSid.set(r.sid);
       setRec(r);
       setPicked(r.tripId);
       setIncludeHome(r.includeHome);
@@ -140,34 +177,62 @@ export function ConnectPage() {
     })();
   }, []);
 
+  /** Logs each distinct outcome once (an UNCONFIRMED expiry may later be followed by APPLIED) and forgets the record. */
+  const settle = async (r: PairingRecord, outcome: string) => {
+    if (finished.current === outcome) return;
+    finished.current = outcome;
+    await finish(r, outcome);
+  };
+
+  const observe = async (r: PairingRecord, v: SessionView) => {
+    setView(v);
+    if (landed(v)) setSent(true);
+    if (isTerminal(v.state)) await settle(r, outcomeOf(v));
+  };
+
   const refresh = useCallback(async () => {
     if (!rec?.mobileToken) return;
     try {
       const v = await status(rec);
-      setView(v);
-      setErr(null);
-      if (isTerminal(v.state)) await finish(rec, `${v.state}:${v.resultCode ?? v.expireReason ?? v.cancelReason ?? ''}`);
+      if (pollErr.current) {
+        pollErr.current = false;
+        setErr(null);
+      }
+      await observe(rec, v);
     } catch (e) {
       if (e instanceof ApiError && (e.code === 'NOT_FOUND' || e.code === 'UNAUTHORIZED')) {
-        setDead(true); // the session is gone or no longer ours; there is nothing left to poll
-        setErr(t('connect.error.recordGone'));
-        await pairings.remove(rec.sid);
-      } else fail(e);
+        setDead(true); // the session is gone or no longer ours; there is nothing left to poll or send
+        await pairings.remove(rec.sid).catch(() => {});
+        if (finished.current) return; // the outcome is already on screen; the server only dropped its tombstone
+        pollErr.current = false;
+        if (rec.sealed) {
+          // Something may have reached the car: the car screen has the answer.
+          setErr(t('connect.error.recordGone'));
+          setStage('status');
+        } else {
+          // Nothing was sent: the only way on is a new QR.
+          setErr(ERROR_TEXT[e.code]);
+          setStage('invalid');
+        }
+      } else fail(e, true);
     }
   }, [rec]);
 
   // Poll only while the page is visible and the session can still change.
   useEffect(() => {
-    if (!rec?.mobileToken || dead || stage === 'intro' || stage === 'loading') return;
-    if (view && isTerminal(view.state)) return;
+    if (!rec?.mobileToken || dead || stage === 'intro' || stage === 'loading' || stage === 'invalid') return;
+    if (view && settled(view)) return;
     void refresh();
     const t = window.setInterval(() => document.visibilityState === 'visible' && void refresh(), 2000);
     return () => window.clearInterval(t);
   }, [rec, stage, view?.state, dead, refresh]);
 
-  // The car cancelled or the session expired while the user was still choosing: show the real outcome, don't let them send into a dead session.
+  // The car cancelled or the session expired while the user was still choosing, or an upload whose answer was lost did land:
+  // show the real state (an earlier error no longer applies), and don't let them pick or send again into a session that has moved on.
   useEffect(() => {
-    if (view && isTerminal(view.state) && stage !== 'status') setStage('status');
+    if (!view || !(isTerminal(view.state) || landed(view))) return;
+    setErr(null);
+    if (stage !== 'status') setStage('status');
   }, [view?.state]);
 
   const doClaim = async () => {
@@ -187,13 +252,22 @@ export function ConnectPage() {
   };
 
   const doSend = async () => {
-    if (!rec || !doc) return;
+    // On the status screen this re-sends the body already sealed (and approved); otherwise it seals the current choice first.
+    const resend = stage === 'status';
+    if (!rec || dead || (!resend && !doc)) return;
     setBusy(true);
     setErr(null);
+    let next = rec;
     try {
-      setRec(await send(rec, { ...doc, home }, includeHome && !!home));
+      if (!resend) next = await seal(rec, { ...doc!, home }, includeHome && !!home);
+      const v = await upload(next);
+      setRec(next);
+      setSent(true); // an accepted PUT means the server has (or had) exactly this body
       setStage('status');
+      await observe(next, v);
     } catch (e) {
+      // Keep what IndexedDB now holds, so a retry sends the same bytes and the outcome is logged against the sealed trip.
+      if (next !== rec) setRec(next);
       fail(e);
     } finally {
       setBusy(false);
@@ -201,11 +275,11 @@ export function ConnectPage() {
   };
 
   const doCancel = async () => {
-    if (!rec) return;
+    if (!rec || dead) return;
     setBusy(true);
     try {
       if (rec.mobileToken) setView(await cancel(rec));
-      await finish(rec, 'CANCELLED:MOBILE');
+      await settle(rec, 'CANCELLED:MOBILE');
       setStage('status');
     } catch (e) {
       fail(e);
@@ -389,7 +463,7 @@ export function ConnectPage() {
           <VStack gap={4}>
             {st ? (
               <Banner status={st.tone} title={st.title} description={st.detail} />
-            ) : (
+            ) : dead ? null : (
               <HStack gap={2} vAlign="center">
                 <Spinner />
                 <Text>{t('connect.status.checking')}</Text>
@@ -400,7 +474,12 @@ export function ConnectPage() {
                 <List hasDividers>
                   <ListItem
                     label={t('connect.track.sent')}
-                    endContent={<Badge variant={rec?.sealed || view.state !== 'CLAIMED' ? 'success' : 'neutral'} label={rec?.sealed || view.state !== 'CLAIMED' ? t('connect.track.done') : t('connect.track.waiting')} />}
+                    endContent={
+                      <Badge
+                        variant={sent || landed(view) ? 'success' : sessionOver ? 'warning' : 'neutral'}
+                        label={sent || landed(view) ? t('connect.track.done') : sessionOver ? t('connect.track.failed') : t('connect.track.waiting')}
+                      />
+                    }
                   />
                   <ListItem label={t('connect.track.received')} endContent={<Badge variant={view.carFetched ? 'success' : 'neutral'} label={view.carFetched ? t('connect.track.done') : t('connect.track.waiting')} />} />
                   <ListItem
@@ -416,7 +495,7 @@ export function ConnectPage() {
   })();
 
   const footer = (() => {
-    const cancelBtn = !sessionOver && rec?.mobileToken && <Button label={t('connect.cancel')} variant="ghost" isDisabled={busy} onClick={doCancel} />;
+    const cancelBtn = !sessionOver && !dead && rec?.mobileToken && <Button label={t('connect.cancel')} variant="ghost" isDisabled={busy} onClick={doCancel} />;
     switch (stage) {
       case 'intro':
         return (
@@ -429,7 +508,7 @@ export function ConnectPage() {
           <>
             <Button label={t('connect.code.mismatch')} variant="secondary" isDisabled={busy} onClick={doCancel} />
             <StackItem size="fill">
-              <Button label={t('connect.code.match')} variant="primary" width="100%" onClick={async () => rec && (setRec(await confirmCode(rec)), setStage('pick'))} />
+              <Button label={t('connect.code.match')} variant="primary" width="100%" onClick={async () => rec && !dead && (setRec(await confirmCode(rec)), setStage('pick'))} />
             </StackItem>
           </>
         );
@@ -461,14 +540,15 @@ export function ConnectPage() {
           </>
         );
       case 'status':
-        return sessionOver ? (
+        return sessionOver || dead ? (
           <StackItem size="fill">
             <Button label={t('connect.toTrips')} variant="primary" width="100%" onClick={() => navigate('/')} />
           </StackItem>
         ) : (
           <>
             {cancelBtn}
-            {err && rec?.sealed && view?.state === 'CLAIMED' && <Button label={t('connect.resend')} variant="primary" isLoading={busy} onClick={doSend} />}
+            {/* The server says nothing has arrived (a reload after a failed upload lands here): offer the send, whatever the banner shows. */}
+            {rec?.sealed && view?.state === 'CLAIMED' && !sent && <Button label={t('connect.resend')} variant="primary" isLoading={busy} onClick={doSend} />}
             <Button label={t('connect.refresh')} variant="secondary" onClick={() => void refresh()} />
           </>
         );

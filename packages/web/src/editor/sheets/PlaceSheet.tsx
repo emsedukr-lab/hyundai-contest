@@ -3,11 +3,11 @@ import { Button } from '@astryxdesign/core/Button';
 import { List, ListItem } from '@astryxdesign/core/List';
 import { Selector } from '@astryxdesign/core/Selector';
 import { Text } from '@astryxdesign/core/Text';
-import type { Trip } from '@tteonaljido/shared';
+import { TRANSFER_LIMITS, type Trip } from '@tteonaljido/shared';
 import { Card } from '../../components/toss/Card';
 import { shortDate } from '../../lib/format';
 import { t } from '../../lib/i18n';
-import { REASON_LABEL, addPlace, addToDay, assign, placeOf, unassignedVisits } from '../../lib/trips';
+import { REASON_LABEL, addPlace, addToDay, assign, placeOf, placeRoom, unassignedVisits } from '../../lib/trips';
 import { CATEGORY_LABEL, PlaceSearch, type NewPlace } from '../PlaceSearch';
 import { Sheet } from '../Sheet';
 
@@ -52,7 +52,9 @@ export function PlaceSheet({
       onNotice({ tone: 'error', text: (e as Error).message });
     }
   };
+  const full = () => onNotice({ tone: 'error', text: t('trip.placeLimit', { n: TRANSFER_LIMITS.maxPlaces }) });
   const pickNew = (p: NewPlace) => {
+    if (placeRoom(plan) <= 0) return full();
     const r = addToDay(plan, p, dayIndex);
     onChange(r.plan);
     const name = p.name;
@@ -64,8 +66,11 @@ export function PlaceSheet({
     if (r.placed === 'day' || r.placed === 'lodging') onAdded(dayIndex);
   };
   const pickMany = (places: NewPlace[]) => {
-    onChange(places.reduce((pl, p) => addPlace(pl, p), plan));
-    onNotice({ tone: 'success', text: t('tl.addedMany', { n: places.length }) });
+    const fit = places.slice(0, placeRoom(plan)); // the rest would break the trip's 100-place limit
+    if (!fit.length) return full();
+    onChange(fit.reduce((pl, p) => addPlace(pl, p), plan));
+    if (fit.length < places.length) full();
+    else onNotice({ tone: 'success', text: t('tl.addedMany', { n: fit.length }) });
     onClose();
   };
 

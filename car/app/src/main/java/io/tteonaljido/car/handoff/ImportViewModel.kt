@@ -26,6 +26,7 @@ import io.tteonaljido.trip.TransferParser
 import io.tteonaljido.trip.TripTransfer
 import io.tteonaljido.trip.TripValidator
 import io.tteonaljido.trip.ValidationReport
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -185,6 +186,7 @@ class ImportViewModel(
     private suspend fun fetchPayload() {
         val s = live ?: return
         var attempt = 0
+        var serverErrors = 0
         while (live === s) {
             try {
                 val p = client.payload(s.sid, s.token)
@@ -212,7 +214,14 @@ class ImportViewModel(
                 return
             } catch (e: ApiException) {
                 if (e.status == 410 || e.status == 404) return dispatch(HandoffEvent.View(ServerView("EXPIRED", expireReason = "RESULT")))
-                return dispatch(HandoffEvent.PayloadRejected(FailKind.SERVER, "INVALID_PAYLOAD"))
+                // Overload and server errors are retried (as often as retrying() does); none of them is a verdict on the payload.
+                if (RelayStatus.transient(e.status) && ++serverErrors < 5) {
+                    delay(minOf(15_000L, 1_000L shl attempt++))
+                    continue
+                }
+                // Refused, or still failing: show what happened to the session if the relay can say, and never report INVALID_PAYLOAD.
+                runCatching { client.snapshot(s.sid, s.token) }.getOrNull()?.let(::onView)
+                return dispatch(HandoffEvent.FetchFailed(FailKind.SERVER))
             } catch (e: Exception) {
                 _offline.value = true
                 delay(minOf(15_000L, 1_000L shl attempt++))
@@ -236,6 +245,14 @@ class ImportViewModel(
                 "EXPIRED" -> HandoffState.Expired(ended.expireReason ?: "RESULT")
                 else -> HandoffState.Expired("RESULT")
             }
+            return
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            // No answer at all (offline, or a reply that could not be read) after the retries: nothing is written.
+            _review.value = null
+            disconnect()
+            _state.value = HandoffState.Failed(FailKind.NETWORK)
             return
         }
         // Decide again from the files as they are now, under the store lock: an arrival or a delete may have happened
@@ -268,7 +285,7 @@ class ImportViewModel(
         retrying { client.result(p.sid, p.carToken, ResultRequest(p.outcome, p.resultCode, p.appliedRevision)) }
         true
     } catch (e: ApiException) {
-        e.status in setOf(404, 409, 410) // gone, already answered, or ended; 429/5xx fall through as "not yet"
+        RelayStatus.resultFinal(e.status) // malformed, gone, already answered, or ended; 429/5xx fall through as "not yet"
     } catch (e: Exception) {
         false
     }
@@ -309,7 +326,7 @@ class ImportViewModel(
             try {
                 return block()
             } catch (e: ApiException) {
-                if (e.status != 429 && e.status < 500) throw e // a definite answer; only overload and server errors are retried
+                if (!RelayStatus.transient(e.status)) throw e // a definite answer; only overload and server errors are retried
                 delay(wait)
                 wait *= 2
             } catch (e: Exception) {

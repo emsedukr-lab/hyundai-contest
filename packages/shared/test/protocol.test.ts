@@ -8,6 +8,7 @@ const base = (over: Partial<Session> = {}): Session => ({
   qrExpiresAt: T.qr,
   deadline: T.qr,
   purgeAt: null,
+  uploadedBodyHash: null,
   carTokenHash: 'c',
   scanSecretHash: 's',
   claimAttempts: 0,

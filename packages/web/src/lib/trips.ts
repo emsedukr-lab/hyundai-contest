@@ -119,7 +119,12 @@ export function setPeriod(plan: Trip, start: string, end: string): Trip {
   };
 }
 
+/** How many more places this trip can take before the transfer limits (100 places, 100 visits) would be broken. */
+export const placeRoom = (plan: Trip) => Math.max(0, Math.min(TRANSFER_LIMITS.maxPlaces - plan.places.length, TRANSFER_LIMITS.maxVisits - plan.visits.length));
+
 export function addPlace(plan: Trip, p: Omit<Place, 'placeRef'>, stayMinutes = 60): Trip {
+  // Past the limits the car would refuse the whole trip at the very end; stop here, where the user can still act.
+  if (placeRoom(plan) <= 0) throw new Error(t('trip.placeLimit', { n: TRANSFER_LIMITS.maxPlaces }));
   const placeRef = newRef('p');
   const place: Place = { ...p, placeRef };
   const visits =

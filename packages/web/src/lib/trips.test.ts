@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { parseTransfer, sampleTrip, type Trip } from '@tteonaljido/shared';
-import { addPlace, addToDay, assign, changeCategory, emptyPlan, isEndpointOnly, move, moveTo, endpointFromPreset, newDoc, nodeIssues, planWarnings, relinkLegs, rememberLegs, removePlace, savePlan, setDepart, setEndBy, setLeg, setEndpoint, setLodging, setOrigin, setPeriod, startFromPreset, toTransfer, unassign, type LegBook } from './trips';
+import { addPlace, addToDay, placeRoom, assign, changeCategory, emptyPlan, isEndpointOnly, move, moveTo, endpointFromPreset, newDoc, nodeIssues, planWarnings, relinkLegs, rememberLegs, removePlace, savePlan, setDepart, setEndBy, setLeg, setEndpoint, setLodging, setOrigin, setPeriod, startFromPreset, toTransfer, unassign, type LegBook } from './trips';
 
 // The warning assertions below check the Korean copy; jsdom reports navigator.language as en-US.
 vi.hoisted(() => Object.defineProperty(navigator, 'language', { value: 'ko-KR', configurable: true }));
@@ -311,5 +311,15 @@ describe('return destination presets (M27)', () => {
     expect(setEndpoint(atGym, 'finalDestination', { kind: 'HOME' }).places.some((x) => x.placeRef === ref)).toBe(false);
     const both = startFromPreset(atGym, gym);
     expect(setEndpoint(both, 'finalDestination', { kind: 'HOME' }).places.some((x) => x.placeRef === ref)).toBe(true);
+  });
+});
+
+describe('place limits (100 places / 100 visits)', () => {
+  it('refuses a place past the limit instead of building a trip the car would reject', () => {
+    let t: Trip = emptyPlan();
+    const p = { name: '장소', address: '', latE7: 375_000_000, lonE7: 1_270_000_000, category: 'SIGHT' as const, hours: { status: 'UNKNOWN' as const }, source: { provider: 'MANUAL' as const, externalId: null }, naviPoi: null };
+    for (let i = 0; i < 100; i++) t = addPlace(t, { ...p, name: `장소 ${i}` });
+    expect(placeRoom(t)).toBe(0);
+    expect(() => addPlace(t, p)).toThrow();
   });
 });

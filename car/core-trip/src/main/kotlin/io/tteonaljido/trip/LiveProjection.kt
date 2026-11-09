@@ -159,9 +159,11 @@ object LiveProjection {
         // re-suggested). The same candidate can be either skipped (dropped) or deferred (done later) — the driver chooses.
         val lateCand: Pair<String, Int>? = if (status != Punctuality.LATE) null else {
             val late = -(deadlineSlack ?: 0)
-            // Only optional stops before the fixed one (if any) help; a return-by deadline lets any optional stop help.
-            val before = if (fixedPos >= 0) items.take(fixedPos) else items
-            before.mapIndexedNotNull { i, (v, _) ->
+            // Late for the fixed stop: only optional stops before it help. Late for the return-by time: only stops after the
+            // last fixed one help — time saved before a fixed stop is absorbed by waiting for it (its time re-anchors the day).
+            val helps = if (deadlineKind == DeadlineKind.FIXED) 0 until fixedPos else (items.indexOfLast { it.first.fixed != null } + 1) until items.size
+            helps.mapNotNull { i ->
+                val v = items[i].first
                 if (v.importance == Importance.OPTIONAL && v.fixed == null) (v.visitId to (v.prepMinutes + Math.round(v.stayMinutes * stayMult).toInt() + buffers.getOrElse(i) { 0 })) else null
             }.filter { it.second >= late }.minByOrNull { it.second }
         }

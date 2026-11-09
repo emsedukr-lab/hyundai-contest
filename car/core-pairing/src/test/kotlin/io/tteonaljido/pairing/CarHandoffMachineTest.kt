@@ -87,4 +87,38 @@ class CarHandoffMachineTest {
         val (claimed, _) = run(Start, qr, view("CLAIMED"), CodeReady("1"))
         assertEquals(claimed, CarHandoffMachine.reduce(claimed, Start).state)
     }
+
+    /** A claim in the last seconds of the QR countdown runs on the server's upload deadline, not the QR's. */
+    @Test fun aLateClaimFollowsTheUploadDeadlineNotTheQrCountdown() {
+        val claim = View(ServerView("CLAIMED", "pub", deadline = 600_000))
+        val (s, fx) = run(Start, qr, claim, HandoffEvent.Tick(1_000), CodeReady("1"), HandoffEvent.Tick(1_000))
+        assertEquals(HandoffState.Claimed("1", 600_000), s)
+        assertTrue(Effect.Disconnect !in fx)
+    }
+
+    /** Receiving uses the approval window the server just reported, not the one from the previous state. */
+    @Test fun receivingTakesTheDeadlineOfTheApprovedView() {
+        val (s, fx) = run(View(ServerView("MOBILE_APPROVED", "pub", deadline = 700_000)), HandoffEvent.Tick(5_000), from = HandoffState.Claimed("1", 2_000))
+        assertEquals(HandoffState.Receiving("1", 700_000), s)
+        assertEquals(listOf(Effect.FetchPayload), fx)
+    }
+
+    /**
+     * After an app restart more than 5 minutes into a session, restore() seeds the QR state with the long-gone QR
+     * deadline; the server's snapshot (replayed once the code is ready) carries the flow instead of expiring it.
+     */
+    @Test fun aSessionRestoredPastTheQrWindowKeepsGoing() {
+        val approved = View(ServerView("MOBILE_APPROVED", "pub", deadline = 900_000))
+        val (s, fx) = run(approved, HandoffEvent.Tick(10_000), CodeReady("1"), approved, HandoffEvent.Tick(10_000), from = HandoffState.ShowingQr("https://x/c#v1.a.b.c", 0))
+        assertEquals(HandoffState.Receiving("1", 900_000), s)
+        assertEquals(listOf(Effect.ComputeCode("pub"), Effect.FetchPayload), fx)
+    }
+
+    /** The relay refusing the payload request (or failing on and on) is not a verdict on the payload: no INVALID_PAYLOAD report. */
+    @Test fun aRelayRefusalWhileReceivingFailsWithoutBlamingThePayload() {
+        val (s, fx) = run(Start, qr, view("CLAIMED"), CodeReady("1"), view("MOBILE_APPROVED"), HandoffEvent.FetchFailed(FailKind.SERVER))
+        assertEquals(HandoffState.Failed(FailKind.SERVER), s)
+        assertTrue(fx.none { it is Effect.ReportRejected })
+        assertEquals(listOf(Effect.CancelRemote, Effect.Disconnect), fx.takeLast(2))
+    }
 }

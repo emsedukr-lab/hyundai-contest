@@ -51,6 +51,27 @@ object LegKeys {
         val to = if (k == order.size) dayEnd(trip, dayIndex) else ref(k)
         return if (from == null || to == null) null else "$from>$to"
     }
+
+    /**
+     * Key of the plan leg that starts where the car stands (the day's start, or the stop just visited) and ends at the
+     * next stop in guidance order ([NextDestination.upcoming]: deferred stops last), or null. A 'from here' estimate is
+     * measured to that next stop, so it is kept only when a plan leg runs exactly there.
+     */
+    fun startingAt(trip: Trip, overlay: CarOverlay, dayIndex: Int, latE7: Int, lonE7: Int): String? {
+        val order = trip.days[dayIndex - 1].visitOrder
+        val next = NextDestination.upcoming(trip, overlay, dayIndex).firstOrNull()
+        // No stop left: the leg to the night's lodging or the final destination. A stop moved in from another day: no plan leg.
+        val k = if (next == null) order.size else order.indexOf(next).takeIf { it >= 0 } ?: return null
+        val fromRef: String? = if (k == 0) dayStart(trip, overlay, dayIndex) else order[k - 1].takeIf { it in overlay.visited }?.let { id -> trip.visits.first { it.visitId == id }.placeRef }
+        val at: Pair<Int, Int>? = when (fromRef) {
+            null -> null
+            ORIGIN -> overlay.originFor(dayIndex)?.let { it.latE7 to it.lonE7 }
+            HOME -> (overlay.home?.let { it.latE7 to it.lonE7 } ?: trip.home?.let { it.latE7 to it.lonE7 })
+            else -> overlay.poiBindings[fromRef]?.let { it.latE7 to it.lonE7 } ?: trip.places.first { it.placeRef == fromRef }.let { p -> p.latE7?.let { la -> p.lonE7?.let { lo -> la to lo } } }
+        }
+        if (at == null || metres(at.first, at.second, latE7, lonE7) > PlaceMatch.SAME_METRES) return null
+        return of(trip, overlay, dayIndex, k)
+    }
 }
 
 object TripValidator {

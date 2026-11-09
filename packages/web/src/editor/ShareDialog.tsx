@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { Card } from '@astryxdesign/core/Card';
@@ -20,15 +20,23 @@ export function ShareDialog({ isOpen, doc, onClose }: { isOpen: boolean; doc: Tr
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
 
+  // The trip as it is when the dialog opens. The editor hands a fresh `doc` object on every render (an auto-save on
+  // switching to the messenger, a Kakao travel-time fill); rebuilding on those would change the passcode under the
+  // file that was already sent, so the file and its code are made once per opening.
+  const docRef = useRef(doc);
+  docRef.current = doc;
   useEffect(() => {
     if (!isOpen) return;
+    let current = true;
     const code = newPasscode();
     setPasscode(code);
     setFile(null);
     setNote(null);
-    void exportShare(doc, code).then(setFile);
-    // Rebuild only when the dialog opens or the trip identity/revision changes.
-  }, [isOpen, doc]);
+    void exportShare(docRef.current, code).then((f) => current && setFile(f)); // a slower older build never wins
+    return () => {
+      current = false;
+    };
+  }, [isOpen]);
 
   const fileName = t('share.fileName', { name: doc.plan.name.replace(/[^\p{L}\p{N}_-]+/gu, '_').slice(0, 40) || 'trip' });
 
@@ -41,7 +49,8 @@ export function ShareDialog({ isOpen, doc, onClose }: { isOpen: boolean; doc: Tr
       const f = asFile(file);
       const nav = navigator as Navigator & { canShare?: (d: { files: File[] }) => boolean };
       if (nav.canShare?.({ files: [f] }) && navigator.share) {
-        await navigator.share({ files: [f], title: t('share.shareTitle'), text: t('share.shareText', { code: passcode }) });
+        // The passcode stays out of the message: sent together with the file, it would open it for anyone who sees it.
+        await navigator.share({ files: [f], title: t('share.shareTitle'), text: t('share.shareTextNoCode') });
       } else {
         download(f);
       }
@@ -58,7 +67,7 @@ export function ShareDialog({ isOpen, doc, onClose }: { isOpen: boolean; doc: Tr
     a.href = url;
     a.download = f.name;
     a.click();
-    URL.revokeObjectURL(url);
+    setTimeout(() => URL.revokeObjectURL(url), 30_000); // revoking at once can abort the download on some mobile browsers
     setNote(t('share.saved'));
   };
 

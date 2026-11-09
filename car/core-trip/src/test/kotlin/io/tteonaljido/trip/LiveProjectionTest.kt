@@ -204,7 +204,45 @@ class DeadlineAndReconcileTest {
         assertEquals(DeadlineKind.END_BY, p.deadlineKind)
         assertEquals(Punctuality.LATE, p.status)
         assertEquals(-90, p.deadlineSlack)
-        assertEquals("v4", p.skip?.visitId) // 경포호 is the optional stop before the reservation
+        // Skipping 경포호 (before the 13:00 reservation) would not help the return time: the reservation re-anchors the
+        // day. The stops after it are not optional, so nothing is suggested.
+        assertNull(p.skip)
+    }
+
+    /** Late for the return time with a fixed stop in between: only an optional stop after the fixed one saves time. */
+    @Test fun lateForTheReturnTimeSuggestsAStopAfterTheReservation() {
+        val v6Optional = sample.copy(visits = sample.visits.map { if (it.visitId == "v6") it.copy(importance = Importance.OPTIONAL, stayMinutes = 50) else if (it.visitId == "v4") it.copy(importance = Importance.OPTIONAL) else it })
+        val t = withDay(v6Optional, 2) { it.copy(endBy = "15:50") } // v4 (optional) → v5 fixed 13:00 → v6 (optional, 10+50) → v7; the day ends 16:50
+        val p = LiveProjection.project(t, CarOverlay(), 2, m("08:00"))
+        assertEquals(DeadlineKind.END_BY, p.deadlineKind)
+        assertEquals(-60, p.deadlineSlack)
+        assertEquals(175, p.fixed!!.slack)
+        assertEquals(SkipSuggestion("v6", 60), p.skip)
+        assertEquals(DeferSuggestion("v6", 60), p.defer)
+        // Skipping v4 instead saves nothing: the car would just wait longer for 13:00.
+        assertEquals(-60, LiveProjection.project(t, CarOverlay(skipped = setOf("v4")), 2, m("08:00")).deadlineSlack)
+        assertEquals(0, LiveProjection.project(t, CarOverlay(skipped = setOf("v6")), 2, m("08:00")).deadlineSlack)
+    }
+
+    private fun at(local: String) = java.time.LocalDateTime.parse(local).atZone(java.time.ZoneId.of("Asia/Seoul")).toInstant().toEpochMilli()
+
+    /** Just past midnight the day goes on (still heading to that night's lodging), and its clock runs past 24:00. */
+    @Test fun justPastMidnightTheDayGoesOnAndItsClockRunsPast24h() {
+        val t = withDay(sample, 2) { it.copy(endBy = "22:00") }
+        val now = NextDestination.momentOf(t, at("2026-11-22T00:30"))!!
+        assertEquals(TripMoment(2, m("00:30") + 1440), now)
+        val p = LiveProjection.project(t, CarOverlay(visited = setOf("v4", "v5", "v6", "v7")), now.dayIndex, now.minute)
+        assertEquals(Punctuality.LATE, p.status)
+        assertEquals(-165, p.deadlineSlack) // 00:30 + 15 min to the lodging = 00:45, 2 h 45 min past 22:00
+        assertEquals("00:45(+1)", TripValidator.hhmm(p.arriveNext!!))
+    }
+
+    @Test fun theGraceEndsAt4AndAnEarlyStartOnDay1IsDay1() {
+        assertEquals(TripMoment(3, m("04:00")), NextDestination.momentOf(sample, at("2026-11-22T04:00")))
+        assertEquals(TripMoment(4, m("03:59") + 1440), NextDestination.momentOf(sample, at("2026-11-24T03:59")))
+        assertNull(NextDestination.momentOf(sample, at("2026-11-24T04:00")))
+        assertEquals(TripMoment(1, m("03:00")), NextDestination.momentOf(sample, at("2026-11-20T03:00"))) // leaving before 04:00 on day 1
+        assertNull(NextDestination.momentOf(sample, at("2026-11-19T23:00")))
     }
 
     @Test fun theMoreUrgentOfFixedAndReturnByBinds() {

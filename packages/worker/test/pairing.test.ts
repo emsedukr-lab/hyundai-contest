@@ -65,6 +65,26 @@ async function sealedPayload(car: Awaited<ReturnType<typeof newCar>>, phone: Awa
 }
 
 describe('pairing relay', () => {
+  it("accepts the car's HOME_ADDED result (same trip resent with the home address added)", async () => {
+    const car = await newCar();
+    const phone = await claim(car);
+    const sealed = await sealedPayload(car, phone);
+    await call('PUT', `/sessions/${car.sid}/payload`, { token: phone.body.mobileToken, body: { iv: sealed.iv, ct: sealed.ct, schemaVersion: 1 } });
+    await call('GET', `/sessions/${car.sid}/payload`, { token: car.carToken });
+    await call('POST', `/sessions/${car.sid}/lock`, { token: car.carToken });
+    const done = await call<SessionView>('POST', `/sessions/${car.sid}/result`, { token: car.carToken, body: { outcome: 'APPLIED', resultCode: 'HOME_ADDED', appliedRevision: 1 } });
+    expect(done.status).toBe(200);
+    expect(done.body).toMatchObject({ state: 'APPLIED', resultCode: 'HOME_ADDED' });
+  });
+
+  it('refuses a payload whose schemaVersion is not a safe integer (400, not a crash)', async () => {
+    const car = await newCar();
+    const phone = await claim(car);
+    const sealed = await sealedPayload(car, phone);
+    const up = await call('PUT', `/sessions/${car.sid}/payload`, { token: phone.body.mobileToken, body: { iv: sealed.iv, ct: sealed.ct, schemaVersion: 1e300 } });
+    expect(up.status).toBe(400);
+  });
+
   it('runs the whole handoff and keeps only ciphertext', async () => {
     const car = await newCar();
     const phone = await claim(car);

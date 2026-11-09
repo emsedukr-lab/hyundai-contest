@@ -52,6 +52,17 @@ sealed interface Guide {
     data class Failed(val msg: Msg, val canSearch: Boolean) : Guide
 }
 
+/**
+ * What '오늘 경로 전송' tells the driver once the navigation has answered: sent only when it settled on the last stop
+ * (same POI or within 150 m); a route it settled somewhere else is named, never reported as sent.
+ */
+internal fun todayRouteGuide(r: RouteOutcome, stops: Int): Guide = when (r) {
+    is RouteOutcome.Confirmed -> Guide.Done(Msg(R.string.guide_today_done, stops.toString()))
+    is RouteOutcome.Different -> Guide.Failed(Msg(R.string.live_navi_elsewhere, r.binding.name), false)
+    RouteOutcome.NoAnswer -> Guide.Failed(Msg(R.string.guide_no_answer), false)
+    is RouteOutcome.Unavailable -> Guide.Failed(Msg(r.reason), false)
+}
+
 /** A one-off `requestTrip` answer from where the car stood, kept for the screen (and the projection) for an hour. */
 data class HereEstimate(val target: String, val targetKey: String, val minutes: Int, val metres: Int, val socAtDest: Int?, val at: Long)
 
@@ -201,8 +212,9 @@ class TripsViewModel(
 
     fun today(t: LocalTrip, now: Long = _now.value): LocalDate = Instant.ofEpochMilli(now).atZone(t.plan.zoneOrUtc()).toLocalDate()
     /** Which day of the trip "now" falls on. A 4-hour grace keeps it on the current day just past midnight (still driving to that night's lodging). */
-    fun todayIndex(t: LocalTrip, now: Long = _now.value): Int? = runCatching { NextDestination.dayIndexFor(t.plan, Instant.ofEpochMilli(now - 4 * 3_600_000L).atZone(t.plan.zoneOrUtc()).toLocalDate()) }.getOrNull()
-    private fun minuteOfDay(t: LocalTrip, now: Long) = Instant.ofEpochMilli(now).atZone(t.plan.zoneOrUtc()).toLocalTime().let { it.hour * 60 + it.minute }
+    fun todayIndex(t: LocalTrip, now: Long = _now.value): Int? = moment(t, now)?.dayIndex
+    /** That day and the minute counted from its midnight (past 1440 in the grace hours), so the live view compares like with like. */
+    private fun moment(t: LocalTrip, now: Long) = runCatching { NextDestination.momentOf(t.plan, now) }.getOrNull()
 
     private fun placeTarget(t: LocalTrip, p: Place): RouteTarget {
         val b = t.overlay.poiBindings[p.placeRef]
@@ -237,7 +249,7 @@ class TripsViewModel(
      * guiding to the same place as the next stop; otherwise a recent estimate from here, otherwise the plan's legs.
      */
     fun live(t: LocalTrip, day: Int, now: Long, live: NaviLive?, here: Map<String, HereEstimate>): LiveView? {
-        if (todayIndex(t, now) != day) return null
+        val moment = moment(t, now)?.takeIf { it.dayIndex == day } ?: return null
         val step = NextDestination.of(t.plan, t.overlay, day)
         val target = targetOf(t, step)?.first
         val guidingThere = live?.guiding == true && target != null && (
@@ -249,7 +261,7 @@ class TripsViewModel(
         val fresh = live != null && System.currentTimeMillis() - live.at < 120_000L
         val e = _energy.value
         val p = LiveProjection.project(
-            t.plan, t.overlay, day, minuteOfDay(t, now),
+            t.plan, t.overlay, day, moment.minute,
             if (guidingThere && fresh) live!!.remainMinutes else null, h?.minutes,
             vehicleKind = e?.kind ?: VehicleKind.UNKNOWN, energyPercent = e?.percent, rangeKm = e?.rangeKm,
         )
@@ -311,11 +323,9 @@ class TripsViewModel(
         val waypoints = targets.dropLast(1)
         viewModelScope.launch {
             _guide.value = Guide.Working(Msg(R.string.guide_today_working, targets.size.toString()))
-            _guide.value = when (val r = navi.routeTrip(dest, waypoints)) {
-                is RouteOutcome.Confirmed, is RouteOutcome.Different -> Guide.Done(Msg(R.string.guide_today_done, targets.size.toString()))
-                RouteOutcome.NoAnswer -> Guide.Failed(Msg(R.string.guide_no_answer), false)
-                is RouteOutcome.Unavailable -> Guide.Failed(Msg(r.reason), false)
-            }
+            // What the navigation was guiding to before, so its unchanged old route is not taken for the answer.
+            val previous = navi.currentDestination()
+            _guide.value = todayRouteGuide(navi.routeTrip(dest, waypoints, previous), targets.size)
         }
     }
 
@@ -431,7 +441,7 @@ class TripsViewModel(
             val est = navi.estimate(target) ?: return@launch run { reload(); _guide.value = Guide.Failed(Msg(R.string.estimate_failed, target.name), false) }
             val now = nowMs()
             _here.value = _here.value + (localId to HereEstimate(target.name, stepKey(day, step), est.minutes, est.metres, est.socAtDest, now))
-            legStartingHere(t, day, here.latE7, here.lonE7)?.let { key ->
+            LegKeys.startingAt(t.plan, t.overlay, day, here.latE7, here.lonE7)?.let { key ->
                 update(localId) { it.copy(overlay = it.overlay.copy(legEstimates = it.overlay.legEstimates + (key to LegEstimate(est.minutes, est.metres, now)))) }
             }
             reload()
@@ -459,20 +469,5 @@ class TripsViewModel(
         _here.value = _here.value - localId
         reload()
         _guide.value = Guide.Done(Msg(R.string.here_reset))
-    }
-
-    /** Key of the plan leg that starts where the car stands (the day's start, or the stop just visited), or null. */
-    private fun legStartingHere(t: LocalTrip, day: Int, lat: Int, lon: Int): String? {
-        val order = t.plan.days[day - 1].visitOrder
-        val k = order.indices.firstOrNull { order[it] !in t.overlay.visited && order[it] !in t.overlay.skipped } ?: order.size
-        val fromRef: String? = if (k == 0) LegKeys.dayStart(t.plan, t.overlay, day) else order[k - 1].takeIf { it in t.overlay.visited }?.let { id -> t.plan.visits.first { it.visitId == id }.placeRef }
-        val at: Pair<Int, Int>? = when (fromRef) {
-            null -> null
-            LegKeys.ORIGIN -> t.overlay.originFor(day)?.let { it.latE7 to it.lonE7 }
-            LegKeys.HOME -> (t.overlay.home?.let { it.latE7 to it.lonE7 } ?: t.plan.home?.let { it.latE7 to it.lonE7 })
-            else -> t.overlay.poiBindings[fromRef]?.let { it.latE7 to it.lonE7 } ?: t.plan.places.first { it.placeRef == fromRef }.let { p -> p.latE7?.let { la -> p.lonE7?.let { lo -> la to lo } } }
-        }
-        if (at == null || metres(at.first, at.second, lat, lon) > PlaceMatch.SAME_METRES) return null
-        return LegKeys.of(t.plan, t.overlay, day, k)
     }
 }

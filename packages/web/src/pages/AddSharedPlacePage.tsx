@@ -73,6 +73,15 @@ export function AddSharedPlacePage() {
   const [note, setNote] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const ran = useRef(false); // guard the one-time auto-add (React StrictMode runs effects twice in dev)
+  // Still on this page? Leaving while the link resolves must not add the place later and mark the wrong history entry
+  // (Back to this page would then add it a second time).
+  const alive = useRef(true);
+  useEffect(() => {
+    alive.current = true;
+    return () => {
+      alive.current = false;
+    };
+  }, []);
 
   // ---- db operations (reuse the editor's pure plan edits) ----
 
@@ -150,10 +159,12 @@ export function AddSharedPlacePage() {
         } catch (e) {
           if (!(e instanceof ApiError && e.status === 503)) setNote(t('place.search.failed'));
         }
+        if (!alive.current) return; // the user left before it was found: add nothing
         setHits(found);
         const place = found[0] ? fromHit(found[0]) : byName(name);
         const intent: Intent = all[0] ? { existingId: all[0].tripId } : { collection: true };
         const added = await doAdd(intent, place);
+        if (!alive.current) return;
         setAdd(added);
         writeMarker('added', added);
         setStatus('added');

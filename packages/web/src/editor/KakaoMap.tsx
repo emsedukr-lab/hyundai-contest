@@ -52,13 +52,15 @@ export function KakaoMap({ plan, home, dayIndex }: { plan: Trip; home: Home | nu
           }
         }
         if (path.length > 1) new kakao.maps.Polyline({ path, strokeWeight: 4, strokeColor: '#3182F6', strokeOpacity: 0.85, strokeStyle: 'solid', map });
-        // Fit to the day's stops (≥2) so a far-away home/lodging anchor doesn't zoom the whole region out and overlap them.
+        // Fit to the day's stops (≥2) so a far-away home/lodging anchor doesn't zoom the whole region out and overlap them;
+        // an anchor close to the stops (the night's hotel in the same town) is kept in view instead of being cut off.
         const stops = coords.filter((p) => p.kind === 'stop');
-        const base = stops.length >= 2 ? stops : coords;
+        const nearStops = (p: (typeof coords)[number]) => stops.some((s) => Math.hypot((s.latE7 - p.latE7) / 1e7, ((s.lonE7 - p.lonE7) / 1e7) * 0.8) < 0.1); // ~10 km
+        const base = stops.length >= 2 ? coords.filter((p) => p.kind === 'stop' || nearStops(p)) : coords;
         if (base.length > 1) {
           const bounds = new kakao.maps.LatLngBounds();
           for (const p of base) bounds.extend(new kakao.maps.LatLng(p.latE7 / 1e7, p.lonE7 / 1e7));
-          map.setBounds(bounds);
+          map.setBounds(bounds, 44, 24, 24, 24); // top room for a pin's head, which stands above its point
         }
       })
       .catch(() => {

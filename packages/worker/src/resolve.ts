@@ -1,7 +1,7 @@
 import { json } from './http';
 
 /**
- * 공유 링크 해석 (resolve a map-app share link). Naver/Kakao "share → copy" gives a short link (naver.me, kko.kl, …)
+ * 공유 링크 해석 (resolve a map-app share link). Naver/Kakao "share → copy" gives a short link (naver.me, kko.to, …)
  * that the browser can't open cross-origin under the strict CSP, so the Worker follows it and reads the place name and
  * address from the page's Open Graph tags. Coordinates are NOT read here — the client resolves them with the existing
  * Kakao keyword search. Only allow-listed hosts are fetched (SSRF guard), redirects are followed manually with each
@@ -9,7 +9,7 @@ import { json } from './http';
  */
 
 // host must equal, or be a subdomain of, one of these
-const ALLOW = [/(^|\.)naver\.me$/, /(^|\.)naver\.com$/, /^kko\.kl$/, /^kko\.to$/, /(^|\.)kakao\.com$/];
+const ALLOW = [/(^|\.)naver\.me$/, /(^|\.)naver\.com$/, /^kko\.to$/, /(^|\.)kakao\.com$/];
 export const allowedHost = (host: string) => ALLOW.some((re) => re.test(host.toLowerCase()));
 
 const str = (v: unknown) => (typeof v === 'string' ? v : '');
@@ -40,12 +40,29 @@ const stripSuffix = (name: string) => name.replace(/\s*[-:|]\s*(네이버\s*지�
 /** A title that is only the map app's name — what a link to the app's home page (not a place) carries. */
 const APP_ONLY = /^(네이버\s*지도|네이버|카카오\s*맵|카카오맵|카카오|kakao\s*map|naver\s*map|naver|kakao)$/i;
 
+/** Control characters some pages leave in their tags (Naver ends og:title with U+001C) would keep the suffix on. */
+const clean = (s: string) => s.replace(/[\u0000-\u001f\u007f]+/g, ' ').replace(/\s+/g, ' ').trim();
+
+/** Naver puts review counts in og:description ("방문자리뷰 20,158 · 블로그리뷰 9,839"), not the address. */
+const NOT_ADDRESS = /^(방문자\s*리뷰|블로그\s*리뷰|리뷰)(\s|\d|$)|^(visitor|blog)\s+reviews?\b/i; // (\b is ASCII-only in JS)
+
 /** The place name and address from a shared page's og tags, or null when the page names no place. */
 export function parseOg(html: string): { name: string; address: string } | null {
-  const name = stripSuffix(meta(html, 'og:title').replace(/\s+/g, ' ').trim()).slice(0, 60);
-  const address = meta(html, 'og:description').replace(/\s+/g, ' ').trim().slice(0, 120);
+  const name = stripSuffix(clean(meta(html, 'og:title'))).slice(0, 60);
+  const desc = clean(meta(html, 'og:description'));
+  const address = NOT_ADDRESS.test(desc) ? '' : desc.slice(0, 120);
   if (!name || APP_ONLY.test(name)) return null;
   return { name, address };
+}
+
+/**
+ * Naver's share link lands on the map app (`map.naver.com/p/entry/place/{id}`, or `/p/search/…/place/{id}`), a script
+ * page with no place tags; the same place's mobile page (`m.place.naver.com/place/{id}/home`) carries them.
+ */
+export function naverPlacePage(u: URL): URL | null {
+  if (u.hostname !== 'map.naver.com') return null;
+  const id = u.pathname.match(/\/place\/(\d{1,15})(?:\/|$)/)?.[1];
+  return id ? new URL(`https://m.place.naver.com/place/${id}/home`) : null;
 }
 
 const UA = 'Mozilla/5.0 (compatible; TteonaljidoBot/1.0; +https://tteonaljido.tteonaljido-worker.workers.dev)';
@@ -61,7 +78,7 @@ export async function resolveShare(body: Record<string, unknown>): Promise<Respo
 
   try {
     // Follow redirects by hand so every hop's host is re-checked; cap the chain.
-    let current = url;
+    let current = naverPlacePage(url) ?? url;
     let res: Response | null = null;
     for (let i = 0; i < 6; i++) {
       res = await fetch(current.toString(), { method: 'GET', redirect: 'manual', headers: { 'User-Agent': UA, Accept: 'text/html,*/*' }, signal: AbortSignal.timeout(5_000) });
@@ -71,7 +88,7 @@ export async function resolveShare(body: Record<string, unknown>): Promise<Respo
         if (!loc) break;
         const next = new URL(loc, current);
         if (next.protocol !== 'https:' || !allowedHost(next.hostname)) return json({ error: 'RESOLVE_FAILED' }, 422);
-        current = next;
+        current = naverPlacePage(next) ?? next;
         continue;
       }
       break;

@@ -27,7 +27,7 @@ import { navigate } from '../lib/router';
 import { cleanNotes, setNote, type TripNotes } from '../lib/notes';
 import { allRuns, applyRun, cleanLegMeters, emptyRuns, fetchRun, runSignature } from '../lib/routeTimes';
 import { defaultHome } from '../lib/settings';
-import { emptyPlan, newDoc, nightsLabel, nowIso, placeOf, relinkLegs, rememberLegs, savePlan, unassign, unassignedVisits, visitOf, type LegBook, type TripDoc } from '../lib/trips';
+import { emptyPlan, legKeys, newDoc, nightsLabel, nowIso, placeOf, relinkLegs, rememberLegs, savePlan, unassign, unassignedVisits, visitOf, type LegBook, type TripDoc } from '../lib/trips';
 import '../editor/timeline.css';
 
 /** Which bottom sheet is open (one at a time; dialogs such as place details may stack above it). */
@@ -51,10 +51,11 @@ const STUCK_AT = 56 + 56;
 const named = (p: Trip): Trip => (p.name.trim() ? p : { ...p, name: t('trip.defaultName') });
 
 /** Writes the trip to this phone (a new revision only when its content changed) and tells listening lists. */
-async function persist(doc: TripDoc, plan: Trip, home: Home | null, notes: TripNotes, legMeters: Record<string, number>): Promise<TripDoc> {
+async function persist(doc: TripDoc, plan: Trip, home: Home | null, notes: TripNotes, legMeters: Record<string, number>, fresh = false): Promise<TripDoc> {
   // Notes and distances are phone-only and outside the plan's hash: changing only those keeps the version the car knows.
+  // A trip saved for the first time is v1, whatever was typed before (its blank starting doc was never stored).
   const next: TripDoc = {
-    ...(await savePlan(doc, named(plan), home)),
+    ...(fresh ? await newDoc({ ...named(plan), tripId: doc.tripId, revision: 1, updatedAt: nowIso() }, home) : await savePlan(doc, named(plan), home)),
     notes: cleanNotes(notes, new Set(plan.places.map((p) => p.placeRef))),
     legMeters: cleanLegMeters(legMeters, plan),
   };
@@ -108,14 +109,24 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
   const edited = useRef(false);
   const asked = useRef(new Set<string>());
   const routeOff = useRef(false);
+  /** Leg keys whose time the user cleared on purpose: the automatic fill leaves them empty (refresh still fills them). */
+  const keepEmpty = useRef(new Set<string>());
+  /** Not stored yet (a new trip until its first save); once deleting, nothing may write the trip back. */
+  const fresh = useRef(!tripId);
+  const deleting = useRef(false);
+  /** What the last save wrote, to tell whether anything changed while it ran (a Kakao fill landing mid-save). */
+  const lastSaved = useRef<{ plan: Trip | null; notes: TripNotes | null; legMeters: Record<string, number> | null }>({ plan: null, notes: null, legMeters: null });
+  const unchangedSinceSave = () => latest.current.plan === lastSaved.current.plan && latest.current.notes === lastSaved.current.notes && latest.current.legMeters === lastSaved.current.legMeters;
   /** Saves run one after another so two of them never race on the same revision. */
   const queue = useRef<Promise<unknown>>(Promise.resolve());
   const saveNow = (): Promise<TripDoc | null> => {
     const run = queue.current.then(async () => {
       const now = latest.current;
-      if (!now.dirty || !now.doc || !now.plan) return null;
+      if (deleting.current || !now.dirty || !now.doc || !now.plan) return null;
       now.dirty = false;
-      const next = await persist(now.doc, now.plan, home, now.notes, now.legMeters);
+      lastSaved.current = { plan: now.plan, notes: now.notes, legMeters: now.legMeters };
+      const next = await persist(now.doc, now.plan, home, now.notes, now.legMeters, fresh.current);
+      fresh.current = false;
       latest.current.doc = next; // edits made while saving stay marked as unsaved
       return next;
     });
@@ -166,7 +177,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
       void saveNow().then((next) => {
         if (!next) return;
         setDoc(next);
-        setDirty(false);
+        if (unchangedSinceSave()) setDirty(false); // a fill that landed meanwhile is still unsaved
         // A new trip now has an address; keep it without re-mounting the editor while the user is away.
         if (location.pathname === '/trips/new') history.replaceState(null, '', `/trips/${next.tripId}`);
       });
@@ -191,7 +202,9 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
   const askKakao = async (mode: 'auto' | 'refresh'): Promise<number | null> => {
     const cur = latest.current.plan;
     if (!cur || (mode === 'auto' && routeOff.current)) return 0;
-    const runs = mode === 'refresh' ? allRuns(cur) : emptyRuns(cur).filter((r) => !asked.current.has(runSignature(r)));
+    if (mode === 'refresh') keepEmpty.current.clear(); // recalculating everything is an explicit ask, cleared legs too
+    const skip = keepEmpty.current;
+    const runs = mode === 'refresh' ? allRuns(cur) : emptyRuns(cur).filter((r) => !asked.current.has(runSignature(r)) && r.keys.some((k) => !skip.has(k)));
     let filled = 0;
     for (const run of runs) {
       asked.current.add(runSignature(run));
@@ -202,8 +215,8 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
       }
       const now = latest.current.plan;
       if (!now) return filled;
-      const out = applyRun(now, run, result, { overwrite: mode === 'refresh' });
-      if (Object.keys(out.meters).length) {
+      const out = applyRun(now, run, result, { overwrite: mode === 'refresh', skip });
+      if (Object.entries(out.meters).some(([k, m]) => latest.current.legMeters[k] !== m)) {
         const merged = { ...latest.current.legMeters, ...out.meters };
         latest.current.legMeters = merged;
         setLegMeters(merged);
@@ -239,7 +252,9 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
     root.style.overscrollBehaviorY = 'contain'; // the browser's own pull-to-reload would leave the editor
     let g: { x0: number; y0: number; pulling: boolean; dist: number } | null = null;
     // Closed menus and dialogs stay in the DOM (hidden), so only a visible one counts.
-    const covered = () => [...document.querySelectorAll<HTMLElement>('[role="dialog"], [role="alertdialog"], [role="menu"], dialog')].some((el) => el.checkVisibility());
+    // (checkVisibility is missing before iOS 17.4, so fall back to <dialog open> / layout boxes.)
+    const shown = (el: HTMLElement) => (el instanceof HTMLDialogElement ? el.open : typeof el.checkVisibility === 'function' ? el.checkVisibility() : el.getClientRects().length > 0);
+    const covered = () => [...document.querySelectorAll<HTMLElement>('[role="dialog"], [role="alertdialog"], [role="menu"], dialog')].some(shown);
     const onStart = (e: TouchEvent) => {
       g = null;
       if (e.touches.length !== 1 || window.scrollY > 0 || covered() || (e.target as Element).closest?.('.tl-handle')) return;
@@ -298,8 +313,9 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
   const targetDay = plan.days.some((d) => d.dayIndex === focusDay) ? focusDay : plan.days[0].dayIndex;
 
   const edit = (p: Trip) => {
-    const linked = relinkLegs(plan, p, book.current);
+    const linked = relinkLegs(latest.current.plan ?? plan, p, book.current);
     rememberLegs(linked, book.current);
+    latest.current.plan = linked; // a second edit before the next render builds on this one
     setPlan(linked);
     setDirty(true);
     edited.current = true;
@@ -308,7 +324,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
   const fail = (m: string) => setNotice({ tone: 'error', text: m });
   /** Takes a stop off its day (it waits in 보관함) and offers 되돌리기, which puts the plan back as it was. */
   const removeStop = (visitId: string) => {
-    const before = plan;
+    const before = latest.current.plan ?? plan;
     const v = visitOf(before, visitId);
     if (!v) return;
     try {
@@ -329,27 +345,34 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
   const showDay = (day: number) => requestAnimationFrame(() => document.getElementById(`day-${day}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
 
   const save = async () => {
+    const wasDirty = dirty;
     latest.current = { doc, plan, notes, legMeters, dirty: true };
     const next = (await saveNow()) ?? doc;
     setDoc(next);
-    setPlan(next.plan);
-    setDirty(false);
-    setNotice({ tone: 'success', text: next.revision === doc.revision && tripId ? t('editor.noChanges') : t('editor.saved', { revision: next.revision }) });
+    if (unchangedSinceSave()) {
+      setPlan(next.plan);
+      setDirty(false);
+    }
+    // A memo or distance change keeps the version (phone-only) but was still saved.
+    setNotice({ tone: 'success', text: !wasDirty && tripId ? t('editor.noChanges') : t('editor.saved', { revision: next.revision }) });
     if (!tripId) navigate(`/trips/${next.tripId}`, true);
   };
 
   /** Makes a copy of the current trip (places, days, home and all) as a new trip and opens it. The original is untouched. */
   const duplicate = async () => {
     if (dirty) await save(); // keep unsaved edits in the original too, not only in the copy
-    const clone: Trip = { ...structuredClone(plan), tripId: crypto.randomUUID(), name: t('trip.copyName', { name: plan.name }).slice(0, 60), revision: 1, updatedAt: nowIso() };
-    const nd: TripDoc = { ...(await newDoc(clone, home)), notes: cleanNotes(notes) }; // the copy keeps its memos (same places)
+    const clone: Trip = { ...structuredClone(plan), tripId: crypto.randomUUID(), name: t('trip.copyName', { name: named(plan).name }).slice(0, 60), revision: 1, updatedAt: nowIso() };
+    // The copy keeps its memos and distances (same places, same legs).
+    const nd: TripDoc = { ...(await newDoc(clone, home)), notes: cleanNotes(notes), legMeters: cleanLegMeters(legMeters, clone) };
     await trips.put(nd);
     navigate(`/trips/${nd.tripId}`);
   };
 
   /** Leave the editor (back to the trips tab, or to 설정 to change a start place); unsaved edits are saved first. */
   const leave = async (to = '/') => {
-    await saveNow();
+    const next = await saveNow();
+    // A new trip now exists under its own address: put that on this history entry so Back reopens it, not a blank trip.
+    if (next && location.pathname === '/trips/new') history.replaceState(null, '', `/trips/${next.tripId}`);
     navigate(to);
   };
   const close = () => setSheet(null);
@@ -525,7 +548,20 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
       </button>
 
       {sheet?.kind === 'start' && <StartSheet isOpen onClose={close} plan={plan} home={home} dayIndex={sheet.day} onChange={edit} onOpenSettings={() => leave('/settings')} />}
-      {sheet?.kind === 'leg' && <LegSheet isOpen onClose={close} plan={plan} dayIndex={sheet.day} k={sheet.k} legMeters={legMeters} onChange={edit} />}
+      {sheet?.kind === 'leg' && <LegSheet
+          isOpen
+          onClose={close}
+          plan={plan}
+          dayIndex={sheet.day}
+          k={sheet.k}
+          legMeters={legMeters}
+          onChange={(p) => {
+            // A time cleared on purpose stays empty (the car shows '확인 필요'); typing one again lifts that.
+            const key = legKeys(plan, sheet.day)[sheet.k];
+            if (key) (p.days[sheet.day - 1]?.legs[sheet.k] ? keepEmpty.current.delete(key) : keepEmpty.current.add(key));
+            edit(p);
+          }}
+        />}
       {sheet?.kind === 'end' && <EndSheet isOpen onClose={close} plan={plan} home={home} dayIndex={sheet.day} onChange={edit} onOpenPlace={setOpenPlace} onOpenSettings={() => leave('/settings')} />}
       {sheet?.kind === 'place' && (
         <PlaceSheet
@@ -553,7 +589,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
         actionLabel={t('editor.delete.action')}
         actionVariant="destructive"
         onAction={async () => {
-          latest.current.dirty = false; // deleting: nothing to auto-save on the way out
+          deleting.current = true; // deleting: nothing may save the trip back on the way out (a re-render resets `dirty`)
           await trips.remove(doc.tripId);
           navigate('/', true);
         }}

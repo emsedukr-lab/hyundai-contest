@@ -81,7 +81,8 @@ object ImportDecision {
             skipped = overlay.skipped.filter { it in visits }.toSet(),
             // Defer state and measured visits for stops/places the new plan no longer has are dropped (stale otherwise).
             deferred = overlay.deferred.filter { it in visits }.toSet(),
-            deferredTo = overlay.deferredTo.filterKeys { it in visits },
+            // A move to a day the new plan no longer has would hide the stop everywhere: drop it (the stop is back on its own day).
+            deferredTo = overlay.deferredTo.filter { (id, day) -> id in visits && day in 1..incoming.days.size },
             visitRecords = overlay.visitRecords.filter { it.placeId in places },
             legEstimates = estimates,
             guiding = guiding,

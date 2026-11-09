@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, type KeyboardEvent, type MouseEvent, type PointerEvent, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type MouseEvent, type PointerEvent, type ReactNode } from 'react';
 import { DndContext, KeyboardSensor, PointerSensor, closestCenter, useSensor, useSensors, type Announcements, type DragEndEvent, type UniqueIdentifier } from '@dnd-kit/core';
 import { SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -277,11 +277,17 @@ function SwipeToRemove({ cardClass, actionLabel, onRemove, children }: { cardCla
   const gesture = useRef<{ id: number; x0: number; y0: number; t0: number; base: number; width: number; sideways: boolean } | null>(null);
   const swipedAt = useRef(-Infinity);
   const card = useRef<HTMLDivElement>(null);
+  // The slide-out finishes before the stop is removed; by then the editor may have re-rendered, so call its newest handler.
+  const removeRef = useRef(onRemove);
+  removeRef.current = onRemove;
+  const timer = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(timer.current), []);
 
   const remove = () => {
+    if (timer.current !== undefined) return; // already on its way out
     setSliding(false);
     setX(-(card.current?.offsetWidth ?? 400));
-    window.setTimeout(onRemove, 160);
+    timer.current = window.setTimeout(() => removeRef.current(), 160);
   };
   const onPointerDown = (e: PointerEvent<HTMLDivElement>) => {
     if (e.button !== 0 || (e.target as Element).closest('.tl-handle')) return;

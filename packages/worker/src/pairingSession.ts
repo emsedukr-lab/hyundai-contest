@@ -107,6 +107,7 @@ export class PairingSession extends DurableObject<Env> {
     if (r.ok && r.changed) {
       await this.save(r.session);
       this.broadcast(r.session);
+      if (isTerminal(r.session.state)) this.closeSockets(); // as in apply(): no socket held through the tombstone window
     } else {
       await this.ctx.storage.setAlarm(isTerminal(s.state) ? (s.purgeAt ?? Date.now()) : s.deadline);
     }
@@ -228,7 +229,7 @@ export class PairingSession extends DurableObject<Env> {
   private async upload(req: Request, s: Session) {
     const body = await readJson<PayloadBody>(req, PROTOCOL.limits.maxPayloadBytes + 512);
     if (body === 'TOO_LARGE') return error('PAYLOAD_TOO_LARGE');
-    if (!body || !isB64url(body.iv, 16, 16) || !isB64url(body.ct, 22, PROTOCOL.limits.maxPayloadBytes) || !Number.isInteger(body.schemaVersion)) {
+    if (!body || !isB64url(body.iv, 16, 16) || !isB64url(body.ct, 22, PROTOCOL.limits.maxPayloadBytes) || !Number.isSafeInteger(body.schemaVersion)) {
       return error('BAD_REQUEST');
     }
     const envelope = { iv: body.iv, ct: body.ct, schemaVersion: body.schemaVersion };

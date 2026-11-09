@@ -14,10 +14,28 @@ sealed interface Target {
 /** `note` is Korean; apps localize from `noteCode` + `noteArgs` (strings `next_<code>`). */
 data class NextStep(val dayIndex: Int, val target: Target?, val note: String, val noteCode: String = "", val noteArgs: List<String> = emptyList())
 
+/** The trip day a moment belongs to and its minute counted from that day's midnight. */
+data class TripMoment(val dayIndex: Int, val minute: Int)
+
 object NextDestination {
+    /** Just past midnight the car is often still driving to that night's lodging: until 04:00 it is still the previous day. */
+    const val GRACE_MINUTES = 4 * 60
+
     fun dayIndexFor(trip: Trip, today: LocalDate): Int? {
         val n = today.toEpochDay() - LocalDate.parse(trip.startDate).toEpochDay() + 1
         return if (n in 1..trip.days.size) n.toInt() else null
+    }
+
+    /**
+     * Which trip day [epochMs] falls on (in the trip's zone) and its minute counted from that day's midnight. Before
+     * 04:00 the previous trip day goes on and the minute runs past 1440 (00:30 → 1470), so the day's times and deadlines
+     * still compare correctly. If there was no previous trip day (an early start on day 1), it is simply that day.
+     */
+    fun momentOf(trip: Trip, epochMs: Long): TripMoment? {
+        val t = java.time.Instant.ofEpochMilli(epochMs).atZone(trip.zoneOrUtc())
+        val minute = t.hour * 60 + t.minute
+        if (minute < GRACE_MINUTES) dayIndexFor(trip, t.toLocalDate().minusDays(1))?.let { return TripMoment(it, minute + 1440) }
+        return dayIndexFor(trip, t.toLocalDate())?.let { TripMoment(it, minute) }
     }
 
     /**

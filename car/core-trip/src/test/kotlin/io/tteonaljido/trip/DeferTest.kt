@@ -99,6 +99,29 @@ class DeferTest {
         assertTrue(r.visitRecords.isEmpty()) // the removed place's measurement is dropped
     }
 
+    @Test fun reconcileDropsAMoveToADayTheNewPlanNoLongerHas() {
+        val o = CarOverlay(deferredTo = mapOf("v4" to 4, "v6" to 3))
+        val shorter = sample.copy(endDate = "2026-11-22", days = sample.days.take(3))
+        val r = ImportDecision.reconcile(o, shorter)
+        assertEquals(mapOf("v6" to 3), r.deferredTo) // day 3 still exists; day 4 is gone
+        assertEquals("v4", NextDestination.upcoming(shorter, r, 2).first()) // back in its place on its own day
+    }
+
+    /** "여기서 출발" keeps its estimate only as the plan leg it actually measured (here → the next stop in guidance order). */
+    @Test fun aFromHereEstimateIsKeptOnlyUnderTheLegItMeasured() {
+        val lake = sample.places.first { it.placeRef == "lake" }
+        val skybay = sample.places.first { it.placeRef == "skybay" }
+        fun key(at: Place, o: CarOverlay) = LegKeys.startingAt(sample, o, 2, at.latE7!!, at.lonE7!!)
+        // At 경포호 with v4 done, the estimate is to v5: exactly the plan leg 경포호→동화가든.
+        assertEquals("lake>donghwa", key(lake, CarOverlay(visited = setOf("v4"))))
+        // v5 put off until later (or to another day): the estimate is to v6, and no plan leg runs 경포호→만동제과.
+        assertNull(key(lake, CarOverlay(visited = setOf("v4"), deferred = setOf("v5"))))
+        assertNull(key(lake, CarOverlay(visited = setOf("v4"), deferredTo = mapOf("v5" to 3))))
+        // Same at the day's start: the first stop put off means the estimate is to v5, not the leg to 경포호.
+        assertEquals("skybay>lake", key(skybay, CarOverlay()))
+        assertNull(key(skybay, CarOverlay(deferred = setOf("v4"))))
+    }
+
     @Test fun lowEvSocSurfacesAChargeAdvisoryInTheProjection() {
         val p = LiveProjection.project(sample, CarOverlay(), 2, m("09:00"), naviRemaining = 134, vehicleKind = VehicleKind.EV, energyPercent = 15)
         assertEquals(EnergyAction.FAST_CHARGE, p.energy?.action)
