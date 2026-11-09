@@ -2,7 +2,7 @@
   Content-Security-Policy: default-src 'self'; script-src 'self' https://dapi.kakao.com https://t1.kakaocdn.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://*.kakaocdn.net https://dapi.kakao.com; font-src 'self'; connect-src 'self' https://dapi.kakao.com https://*.kakaocdn.net; manifest-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
   Referrer-Policy: no-referrer
   X-Content-Type-Options: nosniff
-  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()
+  Permissions-Policy: camera=(self), microphone=(), geolocation=(), payment=()
   Strict-Transport-Security: max-age=31536000; includeSubDomains
 
 # Vite content-hashes everything under /assets, so a changed file always gets a new URL.

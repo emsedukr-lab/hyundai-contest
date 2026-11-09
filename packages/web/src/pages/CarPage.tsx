@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Button } from '@astryxdesign/core/Button';
 import { CarIcon, MapIcon, QrIcon, SendIcon } from '../components/shell/icons';
 import { Row, Section } from '../components/shell/rows';
 import { TabScreen } from '../components/shell/Screens';
@@ -6,6 +7,8 @@ import { sendLog, trips } from '../lib/db';
 import { dateLabel, dayOf } from '../lib/format';
 import { t } from '../lib/i18n';
 import { navigate } from '../lib/router';
+import { carQrTarget } from '../lib/qrLink';
+import { QrScanner } from '../components/QrScanner';
 
 /** The pairing page remembers its session per browser window (ConnectPage's LAST_SID); /c resumes it. */
 const hasOpenConnection = () => {
@@ -30,6 +33,7 @@ interface RecentSend {
 export function CarPage() {
   const [recent, setRecent] = useState<RecentSend[] | null>(null);
   const [resumable] = useState(hasOpenConnection);
+  const [scanning, setScanning] = useState(false);
 
   useEffect(() => {
     void (async () => {
@@ -51,6 +55,10 @@ export function CarPage() {
       <div className="tn-intro">
         <p>{t('car.intro')}</p>
       </div>
+      {/* Scan in the app: one tap opens the camera (asking permission), and the car's QR opens the connection here. */}
+      <div className="tn-pad" style={{ paddingBottom: 8 }}>
+        <Button label={t('car.scan')} variant="primary" size="lg" width="100%" onClick={() => setScanning(true)} />
+      </div>
 
       {resumable && (
         <ul className="tn-cards">
@@ -66,7 +74,7 @@ export function CarPage() {
             <Row lead={<CarIcon />} title={t('car.step1')} />
           </li>
           <li>
-            <Row lead={<QrIcon />} title={t('car.step2')} />
+            <Row lead={<QrIcon />} title={t('car.step2b')} />
           </li>
           <li>
             <Row lead={<SendIcon />} title={t('car.step3')} />
@@ -96,6 +104,18 @@ export function CarPage() {
           </ul>
         )}
       </Section>
+      {scanning && (
+        <QrScanner
+          onClose={() => setScanning(false)}
+          onResult={(text) => {
+            const target = carQrTarget(text, location.origin);
+            if (!target) return false;
+            setScanning(false);
+            navigate(target);
+            return true;
+          }}
+        />
+      )}
     </TabScreen>
   );
 }

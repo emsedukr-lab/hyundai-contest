@@ -6,6 +6,7 @@ import { navigate } from '../lib/router';
 const ROWS: Array<[string, string]> = [
   [t('privacy.phone.label'), t('privacy.phone.text')],
   [t('privacy.qr.label'), t('privacy.qr.text')],
+  [t('privacy.camera.label'), t('privacy.camera.text')],
   [t('privacy.relay.label'), t('privacy.relay.text')],
   [t('privacy.car.label'), t('privacy.car.text')],
   [t('common.homeAddress'), t('privacy.home.text')],
