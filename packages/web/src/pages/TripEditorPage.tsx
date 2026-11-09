@@ -73,8 +73,8 @@ const shortPeriod = (start: string, end: string) => {
 /**
  * The trip editor as one page (M30): 여행 정보, then every day as a route from 출발 to 숙소/귀가, one after another in a
  * single scroll. Each section's header sticks under the top bar while its section is on screen, so you always see which
- * part you are in. Places are added with the floating + button (to the day in view; its badge counts the places on no
- * day yet). Every input opens in a bottom sheet; problems show on the node they concern. Below: one action — 저장 while
+ * part you are in. Places are added with the floating + button to the whole trip (M40: a day is set in the place's details;
+ * its badge counts the places on no day yet). Every input opens in a bottom sheet; problems show on the node they concern. Below: one action — 저장 while
  * there are unsaved edits, then 경로 보고 차로 보내기. Leaving saves on its own (M29).
  */
 export function TripEditorPage({ tripId }: { tripId: string | null }) {
@@ -346,8 +346,6 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
       setDirty(true);
     },
   };
-  /** Brings a day's section to the top, under its own stuck header. */
-  const showDay = (day: number) => requestAnimationFrame(() => document.getElementById(`day-${day}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
 
   const save = async () => {
     const wasDirty = dirty;
@@ -538,7 +536,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
         </section>
       ))}
 
-      {/* Add a place: to the day in view. The badge counts places collected but on no day yet. */}
+      {/* Add a place: to the whole trip (its day is set in the place's details). The badge counts places on no day yet. */}
       <button
         type="button"
         className={`tl-fab${notice?.undo ? ' is-raised' : ''}`}
@@ -569,21 +567,12 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
         />}
       {sheet?.kind === 'end' && <EndSheet isOpen onClose={close} plan={plan} home={home} dayIndex={sheet.day} onChange={edit} onOpenPlace={setOpenPlace} onOpenSettings={() => leave('/settings')} />}
       {sheet?.kind === 'place' && (
-        <PlaceSheet
-          isOpen
-          onClose={close}
-          plan={plan}
-          initialDay={targetDay}
-          onChange={edit}
-          onOpenPlace={setOpenPlace}
-          onNotice={setNotice}
-          onAdded={showDay}
-        />
+        <PlaceSheet isOpen onClose={close} plan={plan} onChange={edit} onOpenPlace={setOpenPlace} onNotice={setNotice} />
       )}
       {sheet?.kind === 'map' && <SendSheet key={`map${sheet.day}`} isOpen onClose={close} plan={plan} home={home} dayIndex={sheet.day} mode="map" />}
       {sheet?.kind === 'send' && <SendSheet key={`send${targetDay}`} isOpen onClose={close} plan={plan} home={home} dayIndex={targetDay} mode="send" />}
 
-      <VisitDialog plan={plan} placeRef={openPlace} onChange={edit} onUnassign={removeStop} onClose={() => setOpenPlace(null)} />
+      <VisitDialog plan={plan} placeRef={openPlace} onChange={edit} onUnassign={removeStop} onError={fail} onClose={() => setOpenPlace(null)} />
       <RecommendDialog isOpen={recommending} plan={plan} home={home} book={book.current} onApply={edit} onClose={() => setRecommending(false)} />
       <ShareDialog isOpen={sharing} doc={{ ...doc, plan: named(plan), home }} onClose={() => setSharing(false)} />
       <AlertDialog

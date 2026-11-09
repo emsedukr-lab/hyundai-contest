@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { parseTransfer, sampleTrip, type Trip } from '@tteonaljido/shared';
-import { addPlace, addToDay, placeRoom, assign, changeCategory, emptyPlan, isEndpointOnly, move, moveTo, endpointFromPreset, newDoc, nodeIssues, planWarnings, relinkLegs, rememberLegs, removePlace, savePlan, setDepart, setEndBy, setLeg, setEndpoint, setLodging, setOrigin, setPeriod, startFromPreset, toTransfer, unassign, type LegBook } from './trips';
+import { addPlace, addToDay, moveToDay, placeRoom, assign, changeCategory, emptyPlan, isEndpointOnly, move, moveTo, endpointFromPreset, newDoc, nodeIssues, planWarnings, relinkLegs, rememberLegs, removePlace, savePlan, setDepart, setEndBy, setLeg, setEndpoint, setLodging, setOrigin, setPeriod, startFromPreset, toTransfer, unassign, type LegBook } from './trips';
 
 // The warning assertions below check the Korean copy; jsdom reports navigator.language as en-US.
 vi.hoisted(() => Object.defineProperty(navigator, 'language', { value: 'ko-KR', configurable: true }));
@@ -321,5 +321,29 @@ describe('place limits (100 places / 100 visits)', () => {
     for (let i = 0; i < 100; i++) t = addPlace(t, { ...p, name: `장소 ${i}` });
     expect(placeRoom(t)).toBe(0);
     expect(() => addPlace(t, p)).toThrow();
+  });
+});
+
+describe('a place gets its day only from its details (moveToDay, M40)', () => {
+  it('puts a whole-trip place at the end of the chosen day', () => {
+    const t0 = sampleTrip();
+    const pooled = t0.visits.find((v) => v.unassignedReason !== null)!;
+    const t1 = moveToDay(t0, pooled.visitId, 2);
+    expect(day(t1, 2).visitOrder.at(-1)).toBe(pooled.visitId);
+    expect(t1.visits.find((v) => v.visitId === pooled.visitId)?.unassignedReason).toBeNull();
+    expect(day(t1, 2).legs.length).toBe(day(t1, 2).visitOrder.length + 1);
+  });
+  it('moves a stop from one day to the end of another, keeping legs = stops + 1 on both', () => {
+    const t0 = sampleTrip();
+    const id = day(t0, 2).visitOrder[0];
+    const t1 = moveToDay(t0, id, 3);
+    expect(day(t1, 2).visitOrder).not.toContain(id);
+    expect(day(t1, 3).visitOrder.at(-1)).toBe(id);
+    for (const d of [2, 3]) expect(day(t1, d).legs.length).toBe(day(t1, d).visitOrder.length + 1);
+  });
+  it('leaves the plan alone when the stop is already on that day', () => {
+    const t0 = sampleTrip();
+    const id = day(t0, 2).visitOrder[0];
+    expect(moveToDay(t0, id, 2)).toBe(t0);
   });
 });

@@ -14,11 +14,11 @@ import { TimeInput } from '@astryxdesign/core/TimeInput';
 import { Token } from '@astryxdesign/core/Token';
 import { useEffect, useState } from 'react';
 import type { OpeningHours, Place, Trip, Visit } from '@tteonaljido/shared';
-import { dateLabel } from '../lib/format';
+import { dateLabel, shortDate } from '../lib/format';
 import { t } from '../lib/i18n';
 import { FieldPrefix } from './FieldPrefix';
 import { LodgingNoteFields, PlaceMemoField } from './NotesContext';
-import { REASON_LABEL, changeCategory, removePlace, updatePlace, updateVisit } from '../lib/trips';
+import { REASON_LABEL, changeCategory, moveToDay, removePlace, updatePlace, updateVisit } from '../lib/trips';
 import { CATEGORY_OPTIONS } from './PlaceSearch';
 
 type ISOTime = Parameters<NonNullable<Parameters<typeof TimeInput>[0]['onChange']>>[0];
@@ -28,20 +28,23 @@ const WEEKDAYS = ['visit.weekday.1', 'visit.weekday.2', 'visit.weekday.3', 'visi
 const ALL_DAYS = ['1', '2', '3', '4', '5', '6', '7'];
 
 /**
- * Edits one place and its visit attributes (stay, importance, desired/fixed time, flexibility, hours). A stop on a day
- * can be taken off it here too — the keyboard and screen-reader way to do what swiping the card does.
+ * Edits one place and its visit attributes: its day (M40 — places start on the whole trip and get a day only here, or
+ * with 경로 추천), stay, importance, desired/fixed time, flexibility and hours. Choosing 전체 일정 takes a stop off its
+ * day, the keyboard and screen-reader way to do what swiping the card does.
  */
 export function VisitDialog({
   plan,
   placeRef,
   onChange,
   onUnassign,
+  onError,
   onClose,
 }: {
   plan: Trip;
   placeRef: string | null;
   onChange: (p: Trip) => void;
   onUnassign: (visitId: string) => void;
+  onError: (message: string) => void;
   onClose: () => void;
 }) {
   // Hooks first, before any early return (rules of hooks); each opened place starts without a pending delete.
@@ -54,7 +57,16 @@ export function VisitDialog({
   const place = plan.places.find((p) => p.placeRef === placeRef);
   const visit = plan.visits.find((v) => v.placeRef === placeRef);
   if (!place) return null;
-  const onDay = !!visit && plan.days.some((d) => d.visitOrder.includes(visit.visitId));
+  const onDay = visit ? plan.days.find((d) => d.visitOrder.includes(visit.visitId))?.dayIndex ?? null : null;
+  const setDay = (v: string) => {
+    if (!visit) return;
+    if (v === 'all') return onDay !== null && onUnassign(visit.visitId); // back to the whole trip, with 되돌리기
+    try {
+      onChange(moveToDay(plan, visit.visitId, Number(v))); // to the end of that day
+    } catch (e) {
+      onError((e as Error).message); // e.g. the day already has the most stops a day can hold
+    }
+  };
   // Kakao's local API has no opening hours; a place found through Kakao links to its Kakao Map page, which shows them.
   const kakaoPage = place.source.provider === 'KAKAO' && place.source.externalId && /^\d+$/.test(place.source.externalId) ? `https://place.map.kakao.com/${place.source.externalId}` : null;
   const setVisit = (patch: Partial<Visit>) => visit && onChange(updateVisit(plan, visit.visitId, patch));
@@ -78,6 +90,16 @@ export function VisitDialog({
       <VStack gap={4}>
         <FormLayout>
           <Selector label={t('common.type')} isLabelHidden placement="below" options={CATEGORY_OPTIONS} value={place.category} onChange={(v) => onChange(changeCategory(plan, place.placeRef, v as Place['category']))} />
+          {visit && (
+            <Selector
+              label={t('visit.day')}
+              isLabelHidden
+              placement="below"
+              options={[{ value: 'all', label: t('visit.dayAll') }, ...plan.days.map((d) => ({ value: String(d.dayIndex), label: `${t('common.day', { day: d.dayIndex })} · ${shortDate(d.date)}` }))]}
+              value={onDay === null ? 'all' : String(onDay)}
+              onChange={setDay}
+            />
+          )}
           {/* Phone-only notes: lodging gets check-in/out and a memo, any other place a memo. */}
           {place.category === 'LODGING' ? <LodgingNoteFields placeRef={place.placeRef} /> : <PlaceMemoField placeRef={place.placeRef} />}
           {visit && visit.unassignedReason !== null && (
@@ -196,20 +218,8 @@ export function VisitDialog({
           </VStack>
         ) : (
           <HStack gap={2} hAlign="between">
-            <HStack gap={1}>
-              {onDay && (
-                <Button
-                  label={t('tl.unassign')}
-                  variant="ghost"
-                  onClick={() => {
-                    onUnassign(visit!.visitId);
-                    onClose();
-                  }}
-                />
-              )}
-              {/* A quiet first step: red only on the confirm below, so the rare delete doesn't shout on every place. */}
-              <Button label={t('visit.delete')} variant="ghost" onClick={() => setConfirmDelete(true)} />
-            </HStack>
+            {/* A quiet first step: red only on the confirm below, so the rare delete doesn't shout on every place. */}
+            <Button label={t('visit.delete')} variant="ghost" onClick={() => setConfirmDelete(true)} />
             <Button label={t('common.close')} variant="primary" onClick={onClose} />
           </HStack>
         )}

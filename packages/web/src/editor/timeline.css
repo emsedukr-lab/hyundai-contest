@@ -667,3 +667,12 @@
 .tl-fab.is-raised {
   bottom: calc(96px + 68px + env(safe-area-inset-bottom));
 }
+
+/* The place sheet's quiet confirmation under the search ("'경포호'을(를) 저장 목록에 담았어요"); empty keeps its slot. */
+.tl-added-line {
+  min-height: 20px;
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 600;
+  color: var(--color-text-accent, var(--color-accent));
+}

@@ -239,6 +239,12 @@ export function assign(plan: Trip, visitId: string, dayIndex: number): Trip {
   return patchVisit(placed, visitId, { unassignedReason: null });
 }
 
+/** Puts a visit on a day from its place details (M40): to the end of that day; already there → unchanged. */
+export function moveToDay(plan: Trip, visitId: string, dayIndex: number): Trip {
+  const current = plan.days.find((d) => d.visitOrder.includes(visitId))?.dayIndex;
+  return current === dayIndex ? plan : assign(plan, visitId, dayIndex);
+}
+
 export function move(plan: Trip, dayIndex: number, k: number, dir: -1 | 1): Trip {
   return mapDay(plan, dayIndex, (d) => {
     const j = k + dir;

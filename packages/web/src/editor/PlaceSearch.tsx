@@ -71,6 +71,9 @@ export function PlaceSearch({
   placeholder,
   isLabelHidden = false,
   compact = false,
+  hideFavorites = false,
+  favoritesVersion = 0,
+  onFavoritesChange,
 }: {
   onPick: (p: NewPlace) => void;
   onPickMany?: (places: NewPlace[]) => void;
@@ -83,6 +86,12 @@ export function PlaceSearch({
   isLabelHidden?: boolean;
   /** Just the search field and its results: no favorites row, manual entry or paste panel. */
   compact?: boolean;
+  /** No favorites row above the field (the place sheet lists them below the search instead). */
+  hideFavorites?: boolean;
+  /** Bump to re-read favorites changed elsewhere (the place sheet's own list), so the ☆/★ on results stay right. */
+  favoritesVersion?: number;
+  /** A result's ☆/★ was toggled: lets the place sheet refresh its favorites list. */
+  onFavoritesChange?: () => void;
 }) {
   const [q, setQ] = useState('');
   const [hits, setHits] = useState<PlaceHit[] | null>(null);
@@ -99,13 +108,14 @@ export function PlaceSearch({
 
   useEffect(() => {
     void favorites.all().then(setFavs);
-  }, []);
+  }, [favoritesVersion]);
   const reloadFavs = async () => setFavs(await favorites.all());
   const isFav = (p: NewPlace) => favs.some((f) => f.id === favoriteId(p));
   const toggleFav = async (p: NewPlace) => {
     if (isFav(p)) await favorites.remove(favoriteId(p));
     else await favorites.put(toFavorite(p));
     await reloadFavs();
+    onFavoritesChange?.();
   };
   /** Add respecting the lodging-only context (e.g. when picking a night's lodging). */
   const pick = (p: NewPlace) => onPick(lodgingOnly ? { ...p, category: 'LODGING' } : p);
@@ -201,7 +211,7 @@ export function PlaceSearch({
 
   return (
     <VStack gap={2}>
-      {!compact && shownFavs.length > 0 && (
+      {!compact && !hideFavorites && shownFavs.length > 0 && (
         <VStack gap={1}>
           <HStack gap={2} vAlign="center">
             <StackItem size="fill">
