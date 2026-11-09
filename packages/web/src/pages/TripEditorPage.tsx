@@ -197,14 +197,14 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
    * Asks Kakao directions for travel times and distances. 'auto' runs after a route change: only empty legs, each stretch
    * once, silent. 'refresh' (pull to refresh, or 이동시간·거리 다시 계산) re-asks every leg between known places and
    * replaces its time — the way to bring typed or old estimates in line with the real route. Answers land only on legs
-   * still between the same two places; legs touching home are never asked (home stays on this phone).
+   * still between the same two places. Legs from or to home are asked too when 설정 has the home address (M39).
    */
   const askKakao = async (mode: 'auto' | 'refresh'): Promise<number | null> => {
     const cur = latest.current.plan;
     if (!cur || (mode === 'auto' && routeOff.current)) return 0;
     if (mode === 'refresh') keepEmpty.current.clear(); // recalculating everything is an explicit ask, cleared legs too
     const skip = keepEmpty.current;
-    const runs = mode === 'refresh' ? allRuns(cur) : emptyRuns(cur).filter((r) => !asked.current.has(runSignature(r)) && r.keys.some((k) => !skip.has(k)));
+    const runs = mode === 'refresh' ? allRuns(cur, home) : emptyRuns(cur, home).filter((r) => !asked.current.has(runSignature(r)) && r.keys.some((k) => !skip.has(k)));
     let filled = 0;
     for (const run of runs) {
       asked.current.add(runSignature(run));
@@ -291,8 +291,13 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
     };
   }, []);
   // After an edit that left legs empty (a stop moved, added or removed; lodging or an end changed), fill them shortly after.
+  // Opening a trip fills its empty legs once too (e.g. the legs to and from home in a trip made before M39); a time the
+  // user typed is never replaced here.
+  const opened = useRef(false);
   useEffect(() => {
-    if (!plan || !edited.current) return;
+    if (!plan) return;
+    if (!edited.current && opened.current) return;
+    opened.current = true;
     const timer = setTimeout(() => void askKakao('auto'), 900);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps

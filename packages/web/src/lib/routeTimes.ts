@@ -1,11 +1,12 @@
-import type { Trip } from '@tteonaljido/shared';
+import type { Home, Trip } from '@tteonaljido/shared';
 import { legKeys, setLeg } from './trips';
 
 /**
  * Travel times from Kakao directions, filled into legs that are empty after the route changed (a stop moved, added or
- * removed, lodging or the start/end changed). Only legs whose two ends have coordinates are asked for, and never a leg
- * that starts or ends at home: home stays on this phone (the car's navigation times those legs itself). The result is
- * stored like a typed estimate (the transfer has one leg source); the user can still change it.
+ * removed, lodging or the start/end changed). Only legs whose two ends have coordinates are asked for. Home counts as a
+ * known point when 설정 has the home address (M39): its coordinates go through the relay to Kakao for this calculation
+ * only, like any other place, and are never stored there. The result is stored like a typed estimate (the transfer has
+ * one leg source; the home coordinates themselves still reach the car only with consent); the user can still change it.
  */
 export interface Point {
   latE7: number;
@@ -22,29 +23,30 @@ export interface LegRun {
 
 const MAX_POINTS = 25;
 
-/** [start, ...stops, end] of a day with coordinates, null where unknown — and null for home, which is never sent. */
-function knownPoints(plan: Trip, dayIndex: number): (Point | null)[] {
+/** [start, ...stops, end] of a day with coordinates, null where unknown (home only when 설정 has its address). */
+function knownPoints(plan: Trip, dayIndex: number, home: Home | null): (Point | null)[] {
   const day = plan.days[dayIndex - 1];
   const at = (ref: string | null | undefined): Point | null => {
     const p = ref ? plan.places.find((x) => x.placeRef === ref) : undefined;
     return p && p.latE7 !== null && p.lonE7 !== null ? { latE7: p.latE7, lonE7: p.lonE7 } : null;
   };
-  const start = dayIndex === 1 ? (plan.origin.kind === 'PLACE' ? at(plan.origin.placeRef) : null) : at(plan.days[dayIndex - 2].lodgingPlaceRef);
-  const end = dayIndex === plan.days.length ? (plan.finalDestination.kind === 'PLACE' ? at(plan.finalDestination.placeRef) : null) : at(day.lodgingPlaceRef);
+  const homePoint: Point | null = home ? { latE7: home.latE7, lonE7: home.lonE7 } : null;
+  const start = dayIndex === 1 ? (plan.origin.kind === 'PLACE' ? at(plan.origin.placeRef) : homePoint) : at(plan.days[dayIndex - 2].lodgingPlaceRef);
+  const end = dayIndex === plan.days.length ? (plan.finalDestination.kind === 'PLACE' ? at(plan.finalDestination.placeRef) : homePoint) : at(day.lodgingPlaceRef);
   const stops = day.visitOrder.map((id) => at(plan.visits.find((v) => v.visitId === id)?.placeRef));
   return [start, ...stops, end];
 }
 
 /** Every run of empty, askable legs in the trip (automatic fill after a route change). */
-export const emptyRuns = (plan: Trip): LegRun[] => runs(plan, true);
+export const emptyRuns = (plan: Trip, home: Home | null = null): LegRun[] => runs(plan, home, true);
 
 /** Every run of askable legs, filled or not (pull-to-refresh / 다시 계산: re-ask Kakao for the whole trip). */
-export const allRuns = (plan: Trip): LegRun[] => runs(plan, false);
+export const allRuns = (plan: Trip, home: Home | null = null): LegRun[] => runs(plan, home, false);
 
-function runs(plan: Trip, onlyEmpty: boolean): LegRun[] {
+function runs(plan: Trip, home: Home | null, onlyEmpty: boolean): LegRun[] {
   const runs: LegRun[] = [];
   for (const day of plan.days) {
-    const pts = knownPoints(plan, day.dayIndex);
+    const pts = knownPoints(plan, day.dayIndex, home);
     const keys = legKeys(plan, day.dayIndex);
     let run: LegRun | null = null;
     day.legs.forEach((leg, k) => {

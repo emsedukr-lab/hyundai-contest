@@ -6,12 +6,12 @@ import { move, setLeg } from './trips';
 const day = (t: ReturnType<typeof sampleTrip>, i: number) => t.days[i - 1];
 
 describe('Kakao travel times (routeTimes)', () => {
-  it('finds runs of empty legs between known places after a reorder, never touching home', () => {
+  it('finds runs of empty legs between known places after a reorder; without a home address the home legs are not asked', () => {
     const t = move(sampleTrip(), 2, 0, 1); // swapping two stops on day 2 empties the legs around them
     const runs = emptyRuns(t).filter((r) => r.dayIndex === 2);
     expect(runs.length).toBeGreaterThan(0);
     for (const r of runs) expect(r.points.length).toBe(r.keys.length + 1);
-    // day 1 starts and day 4 ends at home: those legs are never asked for
+    // day 1 starts and day 4 ends at home, and no home address is given: those legs can't be asked for
     expect(emptyRuns(t).some((r) => r.dayIndex === 1 && r.fromK === 0)).toBe(false);
     const lastDay = t.days.length;
     expect(emptyRuns(t).some((r) => r.dayIndex === lastDay && r.fromK + r.keys.length === day(t, lastDay).legs.length)).toBe(false);
@@ -36,7 +36,7 @@ describe('Kakao travel times (routeTimes)', () => {
 });
 
 describe('refresh (pull to refresh / 다시 계산)', () => {
-  it('re-asks every leg between known places, filled or not, and overwrites them; home legs stay out', () => {
+  it('re-asks every leg between known places, filled or not, and overwrites them; home legs need a home address', () => {
     const t = sampleTrip();
     const runs = allRuns(t);
     expect(runs.reduce((n, r) => n + r.keys.length, 0)).toBeGreaterThan(emptyRuns(t).reduce((n, r) => n + r.keys.length, 0));
@@ -67,5 +67,26 @@ describe('a travel time cleared on purpose', () => {
     expect(day(out.plan, 2).legs[run.fromK]).toBeNull();
     expect(out.filled).toBe(run.keys.length - 1);
     expect(out.meters[run.keys[0]]).toBe(3000);
+  });
+});
+
+describe('legs to and from home (M39)', () => {
+  const home = { address: '세종시 한누리대로 2130', latE7: 364_800_000, lonE7: 1_272_890_000 };
+  it('are asked with the home coordinates from 설정 when the trip starts or ends at home', () => {
+    const t = sampleTrip(); // starts and ends at home
+    const first = allRuns(t, home).find((r) => r.dayIndex === 1 && r.fromK === 0);
+    expect(first?.points[0]).toEqual({ latE7: home.latE7, lonE7: home.lonE7 });
+    expect(first?.keys[0].startsWith('@home>')).toBe(true);
+    const lastDay = t.days.length;
+    const back = allRuns(t, home).find((r) => r.dayIndex === lastDay && r.fromK + r.keys.length === day(t, lastDay).legs.length);
+    expect(back?.points[back.points.length - 1]).toEqual({ latE7: home.latE7, lonE7: home.lonE7 });
+  });
+  it('fill the empty home leg and keep its distance under the @home key', () => {
+    const t = setLeg(sampleTrip(), 1, 0, null);
+    const run = emptyRuns(t, home).find((r) => r.dayIndex === 1 && r.fromK === 0)!;
+    const out = applyRun(t, run, { minutes: run.keys.map(() => 95), meters: run.keys.map(() => 151_200) });
+    expect(day(out.plan, 1).legs[0]?.minutes).toBe(95);
+    expect(out.meters[run.keys[0]]).toBe(151_200);
+    expect(kmLabel(151_200)).toBe('151.2km');
   });
 });
