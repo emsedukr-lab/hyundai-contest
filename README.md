@@ -93,13 +93,14 @@ npm run typecheck
 npm run smoke               # 서버 흐름 (기본 http://localhost:8787, 다른 주소는 `npm run smoke -- <URL>`)
 npm run e2e                 # Chrome 휴대폰 + 가짜 차량 (같은 방식으로 주소 지정, 화면은 docs/evidence/m3/에 덮어씀)
 npm run e2e:car             # 에뮬레이터 차량 앱(dev debug) + Chrome 휴대폰 (기본 emulator-5580)
+npx tsx tools/live-pair.mts # 서명 release APK + 배포된 모바일 웹·서버 실제 연동, 양쪽 화면을 docs/evidence/live-pair/에 저장
 npx tsx tools/phone-test.mts                 # 실제 폰 + 가짜 차량 (Mac 화면에 QR 표시, 기본 배포 서버)
 npx tsx tools/record-demo.mts emulator-5580  # release APK + 배포 서버 전체 흐름 녹화·메모리 기록
 npx tsx tools/compose-demo.mts               # 녹화 → media/demo/떠날지도_시연.mp4
 npx tsx tools/compose-shorts.mts             # 녹화 → media/demo/떠날지도_숏폼.mp4 (세로)
 ```
 
-2026-11-10(M54) 기준 TypeScript 234개와 Kotlin 137개가 모두 통과하고, 모바일 E2E(`npm run e2e`)도 통과합니다. 전송 스키마를 바꾸면 `npm run schema`로 JSON Schema·fixture를 다시 만들고 TS·Kotlin 시험을 모두 돌립니다.
+2026-11-10(M54) 기준 TypeScript 234개와 Kotlin 137개가 모두 통과하고, 모바일 E2E(`npm run e2e`)도 통과합니다. 같은 날 서명 release APK 0.2.0과 배포 서버·모바일 웹의 실제 연동(`tools/live-pair.mts`, 15항목)과 내비 경로 안내까지 확인했습니다 — 화면은 `docs/evidence/live-pair/overview.png`. 전송 스키마를 바꾸면 `npm run schema`로 JSON Schema·fixture를 다시 만들고 TS·Kotlin 시험을 모두 돌립니다.
 
 ## 배포
 

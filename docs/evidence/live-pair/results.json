@@ -1,0 +1,67 @@
+{
+  "at": "2026-11-09T17:54:22.533Z",
+  "base": "https://tteonaljido.tteonaljido-worker.workers.dev",
+  "serial": "emulator-5580",
+  "results": [
+    {
+      "ok": true,
+      "what": "car app (release 0.2.0) and mobile web (deployed) are both open: car has no trips, phone has \"강릉 3박 4일\""
+    },
+    {
+      "ok": true,
+      "what": "car shows a one-time QR for the deployed server (https://tteonaljido.tteonaljido-worker.workers.dev/c#v1.AlxU…)"
+    },
+    {
+      "ok": true,
+      "what": "the QR link carries no trip, address or token"
+    },
+    {
+      "ok": true,
+      "what": "phone and car show the same confirm code (342 621)"
+    },
+    {
+      "ok": true,
+      "what": "the car review is labelled with the same code"
+    },
+    {
+      "ok": true,
+      "what": "the car received \"강릉 3박 4일\""
+    },
+    {
+      "ok": true,
+      "what": "phone says \"sent, not applied yet\" while the car reviews"
+    },
+    {
+      "ok": true,
+      "what": "phone shows \"applied\" only after the car imported"
+    },
+    {
+      "ok": true,
+      "what": "the car shows the trip detail"
+    },
+    {
+      "ok": true,
+      "what": "the day plan with lodging arrived intact"
+    },
+    {
+      "ok": true,
+      "what": "car shows a one-time QR for the deployed server (https://tteonaljido.tteonaljido-worker.workers.dev/c#v1.Unk7…)"
+    },
+    {
+      "ok": true,
+      "what": "the QR link carries no trip, address or token"
+    },
+    {
+      "ok": true,
+      "what": "a new QR is a new session"
+    },
+    {
+      "ok": true,
+      "what": "resending the same version adds nothing (trips named \"강릉 3박 4일\": 1)"
+    },
+    {
+      "ok": true,
+      "what": "a used QR is refused on the phone"
+    }
+  ]
+}
