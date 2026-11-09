@@ -168,7 +168,7 @@ const readQr = () => {
 };
 try {
   caption("휴대폰에서 짠 3박 4일 강릉 여행 · 예약 2곳, 숙소 3박 · 경포호는 '여유 있으면' 일정");
-  await click(page, '샘플 여행 추가');
+  await open(`${HOME}?sample=1`); // the 여행 tab has no sample menu; this address adds it once (M34)
   await page.getByText('강릉 3박 4일', { exact: true }).first().click();
   const day2 = page.locator('#day-2'); // the editor is one page: 여행 정보, then each day with a sticky header (M30)
   await day2.waitFor();

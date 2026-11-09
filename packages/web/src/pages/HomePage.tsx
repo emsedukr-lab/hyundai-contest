@@ -1,11 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Badge } from '@astryxdesign/core/Badge';
 import { Banner } from '@astryxdesign/core/Banner';
-import { Button } from '@astryxdesign/core/Button';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { sampleTrip, type Trip } from '@tteonaljido/shared';
 import { InstallHint } from '../components/InstallHint';
-import { MapIcon } from '../components/shell/icons';
+import { MapIcon, PlusIcon } from '../components/shell/icons';
 import { Row, Section } from '../components/shell/rows';
 import { TabScreen } from '../components/shell/Screens';
 import { TRIPS_CHANGED, sendLog, trips, type SendLogEntry } from '../lib/db';
@@ -15,11 +14,15 @@ import { navigate } from '../lib/router';
 import { defaultHome } from '../lib/settings';
 import { newDoc, nightsLabel, nowIso, unassignedVisits, type TripDoc } from '../lib/trips';
 
-/** 여행 tab: the trip list, one primary "create" action and a sample for a first look. Backup and import live in 전체. */
+/**
+ * 여행 tab: the trip list, and a floating + at the bottom right (above the tab bar) to create a trip. The sample trip has
+ * no menu; `/?sample=1` still adds it for demos and tests (the address is cleaned right after).
+ */
 export function HomePage() {
   const [docs, setDocs] = useState<TripDoc[] | null>(null);
   const [lastSends, setLastSends] = useState<Record<string, SendLogEntry>>({});
   const [message, setMessage] = useState<string | null>(null);
+  const sampleAsked = useRef(false);
 
   const reload = async () => {
     const [all, log] = await Promise.all([trips.all(), sendLog.recent(1000)]);
@@ -30,6 +33,12 @@ export function HomePage() {
     setLastSends(latest);
   };
   useEffect(() => {
+    // Demo/test entry: '/?sample=1' adds the sample once and drops the parameter.
+    if (!sampleAsked.current && new URLSearchParams(location.search).get('sample') === '1') {
+      sampleAsked.current = true;
+      history.replaceState(null, '', '/');
+      void addSample();
+    }
     void reload();
     // The editor saves on its way out (browser back included); reload when that write lands after this list.
     const onChanged = () => void reload();
@@ -52,16 +61,10 @@ export function HomePage() {
       <div className="tn-pad" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         <InstallHint />
         {message && <Banner status="info" title={message} isDismissable onDismiss={() => setMessage(null)} />}
-        <div style={{ display: 'flex', gap: 8 }}>
-          <div style={{ flex: '1 1 0', minWidth: 0 }}>
-            <Button label={t('trips.create')} variant="primary" size="lg" width="100%" onClick={() => navigate('/trips/new')} />
-          </div>
-          <Button label={t('common.addSample')} variant="secondary" size="lg" onClick={() => void addSample()} />
-        </div>
       </div>
       {docs !== null && docs.length === 0 ? (
         <div className="tn-pad" style={{ paddingTop: 32 }}>
-          <EmptyState title={t('common.noTrips')} description={t('home.empty.description')} />
+          <EmptyState title={t('common.noTrips')} description={t('home.empty.fab')} />
         </div>
       ) : (
         <Section title={t('home.myTrips')}>
@@ -95,6 +98,11 @@ export function HomePage() {
           </ul>
         </Section>
       )}
+      {/* room so the last trip can scroll clear of the floating + */}
+      <div style={{ height: 72 }} aria-hidden="true" />
+      <button type="button" className="tn-fab" onClick={() => navigate('/trips/new')} aria-label={t('trips.create')}>
+        <PlusIcon />
+      </button>
     </TabScreen>
   );
 }
