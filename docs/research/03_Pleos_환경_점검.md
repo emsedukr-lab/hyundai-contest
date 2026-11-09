@@ -24,6 +24,8 @@
 
 ## 2. 고칠 점
 
+> 2026-11-10 같은 날 1~5·8번을 반영해 서명 APK를 다시 만들었습니다(버전 0.2.0(2), sha256 `31f347be…`, 에뮬레이터 설치·실행·차량 E2E 16항목 통과, 앱 목록에 적응형 아이콘 표시 확인). 6·7번은 실차/폼팩터 시험과 마켓 등록 때 할 일입니다. 4절의 휴대폰 문구도 새 키로 고쳐 배포했습니다.
+
 | # | 내용 | 근거 | 영향 | 조치 |
 |---|---|---|---|---|
 | 1 | **주행가능거리 조회에 `CAR_DRIVE` 권한이 빠짐** | Vehicle 2.3.2 바이트코드: `Odometer.getRangeRemainingDistance`는 `@RequiresPermission("pleos.car.permission.CAR_DRIVE")`. 매니페스트는 `CAR_ENERGY`만 선언 | 실차에서 거리 조회가 `ERROR_SECURITY_PERMISSION`으로 실패 → 앱은 '알 수 없음'으로 처리해 EV '숙소까지 못 감 → 다음 정류장 급속' 판단이 나오지 않음(SOC 기준만 동작) | `CAR_DRIVE`(조회) 추가, 또는 AAOS 표준 `RANGE_REMAINING`으로 이전(Pleos '표준 우선' 원칙) |

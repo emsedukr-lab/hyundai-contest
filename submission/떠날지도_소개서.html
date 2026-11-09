@@ -219,7 +219,7 @@
   <div class="cards2">
     <div class="card"><h3>교차 검증</h3><p>휴대폰(TS)과 차량(Kotlin)이 같은 일정 데이터를 읽고 <b>같은 판정</b>을 내는지 fixture로 자동 비교합니다. 어느 한쪽만 바뀌면 시험이 실패합니다.</p></div>
     <div class="card"><h3>안전 우선</h3><p>주행 규제(CarUxRestrictions) 코드 경로를 구현해 주행 중 조작을 막습니다. 내비·차량 신호 조회는 경로를 바꾸지 않는 <b>읽기 전용</b> API만 사용.</p></div>
-    <div class="card"><h3>최소 권한</h3><p>차량 <b>제어 권한을 선언하지 않습니다</b>. 에너지 측정도 조회 전용(CAR_ENERGY)만 쓰고, 원시 신호값은 저장하지 않습니다.</p></div>
+    <div class="card"><h3>최소 권한</h3><p>차량 <b>제어 권한을 선언하지 않습니다</b>. 에너지 측정도 조회 전용(CAR_ENERGY·CAR_DRIVE)만 쓰고, 원시 신호값은 저장하지 않습니다.</p></div>
   </div>
 
   <footer>
@@ -241,7 +241,7 @@
 
   <div class="sec">기술 구조</div>
   <div class="arch">
-    <div class="acard"><h3>차량 앱</h3><p>Kotlin · Jetpack Compose (Android Automotive). Pleos Connect 2.1.5 디자인 토큰, NaviHelper 3.0.5, Vehicle SDK(조회 전용). 암호화 로컬 저장, 주·야간 지원. 권한은 INTERNET·NAVI_*·CAR_ENERGY만.</p></div>
+    <div class="acard"><h3>차량 앱</h3><p>Kotlin · Jetpack Compose (Android Automotive). Pleos Connect 2.1.5 디자인 토큰, NaviHelper 3.0.5, Vehicle SDK(조회 전용). 암호화 로컬 저장, 주·야간 지원. 권한은 INTERNET·NAVI_*·CAR_ENERGY·CAR_DRIVE(읽기)만.</p></div>
     <div class="acard"><h3>모바일 웹</h3><p>React 19 · Vite, Pleos 디자인 토큰. 설치 없이 QR로 열리고 여행은 기기 안에만 저장. 카카오 장소 검색·길찾기·지도. 지도앱 공유 수신(PWA)·드래그 편집. 한국어·영어.</p></div>
     <div class="acard"><h3>중계 서버</h3><p>Cloudflare Worker + Durable Object. 세션 하나를 원자적으로(5분·1회) 처리. P-256 ECDH · HKDF · AES-256-GCM 종단간 암호화. 카카오 키는 서버에만 두고 좌표만 전달(저장·기록 없음).</p></div>
   </div>

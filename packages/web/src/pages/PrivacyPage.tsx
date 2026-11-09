@@ -4,7 +4,7 @@ import { t } from '../lib/i18n';
 import { navigate } from '../lib/router';
 
 const ROWS: Array<[string, string]> = [
-  [t('privacy.phone.label'), t('privacy.phone.text')],
+  [t('privacy.phone.label'), t('privacy.phone.text2')],
   [t('privacy.qr.label'), t('privacy.qr.text')],
   [t('privacy.camera.label'), t('privacy.camera.text')],
   [t('privacy.relay.label'), t('privacy.relay.text')],
@@ -28,7 +28,7 @@ export function PrivacyPage() {
         ))}
       </ul>
       <p className="tn-note" style={{ marginTop: 16 }}>
-        {t('privacy.processors')}
+        {t('privacy.processors2')}
       </p>
     </PushScreen>
   );

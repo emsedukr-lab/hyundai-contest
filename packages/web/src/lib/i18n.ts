@@ -82,6 +82,7 @@ const ko = {
   'privacy.title': '개인정보 안내',
   'privacy.phone.label': '휴대폰',
   'privacy.phone.text': '여행·집 주소는 이 브라우저(IndexedDB)에만 저장돼요 · 계정 없음 · 브라우저 데이터를 지우면 함께 지워져요',
+  'privacy.phone.text2': '여행(IndexedDB)과 집 주소(localStorage)는 이 브라우저에만 저장돼요 · 계정 없음 · 브라우저 데이터를 지우면 함께 지워져요',
   'privacy.qr.label': 'QR코드',
   'privacy.qr.text': '여행·주소·비밀번호·토큰 없음 · 5분간 한 번 쓰는 연결 정보만 들어 있어요',
   'privacy.relay.label': '중계 서버',
@@ -96,6 +97,7 @@ const ko = {
   'privacy.ongoing.label': '계속 연결',
   'privacy.ongoing.text': '없어요 · QR 불러오기는 한 번뿐이고, 휴대폰과 차는 계속 연결되지 않아요',
   'privacy.processors': '처리 위탁: Cloudflare(중계 서버), 카카오(장소 검색) · 문의는 공모전 운영 채널로',
+  'privacy.processors2': '처리 위탁: Cloudflare(중계 서버), 카카오(장소 검색·지도), 카카오모빌리티(길찾기·도로 경로) · 문의는 공모전 운영 채널로',
 
   // pages/ConnectPage.tsx
   'connect.title': '모바일 여행 보내기',
@@ -188,6 +190,7 @@ const ko = {
   'connect.consent.places.detail': '이름·주소·좌표, 배정 안 된 장소 포함',
   'connect.consent.days': '일차별 순서와 시간',
   'connect.consent.days.detail': '방문 순서, 희망·고정 시각, 체류 시간, 변경 허용 여부, 입력한 이동시간',
+  'connect.consent.days.detail2': '방문 순서, 희망·고정 시각, 체류 시간, 변경 허용 여부, 카카오로 계산한 이동시간',
   'connect.consent.lodging': '숙소와 출발·귀가 설정',
   'connect.consent.lodging.detail': '박별 숙소, 첫날 출발 기준, 출발지와 마지막 귀가지',
   'connect.consent.notSent': '보내지 않는 정보',
@@ -815,6 +818,7 @@ const en: Record<Key, string> = {
   'privacy.title': 'Privacy',
   'privacy.phone.label': 'Phone',
   'privacy.phone.text': "Trips and home address live only in this browser (IndexedDB) · no account · clearing browser data deletes them",
+  'privacy.phone.text2': "Trips (IndexedDB) and the home address (localStorage) live only in this browser · no account · clearing browser data deletes them",
   'privacy.qr.label': 'QR code',
   'privacy.qr.text': "No trip, address, password or token · only connection details good for one use within 5 minutes",
   'privacy.relay.label': 'Relay server',
@@ -830,6 +834,7 @@ const en: Record<Key, string> = {
   'privacy.ongoing.label': 'Ongoing connection',
   'privacy.ongoing.text': "None · a QR import is one-time; phone and car don't stay linked",
   'privacy.processors': "Processors: Cloudflare (relay server), Kakao (place search) · questions via the contest channel",
+  'privacy.processors2': "Processors: Cloudflare (relay server), Kakao (place search, map), Kakao Mobility (directions, road lines) · questions via the contest channel",
 
   // pages/ConnectPage.tsx
   'connect.title': 'Send a trip to the car',
@@ -924,6 +929,7 @@ const en: Record<Key, string> = {
   'connect.consent.places.detail': 'Names, addresses and coordinates, including unassigned places',
   'connect.consent.days': 'Daily order and times',
   'connect.consent.days.detail': 'Visit order, preferred and fixed times, stay lengths, what may be changed, travel times you entered',
+  'connect.consent.days.detail2': 'Visit order, preferred and fixed times, stay lengths, what may be changed, travel times from Kakao',
   'connect.consent.lodging': 'Lodging, start and return',
   'connect.consent.lodging.detail': 'Lodging for each night, first-day start rule, starting point and final destination',
   'connect.consent.notSent': 'Never sent',

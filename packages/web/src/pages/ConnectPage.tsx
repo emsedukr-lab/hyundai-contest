@@ -413,7 +413,7 @@ export function ConnectPage() {
               <List hasDividers header={<CardListHeader>{t('connect.consent.sent')}</CardListHeader>}>
                 <ListItem label={t('connect.consent.basics')} description={`${doc.plan.name} · ${periodLabel(doc.plan.startDate, doc.plan.endDate)}`} />
                 <ListItem label={t('connect.consent.places', { n: doc.plan.places.length })} description={t('connect.consent.places.detail')} />
-                <ListItem label={t('connect.consent.days')} description={t('connect.consent.days.detail')} />
+                <ListItem label={t('connect.consent.days')} description={t('connect.consent.days.detail2')} />
                 <ListItem label={t('connect.consent.lodging')} description={t('connect.consent.lodging.detail')} />
                 <ListItem label={t('common.homeAddress')} description={includeHome && home ? t('common.included') : t('common.notIncluded')} />
               </List>

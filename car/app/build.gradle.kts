@@ -40,8 +40,8 @@ android {
         applicationId = "io.tteonaljido.car"
         minSdk = 28
         targetSdk = 34
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = 2 // Pleos: every review submission needs a new version
+        versionName = "0.2.0"
     }
     useLibrary("android.car", false)
     buildFeatures {
@@ -71,6 +71,9 @@ android {
                 storePassword = values.getProperty("password")
                 keyAlias = "tteonaljido"
                 keyPassword = values.getProperty("password")
+                // v3 too: Pleos ties minSdk 28 to signing-key rotation and lineage (APK Signature Scheme v3).
+                enableV2Signing = true
+                enableV3Signing = true
             }
         }
     }
@@ -108,7 +111,7 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("com.google.zxing:core:3.5.4")
     implementation("ai.pleos.playground:NaviHelper:3.0.5")
-    implementation("ai.pleos.playground:Vehicle:2.3.2") // read-only energy/fuel/range (CAR_ENERGY); phase-2 adapter, real-car verified
+    implementation("ai.pleos.playground:Vehicle:2.3.2") // read-only energy/fuel (CAR_ENERGY) and range (CAR_DRIVE); real-car check still pending
 
     testImplementation("junit:junit:4.13.2")
     testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
