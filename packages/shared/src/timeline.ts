@@ -54,13 +54,17 @@ export function departure(trip: Trip, dayIndex: number): number | null {
   return leg ? minutes(f.arriveTime) - leg.minutes : null;
 }
 
-/** Arrival = clock + leg; a visit starts after prep and not before its fixed time, which also restores the chain. */
+/**
+ * Arrival = clock + leg; a visit starts on arrival and not before its fixed time, which also restores the chain.
+ * Parking time (`prepMinutes`) is NOT counted (M42): it stays in the transfer for compatibility, and real parking time
+ * will later come from the car's own data (navigation ended → ignition off + belt released + doors locked).
+ */
 function walk(start: number | null, items: [Visit, number | null][]): StopTime[] {
   let clock = start;
   return items.map(([v, leg]) => {
     const arrive = clock !== null && leg !== null ? clock + leg : null;
     const fixed = v.fixed ? minutes(v.fixed.time) : null;
-    const begin = arrive !== null ? Math.max(arrive + v.prepMinutes, fixed ?? 0) : fixed;
+    const begin = arrive !== null ? Math.max(arrive, fixed ?? 0) : fixed;
     const end = begin !== null ? begin + v.stayMinutes : null;
     clock = end;
     return { visitId: v.visitId, arrive, start: begin, end };
@@ -127,7 +131,7 @@ export function dayIssues(trip: Trip, dayIndex: number): DayIssue[] {
     const v = visitOf(trip, st.visitId);
     const name = placeName(trip, v.placeRef);
     const fixed = v.fixed ? minutes(v.fixed.time) : null;
-    if (fixed !== null && st.arrive !== null && st.arrive + v.prepMinutes > fixed) add('CONFLICT', 'LATE_FOR_FIXED', [n, name, v.fixed!.time, hhmm(st.arrive + v.prepMinutes)], v.visitId);
+    if (fixed !== null && st.arrive !== null && st.arrive > fixed) add('CONFLICT', 'LATE_FOR_FIXED', [n, name, v.fixed!.time, hhmm(st.arrive)], v.visitId); // no parking time (M42)
     if (fixed !== null && st.arrive === null) add('UNCERTAIN', 'FIXED_UNCHECKED', [n, name, v.fixed!.time], v.visitId);
     const h = hoursIssue(trip, v.placeRef, date, st);
     if (h) add('CONFLICT', h.code, [n, name, ...h.extra], v.visitId);

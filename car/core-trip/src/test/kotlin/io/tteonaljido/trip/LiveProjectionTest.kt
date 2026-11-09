@@ -20,7 +20,10 @@ class LiveProjectionTest {
     private val lakeOptional = withVisit(sample, "v4") { it.copy(importance = Importance.OPTIONAL) }
     private val here = NaviBinding("", "", "", 374_127_212, 1_270_946_810, "", "수정구 시흥동")
 
-    /* ---------- punctuality against the 13:00 reservation (day 2, navigation says 134 min to 경포호) ---------- */
+    /*
+     * ---------- punctuality against the 13:00 reservation (day 2, navigation says 134 min to 경포호) ----------
+     * No parking time is counted (M42): 경포호 90 min + 10 min drive, so the reservation's slack is 13:00 − (now + 234).
+     */
 
     @Test fun onTimeWithRoomToSpare() {
         val p = LiveProjection.project(lakeOptional, CarOverlay(), 2, m("08:00"), naviRemaining = 134)
@@ -29,27 +32,28 @@ class LiveProjectionTest {
         assertEquals(Basis.NAVI_LIVE, p.basis)
         assertEquals(39, p.vsPlan) // the plan arrives 09:35
         assertEquals("v5", p.fixed!!.visitId)
-        assertEquals(46, p.fixed!!.slack)
+        assertEquals(m("11:54"), p.fixed!!.ready) // arrival at the reservation, no parking time
+        assertEquals(66, p.fixed!!.slack)
         assertEquals(Punctuality.ON_TIME, p.status)
         assertNull(p.skip)
     }
 
     @Test fun tightWithinTenMinutes() {
-        val p = LiveProjection.project(lakeOptional, CarOverlay(), 2, m("08:40"), naviRemaining = 134)
+        val p = LiveProjection.project(lakeOptional, CarOverlay(), 2, m("09:00"), naviRemaining = 134)
         assertEquals(6, p.fixed!!.slack)
         assertEquals(Punctuality.TIGHT, p.status)
     }
 
     @Test fun lateSuggestsSkippingTheOptionalStop() {
-        val p = LiveProjection.project(lakeOptional, CarOverlay(), 2, m("09:00"), naviRemaining = 134)
+        val p = LiveProjection.project(lakeOptional, CarOverlay(), 2, m("09:20"), naviRemaining = 134)
         assertEquals(-14, p.fixed!!.slack)
         assertEquals(Punctuality.LATE, p.status)
-        assertEquals(SkipSuggestion("v4", 100), p.skip) // prep 10 + stay 90
+        assertEquals(SkipSuggestion("v4", 90), p.skip) // its planned stay only (no parking time, M42)
     }
 
     @Test fun mustAndNormalStopsAreNeverSuggested() {
         val lakeNormal = withVisit(sample, "v4") { it.copy(importance = Importance.NORMAL) }
-        val p = LiveProjection.project(lakeNormal, CarOverlay(), 2, m("09:00"), naviRemaining = 134)
+        val p = LiveProjection.project(lakeNormal, CarOverlay(), 2, m("09:20"), naviRemaining = 134)
         assertEquals(Punctuality.LATE, p.status)
         assertNull(p.skip)
     }
@@ -67,7 +71,7 @@ class LiveProjectionTest {
         assertEquals("v5", p.nextVisitId)
         assertEquals(m("11:25"), p.arriveNext)
         assertFalse(p.approximate)
-        assertEquals(85, p.fixed!!.slack)
+        assertEquals(95, p.fixed!!.slack)
         assertEquals(Basis.PLAN, p.basis)
     }
 
@@ -92,22 +96,27 @@ class LiveProjectionTest {
         assertEquals(Punctuality.LATE, p.status)
     }
 
-    @Test fun measuredParkingBufferAndStayTendencyPushTheScheduleLater() {
+    /** M42: measured visit records are groundwork only — no parking buffer and no stay tendency reach the projection. */
+    @Test fun visitRecordsDoNotChangeTheProjection() {
         fun rec(pid: String, parkMin: Int, actualStay: Int) = VisitRecord("t", 2, pid, PlaceCategory.FOOD, isWeekend = false, tArrive = 0, tParked = parkMin * 60_000L, tDepart = (parkMin + actualStay) * 60_000L)
         // Three FOOD visits parked ~8 min and stayed 1.5× their plan (donghwa 60, mandong 30, umji 60).
         val recs = listOf(rec("donghwa", 8, 90), rec("mandong", 8, 45), rec("umji", 8, 90))
         val plain = LiveProjection.project(sample, CarOverlay(visited = setOf("v4")), 2, m("11:15"))
         val measured = LiveProjection.project(sample, CarOverlay(visited = setOf("v4"), visitRecords = recs), 2, m("11:15"))
-        assertEquals(85, plain.fixed!!.slack) // unchanged baseline (no records)
-        assertTrue("buffer before the fixed stop eats into the slack", measured.fixed!!.slack!! < plain.fixed!!.slack!!)
-        assertTrue("buffer + 1.5× stay push the day's end out", measured.endExpected!! > plain.endExpected!!)
+        assertEquals(95, plain.fixed!!.slack)
+        assertEquals(plain, measured)
+        // Late case too: same slack, and the skip saves only the planned stay.
+        val late = LiveProjection.project(lakeOptional, CarOverlay(), 2, m("09:20"), naviRemaining = 134)
+        val lateMeasured = LiveProjection.project(lakeOptional, CarOverlay(visitRecords = recs), 2, m("09:20"), naviRemaining = 134)
+        assertEquals(late, lateMeasured)
+        assertEquals(SkipSuggestion("v4", 90), lateMeasured.skip)
     }
 
     @Test fun noVisitRecordsLeavesTheProjectionUnchanged() {
-        // Empty records → buffer 0, stay ×1.0: identical to before the feature (guards the existing behavior).
+        // No records → the plain projection (records are never applied, M42).
         val p = LiveProjection.project(lakeOptional, CarOverlay(), 2, m("08:00"), naviRemaining = 134)
         assertEquals(m("10:14"), p.arriveNext)
-        assertEquals(46, p.fixed!!.slack)
+        assertEquals(66, p.fixed!!.slack)
     }
 
     /* ---------- leg sources ---------- */
@@ -199,11 +208,11 @@ class DeadlineAndReconcileTest {
     private fun withDay(t: Trip, n: Int, f: (Day) -> Day) = t.copy(days = t.days.map { if (it.dayIndex == n) f(it) else it })
 
     @Test fun returnByCanBindEvenWhenTheFixedStopIsFine() {
-        val t = withDay(sample, 2) { it.copy(endBy = "15:00") } // the day ends ~16:30, the 13:00 reservation is fine
+        val t = withDay(sample, 2) { it.copy(endBy = "15:00") } // the day ends 16:10, the 13:00 reservation is fine
         val p = LiveProjection.project(t, CarOverlay(), 2, m("09:30"))
         assertEquals(DeadlineKind.END_BY, p.deadlineKind)
         assertEquals(Punctuality.LATE, p.status)
-        assertEquals(-90, p.deadlineSlack)
+        assertEquals(-70, p.deadlineSlack)
         // Skipping 경포호 (before the 13:00 reservation) would not help the return time: the reservation re-anchors the
         // day. The stops after it are not optional, so nothing is suggested.
         assertNull(p.skip)
@@ -212,16 +221,17 @@ class DeadlineAndReconcileTest {
     /** Late for the return time with a fixed stop in between: only an optional stop after the fixed one saves time. */
     @Test fun lateForTheReturnTimeSuggestsAStopAfterTheReservation() {
         val v6Optional = sample.copy(visits = sample.visits.map { if (it.visitId == "v6") it.copy(importance = Importance.OPTIONAL, stayMinutes = 50) else if (it.visitId == "v4") it.copy(importance = Importance.OPTIONAL) else it })
-        val t = withDay(v6Optional, 2) { it.copy(endBy = "15:50") } // v4 (optional) → v5 fixed 13:00 → v6 (optional, 10+50) → v7; the day ends 16:50
+        val t = withDay(v6Optional, 2) { it.copy(endBy = "15:50") } // v4 (optional) → v5 fixed 13:00 → v6 (optional, stay 50) → v7; the day ends 16:30
         val p = LiveProjection.project(t, CarOverlay(), 2, m("08:00"))
         assertEquals(DeadlineKind.END_BY, p.deadlineKind)
-        assertEquals(-60, p.deadlineSlack)
-        assertEquals(175, p.fixed!!.slack)
-        assertEquals(SkipSuggestion("v6", 60), p.skip)
-        assertEquals(DeferSuggestion("v6", 60), p.defer)
+        assertEquals(-40, p.deadlineSlack)
+        assertEquals(195, p.fixed!!.slack)
+        assertEquals(SkipSuggestion("v6", 50), p.skip)
+        assertEquals(DeferSuggestion("v6", 50), p.defer)
         // Skipping v4 instead saves nothing: the car would just wait longer for 13:00.
-        assertEquals(-60, LiveProjection.project(t, CarOverlay(skipped = setOf("v4")), 2, m("08:00")).deadlineSlack)
-        assertEquals(0, LiveProjection.project(t, CarOverlay(skipped = setOf("v6")), 2, m("08:00")).deadlineSlack)
+        assertEquals(-40, LiveProjection.project(t, CarOverlay(skipped = setOf("v4")), 2, m("08:00")).deadlineSlack)
+        // Skipping v6 frees its 50-min stay; the bridged leg through it (15 + 10) is the plan's upper bound.
+        assertEquals(10, LiveProjection.project(t, CarOverlay(skipped = setOf("v6")), 2, m("08:00")).deadlineSlack)
     }
 
     private fun at(local: String) = java.time.LocalDateTime.parse(local).atZone(java.time.ZoneId.of("Asia/Seoul")).toInstant().toEpochMilli()

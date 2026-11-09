@@ -12,9 +12,16 @@ describe('timetable (same rules as the car)', () => {
   it('waits for a fixed reservation', () => {
     const t = Object.fromEntries(timeline(sample, 2).map((s) => [s.visitId, s]));
     expect(t.v4.arrive).toBe(minutes('09:35'));
-    expect(t.v5.arrive).toBe(minutes('11:25'));
+    expect(t.v5.arrive).toBe(minutes('11:15'));
     expect(t.v5.start).toBe(minutes('13:00'));
-    expect(dayEnd(sample, 2)).toBe(minutes('16:30'));
+    expect(dayEnd(sample, 2)).toBe(minutes('16:10'));
+  });
+
+  it('does not count parking time: a visit starts on arrival even when prepMinutes is set (M42)', () => {
+    const withPrep: Trip = { ...sample, visits: sample.visits.map((v) => ({ ...v, prepMinutes: 30 })) };
+    const t = Object.fromEntries(timeline(withPrep, 2).map((s) => [s.visitId, s]));
+    expect(t.v4.start).toBe(t.v4.arrive);
+    expect(dayEnd(withPrep, 2)).toBe(dayEnd(sample, 2));
   });
 
   it('reports unknown legs instead of guessing', () => {
@@ -24,13 +31,13 @@ describe('timetable (same rules as the car)', () => {
   });
 
   it('flags being late for a fixed time with the expected arrival', () => {
-    const late = withDay(sample, 4, { departTime: '09:45' });
+    const late = withDay(sample, 4, { departTime: '09:55' });
     const issue = dayIssues(late, 4).find((i) => i.code === 'LATE_FOR_FIXED')!;
-    expect(issue).toMatchObject({ severity: 'CONFLICT', visitId: 'v10', args: ['4', '정동심곡바다부채길', '10:00', '10:15'] });
+    expect(issue).toMatchObject({ severity: 'CONFLICT', visitId: 'v10', args: ['4', '정동심곡바다부채길', '10:00', '10:05'] });
   });
 
   it('checks the return-by time', () => {
-    expect(dayIssues(withDay(sample, 2, { endBy: '16:00' }), 2).at(-1)).toMatchObject({ code: 'PAST_END_BY', args: ['2', '16:30', '16:00'] });
+    expect(dayIssues(withDay(sample, 2, { endBy: '16:00' }), 2).at(-1)).toMatchObject({ code: 'PAST_END_BY', args: ['2', '16:10', '16:00'] });
     expect(dayIssues(withDay(sample, 2, { endBy: '17:00' }), 2)).toEqual([]);
   });
 

@@ -284,9 +284,6 @@
     <string name="find_fuel">Find a gas station</string>
     <string name="demo_energy_ev">EV 18%% sample</string>
     <string name="demo_energy_ice">Fuel 25%% sample</string>
-    <string name="measured_parking">Car signal: park &amp; exit +%1$s min · stay %2$s min</string>
-    <string name="measured_dropoff">Car signal: drop-off only (0 min stay)</string>
-    <string name="demo_seed_visit">Sample measurement</string>
     <string name="presend_demo">Pre-send (demo)</string>
     <string name="presend_demo_title">Pre-send (demo)</string>
     <string name="presend_demo_body">Demonstrates pushing a day\'s pre-planned route to the car navigation. Account-based "auto send on next start" isn\'t built (no infrastructure); the car\'s "Send today\'s route" is the real bundle send.</string>

@@ -137,7 +137,7 @@
     </div></div>
     <div class="feat"><div class="n">5</div><div>
       <div class="t">여행 중 시간 지킴이</div>
-      <div class="d">내비 남은 시간으로 하루를 다시 계산해 <b>"예약까지 여유 46분"</b>처럼 알리고, 늦으면 덜 중요한 곳을 건너뛰거나 미루자고 제안합니다. 도착하면 자동 체크.</div>
+      <div class="d">내비 남은 시간으로 하루를 다시 계산해 <b>"예약까지 여유 66분"</b>처럼 알리고, 늦으면 덜 중요한 곳을 건너뛰거나 미루자고 제안합니다. 도착하면 자동 체크.</div>
     </div></div>
     <div class="feat"><div class="n">6</div><div>
       <div class="t">주행 중 단순화 화면</div>
@@ -199,7 +199,7 @@
   <div class="cards2">
     <div class="card"><h3>교차 검증</h3><p>휴대폰(TS)과 차량(Kotlin)이 같은 일정 데이터를 읽고 <b>같은 판정</b>을 내는지 fixture로 자동 비교합니다. 어느 한쪽만 바뀌면 시험이 실패합니다.</p></div>
     <div class="card"><h3>안전 우선</h3><p>주행 규제(CarUxRestrictions) 코드 경로를 구현해 주행 중 조작을 막습니다. 내비·차량 신호 조회는 경로를 바꾸지 않는 <b>읽기 전용</b> API만 사용.</p></div>
-    <div class="card"><h3>최소 권한</h3><p>차량 <b>제어 권한을 선언하지 않습니다</b>. 주차·체류·에너지 측정도 조회 전용(CAR_ENERGY 등)만 쓰고, 원시 신호값은 저장하지 않습니다.</p></div>
+    <div class="card"><h3>최소 권한</h3><p>차량 <b>제어 권한을 선언하지 않습니다</b>. 에너지 측정도 조회 전용(CAR_ENERGY)만 쓰고, 원시 신호값은 저장하지 않습니다.</p></div>
   </div>
 
   <footer>
@@ -220,7 +220,7 @@
   <div class="sub">여행 중 — 운전 맥락에서 조정·측정</div>
   <div class="xgrid">
     <div class="xcard"><h4>건너뛰기 · 미루기</h4><p>늦을 것 같으면 선택 일정을 건너뛰거나 <b>오늘 나중으로 / 다른 날로</b> 미룹니다. 모두 차량 오버레이에만 기록돼 <b>계획은 바뀌지 않고</b> 되돌릴 수 있습니다.</p></div>
-    <div class="xcard"><h4>주차·하차/체류 측정 <span class="tag">차량 신호</span></h4><p>차량 신호로 목적지 도착 후 <b>실제 주차·하차 시간과 체류 시간</b>을 재, 다음 일정 여유 계산에 반영합니다. 휴대폰 내비는 알 수 없는 값입니다.</p></div>
+    <div class="xcard"><h4>실제 주차 시간 추정 <span class="tag">향후 계획</span></h4><p>지금은 주차 시간을 계산에 넣지 않습니다. 앞으로 <b>내비 안내 종료 뒤 시동 종료·안전벨트 해제·문 잠금</b>이 모두 이뤄진 시각을 실제 도착으로 보고, 백화점·대형마트·관광지 등 장소 종류별 주차 시간을 추정해 내비 도착 예상에 반영합니다. 휴대폰 내비는 알 수 없는 값입니다.</p></div>
     <div class="xcard"><h4>EV·연료 충전/주유 추천 <span class="tag">차량 신호</span></h4><p>EV는 숙소까지 되면 <b>야간 완속</b>, 아니면 <b>다음 정류장 급속</b>(주행가능거리 vs 남은 거리). 내연기관은 잔량 20~30%에 주유 권장 — 유가·충전소는 순정 내비가 표시합니다.</p></div>
     <div class="xcard"><h4>내비 묶음 전송</h4><p>다음 목적지 하나가 아니라 <b>그날 경로를 한 번에</b> 내비로 보냅니다(최대 3스톱). 주차 중 명시적 탭에서만 동작합니다.</p></div>
   </div>
@@ -233,7 +233,7 @@
     <div class="xcard"><h4>친구에게 공유</h4><p>여행을 <b>암호화 파일</b>로 친구에게 보냅니다. 중계 서버를 거치지 않고(링크 없음), <b>집 주소는 빼고</b> 6자리 패스코드로 엽니다.</p></div>
   </div>
 
-  <p class="note" style="margin-top:5mm;">모든 조정·추천은 <b>'제안·표시'</b>이며 사용자의 계획을 자동으로 바꾸지 않습니다. 차량 신호(주차·체류·에너지)는 <b>조회 전용 권한</b>으로 읽어 추천에만 쓰고 저장·전송하지 않습니다.</p>
+  <p class="note" style="margin-top:5mm;">모든 조정·추천은 <b>'제안·표시'</b>이며 사용자의 계획을 자동으로 바꾸지 않습니다. 차량 신호(에너지)는 <b>조회 전용 권한</b>으로 읽어 추천에만 쓰고 저장·전송하지 않습니다. 주차 시간은 지금 계산에 넣지 않습니다(향후 차량 신호로 추정).</p>
 
   <footer>
     <span>떠날지도 · 현대자동차그룹 차량용 앱 공모전 출품작</span>
@@ -258,10 +258,10 @@
       <tr><td class="m">M3–M5</td><td>모바일 웹(편집기·기기 내 저장), 차량 앱(재검증·QR·암호화 저장·주행 잠금), 내비 연동</td><td><span class="st done">완료</span></td><td>단위 + E2E, 실제 경로 안내</td></tr>
       <tr><td class="m">M8</td><td>여행 중 시간 지킴이·자동 도착·이동시간 예상·배터리·주행 화면</td><td><span class="st done">완료</span></td><td>시각표·교차 검증</td></tr>
       <tr><td class="m">M9</td><td>코드 리뷰 후 안정화 — 충돌·유실·규칙 위반 수정, 실시간 시각표·'여기서 출발'·입력 보강</td><td><span class="st done">완료</span></td><td>단위·통합 전체 통과</td></tr>
-      <tr><td class="m">M10</td><td>차량 신호 기반 주차·체류 측정 → 시각표 반영 (1단계 코어)</td><td><span class="st done">1단계 완료</span></td><td>전용 시험·교차 검증 불변</td></tr>
+      <tr><td class="m">M10</td><td>차량 신호 기반 주차·체류 측정 뼈대 (M42에서 화면·계산 제외, 향후 실제 주차 시간 추정의 출발점)</td><td><span class="st done">뼈대 보관</span></td><td>전용 시험</td></tr>
       <tr><td class="m">M11</td><td>미루기·지도앱 공유 수집·내비 묶음 전송·친구 공유(암호화 파일)</td><td><span class="st done">완료</span></td><td>단위·배포 E2E</td></tr>
       <tr><td class="m">M12</td><td>다른 날로 미루기·드래그 재정렬·경로 미리보기(SVG)·공유 수집 보정</td><td><span class="st done">완료</span></td><td>단위·배포 E2E</td></tr>
-      <tr><td class="m">M13</td><td>재전송 병합 보강·주차/체류 측정 배지(차량 신호 가시화)</td><td><span class="st done">완료</span></td><td>단위·에뮬레이터 확인</td></tr>
+      <tr><td class="m">M13</td><td>재전송 병합 보강 (주차/체류 측정 배지는 M42에서 삭제)</td><td><span class="st done">완료</span></td><td>단위·에뮬레이터 확인</td></tr>
       <tr><td class="m">M14</td><td>EV·연료 충전/주유 동선 추천 + 실 Vehicle SDK 어댑터(CAR_ENERGY 조회 전용)</td><td><span class="st done">완료</span></td><td>단위·실 SDK 컴파일</td></tr>
       <tr><td class="m">M6</td><td>문서 6종·README·배포·서명 APK·기획서</td><td><span class="st prog">진행 중</span></td><td>—</td></tr>
       <tr><td class="m">M7</td><td>실제 폰 QR 인식·실차 검증·성능·PT 리허설</td><td><span class="st plan">예정</span></td><td>11/16 – 12/2</td></tr>
@@ -282,7 +282,7 @@
       <div class="sec">실제 동작 vs 시연</div>
       <ul class="tight">
         <li><b>실제 동작:</b> QR·세션·종단간 암호화·차량 재검증·내비 경로 안내·묶음 전송. 배포 서버 + 서명 APK로 전체 흐름 E2E 통과.</li>
-        <li><b>실차 범위:</b> 실제 폰 카메라 스캔, 주행 규제·차량 신호(주차·체류·EV/연료)는 에뮬레이터가 주입 불가 → 데모로 화면 시연, 실차/userdebug에서 실검증.</li>
+        <li><b>실차 범위:</b> 실제 폰 카메라 스캔, 주행 규제·차량 신호(EV/연료)는 에뮬레이터가 주입 불가 → 데모로 화면 시연, 실차/userdebug에서 실검증.</li>
       </ul>
     </div>
     <div>
@@ -291,7 +291,8 @@
         <li>실제 폰(iPhone·Android)으로 QR 스캔 → 전체 흐름 시험</li>
         <li>새 기능 반영해 시연 영상·숏폼 재녹화</li>
         <li>팀명 확정 → APK 이름 변경, 접수양식 01·03·04 직접 작성</li>
-        <li>실차에서 차량 신호(주차·체류·에너지) 실검증</li>
+        <li>실차에서 차량 신호(에너지) 실검증</li>
+        <li>실제 주차 시간 추정: 내비 안내 종료 → 시동 종료·안전벨트 해제·문 잠금으로 실제 도착, 장소 종류별 주차 시간을 내비에 반영</li>
       </ul>
     </div>
   </div>

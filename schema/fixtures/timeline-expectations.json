@@ -43,29 +43,29 @@
         {
           "visitId": "v4",
           "arrive": 575,
-          "start": 585,
-          "end": 675
+          "start": 575,
+          "end": 665
         },
         {
           "visitId": "v5",
-          "arrive": 685,
+          "arrive": 675,
           "start": 780,
           "end": 840
         },
         {
           "visitId": "v6",
           "arrive": 855,
-          "start": 865,
-          "end": 895
+          "start": 855,
+          "end": 885
         },
         {
           "visitId": "v7",
-          "arrive": 905,
-          "start": 915,
-          "end": 975
+          "arrive": 895,
+          "start": 895,
+          "end": 955
         }
       ],
-      "dayEnd": 990,
+      "dayEnd": 970,
       "issues": []
     },
     {
@@ -75,17 +75,17 @@
         {
           "visitId": "v8",
           "arrive": 650,
-          "start": 660,
-          "end": 720
+          "start": 650,
+          "end": 710
         },
         {
           "visitId": "v9",
-          "arrive": 740,
-          "start": 750,
-          "end": 840
+          "arrive": 730,
+          "start": 730,
+          "end": 820
         }
       ],
-      "dayEnd": 875,
+      "dayEnd": 855,
       "issues": []
     },
     {
@@ -157,29 +157,29 @@
         {
           "visitId": "v4",
           "arrive": 575,
-          "start": 585,
-          "end": 675
+          "start": 575,
+          "end": 665
         },
         {
           "visitId": "v5",
-          "arrive": 685,
+          "arrive": 675,
           "start": 780,
           "end": 840
         },
         {
           "visitId": "v6",
           "arrive": 855,
-          "start": 865,
-          "end": 895
+          "start": 855,
+          "end": 885
         },
         {
           "visitId": "v7",
-          "arrive": 905,
-          "start": 915,
-          "end": 975
+          "arrive": 895,
+          "start": 895,
+          "end": 955
         }
       ],
-      "dayEnd": 990,
+      "dayEnd": 970,
       "issues": []
     },
     {
@@ -189,28 +189,28 @@
         {
           "visitId": "v8",
           "arrive": 650,
-          "start": 660,
-          "end": 720
+          "start": 650,
+          "end": 710
         },
         {
           "visitId": "v9",
-          "arrive": 740,
-          "start": 750,
-          "end": 840
+          "arrive": 730,
+          "start": 730,
+          "end": 820
         }
       ],
-      "dayEnd": 875,
+      "dayEnd": 855,
       "issues": []
     },
     {
       "dayIndex": 4,
-      "departure": 585,
+      "departure": 595,
       "stops": [
         {
           "visitId": "v10",
-          "arrive": 595,
-          "start": 615,
-          "end": 795
+          "arrive": 605,
+          "start": 605,
+          "end": 785
         }
       ],
       "dayEnd": null,
@@ -232,7 +232,7 @@
             "4",
             "정동심곡바다부채길",
             "10:00",
-            "10:15"
+            "10:05"
           ]
         }
       ]
@@ -246,23 +246,23 @@
         {
           "visitId": "v1",
           "arrive": 30,
-          "start": 40,
-          "end": 100
+          "start": 30,
+          "end": 90
         },
         {
           "visitId": "v2",
-          "arrive": 115,
-          "start": 125,
-          "end": 200
+          "arrive": 105,
+          "start": 105,
+          "end": 180
         },
         {
           "visitId": "v3",
-          "arrive": 210,
-          "start": 220,
-          "end": 280
+          "arrive": 190,
+          "start": 190,
+          "end": 250
         }
       ],
-      "dayEnd": 300,
+      "dayEnd": 270,
       "issues": [
         {
           "severity": "CONFLICT",
@@ -279,29 +279,29 @@
         {
           "visitId": "v4",
           "arrive": 575,
-          "start": 585,
-          "end": 675
+          "start": 575,
+          "end": 665
         },
         {
           "visitId": "v5",
-          "arrive": 685,
+          "arrive": 675,
           "start": 780,
           "end": 840
         },
         {
           "visitId": "v6",
           "arrive": 855,
-          "start": 865,
-          "end": 895
+          "start": 855,
+          "end": 885
         },
         {
           "visitId": "v7",
-          "arrive": 905,
-          "start": 915,
-          "end": 975
+          "arrive": 895,
+          "start": 895,
+          "end": 955
         }
       ],
-      "dayEnd": 990,
+      "dayEnd": 970,
       "issues": []
     },
     {
@@ -311,17 +311,17 @@
         {
           "visitId": "v8",
           "arrive": 650,
-          "start": 660,
-          "end": 720
+          "start": 650,
+          "end": 710
         },
         {
           "visitId": "v9",
-          "arrive": 740,
-          "start": 750,
-          "end": 840
+          "arrive": 730,
+          "start": 730,
+          "end": 820
         }
       ],
-      "dayEnd": 875,
+      "dayEnd": 855,
       "issues": []
     },
     {
@@ -393,29 +393,29 @@
         {
           "visitId": "v4",
           "arrive": 575,
-          "start": 585,
-          "end": 675
+          "start": 575,
+          "end": 665
         },
         {
           "visitId": "v5",
-          "arrive": 685,
+          "arrive": 675,
           "start": 780,
           "end": 840
         },
         {
           "visitId": "v6",
           "arrive": 855,
-          "start": 865,
-          "end": 895
+          "start": 855,
+          "end": 885
         },
         {
           "visitId": "v7",
-          "arrive": 905,
-          "start": 915,
-          "end": 975
+          "arrive": 895,
+          "start": 895,
+          "end": 955
         }
       ],
-      "dayEnd": 990,
+      "dayEnd": 970,
       "issues": [
         {
           "severity": "CONFLICT",
@@ -424,8 +424,8 @@
           "args": [
             "2",
             "경포호",
-            "09:45",
-            "11:15"
+            "09:35",
+            "11:05"
           ]
         },
         {
@@ -455,17 +455,17 @@
         {
           "visitId": "v8",
           "arrive": 650,
-          "start": 660,
-          "end": 720
+          "start": 650,
+          "end": 710
         },
         {
           "visitId": "v9",
-          "arrive": 740,
-          "start": 750,
-          "end": 840
+          "arrive": 730,
+          "start": 730,
+          "end": 820
         }
       ],
-      "dayEnd": 875,
+      "dayEnd": 855,
       "issues": []
     },
     {
@@ -537,29 +537,29 @@
         {
           "visitId": "v4",
           "arrive": 575,
-          "start": 585,
-          "end": 675
+          "start": 575,
+          "end": 665
         },
         {
           "visitId": "v5",
-          "arrive": 685,
+          "arrive": 675,
           "start": 780,
           "end": 840
         },
         {
           "visitId": "v6",
           "arrive": 855,
-          "start": 865,
-          "end": 895
+          "start": 855,
+          "end": 885
         },
         {
           "visitId": "v7",
-          "arrive": 905,
-          "start": 915,
-          "end": 975
+          "arrive": 895,
+          "start": 895,
+          "end": 955
         }
       ],
-      "dayEnd": 990,
+      "dayEnd": 970,
       "issues": [
         {
           "severity": "CONFLICT",
@@ -567,7 +567,7 @@
           "dayIndex": 2,
           "args": [
             "2",
-            "16:30",
+            "16:10",
             "16:00"
           ]
         }
@@ -580,17 +580,17 @@
         {
           "visitId": "v8",
           "arrive": 1370,
-          "start": 1380,
-          "end": 1440
+          "start": 1370,
+          "end": 1430
         },
         {
           "visitId": "v9",
-          "arrive": 1460,
-          "start": 1470,
-          "end": 1560
+          "arrive": 1450,
+          "start": 1450,
+          "end": 1540
         }
       ],
-      "dayEnd": 1595,
+      "dayEnd": 1575,
       "issues": []
     },
     {
@@ -674,8 +674,8 @@
         {
           "visitId": "v6",
           "arrive": 855,
-          "start": 865,
-          "end": 895
+          "start": 855,
+          "end": 885
         },
         {
           "visitId": "v7",
@@ -714,17 +714,17 @@
         {
           "visitId": "v8",
           "arrive": 650,
-          "start": 660,
-          "end": 720
+          "start": 650,
+          "end": 710
         },
         {
           "visitId": "v9",
-          "arrive": 740,
-          "start": 750,
-          "end": 840
+          "arrive": 730,
+          "start": 730,
+          "end": 820
         }
       ],
-      "dayEnd": 875,
+      "dayEnd": 855,
       "issues": []
     },
     {

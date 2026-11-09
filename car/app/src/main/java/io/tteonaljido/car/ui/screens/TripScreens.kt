@@ -295,14 +295,6 @@ private fun DayPlan(t: LocalTrip, day: Int, live: LiveView?) {
                     Pleos.type.bodySmall, secondary, maxLines = 1,
                 )
             }
-            // Measured parking/stay from the car's own signals (M10) — what a phone navigation can't know.
-            t.overlay.visitRecords.firstOrNull { it.placeId == v.placeRef && it.dayIndex == day && it.confirmed }?.let { rec ->
-                StatusLine(
-                    if (io.tteonaljido.trip.VisitFlag.DROP_OFF in rec.flags) stringResource(R.string.measured_dropoff)
-                    else stringResource(R.string.measured_parking, (rec.parkingMinutes ?: 0).toString(), (rec.stayMinutes ?: 0).toString()),
-                    Tone.INFO,
-                )
-            }
             legLine(k + 1)
         }
         val last = day == t.plan.days.size
@@ -474,7 +466,6 @@ fun SettingsScreen(
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                         PleosButton(stringResource(R.string.presend_demo), { presend = true }, type = ButtonType.SECONDARY, tag = "presend")
-                        PleosButton(stringResource(R.string.demo_seed_visit), vm::seedDemoVisitRecord, type = ButtonType.SECONDARY, tag = "seedVisit")
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                         PleosButton(stringResource(R.string.demo_energy_ev), { vm.seedDemoEnergy(io.tteonaljido.trip.VehicleKind.EV, 18, 250) }, type = ButtonType.SECONDARY, tag = "seedEvEnergy")

@@ -29,14 +29,36 @@ class TripRulesTest {
     @Test fun timelineWaitsForFixedTimes() {
         val t = TripValidator.timeline(sample, 2).associateBy { it.visitId }
         assertEquals(TripValidator.minutes("09:35"), t.getValue("v4").arrive)
-        assertEquals(TripValidator.minutes("13:00"), t.getValue("v5").start) // arrives 11:35, waits for the 13:00 reservation
+        assertEquals(TripValidator.minutes("11:15"), t.getValue("v5").arrive)
+        assertEquals(TripValidator.minutes("13:00"), t.getValue("v5").start) // arrives 11:15, waits for the 13:00 reservation
     }
 
     @Test fun lateForFixedIsAConflict() {
-        val late = withDay(sample, 4) { it.copy(departTime = "09:45") }
+        val late = withDay(sample, 4) { it.copy(departTime = "10:05") } // 10-min leg → arrives 10:15 for the 10:00 fixed time
         val issue = TripValidator.validate(late).issues.single { it.code == "LATE_FOR_FIXED" }
         assertEquals(Severity.CONFLICT, issue.severity)
         assertTrue(issue.text.contains("10:15"))
+        assertEquals(listOf("4", "정동심곡바다부채길", "10:00", "10:15"), issue.args) // expected = hhmm(arrival), no parking time
+        // Arriving 09:55 for 10:00 is on time (it used to be late once 20 min of parking time was added).
+        assertFalse("LATE_FOR_FIXED" in codes(withDay(sample, 4) { it.copy(departTime = "09:45") }))
+    }
+
+    /** M42: parking time (`prepMinutes`) is not counted anywhere — a stop starts the minute the car arrives. */
+    @Test fun aVisitWithPrepMinutes30StartsExactlyAtItsArrival() {
+        val withPrep = sample.copy(visits = sample.visits.map { if (it.visitId == "v4" || it.visitId == "v10") it.copy(prepMinutes = 30) else it })
+        val lake = TripValidator.timeline(withPrep, 2).first { it.visitId == "v4" }
+        assertEquals(TripValidator.minutes("09:35"), lake.arrive)
+        assertEquals(lake.arrive, lake.start)
+        assertEquals(lake.start!! + 90, lake.end)
+        // A fixed stop reached exactly at its time is on time, whatever its prepMinutes; the live projection agrees.
+        val exact = withDay(withPrep, 4) { it.copy(departTime = "09:50") }
+        val cliff = TripValidator.timeline(exact, 4).single()
+        assertEquals(TripValidator.minutes("10:00"), cliff.arrive)
+        assertEquals(cliff.arrive, cliff.start)
+        assertFalse("LATE_FOR_FIXED" in codes(exact))
+        val live = LiveProjection.project(exact, CarOverlay(), 4, TripValidator.minutes("09:50"))
+        assertEquals(TripValidator.minutes("10:00"), live.fixed!!.ready)
+        assertEquals(0, live.fixed!!.slack)
     }
 
     @Test fun missingLegBeforeFixedCannotBeChecked() {

@@ -108,6 +108,7 @@ data class Visit(
     val visitId: String,
     val placeRef: String,
     val stayMinutes: Int,
+    /** Parking time from the phone (0..120). Kept for transfer schema v1; not used in any time math (M42). */
     val prepMinutes: Int,
     val importance: Importance,
     val desiredTime: String?,

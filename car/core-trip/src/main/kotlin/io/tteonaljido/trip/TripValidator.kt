@@ -110,22 +110,23 @@ object TripValidator {
     }
 
     /**
-     * Walks stops from `start`: arrival = clock + leg; a visit starts after prep (plus a measured parking buffer) and
-     * not before its fixed time; a fixed time restores the chain even after an unknown leg. `bufferAt`/`stayMult`
-     * default to no-op (0 / 1.0) so the plan check and cross-language fixtures are unchanged; only the car's live
-     * projection passes measured values. Shared by the plan check and the live projection.
+     * Walks stops from `start`: arrival = clock + leg; a visit starts on arrival and not before its fixed time; a fixed
+     * time restores the chain even after an unknown leg. Shared by the plan check and the live projection.
+     * Parking time (`Visit.prepMinutes`) is NOT counted (M42): the field stays in the transfer for compatibility, and real
+     * parking time will later come from the car's own data (navigation ended → ignition off + belt released + doors
+     * locked). Same rule as packages/shared/src/timeline.ts.
      */
-    internal fun walk(start: Int?, items: List<Pair<Visit, Int?>>, bufferAt: (Int) -> Int = { 0 }, stayMult: Double = 1.0): List<StopTime> {
+    internal fun walk(start: Int?, items: List<Pair<Visit, Int?>>): List<StopTime> {
         var clock: Int? = start
-        return items.mapIndexed { i, (v, leg) ->
+        return items.map { (v, leg) ->
             val arrive = if (clock != null && leg != null) clock!! + leg else null
             val fixed = v.fixed?.let { minutes(it.time) }
             val begin = when {
-                arrive != null -> maxOf(arrive + v.prepMinutes + bufferAt(i), fixed ?: 0)
+                arrive != null -> maxOf(arrive, fixed ?: 0)
                 fixed != null -> fixed
                 else -> null
             }
-            val end = begin?.plus(Math.round(v.stayMinutes * stayMult).toInt())
+            val end = begin?.plus(v.stayMinutes)
             clock = end
             StopTime(v.visitId, arrive, begin, end)
         }
@@ -195,8 +196,9 @@ object TripValidator {
                 val v = visit(trip, st.visitId)
                 val name = placeName(trip, v.placeRef)
                 val fixed = v.fixed?.let { minutes(it.time) }
-                if (fixed != null && st.arrive != null && st.arrive + v.prepMinutes > fixed) {
-                    add(Severity.CONFLICT, "LATE_FOR_FIXED", "${n}일차 '$name' 고정 ${v.fixed!!.time}에 늦어요 (예상 ${hhmm(st.arrive + v.prepMinutes)})", n, n, name, v.fixed!!.time, hhmm(st.arrive + v.prepMinutes))
+                // Late = arriving after the fixed time; no parking time is added (M42).
+                if (fixed != null && st.arrive != null && st.arrive > fixed) {
+                    add(Severity.CONFLICT, "LATE_FOR_FIXED", "${n}일차 '$name' 고정 ${v.fixed!!.time}에 늦어요 (예상 ${hhmm(st.arrive)})", n, n, name, v.fixed!!.time, hhmm(st.arrive))
                 }
                 if (fixed != null && st.arrive == null) add(Severity.UNCERTAIN, "FIXED_UNCHECKED", "${n}일차 '$name' 고정 ${v.fixed!!.time}: 이동시간이 없어 확인할 수 없어요", n, n, name, v.fixed!!.time)
                 hoursIssue(trip, v.placeRef, date, st)?.let { add(Severity.CONFLICT, it.code, "${n}일차 '$name' ${it.text}", n, n, name, *it.extra.toTypedArray()) }

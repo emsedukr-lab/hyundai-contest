@@ -13,10 +13,13 @@ enum class DeadlineKind { FIXED, END_BY, NONE }
 /** Where the first leg's time came from. */
 enum class Basis { NAVI_LIVE, FROM_HERE, PLAN, NONE }
 
-/** The next fixed stop: `ready` = arrival + prep; `slack` = fixed − ready (negative = late). Null values: chain broken. */
+/**
+ * The next fixed stop: `ready` = arrival (no parking time, M42); `slack` = fixed − ready (negative = late). Null values:
+ * chain broken.
+ */
 data class FixedCheck(val visitId: String, val fixed: Int, val ready: Int?, val slack: Int?)
 
-/** Skipping this optional stop saves at least `saves` minutes (its prep + stay; the drive saved is not counted). */
+/** Skipping this optional stop saves at least `saves` minutes (its planned stay; the drive saved is not counted). */
 data class SkipSuggestion(val visitId: String, val saves: Int)
 
 /** Doing this optional stop later (moved after the day's fixed stop) frees the same `saves` minutes before the deadline — but the stop still happens, at the tail of the day. */
@@ -116,14 +119,10 @@ object LiveProjection {
         // This day's own stops (plan legs) followed by any injected cross-day stops (unknown legs, at the tail).
         val items = remaining.mapIndexed { i, idx -> visits.getValue(order[idx]) to (if (i == 0) first else legs(remaining[i - 1], idx)) } +
             injected.map { it to null as Int? }
-        // Measured parking buffer / stay tendency (car-only input). Empty records → buffer 0 and mult 1.0, so the plan's
-        // own timeline is unchanged; it activates once this trip has measurements. Never edits the plan.
+        // Same rule as the plan check: a stop starts on arrival (no parking time, M42). Measured visit records
+        // (overlay.visitRecords) are not applied — they are groundwork for estimating real parking time later.
         val places = trip.places.associateBy { it.placeRef }
-        val isWeekend = runCatching { java.time.LocalDate.parse(day.date).dayOfWeek.let { it == java.time.DayOfWeek.SATURDAY || it == java.time.DayOfWeek.SUNDAY } }.getOrDefault(false)
-        val stayMult = StayTendency.of(overlay.visitRecords) { id -> trip.visits.firstOrNull { it.placeRef == id }?.stayMinutes }
-        val buffers: List<Int> = if (overlay.visitRecords.isEmpty()) List(items.size) { 0 }
-            else items.map { (v, _) -> ParkingBufferPolicy.buffer(overlay.visitRecords, places[v.placeRef]?.category ?: PlaceCategory.OTHER, isWeekend, beforeFixed = v.fixed != null) }
-        val stops = TripValidator.walk(now, items, { buffers.getOrElse(it) { 0 } }, stayMult)
+        val stops = TripValidator.walk(now, items)
         val tail = if (remaining.isEmpty()) null else legs(remaining.last(), order.size)
         val endExpected = stops.last().end?.let { e -> tail?.let { e + it } }
         val nextVisitId = items.firstOrNull()?.first?.visitId
@@ -134,7 +133,7 @@ object LiveProjection {
         val fixed = if (fixedPos < 0) null else {
             val v = items[fixedPos].first
             val f = TripValidator.minutes(v.fixed!!.time)
-            val ready = stops[fixedPos].arrive?.plus(v.prepMinutes + buffers.getOrElse(fixedPos) { 0 })
+            val ready = stops[fixedPos].arrive
             FixedCheck(v.visitId, f, ready, ready?.let { f - it })
         }
         // Both a fixed stop and a return-by time can apply; the nearer-to-late one is what the driver is shown.
@@ -164,7 +163,7 @@ object LiveProjection {
             val helps = if (deadlineKind == DeadlineKind.FIXED) 0 until fixedPos else (items.indexOfLast { it.first.fixed != null } + 1) until items.size
             helps.mapNotNull { i ->
                 val v = items[i].first
-                if (v.importance == Importance.OPTIONAL && v.fixed == null) (v.visitId to (v.prepMinutes + Math.round(v.stayMinutes * stayMult).toInt() + buffers.getOrElse(i) { 0 })) else null
+                if (v.importance == Importance.OPTIONAL && v.fixed == null) (v.visitId to v.stayMinutes) else null
             }.filter { it.second >= late }.minByOrNull { it.second }
         }
         val skip = lateCand?.let { SkipSuggestion(it.first, it.second) }

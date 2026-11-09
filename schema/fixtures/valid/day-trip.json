@@ -2,7 +2,7 @@
   "schema": "trip-transfer",
   "schemaVersion": 1,
   "exportedAt": "2026-11-05T09:30:00+09:00",
-  "contentHash": "HEQkAgHolb1L7a42hFTr3w8cf_TUPBCH1IcCLwhIO7k",
+  "contentHash": "J_BRi_06LosPFDReDHs8NnXXl11hjN-UM9DjfQ-tDQ0",
   "trip": {
     "tripId": "0b6f8a52-1d3e-4f6a-8b9c-2d4e6f8a0b1c",
     "revision": 1,
@@ -45,7 +45,7 @@
         "visitId": "v1",
         "placeRef": "cheolttuk",
         "stayMinutes": 60,
-        "prepMinutes": 10,
+        "prepMinutes": 0,
         "importance": "NORMAL",
         "desiredTime": "10:30",
         "fixed": null,

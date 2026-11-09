@@ -1,3 +1,5 @@
+// M42: not used by the current screens or timetable — kept as the groundwork for estimating real parking time from
+// NaviHelper + Vehicle SDK data (navigation ended → ignition off + belt released + doors locked) later.
 package io.tteonaljido.car.visit
 
 import io.tteonaljido.trip.VisitInput

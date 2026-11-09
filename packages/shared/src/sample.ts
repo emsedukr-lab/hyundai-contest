@@ -22,7 +22,7 @@ const visit = (visitId: string, placeRef: string, stayMinutes: number, extra: Pa
   visitId,
   placeRef,
   stayMinutes,
-  prepMinutes: 10,
+  prepMinutes: 0, // parking time is not counted for now (M42)
   importance: 'NORMAL',
   desiredTime: null,
   fixed: null,
@@ -73,7 +73,7 @@ export function sampleTrip(updatedAt = '2026-11-05T09:00:00+09:00'): Trip {
       visit('v7', 'umji', 60),
       visit('v8', 'gyodong', 60),
       visit('v9', 'terarosa', 90),
-      visit('v10', 'badabuchae', 180, { prepMinutes: 20, importance: 'MUST', fixed: { time: '10:00', kind: 'USER' }, dateFlexible: false, timeFlexible: false }),
+      visit('v10', 'badabuchae', 180, { importance: 'MUST', fixed: { time: '10:00', kind: 'USER' }, dateFlexible: false, timeFlexible: false }),
       visit('v11', 'anmok', 60, { importance: 'OPTIONAL', unassignedReason: 'NO_TIME' }),
     ],
     days: [

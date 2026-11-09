@@ -1,8 +1,11 @@
+// M42: not used by the current screens or timetable — kept as the groundwork for estimating real parking time from
+// NaviHelper + Vehicle SDK data (navigation ended → ignition off + belt released + doors locked) later.
 package io.tteonaljido.trip
 
 /**
  * 주차 여유·체류 경향 (parking-buffer / stay-tendency) derived from this trip's confirmed [VisitRecord]s. Pure Kotlin.
- * These are advisory inputs to the car timeline only — they never change the user's plan, and never leave the car.
+ * Meant as advisory inputs to the car timeline (not applied today, see M42 above) — they never change the user's plan,
+ * and never leave the car.
  * No per-place crowd statistics and no upload (that is a future-plan item, intentionally not built here).
  */
 

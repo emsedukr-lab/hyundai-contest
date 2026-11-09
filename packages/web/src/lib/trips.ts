@@ -141,7 +141,7 @@ export function addPlace(plan: Trip, p: Omit<Place, 'placeRef'>, stayMinutes = 6
             visitId: newRef('v'),
             placeRef,
             stayMinutes,
-            prepMinutes: 10,
+            prepMinutes: 0,
             importance: 'NORMAL' as const,
             desiredTime: null,
             fixed: null,
@@ -395,7 +395,7 @@ export function changeCategory(plan: Trip, placeRef: string, category: Place['ca
   } else if (category !== 'LODGING' && !hasVisit) {
     next = {
       ...next,
-      visits: [...next.visits, { visitId: newRef('v'), placeRef, stayMinutes: 60, prepMinutes: 10, importance: 'NORMAL', desiredTime: null, fixed: null, dateFlexible: true, timeFlexible: true, unassignedReason: 'NOT_SCHEDULED_YET' }],
+      visits: [...next.visits, { visitId: newRef('v'), placeRef, stayMinutes: 60, prepMinutes: 0, importance: 'NORMAL', desiredTime: null, fixed: null, dateFlexible: true, timeFlexible: true, unassignedReason: 'NOT_SCHEDULED_YET' }],
     };
   }
   return next;

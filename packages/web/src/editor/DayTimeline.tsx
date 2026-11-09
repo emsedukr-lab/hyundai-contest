@@ -226,7 +226,13 @@ function StopCard({
   const memo = notes[p.placeRef]?.memo;
   const conflict = issues.length > 0;
   const timeText =
-    !time || time.start === null ? t('days.timeCheck') : time.arrive === null ? t('days.timeStart', { start: clock(time.start) }) : t('days.times', { arrive: clock(time.arrive), start: clock(time.start) });
+    !time || time.start === null
+      ? t('days.timeCheck')
+      : time.arrive === null
+        ? t('days.timeStart', { start: clock(time.start) })
+        : time.arrive === time.start // no parking time is counted (M42): most stops start on arrival
+          ? t('days.arriveOnly', { arrive: clock(time.arrive) })
+          : t('days.times', { arrive: clock(time.arrive), start: clock(time.start) });
   const meta = [t('days.stay', { duration: minutesLabel(v.stayMinutes) }), v.desiredTime ? t('days.desired', { time: v.desiredTime }) : '', p.hours.status === 'UNKNOWN' ? t('tl.hoursUnknown') : '']
     .filter(Boolean)
     .join(' · ');

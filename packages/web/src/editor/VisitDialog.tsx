@@ -116,7 +116,6 @@ export function VisitDialog({
           {visit ? (
             <>
               <NumberInput label={t('visit.stay')} isLabelHidden startIcon={<span className="tl-infield">{t('visit.stay')}</span>} value={visit.stayMinutes} onChange={(v) => setVisit({ stayMinutes: Math.max(0, Math.min(720, Math.round(v))) })} step={15} isIntegerOnly />
-              <NumberInput label={t('visit.prep')} isLabelHidden startIcon={<span className="tl-infield">{t('visit.prep')}</span>} value={visit.prepMinutes} onChange={(v) => setVisit({ prepMinutes: Math.max(0, Math.min(120, Math.round(v))) })} step={5} isIntegerOnly />
               <SegmentedControl label={t('visit.importance')} value={visit.importance} onChange={(v) => setVisit({ importance: v as Visit['importance'] })}>
                 <SegmentedControlItem value="MUST" label={t('common.must')} />
                 <SegmentedControlItem value="NORMAL" label={t('visit.importance.normal')} />

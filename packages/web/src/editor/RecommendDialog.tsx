@@ -99,7 +99,11 @@ export function RecommendDialog({
                               {v.fixed && <Badge variant="info" label={t('common.fixedAt', { time: v.fixed.time })} />}
                             </HStack>
                             <Text type="supporting" color="secondary">
-                              {st?.arrive !== null && st?.arrive !== undefined ? t('days.times', { arrive: clock(st.arrive), start: clock(st.start!) }) : t('days.timeCheck')}
+                              {st?.arrive !== null && st?.arrive !== undefined
+                                ? st.arrive === st.start
+                                  ? t('days.arriveOnly', { arrive: clock(st.arrive) })
+                                  : t('days.times', { arrive: clock(st.arrive), start: clock(st.start!) })
+                                : t('days.timeCheck')}
                             </Text>
                           </VStack>
                         </Card>

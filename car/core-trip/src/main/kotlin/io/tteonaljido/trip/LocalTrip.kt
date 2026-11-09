@@ -71,7 +71,10 @@ data class CarOverlay(
     val legEstimates: Map<String, LegEstimate> = emptyMap(),
     /** What this app last handed to the navigation, so its arrival event can be matched to a stop. */
     val guiding: GuidingTarget? = null,
-    /** Confirmed parking/stay measurements for this trip (local only; deleted with the trip). */
+    /**
+     * Confirmed parking/stay measurements for this trip (local only; deleted with the trip). M42: kept for saved-trip
+     * compatibility and as groundwork for estimating real parking time later — not read by the current screens or timetable.
+     */
     val visitRecords: List<VisitRecord> = emptyList(),
     /** An in-progress measurement (e.g. AWAY while the car is off), persisted so it resumes on the next launch. */
     val visitProgress: VisitProgress? = null,

@@ -121,8 +121,8 @@ const timelineCases: Record<string, Trip> = {};
 {
   const base = sampleTrip();
   timelineCases['sample'] = base;
-  const late = clone(base); // day 4 leaves 15 min later than the plan allows for the 10:00 fixed visit
-  late.days[3].departTime = '09:45';
+  const late = clone(base); // day 4 leaves at 09:55: with the 10-min leg it arrives 10:05, after the 10:00 fixed visit
+  late.days[3].departTime = '09:55';
   timelineCases['late-for-fixed'] = late;
   const arrive = clone(base); // arrival basis needs a start before midnight
   arrive.firstDay = { basis: 'ARRIVE_FIRST_STOP', arriveTime: '00:30', prepMinutes: 10 };

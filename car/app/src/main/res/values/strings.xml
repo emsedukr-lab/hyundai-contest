@@ -284,9 +284,6 @@
     <string name="find_fuel">주유소 찾기</string>
     <string name="demo_energy_ev">EV 18%% 예시</string>
     <string name="demo_energy_ice">주유 25%% 예시</string>
-    <string name="measured_parking">차량 신호: 주차·하차 +%1$s분 · 체류 %2$s분</string>
-    <string name="measured_dropoff">차량 신호: 하차만 (체류 0분)</string>
-    <string name="demo_seed_visit">체류 측정 예시</string>
     <string name="presend_demo">사전 전송 (시연)</string>
     <string name="presend_demo_title">사전 전송 (시연)</string>
     <string name="presend_demo_body">휴대폰에서 미리 짠 하루 경로를 차량 내비에 올리는 동작을 시연해요. 실제 계정 기반 \'다음 시동 때 자동 전송\'은 인프라가 없어 구현하지 않았고, 차량의 \'오늘 경로 전송\'이 실제 묶음 전송입니다.</string>

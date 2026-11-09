@@ -164,15 +164,15 @@ describe('travel times follow their pair of places', () => {
 
 describe('timetable on the phone', () => {
   it('a missed fixed time is a warning before sending', () => {
-    const late = setDepart(sampleTrip(), 4, '09:45');
+    const late = setDepart(sampleTrip(), 4, '09:55');
     const w = planWarnings(late, home).filter((x) => x.level === 'warning').map((x) => x.text);
-    expect(w).toContain("4일차 '정동심곡바다부채길' 고정 10:00에 늦어요 (예상 10:15)");
+    expect(w).toContain("4일차 '정동심곡바다부채길' 고정 10:00에 늦어요 (예상 10:05)");
   });
 
   it('a return-by time that the day runs past is a warning', () => {
     const t = setEndBy(sampleTrip(), 2, '16:00');
     expect(day(t, 2).endBy).toBe('16:00');
-    expect(planWarnings(t, home).map((x) => x.text)).toContain('2일차 도착 예상 16:30 · 목표 16:00보다 늦어요');
+    expect(planWarnings(t, home).map((x) => x.text)).toContain('2일차 도착 예상 16:10 · 목표 16:00보다 늦어요');
   });
 
   it('unknown opening hours leave lodging out, as the car does', () => {
@@ -251,7 +251,7 @@ describe('timeline nodes (M26)', () => {
   const market = { name: '주문진 수산시장', address: '강릉시 주문진읍', latE7: 378_930_000, lonE7: 1_288_260_000, category: 'FOOD' as const, source: { provider: 'MANUAL' as const, externalId: null }, naviPoi: null, hours: { status: 'UNKNOWN' as const } };
 
   it('sorts conflicts onto the node that shows them', () => {
-    const late = setEndBy(setDepart(sampleTrip(), 4, '09:45'), 2, '16:00');
+    const late = setEndBy(setDepart(sampleTrip(), 4, '09:55'), 2, '16:00');
     const d4 = nodeIssues(late, 4);
     expect(Object.values(d4.byVisit).flat().map((i) => i.code)).toContain('LATE_FOR_FIXED'); // on the stop it is about
     expect(nodeIssues(late, 2).end.map((i) => i.code)).toEqual(['PAST_END_BY']); // on the lodging/home card
