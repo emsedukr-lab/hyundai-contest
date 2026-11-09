@@ -143,6 +143,7 @@
     <string name="review_counts">Places %1$d · Fixed %2$d · Nights booked %3$d · Unassigned %4$d</string>
     <string name="review_settings">%1$s · start %2$s · return %3$s · home address %4$s</string>
     <string name="first_depart">Day 1 leave at %1$s</string>
+    <string name="first_depart_free">Day 1 leave any time</string>
     <string name="first_arrive">Day 1 arrive at first stop by %1$s</string>
     <string name="home_included">included</string>
     <string name="home_excluded">not included (uses navigation \'Home\')</string>

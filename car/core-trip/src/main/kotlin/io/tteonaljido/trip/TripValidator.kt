@@ -100,7 +100,7 @@ object TripValidator {
         val day = trip.days[dayIndex - 1]
         if (dayIndex > 1) return day.departTime?.let(::minutes)
         return when (val f = trip.firstDay) {
-            is FirstDay.DepartOrigin -> minutes(f.departTime)
+            is FirstDay.DepartOrigin -> f.departTime?.let(::minutes) // optional (M48)
             is FirstDay.ArriveFirstStop -> {
                 // Arrival basis: leave `leg` minutes before the target arrival; getting ready (prepMinutes) comes before that.
                 val leg = leg(trip, overlay, 1, 0) ?: return null
@@ -180,7 +180,10 @@ object TripValidator {
         trip.days.forEach { d ->
             val n = d.dayIndex
             if (departure(trip, n, overlay) == null) {
-                if (n == 1) add(Severity.UNCERTAIN, "FIRST_DEPARTURE_UNKNOWN", "첫날 출발 시각을 계산할 수 없어요 (첫 구간 이동시간 없음)", n)
+                // A first day with no departure time chosen reads like any other day without one (M48), as in timeline.ts.
+                val first = trip.firstDay
+                val freeFirst = n == 1 && first is FirstDay.DepartOrigin && first.departTime == null
+                if (n == 1 && !freeFirst) add(Severity.UNCERTAIN, "FIRST_DEPARTURE_UNKNOWN", "첫날 출발 시각을 계산할 수 없어요 (첫 구간 이동시간 없음)", n)
                 else add(Severity.UNCERTAIN, "DEPARTURE_UNKNOWN", "${n}일차 출발 시각이 없어요", n, n)
             } else if (n == 1 && departure(trip, 1, overlay)!! < 0) {
                 add(Severity.CONFLICT, "DEPART_PREVIOUS_DAY", "첫 장소 도착 시각을 맞추려면 전날 출발해야 해요", n)

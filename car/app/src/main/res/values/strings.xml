@@ -143,6 +143,7 @@
     <string name="review_counts">장소 %1$d곳 · 고정 일정 %2$d개 · 숙박 %3$d박 · 미배정 %4$d곳</string>
     <string name="review_settings">%1$s · 출발 %2$s · 귀가 %3$s · 집 주소 %4$s</string>
     <string name="first_depart">첫날 %1$s 출발</string>
+    <string name="first_depart_free">첫날 출발 시각 자유</string>
     <string name="first_arrive">첫날 첫 장소 %1$s 도착 기준</string>
     <string name="home_included">포함</string>
     <string name="home_excluded">미포함(내비 \'집\' 사용)</string>

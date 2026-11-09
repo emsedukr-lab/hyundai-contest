@@ -86,7 +86,8 @@ export const Day = z.strictObject({
 });
 
 export const FirstDay = z.discriminatedUnion('basis', [
-  z.strictObject({ basis: z.literal('DEPART_ORIGIN'), departTime: TimeStr }),
+  // departTime null = no departure time chosen (M48: departure is optional on every day, the first included)
+  z.strictObject({ basis: z.literal('DEPART_ORIGIN'), departTime: TimeStr.nullable() }),
   z.strictObject({ basis: z.literal('ARRIVE_FIRST_STOP'), arriveTime: TimeStr, prepMinutes: z.int().min(0).max(240) }),
 ]);
 

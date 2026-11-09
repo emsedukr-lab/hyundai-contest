@@ -180,7 +180,7 @@ private fun ReviewCard(r: ReviewData, code: String, vm: ImportViewModel) {
     val fixed = t.visits.count { it.fixed != null }
     val unassigned = t.visits.count { it.unassignedReason != null }
     val first = when (val f = t.firstDay) {
-        is FirstDay.DepartOrigin -> stringResource(R.string.first_depart, f.departTime)
+        is FirstDay.DepartOrigin -> f.departTime?.let { stringResource(R.string.first_depart, it) } ?: stringResource(R.string.first_depart_free)
         is FirstDay.ArriveFirstStop -> stringResource(R.string.first_arrive, f.arriveTime)
     }
     val origin = stringResource(if (t.origin is Endpoint.Home) R.string.home else R.string.place)

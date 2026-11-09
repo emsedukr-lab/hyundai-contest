@@ -30,7 +30,7 @@ export function StartSheet({ isOpen, onClose, plan, home, dayIndex, onChange, on
               <SegmentedControlItem value="ARRIVE_FIRST_STOP" label={t('editor.firstDay.arrive')} />
             </SegmentedControl>
             {fd.basis === 'DEPART_ORIGIN' ? (
-              <TimeSelect label={t('editor.departTime')} value={fd.departTime} onChange={(v) => v && onChange({ ...plan, firstDay: { basis: 'DEPART_ORIGIN', departTime: v } })} />
+              <TimeSelect label={t('editor.departTime')} placeholder={t('tl.departTime')} clearable value={fd.departTime} onChange={(v) => onChange({ ...plan, firstDay: { basis: 'DEPART_ORIGIN', departTime: v } })} />
             ) : (
               <HStack gap={2}>
                 <TimeSelect label={t('editor.arriveTime')} value={fd.arriveTime} onChange={(v) => v && onChange({ ...plan, firstDay: { ...fd, arriveTime: v } })} />

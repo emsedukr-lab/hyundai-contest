@@ -86,7 +86,9 @@ export function DayTimeline({ plan, home, dayIndex, onChange, onError, onOpenPla
     ? t('tl.liveFrom', { time: hhmm(startAt) })
     : isFirst
     ? fd.basis === 'DEPART_ORIGIN'
-      ? t('tl.departAt', { time: fd.departTime })
+      ? fd.departTime
+        ? t('tl.departAt', { time: fd.departTime })
+        : null
       : t('tl.arriveBasis', { time: fd.arriveTime })
     : day.departTime
       ? t('tl.departAt', { time: day.departTime })
@@ -137,7 +139,8 @@ export function DayTimeline({ plan, home, dayIndex, onChange, onError, onOpenPla
           <button type="button" className="tl-card-main" onClick={onOpenStart}>
             <span className="tl-kicker">{`${t('tl.start')} · ${shortDate(day.date)}`}</span>
             <span className="tl-name">{startName}</span>
-            {startTime ? <span className="tl-line">{startTime}</span> : <span className="tl-warn-text">{t('tl.departUnset')}</span>}
+            {/* Departure is optional (M48): without one the card says so quietly instead of asking for it. */}
+            {startTime ? <span className="tl-line">{startTime}</span> : <span className="tl-meta">{t('tl.departFree')}</span>}
             {prevCheckOut && <span className="tl-memo">{t('tl.checkOutAt', { time: prevCheckOut })}</span>}
             {issues.start.map((x, n) => (
               <span key={n} className="tl-error-text">

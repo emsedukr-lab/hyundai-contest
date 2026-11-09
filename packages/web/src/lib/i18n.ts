@@ -715,6 +715,7 @@ const ko = {
   'time.pm': '오후',
   'time.label': '{ampm} {h}:{m}',
   'time.none': '없음',
+  'tl.departFree': '출발 시각 자유',
 } as const satisfies Record<string, string>;
 
 export type Key = keyof typeof ko;
@@ -1428,6 +1429,7 @@ const en: Record<Key, string> = {
   'time.pm': 'PM',
   'time.label': '{h}:{m} {ampm}',
   'time.none': 'None',
+  'tl.departFree': 'Leave any time',
 };
 
 /** Both tables, for tests. */

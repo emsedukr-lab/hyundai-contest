@@ -78,7 +78,7 @@ internal object SchemaRules {
         need(TZ.matches(trip.timezone) && trip.timezone.length <= 40 && runCatching { java.time.ZoneId.of(trip.timezone) }.isSuccess, "timezone")
         need(date(trip.startDate) && date(trip.endDate), "dates")
         when (val f = trip.firstDay) {
-            is FirstDay.DepartOrigin -> need(TIME.matches(f.departTime), "firstDay")
+            is FirstDay.DepartOrigin -> need(f.departTime?.let(TIME::matches) ?: true, "firstDay") // optional (M48)
             is FirstDay.ArriveFirstStop -> need(TIME.matches(f.arriveTime) && f.prepMinutes in 0..240, "firstDay")
         }
         listOf(trip.origin, trip.finalDestination).forEach { if (it is Endpoint.AtPlace) need(REF.matches(it.placeRef), "endpoint") }

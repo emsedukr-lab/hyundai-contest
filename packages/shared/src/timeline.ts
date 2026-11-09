@@ -48,7 +48,7 @@ export function departure(trip: Trip, dayIndex: number): number | null {
   const day = trip.days[dayIndex - 1];
   if (dayIndex > 1) return day.departTime ? minutes(day.departTime) : null;
   const f = trip.firstDay;
-  if (f.basis === 'DEPART_ORIGIN') return minutes(f.departTime);
+  if (f.basis === 'DEPART_ORIGIN') return f.departTime ? minutes(f.departTime) : null; // optional (M48)
   // Arrival basis: leave `leg` minutes before the target arrival; getting ready (prepMinutes) comes before that.
   const leg = day.legs[0];
   return leg ? minutes(f.arriveTime) - leg.minutes : null;
@@ -125,7 +125,10 @@ export function dayIssues(trip: Trip, dayIndex: number): DayIssue[] {
   const d = trip.days[n - 1];
   const dep = departure(trip, n);
   if (dep === null) {
-    if (n === 1) add('UNCERTAIN', 'FIRST_DEPARTURE_UNKNOWN', []);
+    // A first day with no departure time chosen reads like any other day without one (M48); FIRST_DEPARTURE_UNKNOWN
+    // stays for the arrival basis whose first travel time is missing.
+    const freeFirst = n === 1 && trip.firstDay.basis === 'DEPART_ORIGIN' && trip.firstDay.departTime === null;
+    if (n === 1 && !freeFirst) add('UNCERTAIN', 'FIRST_DEPARTURE_UNKNOWN', []);
     else add('UNCERTAIN', 'DEPARTURE_UNKNOWN', [n]);
   } else if (n === 1 && dep < 0) add('CONFLICT', 'DEPART_PREVIOUS_DAY', []);
   const missing = d.legs.filter((l) => l === null).length;

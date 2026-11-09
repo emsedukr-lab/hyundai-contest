@@ -238,6 +238,137 @@
       ]
     }
   ],
+  "departure-free": [
+    {
+      "dayIndex": 1,
+      "departure": null,
+      "stops": [
+        {
+          "visitId": "v1",
+          "arrive": null,
+          "start": null,
+          "end": null
+        },
+        {
+          "visitId": "v2",
+          "arrive": null,
+          "start": null,
+          "end": null
+        },
+        {
+          "visitId": "v3",
+          "arrive": null,
+          "start": null,
+          "end": null
+        }
+      ],
+      "dayEnd": null,
+      "issues": [
+        {
+          "severity": "UNCERTAIN",
+          "code": "DEPARTURE_UNKNOWN",
+          "dayIndex": 1,
+          "args": [
+            "1"
+          ]
+        },
+        {
+          "severity": "UNCERTAIN",
+          "code": "LEG_UNKNOWN",
+          "dayIndex": 1,
+          "args": [
+            "1",
+            "1"
+          ]
+        }
+      ]
+    },
+    {
+      "dayIndex": 2,
+      "departure": 570,
+      "stops": [
+        {
+          "visitId": "v4",
+          "arrive": 575,
+          "start": 575,
+          "end": 665
+        },
+        {
+          "visitId": "v5",
+          "arrive": 675,
+          "start": 780,
+          "end": 840
+        },
+        {
+          "visitId": "v6",
+          "arrive": 855,
+          "start": 855,
+          "end": 885
+        },
+        {
+          "visitId": "v7",
+          "arrive": 895,
+          "start": 895,
+          "end": 955
+        }
+      ],
+      "dayEnd": 970,
+      "issues": []
+    },
+    {
+      "dayIndex": 3,
+      "departure": null,
+      "stops": [
+        {
+          "visitId": "v8",
+          "arrive": null,
+          "start": null,
+          "end": null
+        },
+        {
+          "visitId": "v9",
+          "arrive": null,
+          "start": null,
+          "end": null
+        }
+      ],
+      "dayEnd": null,
+      "issues": [
+        {
+          "severity": "UNCERTAIN",
+          "code": "DEPARTURE_UNKNOWN",
+          "dayIndex": 3,
+          "args": [
+            "3"
+          ]
+        }
+      ]
+    },
+    {
+      "dayIndex": 4,
+      "departure": 570,
+      "stops": [
+        {
+          "visitId": "v10",
+          "arrive": 580,
+          "start": 600,
+          "end": 780
+        }
+      ],
+      "dayEnd": null,
+      "issues": [
+        {
+          "severity": "UNCERTAIN",
+          "code": "LEG_UNKNOWN",
+          "dayIndex": 4,
+          "args": [
+            "4",
+            "1"
+          ]
+        }
+      ]
+    }
+  ],
   "depart-previous-day": [
     {
       "dayIndex": 1,

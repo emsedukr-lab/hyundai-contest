@@ -40,7 +40,7 @@ data class Trip(
 @JsonClassDiscriminator("basis")
 sealed interface FirstDay {
     @Serializable @SerialName("DEPART_ORIGIN")
-    data class DepartOrigin(val departTime: String) : FirstDay
+    data class DepartOrigin(val departTime: String?) : FirstDay // null = no departure time chosen (M48)
 
     @Serializable @SerialName("ARRIVE_FIRST_STOP")
     data class ArriveFirstStop(val arriveTime: String, val prepMinutes: Int) : FirstDay
