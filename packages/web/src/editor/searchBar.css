@@ -1,0 +1,49 @@
+/*
+ * 장소 검색창 — SOCAR Frame 2.0 `input-filled` (socar.md · input / input-filled), its two states only:
+ * at rest (placeholder) a grey field with no visible border, and on focus a light-blue border. Nothing else of that
+ * system is taken (the app keeps its own colours, buttons and type). Values: field ~48px, radius 14px (radius-350),
+ * gap 10px, padding L12/R8, gray-100 #F2F3F8, placeholder text-tertiary #99A1B1, body2 16/24, focus blue-200 #99CEFF.
+ * SOCAR has no dark values; in dark mode the grey becomes a lifted surface of the page and the blue border stays.
+ * The doubled class outranks Astryx's single-class atomic styles on the same element.
+ */
+.tn-searchbar.tn-searchbar {
+  height: 48px;
+  min-height: 48px;
+  box-sizing: border-box;
+  gap: 10px;
+  padding: 0 8px 0 12px;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  background: light-dark(#f2f3f8, color-mix(in srgb, #ffffff 9%, var(--color-background-body)));
+  box-shadow: none;
+  outline: none;
+  transition: border-color 120ms ease-out;
+}
+.tn-searchbar.tn-searchbar:hover {
+  border-color: transparent;
+}
+.tn-searchbar.tn-searchbar:focus-within {
+  border-color: #99ceff;
+  box-shadow: none;
+  outline: none;
+}
+.tn-searchbar.tn-searchbar input {
+  font-size: 16px;
+  line-height: 24px;
+}
+.tn-searchbar.tn-searchbar input::placeholder {
+  color: #99a1b1;
+  opacity: 1;
+}
+.tn-searchbar.tn-searchbar svg:first-child,
+.tn-searchbar.tn-searchbar > :first-child svg {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  color: #99a1b1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .tn-searchbar.tn-searchbar {
+    transition: none;
+  }
+}

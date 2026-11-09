@@ -21,6 +21,7 @@ import { t } from '../lib/i18n';
 import { ApiError, resolvePlace, searchPlaces, type PlaceHit } from '../lib/pairing';
 import { parsePastedPlace, parsePastedPlaces } from '../lib/placeShare';
 import { BulkAddDialog } from './BulkAddDialog';
+import './searchBar.css';
 
 export const CATEGORY_OPTIONS = [
   { value: 'SIGHT', label: t('place.category.sight') },
@@ -220,17 +221,23 @@ export function PlaceSearch({
           </HStack>
         </VStack>
       )}
-      <HStack gap={2} vAlign="end">
-        <StackItem size="fill">
-          <TextInput label={label} isLabelHidden={isLabelHidden} value={q} onChange={setQ} onEnter={() => run()} placeholder={placeholder ?? t('place.search.placeholder')} hasClear />
-        </StackItem>
-        {compact ? (
-          // narrow cards (a night's lodging): an icon keeps the field wide enough to type in
-          <IconButton label={t('place.search.action')} icon={<SearchIcon />} variant="secondary" isLoading={busy} onClick={() => run()} />
-        ) : (
-          <Button label={t('place.search.action')} variant="secondary" isLoading={busy} onClick={() => run()} />
-        )}
-      </HStack>
+      {/* The search bar (SOCAR Frame input-filled: grey field, blue border on focus): the magnifier sits inside, and the
+          keyboard's search/enter key runs it — no separate button, so even a narrow card keeps the full width to type. */}
+      <div role="search">
+        <TextInput
+          label={label}
+          isLabelHidden={isLabelHidden}
+          value={q}
+          onChange={setQ}
+          onEnter={() => run()}
+          enterKeyHint="search"
+          placeholder={placeholder ?? t('place.search.placeholder')}
+          startIcon={<SearchIcon />}
+          isLoading={busy}
+          hasClear
+          controlClassName="tn-searchbar"
+        />
+      </div>
       {note && <Banner status="info" title={note} />}
       {hits && hits.length === 0 && <Banner status="info" title={t('place.search.noResults')} />}
       {canAddByName && <Button label={t('place.search.addByName', { query: q.trim().slice(0, 20) })} variant="primary" size="sm" onClick={addByName} />}
