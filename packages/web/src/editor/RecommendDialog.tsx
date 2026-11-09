@@ -1,4 +1,3 @@
-import { Badge } from '@astryxdesign/core/Badge';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { Card } from '@astryxdesign/core/Card';
@@ -9,6 +8,7 @@ import { useMemo, useState } from 'react';
 import { hhmm, timeline, type Home, type Trip } from '@tteonaljido/shared';
 import { dateLabel } from '../lib/format';
 import { t } from '../lib/i18n';
+import { Tag } from '../components/shell/Tag';
 import { placeOf, relinkLegs, visitOf, type LegBook } from '../lib/trips';
 import { missingLodgingDays, recommendRoute, summarizeRecommendation, type RecommendationDiff } from '../lib/recommend';
 
@@ -118,10 +118,10 @@ export function RecommendPreview({ display, diff }: { display: Trip; diff: Recom
                     <VStack gap={0.5}>
                       <HStack gap={1} vAlign="center" wrap="wrap">
                         <Text type="supporting">{`${k + 1}. ${p?.name ?? id}`}</Text>
-                        {ch?.newlyAssigned && <Badge variant="info" label={t('recommend.newBadge')} />}
-                        {ch?.moved && ch.fromDay !== null && ch.fromDay !== d.dayIndex && <Badge variant="neutral" label={t('recommend.movedFrom', { from: ch.fromDay })} />}
-                        {v.importance === 'MUST' && <Badge variant="warning" label={t('common.must')} />}
-                        {v.fixed && <Badge variant="info" label={t('common.fixedAt', { time: v.fixed.time })} />}
+                        {ch?.newlyAssigned && <Tag tone="accent">{t('recommend.newBadge')}</Tag>}
+                        {ch?.moved && ch.fromDay !== null && ch.fromDay !== d.dayIndex && <Tag>{t('recommend.movedFrom', { from: ch.fromDay })}</Tag>}
+                        {v.importance === 'MUST' && <Tag tone="ink">{t('common.must')}</Tag>}
+                        {v.fixed && <Tag tone="accent">{t('common.fixedAt', { time: v.fixed.time })}</Tag>}
                       </HStack>
                       <Text type="supporting" color="secondary">
                         {st?.arrive !== null && st?.arrive !== undefined

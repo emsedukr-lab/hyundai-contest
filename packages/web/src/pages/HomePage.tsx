@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import { Badge } from '@astryxdesign/core/Badge';
 import { Banner } from '@astryxdesign/core/Banner';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { sampleTrip, type Trip } from '@tteonaljido/shared';
 import { InstallHint } from '../components/InstallHint';
 import { MapIcon, PlusIcon } from '../components/shell/icons';
 import { Row, Section } from '../components/shell/rows';
+import { Tag } from '../components/shell/Tag';
 import { TabScreen } from '../components/shell/Screens';
 import { TRIPS_CHANGED, sendLog, trips, type SendLogEntry } from '../lib/db';
 import { dateLabel, dayOf, periodLabel } from '../lib/format';
@@ -84,17 +84,18 @@ export function HomePage() {
                         <span>{d.plan.name}</span>
                         {d.setup && !d.setup.done ? (
                           // still in its step-by-step setup (M43)
-                          <Badge variant="info" label={t('setup.homeBadge', { step: d.setup.step })} />
+                          <Tag tone="accent">{t('setup.homeBadge', { step: d.setup.step })}</Tag>
                         ) : (
                           <>
-                            <Badge variant="neutral" label={`v${d.revision}`} />
-                            {unassigned > 0 && <Badge variant="warning" label={t('home.unassignedBadge', { n: unassigned })} />}
+                            <span className="tn-rev">{`v${d.revision}`}</span>
+                            {unassigned > 0 && <Tag tone="warn">{t('home.unassignedBadge', { n: unassigned })}</Tag>}
                           </>
                         )}
                       </span>
                     }
+                    // '3박 4일' keeps its space unbroken so the nights never split across lines
                     subtitle={
-                      t('common.tripSummary', { period: periodLabel(d.plan.startDate, d.plan.endDate), nights: nightsLabel(d.plan), places: d.plan.places.length }) +
+                      t('common.tripSummary', { period: periodLabel(d.plan.startDate, d.plan.endDate), nights: nightsLabel(d.plan).replace(/ /g, '\u00a0'), places: d.plan.places.length }) +
                       (sent ? ` · ${t('home.lastSend', { version: sent.revision, date: dateLabel(dayOf(sent.at)) })}` : '')
                     }
                     chevron

@@ -418,3 +418,104 @@
   outline: 2px solid #fff;
   outline-offset: 3px;
 }
+
+/*
+ * M44 unslop pass.
+ * Korean wraps between words everywhere (not only in cards): no '기\n기' or '붙\n여넣기' breaks. A long unbroken token
+ * (an address, a URL) still wraps without widening the layout.
+ */
+.tn-screen,
+.tn-screen textarea,
+.tn-screen input::placeholder {
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+/* Quiet status tag (components/shell/Tag.tsx). */
+.tn-tag {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 1;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  background: var(--color-background-muted);
+  color: var(--color-text-secondary);
+}
+.tn-tag.is-ink {
+  color: var(--color-text-primary);
+}
+.tn-tag.is-accent {
+  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+  color: var(--color-text-info);
+}
+.tn-tag.is-warn {
+  background: color-mix(in srgb, var(--color-text-warning) 16%, transparent);
+  color: light-dark(#6e5310, #f2c00b);
+}
+.tn-tag.is-ok {
+  background: color-mix(in srgb, var(--color-text-success) 14%, transparent);
+  color: light-dark(#05701e, #41aa4b);
+}
+
+/* The saved version (v3) as quiet meta text, not a pill. */
+.tn-rev {
+  font-size: 13px;
+  line-height: 1.4;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+/*
+ * How-to steps (연결): numbered stops on the same dashed route line as the editor's timeline — they are instructions,
+ * not buttons, so no card surface and no chevron.
+ */
+.tn-steps {
+  margin: 0;
+  padding: 4px 24px 0;
+  list-style: none;
+}
+.tn-steps li {
+  position: relative;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  column-gap: 14px;
+  padding-bottom: 20px;
+}
+.tn-steps li:not(:last-child)::before {
+  content: '';
+  position: absolute;
+  left: 13px;
+  top: 30px;
+  bottom: 2px;
+  border-left: 2px dashed var(--color-border-emphasized);
+}
+.tn-step-no {
+  width: 28px;
+  height: 28px;
+  border-radius: 9999px;
+  border: 2px solid var(--color-text-primary);
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  background: var(--color-background-body);
+}
+.tn-step-text {
+  padding-top: 2px;
+  font-size: 16px;
+  line-height: 1.5;
+  font-weight: 500;
+}
+.tn-steps li:last-child {
+  padding-bottom: 4px;
+}

@@ -851,3 +851,18 @@
   text-align: center;
   pointer-events: none;
 }
+
+/* M44 unslop: the ★ and ✓ text glyphs became the app's line icons. */
+.tl-setup-row .tl-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.tl-setup-row .tl-chip svg {
+  width: 16px;
+  height: 16px;
+}
+.tl-setup-progress-mark svg {
+  width: 20px;
+  height: 20px;
+}

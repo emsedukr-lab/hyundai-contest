@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AlertDialog } from '@astryxdesign/core/AlertDialog';
-import { Badge } from '@astryxdesign/core/Badge';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { DropdownMenu } from '@astryxdesign/core/DropdownMenu';
@@ -458,7 +457,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
       onBack={() => leave()}
       actions={
         <>
-          <Badge variant="neutral" label={`v${doc.revision}${dirty ? ` · ${t('editor.unsaved')}` : ''}`} />
+          <span className="tn-rev">{`v${doc.revision}${dirty ? ` · ${t('editor.unsaved')}` : ''}`}</span>
           <DropdownMenu
             items={menuItems}
             presentation="popover"

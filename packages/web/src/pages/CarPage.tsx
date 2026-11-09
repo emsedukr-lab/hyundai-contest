@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@astryxdesign/core/Button';
-import { CarIcon, MapIcon, QrIcon, SendIcon } from '../components/shell/icons';
+import { CarIcon, MapIcon } from '../components/shell/icons';
 import { Row, Section } from '../components/shell/rows';
 import { TabScreen } from '../components/shell/Screens';
 import { sendLog, trips } from '../lib/db';
@@ -69,16 +69,16 @@ export function CarPage() {
       )}
 
       <Section title={t('car.howTo')}>
-        <ol className="tn-cards">
-          <li>
-            <Row lead={<CarIcon />} title={t('car.step1')} />
-          </li>
-          <li>
-            <Row lead={<QrIcon />} title={t('car.step2b')} />
-          </li>
-          <li>
-            <Row lead={<SendIcon />} title={t('car.step3')} />
-          </li>
+        {/* instructions, not buttons: numbered stops on the route line, no card or chevron */}
+        <ol className="tn-steps">
+          {[t('car.step1'), t('car.step2b'), t('car.step3')].map((text, i) => (
+            <li key={i}>
+              <span className="tn-step-no" aria-hidden="true">
+                {i + 1}
+              </span>
+              <span className="tn-step-text">{text}</span>
+            </li>
+          ))}
         </ol>
       </Section>
 

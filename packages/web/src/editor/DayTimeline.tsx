@@ -2,12 +2,12 @@ import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type MouseEve
 import { DndContext, KeyboardSensor, PointerSensor, closestCenter, useSensor, useSensors, type Announcements, type DragEndEvent, type UniqueIdentifier } from '@dnd-kit/core';
 import { SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Badge } from '@astryxdesign/core/Badge';
 import { Banner } from '@astryxdesign/core/Banner';
 import { dayEnd, hhmm, timeline, type DayIssue, type Home, type Trip } from '@tteonaljido/shared';
 import { BedIcon, FlagIcon, GripIcon } from '../components/shell/icons';
 import { minutesLabel, shortDate } from '../lib/format';
 import { t } from '../lib/i18n';
+import { Tag } from '../components/shell/Tag';
 import { kmLabel } from '../lib/routeTimes';
 import { issueText, legKeys, moveTo, nodeIssues, placeOf, visitOf } from '../lib/trips';
 import { dayEnds, legEnds } from './dayInfo';
@@ -260,10 +260,10 @@ function StopCard({
         <button type="button" className="tl-card-main" onClick={() => onOpen(p.placeRef)}>
           <span className="tl-name-row">
             <span className="tl-name">{p.name}</span>
-            {v.fixed && <Badge variant="info" label={t('common.fixedAt', { time: v.fixed.time })} />}
-            {v.importance === 'MUST' && <Badge variant="warning" label={t('common.must')} />}
-            {!v.fixed && !v.timeFlexible && <Badge variant="neutral" label={t('days.timeFirm')} />}
-            {!v.dateFlexible && <Badge variant="neutral" label={t('days.dateFirm')} />}
+            {v.fixed && <Tag tone="accent">{t('common.fixedAt', { time: v.fixed.time })}</Tag>}
+            {v.importance === 'MUST' && <Tag tone="ink">{t('common.must')}</Tag>}
+            {!v.fixed && !v.timeFlexible && <Tag>{t('days.timeFirm')}</Tag>}
+            {!v.dateFlexible && <Tag>{t('days.dateFirm')}</Tag>}
           </span>
           <span className="tl-line">{timeText}</span>
           <span className="tl-meta">{meta}</span>

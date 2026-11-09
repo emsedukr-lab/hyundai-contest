@@ -6,6 +6,7 @@ import { Spinner } from '@astryxdesign/core/Spinner';
 import { Switch } from '@astryxdesign/core/Switch';
 import { TimeInput } from '@astryxdesign/core/TimeInput';
 import type { Home, Trip } from '@tteonaljido/shared';
+import { CheckIcon, StarIcon } from '../components/shell/icons';
 import { shortDate } from '../lib/format';
 import { t } from '../lib/i18n';
 import { recommendRoute, summarizeRecommendation } from '../lib/recommend';
@@ -141,7 +142,8 @@ export function TripSetup({
                       aria-pressed={must}
                       aria-label={t('setup.mustAria', { name: p?.name ?? '' })}
                       onClick={() => onChange(updateVisit(plan, v.visitId, { importance: must ? 'NORMAL' : 'MUST' }))}>
-                      {`★ ${t('common.must')}`}
+                      <StarIcon filled={must} />
+                      {t('common.must')}
                     </button>
                   </div>
                   <Switch label={t('setup.reserved')} value={booked} onChange={(on) => (on ? reserve(day, v.fixed?.time ?? '12:00') : onChange(setReservation(plan, v.visitId, null, null)))} />
@@ -182,7 +184,7 @@ export function TripSetup({
                 return (
                   <li key={label} className={`is-${state}`}>
                     <span className="tl-setup-progress-mark" aria-hidden="true">
-                      {state === 'done' ? '✓' : state === 'now' ? <Spinner size="sm" /> : ''}
+                      {state === 'done' ? <CheckIcon /> : state === 'now' ? <Spinner size="sm" /> : null}
                     </span>
                     {label}
                   </li>

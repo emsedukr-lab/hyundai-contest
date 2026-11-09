@@ -49,7 +49,7 @@ export function PlacesPage() {
 
       <Section title={t('places.paste.title')}>
         <div className="tn-pad" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <TextArea label={t('place.paste.label')} value={paste} onChange={setPaste} placeholder={t('place.paste.placeholder')} description={t('places.paste.hint')} rows={3} />
+          <TextArea label={t('place.paste.label')} isLabelHidden value={paste} onChange={setPaste} placeholder={t('place.paste.placeholder')} description={t('places.paste.hint')} rows={3} />
           {note && <Banner status="info" title={note} isDismissable onDismiss={() => setNote(null)} />}
           <div style={{ display: 'flex', gap: 8 }}>
             <Button label={t('place.paste.fromClipboard')} variant="secondary" size="lg" onClick={() => void readClipboard()} />

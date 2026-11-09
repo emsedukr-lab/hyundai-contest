@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Badge } from '@astryxdesign/core/Badge';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { Card } from '@astryxdesign/core/Card';
@@ -17,6 +16,7 @@ import { CardListHeader } from '../components/toss/Card';
 import { pairings, trips, type PairingRecord } from '../lib/db';
 import { codeLabel, periodLabel } from '../lib/format';
 import { t } from '../lib/i18n';
+import { Tag } from '../components/shell/Tag';
 import { ApiError, cancel, claim, confirmCode, finish, openPairing, seal, status, supportsWebCrypto, upload } from '../lib/pairing';
 import { navigate } from '../lib/router';
 import { defaultHome } from '../lib/settings';
@@ -372,12 +372,16 @@ export function ConnectPage() {
                         <StackItem size="fill">
                           <Text type="label">{d.plan.name}</Text>
                         </StackItem>
-                        <Badge variant="neutral" label={`v${d.revision}`} />
+                        <span className="tn-rev">{`v${d.revision}`}</span>
                       </HStack>
                       <Text type="supporting" color="secondary">
                         {t('common.tripSummary', { period: periodLabel(d.plan.startDate, d.plan.endDate), nights: nightsLabel(d.plan), places: d.plan.places.length })}
                       </Text>
-                      {warnings > 0 && <Badge variant="warning" label={t('connect.pick.warnings', { n: warnings })} />}
+                      {warnings > 0 && (
+                        <span>
+                          <Tag tone="warn">{t('connect.pick.warnings', { n: warnings })}</Tag>
+                        </span>
+                      )}
                     </VStack>
                   </SelectableCard>
                 );
@@ -475,16 +479,19 @@ export function ConnectPage() {
                   <ListItem
                     label={t('connect.track.sent')}
                     endContent={
-                      <Badge
-                        variant={sent || landed(view) ? 'success' : sessionOver ? 'warning' : 'neutral'}
-                        label={sent || landed(view) ? t('connect.track.done') : sessionOver ? t('connect.track.failed') : t('connect.track.waiting')}
-                      />
+                      <Tag tone={sent || landed(view) ? 'ok' : sessionOver ? 'warn' : 'neutral'}>
+                        {sent || landed(view) ? t('connect.track.done') : sessionOver ? t('connect.track.failed') : t('connect.track.waiting')}
+                      </Tag>
                     }
                   />
-                  <ListItem label={t('connect.track.received')} endContent={<Badge variant={view.carFetched ? 'success' : 'neutral'} label={view.carFetched ? t('connect.track.done') : t('connect.track.waiting')} />} />
+                  <ListItem label={t('connect.track.received')} endContent={<Tag tone={view.carFetched ? 'ok' : 'neutral'}>{view.carFetched ? t('connect.track.done') : t('connect.track.waiting')}</Tag>} />
                   <ListItem
                     label={t('connect.track.applied')}
-                    endContent={<Badge variant={view.state === 'APPLIED' ? 'success' : sessionOver ? 'warning' : 'neutral'} label={view.state === 'APPLIED' ? t('connect.track.done') : sessionOver ? t('connect.track.failed') : t('connect.track.waiting')} />}
+                    endContent={
+                      <Tag tone={view.state === 'APPLIED' ? 'ok' : sessionOver ? 'warn' : 'neutral'}>
+                        {view.state === 'APPLIED' ? t('connect.track.done') : sessionOver ? t('connect.track.failed') : t('connect.track.waiting')}
+                      </Tag>
+                    }
                   />
                 </List>
               </Card>
