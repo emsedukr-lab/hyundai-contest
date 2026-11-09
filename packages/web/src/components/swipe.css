@@ -1,0 +1,66 @@
+/* Swipe to remove (M36, shared M52): the card slides left over a red action that it reveals. */
+.tl-swipe {
+  position: relative;
+  margin: 6px 0;
+  border-radius: var(--radius-container);
+  overflow: hidden;
+}
+.tl-swipe-back {
+  position: absolute;
+  inset: 0 0 0 24px; /* clear of the card's left corners, so no red hairline shows around them */
+  display: none;
+  justify-content: flex-end;
+  align-items: stretch;
+  background: var(--color-error);
+  border-radius: var(--radius-container);
+}
+.tl-swipe.is-open .tl-swipe-back {
+  display: flex;
+}
+.tl-swipe-action {
+  width: 88px;
+  border: 0;
+  background: transparent;
+  color: var(--color-on-error);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.tl-swipe-action:focus-visible {
+  outline: 2px solid var(--color-on-error);
+  outline-offset: -4px;
+}
+.tl-swipe-card {
+  margin: 0;
+  touch-action: pan-y;
+  transition: transform 160ms ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .tl-swipe-card {
+    transition: none;
+  }
+}
+
+
+/* The trip list (M52): the next-trip card keeps its gutter; a list row swipes inside its grouped container. */
+.tl-swipe.tn-next-swipe {
+  margin: 0 20px;
+}
+.tl-swipe.tn-next-swipe .tn-next {
+  margin: 0;
+}
+.tl-swipe.tn-row-swipe {
+  margin: 0;
+  border-radius: 0;
+}
+.tl-swipe.tn-row-swipe .tl-swipe-back {
+  inset: 0;
+  border-radius: 0;
+}
+.tn-row-swipe-card {
+  background: var(--color-background-card);
+}
+.tl-swipe-card a {
+  -webkit-user-drag: none;
+}

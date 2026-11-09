@@ -728,6 +728,8 @@ const ko = {
   'tl.legByCarShort': '차량 내비가 계산',
   'tl.waitGap': '{arrive} 도착 · {gap} 여유',
   'tl.barArrive': '{time} 도착',
+  'home.deleteAria': '{name} 삭제',
+  'home.deleted': "'{name}'을(를) 삭제했어요",
 } as const satisfies Record<string, string>;
 
 export type Key = keyof typeof ko;
@@ -1454,6 +1456,8 @@ const en: Record<Key, string> = {
   'tl.legByCarShort': 'Timed by the car',
   'tl.waitGap': 'Arrive {arrive} · {gap} to spare',
   'tl.barArrive': 'Arrive {time}',
+  'home.deleteAria': 'Delete {name}',
+  'home.deleted': 'Deleted {name}',
 };
 
 /** Both tables, for tests. */

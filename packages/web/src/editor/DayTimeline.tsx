@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type MouseEvent, type PointerEvent, type ReactNode } from 'react';
+import { useMemo } from 'react';
 import { DndContext, KeyboardSensor, PointerSensor, closestCenter, useSensor, useSensors, type Announcements, type DragEndEvent, type UniqueIdentifier } from '@dnd-kit/core';
 import { SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -8,6 +8,7 @@ import { BedIcon, FlagIcon, GripIcon, LockIcon } from '../components/shell/icons
 import { minutesLabel, shortDate } from '../lib/format';
 import { t } from '../lib/i18n';
 import { Tag } from '../components/shell/Tag';
+import { SwipeToRemove } from '../components/SwipeToRemove';
 import { kmLabel } from '../lib/routeTimes';
 import { issueText, legKeys, moveTo, nodeIssues, placeOf, stopRangeText, visitOf, waitBeforeStart } from '../lib/trips';
 import { dayEnds, legEnds } from './dayInfo';
@@ -263,7 +264,12 @@ function StopCard({
           {k + 1}
         </span>
       </div>
-      <SwipeToRemove cardClass={conflict ? ' is-error' : fixedSlot ? ' is-warn' : ''} actionLabel={t('tl.unassignPlace', { name: p.name })} onRemove={onRemove}>
+      <SwipeToRemove
+        cardClassName={`tl-card${conflict ? ' is-error' : fixedSlot ? ' is-warn' : ''}`}
+        actionText={t('tl.unassignShort')}
+        actionLabel={t('tl.unassignPlace', { name: p.name })}
+        ignore=".tl-handle"
+        onRemove={onRemove}>
         <button type="button" className="tl-card-main" onClick={() => onOpen(p.placeRef)}>
           {/* M51 — line 1: the name on one line (ellipsis) and only 꼭 beside it. */}
           <span className="tl-name-row">
@@ -296,103 +302,3 @@ function StopCard({
   );
 }
 
-/** How far a half-swiped card rests open, showing its 빼기 button. */
-const OPEN_AT = -88;
-
-/**
- * A card that slides left to reveal a red 빼기 behind it. Past 45% of its width (or a quick fling) it is removed on
- * release; a shorter swipe rests open so 빼기 can be tapped, and tapping the card or Esc closes it again. Only a sideways
- * gesture counts — vertical scrolling passes through (touch-action: pan-y) — and the drag handle is left to dnd-kit.
- * The tap that ends a swipe never opens the card's details.
- */
-function SwipeToRemove({ cardClass, actionLabel, onRemove, children }: { cardClass: string; actionLabel: string; onRemove: () => void; children: ReactNode }) {
-  const [x, setX] = useState(0);
-  const [sliding, setSliding] = useState(false);
-  const gesture = useRef<{ id: number; x0: number; y0: number; t0: number; base: number; width: number; sideways: boolean } | null>(null);
-  const swipedAt = useRef(-Infinity);
-  const card = useRef<HTMLDivElement>(null);
-  // The slide-out finishes before the stop is removed; by then the editor may have re-rendered, so call its newest handler.
-  const removeRef = useRef(onRemove);
-  removeRef.current = onRemove;
-  const timer = useRef<number | undefined>(undefined);
-  useEffect(() => () => window.clearTimeout(timer.current), []);
-
-  const remove = () => {
-    if (timer.current !== undefined) return; // already on its way out
-    setSliding(false);
-    setX(-(card.current?.offsetWidth ?? 400));
-    timer.current = window.setTimeout(() => removeRef.current(), 160);
-  };
-  const onPointerDown = (e: PointerEvent<HTMLDivElement>) => {
-    if (e.button !== 0 || (e.target as Element).closest('.tl-handle')) return;
-    gesture.current = { id: e.pointerId, x0: e.clientX, y0: e.clientY, t0: e.timeStamp, base: x, width: e.currentTarget.offsetWidth, sideways: false };
-  };
-  const onPointerMove = (e: PointerEvent<HTMLDivElement>) => {
-    const g = gesture.current;
-    if (!g || g.id !== e.pointerId) return;
-    const dx = e.clientX - g.x0;
-    const dy = e.clientY - g.y0;
-    if (!g.sideways) {
-      if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
-      if (Math.abs(dy) >= Math.abs(dx)) return void (gesture.current = null); // a scroll, not a swipe
-      g.sideways = true;
-      e.currentTarget.setPointerCapture(e.pointerId);
-      setSliding(true);
-    }
-    setX(Math.min(0, Math.max(-g.width, g.base + dx)));
-  };
-  const onPointerUp = (e: PointerEvent<HTMLDivElement>) => {
-    const g = gesture.current;
-    gesture.current = null;
-    if (!g?.sideways) return;
-    swipedAt.current = e.timeStamp;
-    setSliding(false);
-    const dx = e.clientX - g.x0;
-    const at = Math.min(0, g.base + dx);
-    const speed = dx / Math.max(1, e.timeStamp - g.t0); // px per ms; negative is leftward
-    if (at < -g.width * 0.45 || (speed < -0.8 && dx < -48)) remove();
-    else setX(at < OPEN_AT / 2 ? OPEN_AT : 0);
-  };
-  const onPointerCancel = () => {
-    const g = gesture.current;
-    gesture.current = null;
-    if (!g?.sideways) return;
-    setSliding(false);
-    setX(g.base);
-  };
-  const onClickCapture = (e: MouseEvent<HTMLDivElement>) => {
-    const afterSwipe = e.timeStamp - swipedAt.current < 400;
-    if (!afterSwipe && x === 0) return;
-    e.preventDefault();
-    e.stopPropagation();
-    if (!afterSwipe) setX(0); // tapping an open card closes it
-  };
-  const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
-    if (e.key === 'Escape' && x !== 0) {
-      e.stopPropagation();
-      setX(0);
-    }
-  };
-  const open = x !== 0;
-
-  return (
-    <div className={`tl-swipe${open || sliding ? ' is-open' : ''}`} onKeyDown={onKeyDown}>
-      <div className="tl-swipe-back" aria-hidden={!open}>
-        <button type="button" className="tl-swipe-action" tabIndex={open ? 0 : -1} aria-label={actionLabel} onClick={remove}>
-          {t('tl.unassignShort')}
-        </button>
-      </div>
-      <div
-        ref={card}
-        className={`tl-card tl-swipe-card${cardClass}`}
-        style={{ transform: x ? `translateX(${x}px)` : undefined, transition: sliding ? 'none' : undefined }}
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        onPointerCancel={onPointerCancel}
-        onClickCapture={onClickCapture}>
-        {children}
-      </div>
-    </div>
-  );
-}

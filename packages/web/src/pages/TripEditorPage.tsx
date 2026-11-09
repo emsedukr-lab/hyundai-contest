@@ -5,8 +5,9 @@ import { Button } from '@astryxdesign/core/Button';
 import { DropdownMenu } from '@astryxdesign/core/DropdownMenu';
 import { Spinner } from '@astryxdesign/core/Spinner';
 import { dayIssues, hhmm, type Home, type Trip } from '@tteonaljido/shared';
-import { ChevronIcon, CloseIcon, MoreIcon, PencilIcon, PlusIcon } from '../components/shell/icons';
+import { ChevronIcon, MoreIcon, PencilIcon, PlusIcon } from '../components/shell/icons';
 import { PushScreen } from '../components/shell/Screens';
+import { UndoSnackbar } from '../components/UndoSnackbar';
 import { endpointName } from '../editor/dayInfo';
 import { DayTabs } from '../editor/DayTabs';
 import { DayTimeline } from '../editor/DayTimeline';
@@ -512,21 +513,14 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
       {/* A notice with 되돌리기 floats above the bottom bar, so it is seen wherever the stop was swiped away. */}
       <div role="status">
         {notice?.undo && (
-          <div className="tl-snack">
-            <span className="tl-snack-text">{notice.text}</span>
-            <button
-              type="button"
-              className="tl-snack-action"
-              onClick={() => {
-                notice.undo?.();
-                setNotice(null);
-              }}>
-              {t('tl.undo')}
-            </button>
-            <button type="button" className="tl-snack-close" aria-label={t('common.close')} onClick={() => setNotice(null)}>
-              <CloseIcon />
-            </button>
-          </div>
+          <UndoSnackbar
+            text={notice.text}
+            onUndo={() => {
+              notice.undo?.();
+              setNotice(null);
+            }}
+            onClose={() => setNotice(null)}
+          />
         )}
       </div>
 

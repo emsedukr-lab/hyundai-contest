@@ -4,6 +4,8 @@ import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { sampleTrip, type Trip } from '@tteonaljido/shared';
 import { InstallHint } from '../components/InstallHint';
 import { NextTrip } from '../components/NextTrip';
+import { SwipeToRemove } from '../components/SwipeToRemove';
+import { UndoSnackbar } from '../components/UndoSnackbar';
 import { dateOverlaps, pickNextTrip, sortOtherTrips } from '../lib/nextTrip';
 import { PlusIcon } from '../components/shell/icons';
 import { Row, Section } from '../components/shell/rows';
@@ -25,6 +27,13 @@ export function HomePage() {
   const [lastSends, setLastSends] = useState<Record<string, SendLogEntry>>({});
   const [message, setMessage] = useState<string | null>(null);
   const sampleAsked = useRef(false);
+  // M52: a trip swiped away is deleted at once and kept here for 되돌리기 (the whole saved doc goes back as it was).
+  const [removed, setRemoved] = useState<TripDoc | null>(null);
+  useEffect(() => {
+    if (!removed) return;
+    const id = window.setTimeout(() => setRemoved(null), 8000);
+    return () => window.clearTimeout(id);
+  }, [removed]);
 
   const reload = async () => {
     const [all, log] = await Promise.all([trips.all(), sendLog.recent(1000)]);
@@ -47,6 +56,19 @@ export function HomePage() {
     window.addEventListener(TRIPS_CHANGED, onChanged);
     return () => window.removeEventListener(TRIPS_CHANGED, onChanged);
   }, []);
+
+  const removeTrip = async (d: TripDoc) => {
+    await trips.remove(d.tripId);
+    setRemoved(d);
+    await reload();
+  };
+  const undoRemove = async () => {
+    if (!removed) return;
+    await trips.put(removed);
+    setRemoved(null);
+    await reload();
+  };
+  const swipeProps = (d: TripDoc) => ({ actionText: t('editor.delete.action'), actionLabel: t('home.deleteAria', { name: d.plan.name }), onRemove: () => void removeTrip(d) });
 
   const addSample = async () => {
     const plan: Trip = { ...sampleTrip(nowIso()), tripId: crypto.randomUUID() };
@@ -87,7 +109,9 @@ export function HomePage() {
       )}
       {next && (
         <Section title={t('home.next.title')}>
-          <NextTrip doc={next} sent={lastSends[next.tripId]} overlaps={overlaps.get(next.tripId)?.length ?? 0} />
+          <SwipeToRemove key={next.tripId} className="tn-next-swipe" cardClassName="" {...swipeProps(next)}>
+            <NextTrip doc={next} sent={lastSends[next.tripId]} overlaps={overlaps.get(next.tripId)?.length ?? 0} />
+          </SwipeToRemove>
         </Section>
       )}
       {others.length > 0 && (
@@ -98,6 +122,7 @@ export function HomePage() {
               const sent = lastSends[d.tripId];
               return (
                 <li key={d.tripId}>
+                  <SwipeToRemove className="tn-row-swipe" cardClassName="tn-row-swipe-card" {...swipeProps(d)}>
                   <Row
                     href={`/trips/${d.tripId}`}
                     onClick={() => navigate(`/trips/${d.tripId}`)}
@@ -125,12 +150,17 @@ export function HomePage() {
                     }
                     chevron
                   />
+                  </SwipeToRemove>
                 </li>
               );
             })}
           </ul>
         </Section>
       )}
+      {/* M52: 되돌리기 for a trip swiped away, above the tab bar. */}
+      <div role="status">
+        {removed && <UndoSnackbar above="tab" text={t('home.deleted', { name: removed.plan.name })} onUndo={() => void undoRemove()} onClose={() => setRemoved(null)} />}
+      </div>
     </TabScreen>
   );
 }
