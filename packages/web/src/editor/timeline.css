@@ -218,12 +218,9 @@
   background: #ff8a00;
 }
 
-/* Editor title: name over the period, the whole block opens the trip's details. */
+/* Editor title (M53): just the dates and n박 n일 on one line; tapping it goes to 여행 정보. No name, no pencil. */
 .tl-title {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  min-width: 0;
+  display: block;
   max-width: 100%;
   padding: 2px 4px;
   margin: 0 -4px;
@@ -232,35 +229,12 @@
   background: transparent;
   color: inherit;
   font: inherit;
+  font-variant-numeric: tabular-nums;
   text-align: left;
-  cursor: pointer;
-}
-.tl-title-name {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  max-width: 100%;
-  font-size: 18px;
-  line-height: 26px;
-  font-weight: 700;
-}
-.tl-title-name > span {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-.tl-title-name svg {
-  flex: none;
-  width: 16px;
-  height: 16px;
-  color: var(--color-icon-secondary);
-}
-.tl-title-sub {
-  font-size: 12px;
-  line-height: 16px;
-  font-weight: 400;
-  color: var(--color-text-secondary);
-  font-variant-numeric: tabular-nums;
+  cursor: pointer;
 }
 
 /*
@@ -1027,4 +1001,56 @@
 }
 .tl-wait {
   flex: none;
+}
+
+/*
+ * M53 여행 정보, collapsed: one two-line card under the chip bar (no heading row — the chip names the section).
+ * Line 1 the trip name (+ an orange dot when a night has no lodging) and the chevron; line 2 route · lodging · version.
+ */
+.tl-info:not(.is-open) #trip-info-body {
+  padding-top: 12px;
+}
+.tl-info.is-open .tl-sechead {
+  padding-top: 16px;
+}
+.tl-infosummary {
+  gap: 2px;
+  padding: 12px 14px 12px 18px;
+}
+.tl-infosum-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.tl-infosum-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 17px;
+  line-height: 24px;
+  font-weight: 700;
+}
+.tl-infosum-top .tl-chev {
+  margin-left: auto;
+  color: var(--color-icon-secondary);
+}
+.tl-infosum-meta {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+.tl-infosum-meta > span + span::before {
+  content: '·';
+  margin: 0 6px;
+  color: var(--color-text-secondary);
+}
+.tl-infosum-meta .tl-required-text {
+  font-size: inherit;
 }

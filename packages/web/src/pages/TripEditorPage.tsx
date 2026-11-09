@@ -5,7 +5,7 @@ import { Button } from '@astryxdesign/core/Button';
 import { DropdownMenu } from '@astryxdesign/core/DropdownMenu';
 import { Spinner } from '@astryxdesign/core/Spinner';
 import { dayIssues, hhmm, type Home, type Trip } from '@tteonaljido/shared';
-import { ChevronIcon, MoreIcon, PencilIcon, PlusIcon } from '../components/shell/icons';
+import { ChevronIcon, MoreIcon, PlusIcon } from '../components/shell/icons';
 import { PushScreen } from '../components/shell/Screens';
 import { UndoSnackbar } from '../components/UndoSnackbar';
 import { endpointName } from '../editor/dayInfo';
@@ -23,7 +23,7 @@ import { TripInfoPanel } from '../editor/TripInfoPanel';
 import { TripSetup } from '../editor/TripSetup';
 import { VisitDialog } from '../editor/VisitDialog';
 import { TRIPS_CHANGED, trips } from '../lib/db';
-import { minutesLabel, periodLabel, shortDate } from '../lib/format';
+import { minutesLabel, shortDate } from '../lib/format';
 import { t } from '../lib/i18n';
 import { navigate } from '../lib/router';
 import { cleanNotes, setNote, type TripNotes } from '../lib/notes';
@@ -444,20 +444,18 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
     ...(tripId ? [{ type: 'divider' as const }, { label: t('editor.delete'), variant: 'destructive' as const, onClick: () => setConfirmDelete(true) }] : []),
   ];
 
+  // Top bar (M53): only the dates and n박 n일. The name lives in the 여행 정보 card; tapping the dates still goes to it.
+  const period = t('tl.summary', { period: shortPeriod(plan.startDate, plan.endDate), nights: nightsLabel(plan) });
   const title = (
     <button
       type="button"
       className="tl-title"
       onClick={() => {
-        setInfoOpen(true);
+        if (!inSetup) setInfoOpen(true);
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }}
-      aria-label={t('tl.editBasics')}>
-      <span className="tl-title-name">
-        <span>{plan.name || (tripId ? t('editor.titleEdit') : t('editor.titleNew'))}</span>
-        <PencilIcon />
-      </span>
-      <span className="tl-title-sub">{t('tl.summary', { period: shortPeriod(plan.startDate, plan.endDate), nights: nightsLabel(plan) })}</span>
+      aria-label={`${period} · ${t('tl.editBasics')}`}>
+      {period}
     </button>
   );
 
@@ -475,7 +473,6 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
       onBack={() => leave()}
       actions={
         <>
-          <span className="tn-rev">{`v${doc.revision}${dirty ? ` · ${t('editor.unsaved')}` : ''}`}</span>
           <DropdownMenu
             items={menuItems}
             presentation="popover"
@@ -555,37 +552,56 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
       ) : (
         <>
         <DayTabs days={plan.days.map((d) => d.dayIndex)} active={focusDay} onPick={jumpTo} />
-        <section id="trip-info" aria-labelledby="trip-info-h" className="tl-section">
-          <div className="tl-sechead">
-            <h2 id="trip-info-h" className="tl-sechead-title">
+        <section id="trip-info" aria-labelledby="trip-info-h" className={`tl-section tl-info${infoOpen ? ' is-open' : ''}`}>
+          {infoOpen ? (
+            <div className="tl-sechead">
+              <h2 id="trip-info-h" className="tl-sechead-title">
+                {t('tl.basicsTitle')}
+              </h2>
+              <button type="button" className="tl-textbtn tl-toggle" aria-expanded="true" aria-controls="trip-info-body" onClick={() => setInfoOpen(false)}>
+                {t('tl.collapse')}
+                <span className="tl-chev is-open" aria-hidden="true">
+                  <ChevronIcon />
+                </span>
+              </button>
+            </div>
+          ) : (
+            // Collapsed (M53): no heading row — the chip bar names this section. One two-line card is the toggle.
+            <h2 id="trip-info-h" className="tn-sr-only">
               {t('tl.basicsTitle')}
-              {missingNights > 0 && !infoOpen && <span className="tl-dot" role="img" aria-label={t('tl.dayAttention')} />}
             </h2>
-            <button type="button" className="tl-textbtn tl-toggle" aria-expanded={infoOpen} aria-controls="trip-info-body" onClick={() => setInfoOpen((o) => !o)}>
-              {infoOpen ? t('tl.collapse') : t('tl.expand')}
-              <span className={`tl-chev${infoOpen ? ' is-open' : ''}`} aria-hidden="true">
-                <ChevronIcon />
-              </span>
-            </button>
-          </div>
-          <div id="trip-info-body" style={{ paddingTop: 4, paddingBottom: 8 }}>
+          )}
+          <div id="trip-info-body">
             {infoOpen ? (
-              <TripInfoPanel plan={plan} home={home} onChange={edit} onOpenSettings={() => leave('/settings')} />
+              <div style={{ paddingTop: 4, paddingBottom: 8 }}>
+                <TripInfoPanel plan={plan} home={home} onChange={edit} onOpenSettings={() => leave('/settings')} />
+              </div>
             ) : (
-              // Collapsed (a saved trip): the trip's frame at a glance; tap to open it for editing.
               <div className="tn-pad">
-                <button type="button" className="tl-infocard tl-infosummary" onClick={() => setInfoOpen(true)} aria-label={`${t('tl.basicsTitle')} · ${t('tl.expand')}`}>
-                  <span className="tl-name">{plan.name || t('editor.name')}</span>
-                  <span className="tl-line">{`${periodLabel(plan.startDate, plan.endDate)} · ${nightsLabel(plan)}`}</span>
-                  <span className="tl-meta">{t('tl.routeLine', { start: t('tl.start'), from: endpointName(plan, plan.origin), end: t('tl.home'), to: endpointName(plan, plan.finalDestination) })}</span>
-                  {nightCount > 0 &&
-                    (missingNights > 0 ? (
-                      <span className="tl-required-text">{t('tl.lodgingMissing', { n: missingNights })}</span>
-                    ) : (
-                      <span className="tl-meta">
-                        {tbdNights > 0 ? t('tl.lodgingCountTbd', { set: nightCount - tbdNights, nights: nightCount, tbd: tbdNights }) : t('tl.lodgingCount', { set: nightCount, nights: nightCount })}
-                      </span>
-                    ))}
+                <button
+                  type="button"
+                  className="tl-infocard tl-infosummary"
+                  aria-expanded="false"
+                  aria-controls="trip-info-body"
+                  onClick={() => setInfoOpen(true)}
+                  aria-label={`${t('tl.basicsTitle')} · ${t('tl.expand')}`}>
+                  <span className="tl-infosum-top">
+                    <span className="tl-infosum-name">{plan.name || t('editor.name')}</span>
+                    {missingNights > 0 && <span className="tl-dot" role="img" aria-label={t('tl.dayAttention')} />}
+                    <span className="tl-chev" aria-hidden="true">
+                      <ChevronIcon />
+                    </span>
+                  </span>
+                  <span className="tl-infosum-meta">
+                    <span>{t('tl.routeShort', { from: endpointName(plan, plan.origin), to: endpointName(plan, plan.finalDestination) })}</span>
+                    {nightCount > 0 &&
+                      (missingNights > 0 ? (
+                        <span className="tl-required-text">{t('tl.lodgingMissing', { n: missingNights })}</span>
+                      ) : (
+                        <span>{tbdNights > 0 ? t('tl.lodgingCountTbd', { set: nightCount - tbdNights, nights: nightCount, tbd: tbdNights }) : t('tl.lodgingCount', { set: nightCount, nights: nightCount })}</span>
+                      ))}
+                    {tripId && <span className="tl-infosum-rev">{`v${doc.revision}`}</span>}
+                  </span>
                 </button>
               </div>
             )}
