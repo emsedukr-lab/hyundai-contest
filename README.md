@@ -48,7 +48,7 @@
 
 | 파일 | 상태 |
 |---|---|
-| `apk/떠날지도_release.apk` | 서명된 release (prod, 서버 `https://tteonaljido.tteonaljido-worker.workers.dev`). 2026-11-10 M48에서 재빌드했고 이후 차량 앱 변경은 없습니다. 제출 시 `팀명_떠날지도_release.apk`로 이름 변경. 해시는 `apk/SHA256SUMS.txt` |
+| `apk/떠날지도_release.apk` | 서명된 release (prod, 서버 `https://tteonaljido.tteonaljido-worker.workers.dev`). 버전 0.2.0(2), 2026-11-10 Pleos 가이드 점검 후 재빌드: 주행가능거리용 `CAR_DRIVE`(읽기), 로터리 미지원 선언, 적응형 아이콘, 서명 v2+v3. 제출 시 `팀명_떠날지도_release.apk`로 이름 변경. 해시는 `apk/SHA256SUMS.txt` |
 | `car/app/build/outputs/apk/dev/debug/app-dev-debug.apk` | 로컬 개발용 (`./gradlew :app:assembleDevDebug`) |
 
 ## 실행 방법
