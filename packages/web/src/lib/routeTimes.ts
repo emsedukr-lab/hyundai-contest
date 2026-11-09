@@ -1,4 +1,4 @@
-import type { Home, Trip } from '@tteonaljido/shared';
+import { dayEnd, type Home, type Trip } from '@tteonaljido/shared';
 import { legKeys, setLeg } from './trips';
 
 /**
@@ -121,4 +121,40 @@ export async function fetchRun(run: LegRun): Promise<RunResult | null> {
   } catch {
     return null;
   }
+}
+
+/** A day at a glance (M45, the editor's day heading): driving total, distance, when the day ends, and what is unknown. */
+export interface DaySummary {
+  /** Sum of the legs that have a time. */
+  driveMinutes: number;
+  /** Total Kakao distance, only when every timed leg has one (a partial sum would read as the whole day). */
+  meters: number | null;
+  /** Legs with no time yet. */
+  unknownLegs: number;
+  /** Arrival at the night's lodging (home on the last day), in minutes after midnight; null when it can't be known. */
+  endAt: number | null;
+}
+
+export function daySummary(plan: Trip, dayIndex: number, legMeters: Record<string, number>, startAt?: number): DaySummary {
+  const day = plan.days[dayIndex - 1];
+  const keys = legKeys(plan, dayIndex);
+  let driveMinutes = 0;
+  let meters = 0;
+  let timed = 0;
+  let measured = 0;
+  let unknownLegs = 0;
+  day.legs.forEach((leg, k) => {
+    if (!leg) {
+      unknownLegs++;
+      return;
+    }
+    timed++;
+    driveMinutes += leg.minutes;
+    const m = keys[k] ? legMeters[keys[k]!] : undefined;
+    if (m !== undefined) {
+      measured++;
+      meters += m;
+    }
+  });
+  return { driveMinutes, meters: timed > 0 && measured === timed ? meters : null, unknownLegs, endAt: dayEnd(plan, dayIndex, startAt) };
 }

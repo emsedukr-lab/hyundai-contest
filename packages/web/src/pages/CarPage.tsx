@@ -56,7 +56,7 @@ export function CarPage() {
         <p>{t('car.intro')}</p>
       </div>
       {/* Scan in the app: one tap opens the camera (asking permission), and the car's QR opens the connection here. */}
-      <div className="tn-pad" style={{ paddingBottom: 8 }}>
+      <div className="tn-pad" style={{ paddingTop: 8, paddingBottom: 8 }}>
         <Button label={t('car.scan')} variant="primary" size="lg" width="100%" onClick={() => setScanning(true)} />
       </div>
 
@@ -70,6 +70,7 @@ export function CarPage() {
 
       <Section title={t('car.howTo')}>
         {/* instructions, not buttons: numbered stops on the route line, no card or chevron */}
+        <div className="tn-panel">
         <ol className="tn-steps">
           {[t('car.step1'), t('car.step2b'), t('car.step3')].map((text, i) => (
             <li key={i}>
@@ -80,11 +81,12 @@ export function CarPage() {
             </li>
           ))}
         </ol>
+        </div>
       </Section>
 
       <Section title={t('car.recent')}>
         {recent && recent.length === 0 ? (
-          <p className="tn-pad" style={{ margin: 0, fontSize: 15, lineHeight: 1.5, color: 'var(--color-text-secondary)' }}>
+          <p className="tn-note" style={{ marginTop: 0 }}>
             {t('car.recent.empty')}
           </p>
         ) : (

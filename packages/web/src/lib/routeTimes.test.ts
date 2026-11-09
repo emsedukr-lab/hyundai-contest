@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { sampleTrip } from '@tteonaljido/shared';
-import { allRuns, applyRun, cleanLegMeters, emptyRuns, kmLabel } from './routeTimes';
-import { move, setLeg } from './trips';
+import { allRuns, applyRun, cleanLegMeters, daySummary, emptyRuns, kmLabel } from './routeTimes';
+import { legKeys, move, setLeg } from './trips';
 
 const day = (t: ReturnType<typeof sampleTrip>, i: number) => t.days[i - 1];
 
@@ -88,5 +88,38 @@ describe('legs to and from home (M39)', () => {
     expect(day(out.plan, 1).legs[0]?.minutes).toBe(95);
     expect(out.meters[run.keys[0]]).toBe(151_200);
     expect(kmLabel(151_200)).toBe('151.2km');
+  });
+});
+
+describe('daySummary (M45 day heading)', () => {
+  it('adds up the timed legs, gives km only when every timed leg has a distance, and counts unknown legs', () => {
+    const t = sampleTrip();
+    const d = day(t, 2);
+    const timed = d.legs.filter((l) => l !== null);
+    const s0 = daySummary(t, 2, {});
+    expect(s0.driveMinutes).toBe(timed.reduce((a, l) => a + l!.minutes, 0));
+    expect(s0.unknownLegs).toBe(d.legs.length - timed.length);
+    expect(s0.meters).toBeNull(); // no distances known
+    const keys = legKeys(t, 2);
+    const all = Object.fromEntries(keys.flatMap((k, i) => (k && d.legs[i] ? [[k, 1000 * (i + 1)]] : [])));
+    const s1 = daySummary(t, 2, all);
+    expect(s1.meters).toBe(Object.values(all).reduce((a, m) => a + m, 0));
+    // one timed leg without a distance → no total km
+    const firstTimed = keys.findIndex((k, i) => k && d.legs[i]);
+    const partial = { ...all };
+    delete partial[keys[firstTimed]!];
+    expect(daySummary(t, 2, partial).meters).toBeNull();
+  });
+
+  it('ends when the last leg arrives, follows a later start, and counts an emptied leg as unknown', () => {
+    const t = sampleTrip();
+    const base = daySummary(t, 2, {});
+    expect(base.endAt).not.toBeNull();
+    const later = daySummary(t, 2, {}, base.endAt! - 60); // leave much later
+    expect(later.endAt!).toBeGreaterThan(base.endAt!);
+    const emptied = setLeg(t, 2, 0, null);
+    const s = daySummary(emptied, 2, {});
+    expect(s.unknownLegs).toBe(base.unknownLegs + 1);
+    expect(s.driveMinutes).toBe(base.driveMinutes - day(t, 2).legs[0]!.minutes);
   });
 });

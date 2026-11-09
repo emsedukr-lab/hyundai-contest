@@ -27,7 +27,7 @@ export function PrivacyPage() {
           </li>
         ))}
       </ul>
-      <p className="tn-pad" style={{ margin: '16px 0 0', fontSize: 13, lineHeight: 1.5, color: 'var(--color-text-secondary)' }}>
+      <p className="tn-note" style={{ marginTop: 16 }}>
         {t('privacy.processors')}
       </p>
     </PushScreen>

@@ -4,10 +4,11 @@ import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { DropdownMenu } from '@astryxdesign/core/DropdownMenu';
 import { Spinner } from '@astryxdesign/core/Spinner';
-import { dayIssues, type Home, type Trip } from '@tteonaljido/shared';
+import { dayIssues, hhmm, type Home, type Trip } from '@tteonaljido/shared';
 import { ChevronIcon, CloseIcon, MoreIcon, PencilIcon, PlusIcon } from '../components/shell/icons';
 import { PushScreen } from '../components/shell/Screens';
 import { endpointName } from '../editor/dayInfo';
+import { DayTabs } from '../editor/DayTabs';
 import { DayTimeline } from '../editor/DayTimeline';
 import { NotesContext } from '../editor/NotesContext';
 import { RecommendDialog } from '../editor/RecommendDialog';
@@ -21,11 +22,11 @@ import { TripInfoPanel } from '../editor/TripInfoPanel';
 import { TripSetup } from '../editor/TripSetup';
 import { VisitDialog } from '../editor/VisitDialog';
 import { TRIPS_CHANGED, trips } from '../lib/db';
-import { periodLabel, shortDate } from '../lib/format';
+import { minutesLabel, periodLabel, shortDate } from '../lib/format';
 import { t } from '../lib/i18n';
 import { navigate } from '../lib/router';
 import { cleanNotes, setNote, type TripNotes } from '../lib/notes';
-import { allRuns, applyRun, cleanLegMeters, emptyRuns, fetchRun, runSignature } from '../lib/routeTimes';
+import { allRuns, applyRun, cleanLegMeters, daySummary, emptyRuns, fetchRun, kmLabel, runSignature } from '../lib/routeTimes';
 import { defaultHome } from '../lib/settings';
 import { cleanLodgingTbd, cleanSetup, emptyPlan, legKeys, newDoc, nightsLabel, nowIso, placeOf, relinkLegs, rememberLegs, savePlan, unassign, unassignedVisits, visitOf, type LegBook, type TripDoc, type TripSetupState } from '../lib/trips';
 import '../editor/timeline.css';
@@ -48,7 +49,8 @@ const PULL_AT = 64;
 const PULL_MAX = 96;
 
 /** Section header height under the 56pt top bar: a day counts as "in view" once its header is stuck there. */
-const STUCK_AT = 56 + 56;
+// The line under the top bar (56) and the day chip bar (56): a section counts as current once its top reaches it.
+const STUCK_AT = 56 + 56 + 8;
 
 /** The plan as stored and shared: a blank name becomes the default one (the transfer needs a name). */
 const named = (p: Trip): Trip => (p.name.trim() ? p : { ...p, name: t('trip.defaultName') });
@@ -108,7 +110,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
   /** 여행 정보 open for editing: a new trip starts open; a saved one shows its summary until expanded. */
   const [infoOpen, setInfoOpen] = useState(!tripId);
   /** The day whose header is stuck under the top bar (the + button adds there); day 1 while 여행 정보 is in view. */
-  const [focusDay, setFocusDay] = useState(1);
+  const [focusDay, setFocusDay] = useState(0);
   const [sheet, setSheet] = useState<SheetState>(null);
   const [openPlace, setOpenPlace] = useState<string | null>(null);
   const [notice, setNotice] = useState<Notice | null>(null);
@@ -165,13 +167,13 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
     })();
   }, [tripId]);
 
-  // Which day is in view: the last day section whose top has reached the stuck-header line.
+  // Which section is in view (0 = 여행 정보): the last day section whose top has reached the line under the chip bar.
   const dayCount = plan?.days.length ?? 0;
   useEffect(() => {
     let frame = 0;
     const update = () => {
       frame = 0;
-      let current = 1;
+      let current = 0;
       for (const el of document.querySelectorAll<HTMLElement>('section[data-day]')) if (el.getBoundingClientRect().top <= STUCK_AT) current = Number(el.dataset.day);
       setFocusDay(current);
     };
@@ -347,6 +349,21 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
   const askableLegs = new Set(allRuns(plan, home).flatMap((r) => r.keys));
   const poolNeedsCare = pool.some((v) => v.fixed);
   const targetDay = plan.days.some((d) => d.dayIndex === focusDay) ? focusDay : plan.days[0].dayIndex;
+  // A day at a glance under its heading (M45): driving total · Kakao km · when the day ends · legs still without a time.
+  const summaryLine = (dayIndex: number) => {
+    const s = daySummary(plan, dayIndex, legMeters, liveFrom?.dayIndex === dayIndex ? liveFrom.minute : undefined);
+    const last = dayIndex === plan.days[plan.days.length - 1].dayIndex;
+    return [
+      s.driveMinutes > 0 ? t('tl.daySummary.drive', { time: minutesLabel(s.driveMinutes) }) : '',
+      s.meters !== null ? kmLabel(s.meters) : '',
+      s.endAt !== null ? t(last ? 'tl.daySummary.home' : 'tl.daySummary.lodging', { time: hhmm(s.endAt) }) : '',
+      s.unknownLegs > 0 ? t('tl.daySummary.unknown', { n: s.unknownLegs }) : '',
+    ]
+      .filter(Boolean)
+      .join(' · ');
+  };
+  // Day chip bar: jump to a section, landing just under the stuck bars (scroll-margin-top in timeline.css).
+  const jumpTo = (day: number) => document.getElementById(day === 0 ? 'trip-info' : `day-${day}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
   const edit = (p: Trip) => {
     const linked = relinkLegs(latest.current.plan ?? plan, p, book.current);
@@ -543,18 +560,21 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
         />
       ) : (
         <>
-        <section id="trip-info" aria-labelledby="trip-info-h">
-          <h2 id="trip-info-h" className="tl-sechead">
-            <span className="tl-sechead-title">{t('tl.basicsTitle')}</span>
-            {missingNights > 0 && !infoOpen && <span className="tl-dot" role="img" aria-label={t('tl.dayAttention')} />}
+        <DayTabs days={plan.days.map((d) => d.dayIndex)} active={focusDay} onPick={jumpTo} />
+        <section id="trip-info" aria-labelledby="trip-info-h" className="tl-section">
+          <div className="tl-sechead">
+            <h2 id="trip-info-h" className="tl-sechead-title">
+              {t('tl.basicsTitle')}
+              {missingNights > 0 && !infoOpen && <span className="tl-dot" role="img" aria-label={t('tl.dayAttention')} />}
+            </h2>
             <button type="button" className="tl-textbtn tl-toggle" aria-expanded={infoOpen} aria-controls="trip-info-body" onClick={() => setInfoOpen((o) => !o)}>
               {infoOpen ? t('tl.collapse') : t('tl.expand')}
               <span className={`tl-chev${infoOpen ? ' is-open' : ''}`} aria-hidden="true">
                 <ChevronIcon />
               </span>
             </button>
-          </h2>
-          <div id="trip-info-body" style={{ paddingTop: 16, paddingBottom: 8 }}>
+          </div>
+          <div id="trip-info-body" style={{ paddingTop: 4, paddingBottom: 8 }}>
             {infoOpen ? (
               <TripInfoPanel plan={plan} home={home} onChange={edit} onOpenSettings={() => leave('/settings')} />
             ) : (
@@ -579,16 +599,20 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
         </section>
 
         {plan.days.map((d) => (
-          <section key={d.dayIndex} id={`day-${d.dayIndex}`} data-day={d.dayIndex} aria-labelledby={`day-${d.dayIndex}-h`}>
-            <h2 id={`day-${d.dayIndex}-h`} className="tl-sechead">
-              <span className="tl-sechead-title">{`${t('common.day', { day: d.dayIndex })} · ${shortDate(d.date)}`}</span>
-              {attention.has(d.dayIndex) && <span className="tl-dot" role="img" aria-label={t('tl.dayAttention')} />}
-              <span style={{ marginLeft: 'auto' }}>
-                <Button label={t('tl.map')} variant="secondary" size="sm" onClick={() => setSheet({ kind: 'map', day: d.dayIndex })} />
-              </span>
-            </h2>
+          <section key={d.dayIndex} id={`day-${d.dayIndex}`} data-day={d.dayIndex} aria-labelledby={`day-${d.dayIndex}-h`} className="tl-section">
+            {/* Day heading (M45): the day, its summary line from the Kakao times, and the map. Not sticky — the chip bar is. */}
+            <div className="tl-sechead">
+              <div className="tl-sechead-text">
+                <h2 id={`day-${d.dayIndex}-h`} className="tl-sechead-title">
+                  {`${t('common.day', { day: d.dayIndex })} · ${shortDate(d.date)}`}
+                  {attention.has(d.dayIndex) && <span className="tl-dot" role="img" aria-label={t('tl.dayAttention')} />}
+                </h2>
+                <p className="tl-sechead-sum">{summaryLine(d.dayIndex)}</p>
+              </div>
+              <Button label={t('tl.map')} variant="secondary" size="sm" onClick={() => setSheet({ kind: 'map', day: d.dayIndex })} />
+            </div>
             {/* The last day leaves room so its end card can scroll clear of the floating + button. */}
-            <div style={{ paddingTop: 12, paddingBottom: d.dayIndex === plan.days[plan.days.length - 1].dayIndex ? 88 : 16 }}>
+            <div style={{ paddingTop: 4, paddingBottom: d.dayIndex === plan.days[plan.days.length - 1].dayIndex ? 88 : 8 }}>
               <DayTimeline
                 plan={plan}
                 home={home}

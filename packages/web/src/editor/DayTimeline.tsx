@@ -113,7 +113,7 @@ export function DayTimeline({ plan, home, dayIndex, onChange, onError, onOpenPla
         <div className="tl-rail" />
         <div className="tl-legrow">
           <button type="button" className={`tl-leg${l || byCar ? '' : ' is-missing'}`} aria-label={`${t('tl.legTitle')} · ${t('tl.legRoute', { from, to })}`} onClick={() => onOpenLeg(k)}>
-            <span aria-hidden="true">↓</span>
+            {l || byCar ? <span aria-hidden="true">↓</span> : <span className="tn-warn-dot" aria-hidden="true" />}
             {l ? `${t('tl.legMinutes', { duration: minutesLabel(l.minutes) })}${km}` : byCar ? t('tl.legByCar') : t('tl.legPending')}
           </button>
         </div>
@@ -241,7 +241,8 @@ function StopCard({
         : time.arrive === time.start // no parking time is counted (M42): most stops start on arrival
           ? t('days.arriveOnly', { arrive: clock(time.arrive) })
           : t('days.times', { arrive: clock(time.arrive), start: clock(time.start) });
-  const meta = [t('days.stay', { duration: minutesLabel(v.stayMinutes) }), v.desiredTime ? t('days.desired', { time: v.desiredTime }) : '', p.hours.status === 'UNKNOWN' ? t('tl.hoursUnknown') : '']
+  // Unknown opening hours stay in the place's details (M45) — on every card they were noise, not information.
+  const meta = [t('days.stay', { duration: minutesLabel(v.stayMinutes) }), v.desiredTime ? t('days.desired', { time: v.desiredTime }) : '']
     .filter(Boolean)
     .join(' · ');
   const fixedSlot = !!v.fixed && !/:(00|30)$/.test(v.fixed.time);

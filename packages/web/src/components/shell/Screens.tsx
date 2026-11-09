@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { TabBar } from './TabBar';
 import { TopBar } from './TopBar';
 
-/** A tab root: large top bar, scrolling content, floating tab bar. */
+/** A tab root: large top bar, scrolling content on the grey canvas, the flat tab bar. */
 export function TabScreen({ path, title, actions, children }: { path: string; title: ReactNode; actions?: ReactNode; children: ReactNode }) {
   return (
     <div className="tn-screen">

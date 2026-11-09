@@ -5,7 +5,7 @@ import { CarIcon, GearIcon, MapIcon, PinIcon } from './icons';
 
 type NavLabel = 'nav.trips' | 'nav.places' | 'nav.connect' | 'nav.settings';
 
-/** The four destinations (toss.md tab-bar allows 2–5). Order = importance: trips first, settings last. */
+/** The four destinations. Order = importance: trips first, settings last. */
 export const TABS: Array<{ path: string; label: NavLabel; Icon: ComponentType<{ filled?: boolean }> }> = [
   { path: '/', label: 'nav.trips', Icon: MapIcon },
   { path: '/places', label: 'nav.places', Icon: PinIcon },
@@ -14,7 +14,7 @@ export const TABS: Array<{ path: string; label: NavLabel; Icon: ComponentType<{ 
 ];
 
 /**
- * Floating tab bar: real links (so long-press/open-in-new-tab work), `aria-current` on the active one. Switching tabs
+ * Tab bar (Pleos GNB at phone scale: full width, flat, hairline on top): real links (so long-press/open-in-new-tab work), `aria-current` on the active one. Switching tabs
  * replaces the history entry — tabs are siblings, not a stack — while screens opened from a tab push onto it.
  */
 export function TabBar({ current }: { current: string }) {

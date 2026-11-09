@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { sampleTrip, type Home } from '@tteonaljido/shared';
 import { nowIso } from './trips';
-import { dayPoints, daySketch } from './routeSketch';
+import { dayPoints, daySketch, tripSketch } from './routeSketch';
 
 const home: Home = { address: '서울', latE7: 375_662_952, lonE7: 1_269_779_451 };
 
@@ -60,5 +60,44 @@ describe('경로 스케치 정규화', () => {
       expect(s.nodes[0].x).toBeCloseTo(50, 0);
       expect(s.nodes[0].y).toBeCloseTo(50, 0);
     }
+  });
+});
+
+describe('전체 동선 (tripSketch, M45)', () => {
+  const trip = sampleTrip(nowIso());
+
+  it('puts every day in order inside the box, joins each day to the previous one, and leaves home out', () => {
+    const s = tripSketch(trip, { width: 300, height: 140, pad: 16 });
+    expect(s.days.map((d) => d.dayIndex)).toEqual([...s.days.map((d) => d.dayIndex)].sort((a, b) => a - b));
+    expect(s.days[0].from).toBeNull();
+    for (let i = 1; i < s.days.length; i++) expect(s.days[i].from).toEqual(s.days[i - 1].points.at(-1));
+    const pts = s.days.flatMap((d) => d.points);
+    expect(pts.length).toBe(s.plotted);
+    for (const p of pts) {
+      expect(p.x).toBeGreaterThanOrEqual(15.99);
+      expect(p.x).toBeLessThanOrEqual(284.01);
+      expect(p.y).toBeGreaterThanOrEqual(15.99);
+      expect(p.y).toBeLessThanOrEqual(124.01);
+    }
+    // stops are numbered within their day; lodgings are not
+    expect(pts.filter((p) => p.kind === 'stop').every((p) => p.n !== null && p.n >= 1)).toBe(true);
+    expect(pts.filter((p) => p.kind === 'lodging').every((p) => p.n === null)).toBe(true);
+  });
+
+  it('keeps proportions: the longer side fills the box and the shape is centred', () => {
+    const s = tripSketch(trip, { width: 300, height: 140, pad: 16 });
+    const pts = s.days.flatMap((d) => d.points);
+    const w = Math.max(...pts.map((p) => p.x)) - Math.min(...pts.map((p) => p.x));
+    const h = Math.max(...pts.map((p) => p.y)) - Math.min(...pts.map((p) => p.y));
+    expect(Math.max(w / 268, h / 108)).toBeCloseTo(1, 5);
+    const cx = (Math.max(...pts.map((p) => p.x)) + Math.min(...pts.map((p) => p.x))) / 2;
+    expect(cx).toBeCloseTo(150, 5);
+  });
+
+  it('returns nothing to draw when no place has coordinates', () => {
+    const bare = { ...trip, places: trip.places.map((p) => ({ ...p, latE7: null, lonE7: null })) };
+    const s = tripSketch(bare);
+    expect(s.plotted).toBe(0);
+    expect(s.days).toEqual([]);
   });
 });

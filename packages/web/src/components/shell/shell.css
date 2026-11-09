@@ -1,17 +1,31 @@
-/* App shell — toss.md menu structure (56pt top bar · floating tab bar · one bottom CTA) on Pleos mobile tokens.
-   Phone first: 360–412pt wide (1080×1920 at 2.6–3x), centred at 480 on anything wider. */
+/*
+ * App shell — Pleos mobile (M45). The same language as the Pleos Connect car app (design/android-res), at phone scale
+ * (car dp × 0.6): a grey canvas (background/primary) with white containers (Surface/container), graphite primary
+ * actions, Regular/Bold Asta Sans only. Phone first: 360–412pt wide, centred at 480 on anything wider.
+ *
+ * Type ladder (Pleos Title / Body / Label × 0.6, weights 400 and 700 only, tracking 0):
+ *   Title L 24/32 · Title M 22/28 · Title S 20/26 · Body L 18/26 · Body M 17/24 · Body S 16/24 · Label M 14/20 · Label S 12/16
+ * Gutter 20 for every block (containers, buttons, fields); containers pad 16 inside, radius 16.
+ */
 
 .tn-screen {
   min-height: 100dvh;
   background: var(--color-background-body);
   color: var(--color-text-primary);
 }
+/* Korean wraps between words everywhere; a long unbroken token (an address, a URL) still wraps without widening. */
+.tn-screen,
+.tn-screen textarea,
+.tn-screen input::placeholder {
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
 .tn-col {
   max-width: 480px;
   margin: 0 auto;
 }
 
-/* Top app bar: 56pt, left-aligned title, sticky. */
+/* Top bar (Pleos page navigation): 56pt, sticky on the canvas. Tab roots carry the Title L page title. */
 .tn-topbar {
   position: sticky;
   top: 0;
@@ -20,36 +34,37 @@
   align-items: center;
   gap: 4px;
   min-height: 56px;
-  padding: env(safe-area-inset-top) 8px 0 24px;
+  padding: env(safe-area-inset-top) 8px 0 20px;
   background: var(--color-background-body);
 }
 .tn-topbar.has-back {
-  padding-left: 6px;
+  padding-left: 4px;
 }
 .tn-topbar h1 {
   flex: 1 1 auto;
   min-width: 0;
   margin: 0;
-  font-size: 17px;
-  line-height: 1.4;
-  font-weight: 600;
+  font-size: 18px;
+  line-height: 26px;
+  font-weight: 700;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.tn-topbar.is-large {
+  min-height: 64px;
+}
 .tn-topbar.is-large h1 {
-  font-size: 22px;
-  line-height: 1.3;
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  font-size: 24px;
+  line-height: 32px;
 }
 .tn-actions {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 4px;
 }
 
-/* 44pt icon button. */
+/* 44pt icon button (Pleos icon button, rounded small). */
 .tn-iconbtn {
   width: 44px;
   height: 44px;
@@ -58,18 +73,45 @@
   align-items: center;
   justify-content: center;
   border: 0;
-  border-radius: 12px;
+  border-radius: 10px;
   background: transparent;
   color: var(--color-icon-primary);
   cursor: pointer;
+  transition: background-color 120ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 .tn-iconbtn:active {
   background: var(--color-background-muted);
 }
 
-/* Room under the content for the floating tab bar / the bottom CTA. */
+/* A labelled action in the top bar (여행: 새 여행) — Pleos basic button, small. */
+.tn-headbtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 36px;
+  padding: 0 12px 0 8px;
+  border: 0;
+  border-radius: 10px;
+  background: light-dark(rgba(19, 20, 23, 0.05), rgba(255, 255, 255, 0.05));
+  color: var(--color-text-primary);
+  font: inherit;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 120ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.tn-headbtn svg {
+  width: 20px;
+  height: 20px;
+}
+.tn-headbtn:active {
+  background: light-dark(rgba(19, 20, 23, 0.1), rgba(255, 255, 255, 0.1));
+}
+
+/* Room under the content for the tab bar / the bottom CTA. */
 .tn-main-tab {
-  padding-bottom: calc(108px + env(safe-area-inset-bottom));
+  padding-bottom: calc(88px + env(safe-area-inset-bottom));
 }
 .tn-main-push {
   padding-bottom: calc(120px + env(safe-area-inset-bottom));
@@ -78,69 +120,65 @@
   padding-bottom: calc(32px + env(safe-area-inset-bottom));
 }
 
-/* Floating tab bar (toss.md tab-bar): max 420, radius 24, hairline, shadow-2. Active = filled icon + primary ink. */
+/* Tab bar (Pleos GNB at phone scale): full width, flat, a hairline on top. Active = filled icon + bold primary label. */
 .tn-tabbar {
   position: fixed;
   left: 0;
   right: 0;
   bottom: 0;
   z-index: 10;
-  display: flex;
-  justify-content: center;
-  padding: 0 16px calc(12px + env(safe-area-inset-bottom));
-  pointer-events: none;
+  padding-bottom: env(safe-area-inset-bottom);
+  background: var(--color-background-surface);
+  border-top: 1px solid var(--color-border);
 }
 .tn-tabbar ul {
-  pointer-events: auto;
-  width: 100%;
-  max-width: 420px;
-  margin: 0;
-  padding: 6px;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 0 8px;
   list-style: none;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 4px;
   box-sizing: border-box;
-  background: var(--color-background-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 24px;
-  box-shadow: var(--shadow-med);
 }
 .tn-tab {
-  min-height: 52px;
+  min-height: 56px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 2px;
-  border-radius: 18px;
   text-decoration: none;
   font-size: 12px;
-  line-height: 1.3;
-  font-weight: 600;
+  line-height: 16px;
+  font-weight: 400;
   color: var(--color-text-secondary);
   -webkit-tap-highlight-color: transparent;
 }
+.tn-tab svg {
+  width: 24px;
+  height: 24px;
+}
 .tn-tab[aria-current='page'] {
   color: var(--color-text-primary);
+  font-weight: 700;
 }
-.tn-tab:active {
-  background: var(--color-background-muted);
+.tn-tab:active svg {
+  transform: scale(0.94);
 }
 
-/* Bottom CTA: fixed above the safe area with a protective fade (the one gradient the guidelines allow). */
+/* Bottom CTA: fixed above the safe area with a protective fade into the canvas (one tone, not a hue gradient). */
 .tn-cta {
   position: fixed;
   left: 0;
   right: 0;
   bottom: 0;
   z-index: 6;
-  padding: 32px 16px calc(16px + env(safe-area-inset-bottom));
-  background: linear-gradient(to top, var(--color-background-body) 62%, transparent);
+  padding: 24px 20px calc(16px + env(safe-area-inset-bottom));
+  background: linear-gradient(to top, var(--color-background-body) 70%, transparent);
   pointer-events: none;
 }
 .tn-cta-inner {
-  max-width: 448px;
+  max-width: 440px;
   margin: 0 auto;
   display: flex;
   gap: 8px;
@@ -152,34 +190,64 @@
 .tn-cta-inner > .is-secondary {
   flex: 0 1 auto;
 }
-.tn-cta button {
+.tn-cta .astryx-button {
+  --_button-radius: 20px; /* Pleos large button */
   min-height: 56px;
 }
 
-/* Section header above list rows (toss.md list-header). */
+/* Section header above a container. */
 .tn-section {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 24px 24px 8px;
+  min-height: 36px;
+  padding: 24px 20px 8px;
 }
 .tn-section h2 {
   margin: 0;
   font-size: 17px;
-  line-height: 1.4;
+  line-height: 24px;
   font-weight: 700;
 }
 
-/* Full-bleed list row (toss.md list-row): 14×24 padding, whole row is the hit area. */
+/*
+ * Grouped list (Pleos list in one container): a section's menus share one white container, rows split by a hairline
+ * that starts at the text column. `ul.tn-cards` keeps its name so every screen moves over at once.
+ */
+.tn-cards {
+  margin: 0 20px;
+  padding: 0;
+  list-style: none;
+  border-radius: var(--radius-container);
+  background: var(--color-background-card);
+  overflow: hidden;
+}
+.tn-cards > li {
+  position: relative;
+}
+.tn-cards > li + li::before {
+  content: '';
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  left: 16px;
+  right: 0;
+  border-top: 1px solid var(--color-border);
+}
+.tn-cards:has(.tn-lead) > li + li::before {
+  left: 52px;
+}
+
+/* List row: 64 tall, 12×16 padding, the whole row is the hit area. */
 .tn-row {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
   width: 100%;
   min-height: 64px;
   box-sizing: border-box;
-  padding: 14px 24px;
+  padding: 12px 16px;
   border: 0;
   background: transparent;
   color: inherit;
@@ -188,6 +256,7 @@
   text-decoration: none;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+  transition: background-color 120ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 .tn-row:active {
   background: var(--color-background-muted);
@@ -198,131 +267,120 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  word-break: keep-all; /* Korean wraps between words, not mid-word, in the narrower cards */
-  overflow-wrap: anywhere; /* …but a long unbroken token (an address, a URL) still fits */
+  overflow-wrap: anywhere;
 }
 .tn-row-title {
   font-size: 17px;
-  line-height: 1.4;
-  font-weight: 600;
+  line-height: 24px;
+  font-weight: 400;
 }
 .tn-row-sub {
-  font-size: 13px;
-  line-height: 1.5;
+  font-size: 14px;
+  line-height: 20px;
   color: var(--color-text-secondary);
 }
 .tn-row-end {
   flex: none;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   color: var(--color-icon-secondary);
 }
+.tn-row-end svg {
+  width: 20px;
+  height: 20px;
+}
+/* Leading icon: a 24 glyph in the secondary ink, no tile. */
 .tn-lead {
   flex: none;
-  width: 44px;
-  height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 14px;
-  background: var(--color-background-muted);
-  color: var(--color-icon-primary);
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  color: var(--color-icon-secondary);
+}
+.tn-lead svg {
+  width: 24px;
+  height: 24px;
 }
 
-/*
- * Stacked cards (stageshow 'Stacked cards'): inside one category every menu is its own card — one width, one left
- * edge (the section title's 24pt gutter), 12px apart — instead of full-bleed rows run together. The card is the grey
- * Pleos section surface used across the app; its icon tile turns white so it still reads on the grey.
- */
-.tn-cards {
+/* A container for content that is not a list (a form, the steps, a hint). */
+.tn-panel {
+  margin: 0 20px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  margin: 0;
-  padding: 0 24px;
-  list-style: none;
-}
-.tn-cards .tn-row {
-  min-height: 72px;
-  padding: 14px 16px 14px 14px;
   border-radius: var(--radius-container);
   background: var(--color-background-card);
 }
-.tn-cards .tn-row:active {
-  background: var(--color-background-muted);
-}
-.tn-cards .tn-row:not(:has(.tn-lead)) {
-  padding-left: 20px; /* text-only card: the text takes the inset the icon tile would have */
-}
-.tn-cards .tn-lead {
-  background: var(--color-background-surface);
-}
-.tn-cards .tn-row:focus-visible {
-  outline-offset: 2px;
+/* Quiet text right under a container (a footnote to it). */
+.tn-note {
+  margin: 8px 0 0;
+  padding: 0 20px;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--color-text-secondary);
 }
 
-/* Page text block: title + description with 24pt side padding. */
+/* Page text block under the title. */
 .tn-intro {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 8px 24px 16px;
+  padding: 0 20px 8px;
 }
 .tn-intro p {
   margin: 0;
-  font-size: 15px;
-  line-height: 1.5;
+  font-size: 16px;
+  line-height: 24px;
   color: var(--color-text-secondary);
 }
 .tn-pad {
-  padding-left: 24px;
-  padding-right: 24px;
+  padding-left: 20px;
+  padding-right: 20px;
 }
 
 .tn-tab:focus-visible,
 .tn-iconbtn:focus-visible,
+.tn-headbtn:focus-visible,
 .tn-row:focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: -2px;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .tn-tab,
-  .tn-row,
-  .tn-iconbtn {
-    transition: none;
-  }
+/* ---- Astryx components on Pleos (unlayered, so they win over the component layer) ---- */
+
+/* Basic button (secondary): ink 5%, pressed 10% — Pleos button/basic. */
+.astryx-button[data-variant='secondary'] {
+  background-color: light-dark(rgba(19, 20, 23, 0.05), rgba(255, 255, 255, 0.08));
+}
+.astryx-button[data-variant='secondary']:active {
+  background-color: light-dark(rgba(19, 20, 23, 0.1), rgba(255, 255, 255, 0.14));
+}
+.astryx-button {
+  font-weight: 700;
+}
+/* Switch on = Pleos informative/active green. */
+.astryx-switch[data-checked='checked'] {
+  background-color: light-dark(#02c265, #00e074);
+}
+/* Banners are quiet containers: white surface, the status only in the icon. */
+.astryx-banner[data-status='info'] {
+  background-color: var(--color-background-card);
+  color: var(--color-text-primary);
+}
+.astryx-banner[data-status='info'] .astryx-banner-icon {
+  color: var(--color-text-accent);
 }
 
-/* Floating "+" on a tab screen (여행: create a trip): bottom right, just above the floating tab bar, inside the
-   480pt content column on wide screens. Same look as the editor's add-place button. */
-.tn-fab {
-  position: fixed;
-  z-index: 11;
-  right: calc(max(0px, (100vw - 480px) / 2) + 20px);
-  bottom: calc(96px + env(safe-area-inset-bottom));
-  width: 56px;
-  height: 56px;
-  display: grid;
-  place-items: center;
-  border: 0;
-  border-radius: 9999px;
-  background: var(--color-accent);
-  color: var(--color-on-accent);
-  box-shadow: var(--shadow-high);
-  cursor: pointer;
-}
-.tn-fab svg {
-  width: 26px;
-  height: 26px;
-}
-.tn-fab:active {
-  transform: scale(0.96);
-}
-.tn-fab:focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 3px;
+@media (prefers-reduced-motion: reduce) {
+  .tn-tab svg,
+  .tn-row,
+  .tn-iconbtn,
+  .tn-headbtn {
+    transition: none;
+  }
 }
 
 /* Camera scanner (연결 tab): full screen, camera behind, a square guide, the title and close on top, status below. */
@@ -400,7 +458,7 @@
 }
 .tn-scan-msg.is-warn {
   color: #ffd76a;
-  font-weight: 600;
+  font-weight: 700;
 }
 .tn-scan-retry {
   min-height: 48px;
@@ -411,7 +469,7 @@
   color: #131417;
   font: inherit;
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
 }
 .tn-scan-retry:focus-visible {
@@ -419,19 +477,7 @@
   outline-offset: 3px;
 }
 
-/*
- * M44 unslop pass.
- * Korean wraps between words everywhere (not only in cards): no '기\n기' or '붙\n여넣기' breaks. A long unbroken token
- * (an address, a URL) still wraps without widening the layout.
- */
-.tn-screen,
-.tn-screen textarea,
-.tn-screen input::placeholder {
-  word-break: keep-all;
-  overflow-wrap: break-word;
-}
-
-/* Quiet status tag (components/shell/Tag.tsx). */
+/* Quiet status tag (components/shell/Tag.tsx): 22 tall, radius 6, Label S bold on a light tint of its own colour. */
 .tn-tag {
   display: inline-flex;
   align-items: center;
@@ -439,61 +485,71 @@
   padding: 0 6px;
   border-radius: 6px;
   font-size: 12px;
-  line-height: 1;
-  font-weight: 600;
+  line-height: 16px;
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
-  background: var(--color-background-muted);
+  background: light-dark(rgba(19, 20, 23, 0.05), rgba(255, 255, 255, 0.08));
   color: var(--color-text-secondary);
 }
 .tn-tag.is-ink {
   color: var(--color-text-primary);
 }
 .tn-tag.is-accent {
-  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
-  color: var(--color-text-info);
+  background: color-mix(in srgb, #0064ff 10%, transparent);
+  color: var(--color-text-accent);
 }
 .tn-tag.is-warn {
-  background: color-mix(in srgb, var(--color-text-warning) 16%, transparent);
-  color: light-dark(#6e5310, #f2c00b);
+  background: color-mix(in srgb, #ff8a00 14%, transparent);
+  color: var(--color-text-warning);
 }
 .tn-tag.is-ok {
-  background: color-mix(in srgb, var(--color-text-success) 14%, transparent);
+  background: color-mix(in srgb, #02c265 14%, transparent);
   color: light-dark(#05701e, #41aa4b);
 }
 
-/* The saved version (v3) as quiet meta text, not a pill. */
+/* The saved version (v3) as quiet meta text. */
 .tn-rev {
-  font-size: 13px;
-  line-height: 1.4;
-  font-weight: 500;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 400;
   font-variant-numeric: tabular-nums;
   color: var(--color-text-secondary);
   white-space: nowrap;
 }
 
-/*
- * How-to steps (연결): numbered stops on the same dashed route line as the editor's timeline — they are instructions,
- * not buttons, so no card surface and no chevron.
- */
+/* A warning mark (Pleos regulation orange) before a line that needs fixing. */
+.tn-warn-dot {
+  display: inline-block;
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: #ff8a00;
+}
+
+/* How-to steps (연결): numbered stops on the dashed route line — the editor's signature, not buttons. */
 .tn-steps {
   margin: 0;
-  padding: 4px 24px 0;
+  padding: 0;
   list-style: none;
 }
 .tn-steps li {
   position: relative;
   display: grid;
   grid-template-columns: 28px minmax(0, 1fr);
-  column-gap: 14px;
-  padding-bottom: 20px;
+  column-gap: 12px;
+  padding-bottom: 16px;
+}
+.tn-steps li:last-child {
+  padding-bottom: 0;
 }
 .tn-steps li:not(:last-child)::before {
   content: '';
   position: absolute;
   left: 13px;
-  top: 30px;
-  bottom: 2px;
+  top: 32px;
+  bottom: 4px;
   border-left: 2px dashed var(--color-border-emphasized);
 }
 .tn-step-no {
@@ -504,18 +560,24 @@
   box-sizing: border-box;
   display: grid;
   place-items: center;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
   line-height: 1;
   font-variant-numeric: tabular-nums;
-  background: var(--color-background-body);
+  background: var(--color-background-card);
 }
 .tn-step-text {
   padding-top: 2px;
   font-size: 16px;
-  line-height: 1.5;
-  font-weight: 500;
+  line-height: 24px;
 }
-.tn-steps li:last-child {
-  padding-bottom: 4px;
+
+/* 여행 tab notes (install hint, sample notice): stacked, collapse when empty. */
+.tn-home-notes {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.tn-home-notes:empty {
+  display: none;
 }

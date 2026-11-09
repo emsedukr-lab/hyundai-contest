@@ -48,7 +48,7 @@ export function PlacesPage() {
       </div>
 
       <Section title={t('places.paste.title')}>
-        <div className="tn-pad" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div className="tn-panel">
           <TextArea label={t('place.paste.label')} isLabelHidden value={paste} onChange={setPaste} placeholder={t('place.paste.placeholder')} description={t('places.paste.hint')} rows={3} />
           {note && <Banner status="info" title={note} isDismissable onDismiss={() => setNote(null)} />}
           <div style={{ display: 'flex', gap: 8 }}>
@@ -72,7 +72,7 @@ export function PlacesPage() {
         title={t('favorites.title')}
         action={favs.length > 0 ? <Button label={manage ? t('favorites.done') : t('favorites.manage')} variant="ghost" size="sm" onClick={() => setManage((m) => !m)} /> : undefined}>
         {favs.length === 0 ? (
-          <p className="tn-pad" style={{ margin: 0, fontSize: 15, lineHeight: 1.5, color: 'var(--color-text-secondary)' }}>
+          <p className="tn-note" style={{ marginTop: 0 }}>
             {t('places.favorites.empty')}
           </p>
         ) : (

@@ -1,29 +1,27 @@
 /*
- * 장소 검색창 — SOCAR Frame 2.0 `input-filled` (socar.md · input / input-filled), its two states only:
- * at rest (placeholder) a grey field with no visible border, and on focus a light-blue border. Nothing else of that
- * system is taken (the app keeps its own colours, buttons and type). Values: field ~48px, radius 14px (radius-350),
- * gap 10px, padding L12/R8, gray-100 #F2F3F8, placeholder text-tertiary #99A1B1, body2 16/24, focus blue-200 #99CEFF.
- * SOCAR has no dark values; in dark mode the grey becomes a lifted surface of the page and the blue border stays.
+ * 장소 검색창 — the M38 behaviour (SOCAR `input-filled`: a filled field with the magnifier inside, no border at rest, a
+ * border on focus) in Pleos colours (M45): rest = ink 5% fill, placeholder and icon in the secondary ink, focus = Pleos
+ * field/focused (#313236, dark #EDEEF2). 48px tall, radius 14 (Pleos text field 24dp × 0.6), Body S 16/24.
  * The doubled class outranks Astryx's single-class atomic styles on the same element.
  */
 .tn-searchbar.tn-searchbar {
   height: 48px;
   min-height: 48px;
   box-sizing: border-box;
-  gap: 10px;
+  gap: 8px;
   padding: 0 8px 0 12px;
   border: 1px solid transparent;
   border-radius: 14px;
-  background: light-dark(#f2f3f8, color-mix(in srgb, #ffffff 9%, var(--color-background-body)));
+  background: light-dark(rgba(19, 20, 23, 0.05), rgba(255, 255, 255, 0.08));
   box-shadow: none;
   outline: none;
-  transition: border-color 120ms ease-out;
+  transition: border-color 120ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 .tn-searchbar.tn-searchbar:hover {
   border-color: transparent;
 }
 .tn-searchbar.tn-searchbar:focus-within {
-  border-color: #99ceff;
+  border-color: light-dark(#313236, #edeef2);
   box-shadow: none;
   outline: none;
 }
@@ -32,7 +30,7 @@
   line-height: 24px;
 }
 .tn-searchbar.tn-searchbar input::placeholder {
-  color: #99a1b1;
+  color: var(--color-text-secondary);
   opacity: 1;
 }
 .tn-searchbar.tn-searchbar svg:first-child,
@@ -40,7 +38,7 @@
   flex: none;
   width: 20px;
   height: 20px;
-  color: #99a1b1;
+  color: var(--color-icon-secondary);
 }
 @media (prefers-reduced-motion: reduce) {
   .tn-searchbar.tn-searchbar {

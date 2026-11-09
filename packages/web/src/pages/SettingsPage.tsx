@@ -106,7 +106,7 @@ export function SettingsPage() {
             </li>
           ))}
         </ul>
-        <p className="tn-pad" style={{ margin: '12px 0 0', fontSize: 13, lineHeight: 1.5, color: 'var(--color-text-secondary)' }}>
+        <p className="tn-note">
           {t('settings.origins.detail2')}
         </p>
       </Section>
@@ -121,7 +121,7 @@ export function SettingsPage() {
           </li>
         </ul>
         {showImport && (
-          <div className="tn-pad" style={{ paddingTop: 12, paddingBottom: 8 }}>
+          <div className="tn-panel" style={{ marginTop: 12 }}>
             <FileInput
               label={t('home.backupFile.label')}
               mode="input"
@@ -136,7 +136,7 @@ export function SettingsPage() {
           </div>
         )}
         {shareText && (
-          <div className="tn-pad" style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingTop: 12, paddingBottom: 8 }}>
+          <div className="tn-panel" style={{ marginTop: 12 }}>
             <Banner status="info" title={t('share.importTitle')} description={t('share.importHint')} />
             <TextInput label={t('share.passcode')} value={sharePass} inputMode="numeric" onChange={setSharePass} />
             <div style={{ display: 'flex', gap: 8 }}>
@@ -170,7 +170,7 @@ export function SettingsPage() {
         </ul>
       </Section>
 
-      <p className="tn-pad" style={{ margin: '16px 0 0', fontSize: 13, lineHeight: 1.5, color: 'var(--color-text-secondary)' }}>
+      <p className="tn-note" style={{ marginTop: 16 }}>
         {t('home.storageNote')}
       </p>
     </TabScreen>

@@ -3,7 +3,9 @@ import { Banner } from '@astryxdesign/core/Banner';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { sampleTrip, type Trip } from '@tteonaljido/shared';
 import { InstallHint } from '../components/InstallHint';
-import { MapIcon, PlusIcon } from '../components/shell/icons';
+import { NextTrip } from '../components/NextTrip';
+import { pickNextTrip } from '../lib/nextTrip';
+import { PlusIcon } from '../components/shell/icons';
 import { Row, Section } from '../components/shell/rows';
 import { Tag } from '../components/shell/Tag';
 import { TabScreen } from '../components/shell/Screens';
@@ -15,8 +17,8 @@ import { defaultHome } from '../lib/settings';
 import { newDoc, nightsLabel, nowIso, unassignedVisits, type TripDoc } from '../lib/trips';
 
 /**
- * 여행 tab: the trip list, and a floating + at the bottom right (above the tab bar) to create a trip. The sample trip has
- * no menu; `/?sample=1` still adds it for demos and tests (the address is cleaned right after).
+ * 여행 tab (M45): the next trip as a card with its whole route, the other trips in one list, and 새 여행 in the top bar.
+ * The sample trip has no menu; `/?sample=1` still adds it for demos and tests (the address is cleaned right after).
  */
 export function HomePage() {
   const [docs, setDocs] = useState<TripDoc[] | null>(null);
@@ -53,23 +55,38 @@ export function HomePage() {
     await reload();
   };
 
+  const next = docs ? pickNextTrip(docs) : null;
+  const others = (docs ?? []).filter((d) => d !== next);
+  const newTrip = (
+    <button type="button" className="tn-headbtn" onClick={() => navigate('/trips/new')} aria-label={t('trips.create')}>
+      <PlusIcon />
+      {t('home.newTrip')}
+    </button>
+  );
+
   return (
-    <TabScreen path="/" title={t('home.title')}>
+    <TabScreen path="/" title={t('home.title')} actions={newTrip}>
       <div className="tn-intro">
         <p>{t('home.tagline')}</p>
       </div>
-      <div className="tn-pad" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div className="tn-pad tn-home-notes">
         <InstallHint />
         {message && <Banner status="info" title={message} isDismissable onDismiss={() => setMessage(null)} />}
       </div>
-      {docs !== null && docs.length === 0 ? (
-        <div className="tn-pad" style={{ paddingTop: 32 }}>
-          <EmptyState title={t('common.noTrips')} description={t('home.empty.fab')} />
+      {docs !== null && docs.length === 0 && (
+        <div className="tn-panel" style={{ marginTop: 16 }}>
+          <EmptyState title={t('common.noTrips')} description={t('home.empty.head')} />
         </div>
-      ) : (
-        <Section title={t('home.myTrips')}>
+      )}
+      {next && (
+        <Section title={t('home.next.title')}>
+          <NextTrip doc={next} sent={lastSends[next.tripId]} />
+        </Section>
+      )}
+      {others.length > 0 && (
+        <Section title={t('home.others')}>
           <ul className="tn-cards">
-            {(docs ?? []).map((d) => {
+            {others.map((d) => {
               const unassigned = unassignedVisits(d.plan).length;
               const sent = lastSends[d.tripId];
               return (
@@ -77,10 +94,9 @@ export function HomePage() {
                   <Row
                     href={`/trips/${d.tripId}`}
                     onClick={() => navigate(`/trips/${d.tripId}`)}
-                    lead={<MapIcon />}
                     title={
-                      // badges ride on the title line so the summary gets the full width on a 360pt screen
-                      <span style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6 }}>
+                      // tags ride on the title line so the summary gets the full width on a 360pt screen
+                      <span style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
                         <span>{d.plan.name}</span>
                         {d.setup && !d.setup.done ? (
                           // still in its step-by-step setup (M43)
@@ -106,11 +122,6 @@ export function HomePage() {
           </ul>
         </Section>
       )}
-      {/* room so the last trip can scroll clear of the floating + */}
-      <div style={{ height: 72 }} aria-hidden="true" />
-      <button type="button" className="tn-fab" onClick={() => navigate('/trips/new')} aria-label={t('trips.create')}>
-        <PlusIcon />
-      </button>
     </TabScreen>
   );
 }

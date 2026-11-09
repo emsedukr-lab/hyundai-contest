@@ -90,3 +90,62 @@ export function daySketch(plan: Trip, home: Home | null, dayIndex: number, opts?
   }));
   return { nodes, noCoords, width, height };
 }
+
+/** One day of the whole-trip sketch: its stops (and that night's lodging) in order, joined to the previous day's end. */
+export interface TripSketchDay {
+  dayIndex: number;
+  /** The previous day's last plotted point, so the route reads as one line from day to day (null on the first). */
+  from: { x: number; y: number } | null;
+  points: { x: number; y: number; kind: 'stop' | 'lodging'; n: number | null }[];
+}
+
+export interface TripSketch {
+  days: TripSketchDay[];
+  width: number;
+  height: number;
+  /** How many points could be placed (places without coordinates are skipped). */
+  plotted: number;
+}
+
+/**
+ * 전체 동선 (M45, the 여행 tab's next-trip card): every day's stops and lodgings on one sketch. North up, and unlike the
+ * day sketch it keeps the map's proportions (longitude scaled by cos(latitude)) so the trip's shape reads true. Home is
+ * left out — a far-away start would shrink the trip itself to a dot. Pure; coordinates never leave the device.
+ */
+export function tripSketch(plan: Trip, opts?: { width?: number; height?: number; pad?: number }): TripSketch {
+  const width = opts?.width ?? 300;
+  const height = opts?.height ?? 140;
+  const pad = opts?.pad ?? 16;
+  type Raw = { dayIndex: number; kind: 'stop' | 'lodging'; n: number | null; latE7: number; lonE7: number };
+  const raws: Raw[] = [];
+  for (const day of plan.days) {
+    day.visitOrder.forEach((id, i) => {
+      const p = placeOf(plan, visitRef(plan, id));
+      if (p && p.latE7 !== null && p.lonE7 !== null) raws.push({ dayIndex: day.dayIndex, kind: 'stop', n: i + 1, latE7: p.latE7, lonE7: p.lonE7 });
+    });
+    const lodging = day.dayIndex < plan.days.length ? placeOf(plan, day.lodgingPlaceRef) : null;
+    if (lodging && lodging.latE7 !== null && lodging.lonE7 !== null) raws.push({ dayIndex: day.dayIndex, kind: 'lodging', n: null, latE7: lodging.latE7, lonE7: lodging.lonE7 });
+  }
+  if (raws.length === 0) return { days: [], width, height, plotted: 0 };
+  const lat0 = ((raws.reduce((a, r) => a + r.latE7, 0) / raws.length) * 1e-7 * Math.PI) / 180;
+  const k = Math.cos(lat0);
+  const xs = raws.map((r) => r.lonE7 * k);
+  const ys = raws.map((r) => r.latE7);
+  const [minX, maxX, minY, maxY] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+  const spanX = maxX - minX;
+  const spanY = maxY - minY;
+  const scale = spanX === 0 && spanY === 0 ? 0 : Math.min(spanX ? (width - 2 * pad) / spanX : Infinity, spanY ? (height - 2 * pad) / spanY : Infinity);
+  // Centre the shape in the box (a north–south trip stands in the middle instead of hugging the left edge).
+  const offX = (width - spanX * scale) / 2;
+  const offY = (height - spanY * scale) / 2;
+  const at = (i: number) => ({ x: offX + (xs[i] - minX) * scale, y: offY + (maxY - ys[i]) * scale });
+  const days: TripSketchDay[] = [];
+  let last: { x: number; y: number } | null = null;
+  for (const day of plan.days) {
+    const points = raws.flatMap((r, i) => (r.dayIndex === day.dayIndex ? [{ ...at(i), kind: r.kind, n: r.n }] : []));
+    if (points.length === 0) continue;
+    days.push({ dayIndex: day.dayIndex, from: last, points });
+    last = points[points.length - 1];
+  }
+  return { days, width, height, plotted: raws.length };
+}
