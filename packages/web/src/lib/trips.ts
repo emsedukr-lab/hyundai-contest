@@ -3,14 +3,17 @@ import {
   buildTransfer,
   contentHash,
   dayIssues,
+  departure,
   epochDay,
   hhmm,
+  minutes,
   TRANSFER_LIMITS,
   type Day,
   type DayIssue,
   type Endpoint,
   type Home,
   type Place,
+  type StopTime,
   type Trip,
   type TripTransfer,
   type Visit,
@@ -464,9 +467,34 @@ export function stopRangeText(st: { start: number | null; end: number | null } |
   return `${hhmm(st.start)} ~ ${hhmm(st.end)}`;
 }
 
-/** Minutes between arriving and starting (a fixed time later than the arrival) when it is 15 or more; else null. */
-export const waitBeforeStart = (st: { arrive: number | null; start: number | null } | undefined): number | null =>
-  st && st.arrive !== null && st.start !== null && st.start - st.arrive >= 15 ? st.start - st.arrive : null;
+/** Minutes to arrive before a fixed time (a reservation or a fixed start) — M54. */
+export const FIXED_BUFFER = 15;
+
+export interface LeaveFor {
+  /** Leave the previous place (or the day's start) by this minute to arrive {@link FIXED_BUFFER} minutes early. */
+  time: number;
+  /** `time` − when the previous place is left as planned; null when that is not known. */
+  spare: number | null;
+  /** 'spare': 15+ minutes to spare (stay longer before); 'short': leaving as planned misses the buffer; else 'ok'. */
+  tone: 'ok' | 'spare' | 'short';
+}
+
+/**
+ * The leg into a stop with a fixed time F (M54): leave by F − 15 − the drive, so the stop is reached 15 minutes early.
+ * Phone only — the shared timeline (and so the car) still starts the stop at F. null when the next node has no fixed
+ * time or the drive is unknown.
+ */
+export function leaveFor(plan: Trip, dayIndex: number, k: number, times: Record<string, StopTime>, startAt?: number): LeaveFor | null {
+  const day = plan.days[dayIndex - 1];
+  const id = day?.visitOrder[k];
+  const fixed = id ? plan.visits.find((v) => v.visitId === id)?.fixed : null;
+  const leg = day?.legs[k];
+  if (!fixed || !leg) return null;
+  const time = minutes(fixed.time) - FIXED_BUFFER - leg.minutes;
+  const prev = k === 0 ? (startAt ?? departure(plan, dayIndex)) : (times[day.visitOrder[k - 1]]?.end ?? null);
+  const spare = prev === null ? null : time - prev;
+  return { time, spare, tone: spare === null ? 'ok' : spare >= 15 ? 'spare' : spare < 0 ? 'short' : 'ok' };
+}
 
 /** Puts one lodging on several nights at once. */
 export const fillNights = (plan: Trip, nights: readonly number[], placeRef: string): Trip => nights.reduce((p, n) => setLodging(p, n, placeRef), plan);

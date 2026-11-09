@@ -4,13 +4,18 @@ import { Text } from '@astryxdesign/core/Text';
 import type { Home, Trip } from '@tteonaljido/shared';
 import { t } from '../lib/i18n';
 import { dayPoints } from '../lib/routeSketch';
+import { allRuns } from '../lib/routeTimes';
+import { roadLines } from '../lib/routePaths';
 import { RouteSketch } from './RouteSketch';
 import { JS_KEY, escapeHtml, loadKakao, numberPin } from '../lib/kakaoSdk';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+const ROUTE = '#3182F6';
+
 /**
- * 경로 미리보기 (real map): a day's stops as numbered markers with the route drawn between them, on a Kakao map. Needs a
+ * 경로 미리보기 (real map): a day's stops as numbered markers with the route drawn between them, on a Kakao map — the
+ * roads Kakao's directions take (M54), a dashed straight line only where no road is known. Needs a
  * build-time `VITE_KAKAO_JS_KEY`; with no key — or if the SDK fails to load — it falls back to the no-key SVG
  * {@link RouteSketch}, so the strict-CSP path keeps working. Advisory only; it never changes the plan.
  */
@@ -25,6 +30,10 @@ export function KakaoMap({ plan, home, dayIndex }: { plan: Trip; home: Home | nu
   // effect below rebuilds the map only when the day's markers actually change — not on every keystroke.
   const sig = useMemo(() => plotted.map((c) => `${c.latE7},${c.lonE7},${c.label},${c.kind},${c.n ?? ''}`).join('|'), [plotted]);
   const coords = useMemo(() => plotted, [sig]);
+  // The day's askable legs, grouped as the travel-time request groups them; keyed on their points like the markers.
+  const dayRuns = useMemo(() => allRuns(plan, home).filter((r) => r.dayIndex === dayIndex), [plan, home, dayIndex]);
+  const runSig = dayRuns.map((r) => r.points.map((p) => `${p.latE7},${p.lonE7}`).join(';')).join('|');
+  const runs = useMemo(() => dayRuns, [runSig]);
 
   useEffect(() => {
     if (!JS_KEY || !ref.current || coords.length === 0) return;
@@ -33,6 +42,7 @@ export function KakaoMap({ plan, home, dayIndex }: { plan: Trip; home: Home | nu
       .then((kakao) => {
         if (cancelled || !ref.current) return;
         ref.current.innerHTML = ''; // a day switch re-runs this effect on the same div; clear the old map so they don't stack
+        ref.current.dataset.route = 'sketch';
         const map = new kakao.maps.Map(ref.current, { center: new kakao.maps.LatLng(coords[0].latE7 / 1e7, coords[0].lonE7 / 1e7), level: 6 });
         const path: any[] = [];
         for (const p of coords) {
@@ -51,7 +61,24 @@ export function KakaoMap({ plan, home, dayIndex }: { plan: Trip; home: Home | nu
             kakao.maps.event.addListener(marker, 'click', () => info.open(map, marker));
           }
         }
-        if (path.length > 1) new kakao.maps.Polyline({ path, strokeWeight: 4, strokeColor: '#3182F6', strokeOpacity: 0.85, strokeStyle: 'solid', map });
+        // A light dashed straight line right away; replaced by the roads as soon as Kakao's directions answer (M54).
+        const dashed = (p: any[]) => new kakao.maps.Polyline({ path: p, strokeWeight: 3, strokeColor: ROUTE, strokeOpacity: 0.55, strokeStyle: 'shortdash', map, zIndex: 1 });
+        const sketch = path.length > 1 ? dashed(path) : null;
+        if (runs.length > 0)
+          void roadLines(runs).then((lines) => {
+            if (cancelled || !lines.some((l) => l.path && l.path.length > 1)) return; // nothing better than the sketch
+            sketch?.setMap(null);
+            for (const l of lines) {
+              if (l.path === null) dashed([new kakao.maps.LatLng(l.from.latE7 / 1e7, l.from.lonE7 / 1e7), new kakao.maps.LatLng(l.to.latE7 / 1e7, l.to.lonE7 / 1e7)]);
+              else if (l.path.length > 1) {
+                const road = l.path.map(([lat, lon]) => new kakao.maps.LatLng(lat, lon));
+                // like a navigation route: a white casing under the blue line keeps it readable over roads and labels
+                new kakao.maps.Polyline({ path: road, strokeWeight: 8, strokeColor: '#FFFFFF', strokeOpacity: 1, strokeStyle: 'solid', map, zIndex: 1 });
+                new kakao.maps.Polyline({ path: road, strokeWeight: 5, strokeColor: ROUTE, strokeOpacity: 0.95, strokeStyle: 'solid', map, zIndex: 2 });
+              }
+            }
+            if (ref.current) ref.current.dataset.route = 'road'; // for tests: the roads are drawn
+          });
         // Fit to the day's stops (≥2) so a far-away home/lodging anchor doesn't zoom the whole region out and overlap them;
         // an anchor close to the stops (the night's hotel in the same town) is kept in view instead of being cut off.
         const stops = coords.filter((p) => p.kind === 'stop');
@@ -71,7 +98,7 @@ export function KakaoMap({ plan, home, dayIndex }: { plan: Trip; home: Home | nu
       cancelled = true;
       if (el) el.innerHTML = '';
     };
-  }, [coords]);
+  }, [coords, runs]);
 
   // No key, nothing to plot, or the SDK failed → the no-map SVG sketch (same props, CSP-safe).
   if (!JS_KEY || failed || coords.length === 0) return <RouteSketch plan={plan} home={home} dayIndex={dayIndex} />;

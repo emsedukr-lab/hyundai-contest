@@ -11,6 +11,7 @@ import { UndoSnackbar } from '../components/UndoSnackbar';
 import { endpointName } from '../editor/dayInfo';
 import { DayTabs } from '../editor/DayTabs';
 import { DayTimeline } from '../editor/DayTimeline';
+import { FasterOrderCard } from '../editor/FasterOrderCard';
 import { NotesContext } from '../editor/NotesContext';
 import { RecommendDialog } from '../editor/RecommendDialog';
 import { ShareDialog } from '../editor/ShareDialog';
@@ -26,6 +27,7 @@ import { TRIPS_CHANGED, trips } from '../lib/db';
 import { minutesLabel, shortDate } from '../lib/format';
 import { t } from '../lib/i18n';
 import { navigate } from '../lib/router';
+import { applyFaster, daySig, dismiss, findFaster, isDismissed, type FasterOrder } from '../lib/fasterOrder';
 import { cleanNotes, setNote, type TripNotes } from '../lib/notes';
 import { allRuns, applyRun, cleanLegMeters, daySummary, emptyRuns, fetchRun, kmLabel, runSignature } from '../lib/routeTimes';
 import { defaultHome } from '../lib/settings';
@@ -120,6 +122,10 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
   const [sharing, setSharing] = useState(false);
   /** Travel times typed this session by pair of places, so reordering does not throw them away. */
   const book = useRef<LegBook>(new Map());
+  /** M54 더 빠른 순서: a confirmed shorter order per day; each shape of a day is checked once per session. */
+  const [faster, setFaster] = useState<Record<number, FasterOrder>>({});
+  const fasterAsked = useRef(new Set<string>());
+  const fasterRun = useRef<'idle' | 'busy' | 'again'>('idle');
   // The latest state for saves that happen outside a render: leaving by browser back (unmount) or the app going away.
   const latest = useRef<{ doc: TripDoc | null; plan: Trip | null; notes: TripNotes; legMeters: Record<string, number>; lodgingTbd: number[]; setup: TripSetupState | null; dirty: boolean }>({ doc: null, plan: null, notes: {}, legMeters: {}, lodgingTbd: [], setup: null, dirty: false });
   latest.current = { doc, plan, notes, legMeters, lodgingTbd, setup, dirty };
@@ -332,6 +338,36 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [plan]);
 
+  // M54: once a day's legs are timed, look for a faster order (straight lines first; Kakao only for a real candidate).
+  const checkFaster = async () => {
+    if (fasterRun.current !== 'idle') return void (fasterRun.current = 'again');
+    fasterRun.current = 'busy';
+    try {
+      for (const d of latest.current.plan?.days ?? []) {
+        const cur = latest.current.plan;
+        if (!cur || inSetupRef.current) break;
+        const sig = daySig(cur, home, d.dayIndex);
+        const owner = latest.current.doc?.tripId ?? 'new';
+        if (fasterAsked.current.has(sig) || isDismissed(owner, sig)) continue;
+        const s = await findFaster(cur, home, d.dayIndex, book.current, fetchRun);
+        if (s === 'wait') continue; // asked again once the day's travel times are in
+        fasterAsked.current.add(sig);
+        const now = latest.current.plan;
+        if (s && now && daySig(now, home, d.dayIndex) === s.sig) setFaster((f) => ({ ...f, [d.dayIndex]: s }));
+      }
+    } finally {
+      const again = (fasterRun.current as string) === 'again'; // set by a call made while this one ran
+      fasterRun.current = 'idle';
+      if (again) void checkFaster();
+    }
+  };
+  useEffect(() => {
+    if (!plan || refreshing) return;
+    const timer = setTimeout(() => void checkFaster(), 1500);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [plan, refreshing]);
+
   // Days with something to fix get a dot on their header: a timetable conflict or a night without lodging.
   const attention = useMemo(() => {
     if (!plan) return new Set<number>();
@@ -354,14 +390,20 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
   const summaryLine = (dayIndex: number) => {
     const s = daySummary(plan, dayIndex, legMeters, liveFrom?.dayIndex === dayIndex ? liveFrom.minute : undefined);
     const last = dayIndex === plan.days[plan.days.length - 1].dayIndex;
-    return [
-      s.driveMinutes > 0 ? t('tl.daySummary.drive', { time: minutesLabel(s.driveMinutes) }) : '',
+    const rest = [
       s.meters !== null ? kmLabel(s.meters) : '',
       s.endAt !== null ? t(last ? 'tl.daySummary.home' : 'tl.daySummary.lodging', { time: hhmm(s.endAt) }) : '',
       s.unknownLegs > 0 ? t('tl.daySummary.unknown', { n: s.unknownLegs }) : '',
-    ]
-      .filter(Boolean)
-      .join(' · ');
+    ].filter(Boolean);
+    // M54: the day's driving time leads, in bold; the rest stays quiet.
+    const drive = s.driveMinutes > 0 ? <strong className="tl-sum-drive">{t('tl.daySummary.drive', { time: minutesLabel(s.driveMinutes) })}</strong> : null;
+    if (!drive) return rest.join(' · ');
+    return (
+      <>
+        {drive}
+        {rest.length > 0 && ` · ${rest.join(' · ')}`}
+      </>
+    );
   };
   // Day chip bar: jump to a section, landing just under the stuck bars (scroll-margin-top in timeline.css).
   const jumpTo = (day: number) => document.getElementById(day === 0 ? 'trip-info' : `day-${day}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -377,6 +419,25 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
     setNotice((n) => (n?.undo ? null : n)); // once something else changed, an old 되돌리기 would undo that too
   };
   const fail = (m: string) => setNotice({ tone: 'error', text: m });
+  const dropFaster = (dayIndex: number) =>
+    setFaster((f) => {
+      const next = { ...f };
+      delete next[dayIndex];
+      return next;
+    });
+  /** [바꾸기] on a 더 빠른 순서 card: the new order with its Kakao times; 되돌리기 puts the day back. */
+  const applyFasterOrder = (s: FasterOrder) => {
+    const before = latest.current.plan;
+    if (!before) return;
+    const next = applyFaster(before, s);
+    rememberLegs(next, book.current); // so edit() keeps the Kakao times on the new legs
+    edit(next);
+    const merged = { ...latest.current.legMeters, ...s.meters };
+    latest.current.legMeters = merged;
+    setLegMeters(merged);
+    dropFaster(s.dayIndex);
+    setNotice({ tone: 'info', text: t('tl.faster.applied', { time: minutesLabel(s.saved) }), undo: () => edit(before) });
+  };
   /** Takes a stop off its day (it waits in 보관함) and offers 되돌리기, which puts the plan back as it was. */
   const removeStop = (visitId: string) => {
     const before = latest.current.plan ?? plan;
@@ -621,6 +682,22 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
               </div>
               <Button label={t('tl.map')} variant="secondary" size="sm" onClick={() => setSheet({ kind: 'map', day: d.dayIndex })} />
             </div>
+            {(() => {
+              const s = faster[d.dayIndex];
+              if (!s || s.sig !== daySig(plan, home, d.dayIndex)) return null;
+              return (
+                <FasterOrderCard
+                  dayIndex={d.dayIndex}
+                  saved={s.saved}
+                  names={s.order.map((id) => placeOf(plan, visitOf(plan, id)?.placeRef ?? '')?.name ?? id)}
+                  onApply={() => applyFasterOrder(s)}
+                  onDismiss={() => {
+                    dismiss(doc.tripId, s.sig);
+                    dropFaster(d.dayIndex);
+                  }}
+                />
+              );
+            })()}
             {/* The last day leaves room so its end card can scroll clear of the floating + button. */}
             <div style={{ paddingTop: 4, paddingBottom: d.dayIndex === plan.days[plan.days.length - 1].dayIndex ? 88 : 8 }}>
               <DayTimeline

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import { parseTransfer, sampleTrip, type Trip } from '@tteonaljido/shared';
-import { stopRangeText, waitBeforeStart, suggestVisitTime, updateVisit, fillNights, laterEmptyNights, lodgingSuggestions, addPlace, addToDay, cleanLodgingTbd, cleanSetup, moveToDay, placeRoom, setReservation, setupReady, assign, changeCategory, emptyPlan, isEndpointOnly, move, moveTo, endpointFromPreset, newDoc, nodeIssues, planWarnings, relinkLegs, rememberLegs, removePlace, savePlan, setDepart, setEndBy, setLeg, setEndpoint, setLodging, setOrigin, setPeriod, startFromPreset, toTransfer, unassign, type LegBook } from './trips';
+import { parseTransfer, sampleTrip, timeline, type Trip } from '@tteonaljido/shared';
+import { stopRangeText, leaveFor, FIXED_BUFFER, suggestVisitTime, updateVisit, fillNights, laterEmptyNights, lodgingSuggestions, addPlace, addToDay, cleanLodgingTbd, cleanSetup, moveToDay, placeRoom, setReservation, setupReady, assign, changeCategory, emptyPlan, isEndpointOnly, move, moveTo, endpointFromPreset, newDoc, nodeIssues, planWarnings, relinkLegs, rememberLegs, removePlace, savePlan, setDepart, setEndBy, setLeg, setEndpoint, setLodging, setOrigin, setPeriod, startFromPreset, toTransfer, unassign, type LegBook } from './trips';
 
 // The warning assertions below check the Korean copy; jsdom reports navigator.language as en-US.
 vi.hoisted(() => Object.defineProperty(navigator, 'language', { value: 'ko-KR', configurable: true }));
@@ -453,11 +453,27 @@ describe('compact card times (M51)', () => {
     expect(stopRangeText(undefined)).toBeNull();
   });
 
-  it('finds the wait before a fixed start only from 15 minutes up', () => {
-    expect(waitBeforeStart({ arrive: 9 * 60 + 37, start: 13 * 60 })).toBe(203); // 09:37 → 13:00 = 3시간 23분
-    expect(waitBeforeStart({ arrive: 12 * 60 + 46, start: 13 * 60 })).toBe(null); // 14 minutes
-    expect(waitBeforeStart({ arrive: 12 * 60 + 45, start: 13 * 60 })).toBe(15);
-    expect(waitBeforeStart({ arrive: null, start: 13 * 60 })).toBeNull();
-    expect(waitBeforeStart({ arrive: 13 * 60, start: 13 * 60 })).toBeNull();
+  it('leaves the previous place in time to be 15 minutes early for a fixed time (M54)', () => {
+    const t = sampleTrip();
+    const at = (p: Trip, d: number) => Object.fromEntries(timeline(p, d).map((x) => [x.visitId, x]));
+    expect(FIXED_BUFFER).toBe(15);
+    // day 2: v4 ends 11:05, 10 min to v5's 13:00 reservation → leave by 12:35, 90 minutes to spare
+    expect(leaveFor(t, 2, 1, at(t, 2))).toEqual({ time: 12 * 60 + 35, spare: 90, tone: 'spare' });
+    // day 4: departs 09:30, 10 min to v10 fixed 10:00 → leave by 09:35 (5 minutes to spare is fine)
+    expect(leaveFor(t, 4, 0, at(t, 4))).toEqual({ time: 9 * 60 + 35, spare: 5, tone: 'ok' });
+    // a longer stay before it: leaving as planned misses the 15-minute margin
+    const long = structuredClone(t);
+    long.visits.find((v) => v.visitId === 'v4')!.stayMinutes = 240; // ends 13:35
+    expect(leaveFor(long, 2, 1, at(long, 2))?.tone).toBe('short');
+    expect(leaveFor(long, 2, 1, at(long, 2))?.spare).toBe(-60);
+    // no departure time on the day (M48): the leave-by time is the suggestion, nothing to compare with
+    const free = structuredClone(t);
+    free.days[3].departTime = null;
+    expect(leaveFor(free, 4, 0, at(free, 4))).toEqual({ time: 9 * 60 + 35, spare: null, tone: 'ok' });
+    // not a fixed stop, or the drive unknown → nothing
+    expect(leaveFor(t, 2, 0, at(t, 2))).toBeNull();
+    const unknown = setLeg(t, 2, 1, null);
+    expect(leaveFor(unknown, 2, 1, at(unknown, 2))).toBeNull();
+    expect(leaveFor(t, 2, 4, at(t, 2))).toBeNull(); // the leg into the lodging
   });
 });

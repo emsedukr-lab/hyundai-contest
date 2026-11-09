@@ -10,7 +10,7 @@ import { t } from '../lib/i18n';
 import { Tag } from '../components/shell/Tag';
 import { SwipeToRemove } from '../components/SwipeToRemove';
 import { kmLabel } from '../lib/routeTimes';
-import { issueText, legKeys, moveTo, nodeIssues, placeOf, stopRangeText, visitOf, waitBeforeStart } from '../lib/trips';
+import { issueText, leaveFor, legKeys, moveTo, nodeIssues, placeOf, stopRangeText, visitOf } from '../lib/trips';
 import { dayEnds, legEnds } from './dayInfo';
 import { useNotes } from './NotesContext';
 import './timeline.css';
@@ -106,8 +106,8 @@ export function DayTimeline({ plan, home, dayIndex, onChange, onError, onOpenPla
     const km = l && m ? ` · ${kmLabel(m)}` : '';
     // Empty: Kakao hasn't answered yet (a warning), or the leg can't be asked at all — the car's navigation times it (neutral).
     const byCar = !l && !(keys[k] && askable?.has(keys[k]!));
-    const waitStop = k < day.visitOrder.length ? times[day.visitOrder[k]] : undefined;
-    const waitAt = waitBeforeStart(waitStop);
+    // M54: into a fixed time, the latest time to leave the previous place to be there 15 minutes early.
+    const leave = leaveFor(plan, day.dayIndex, k, times, startAt);
     return (
       <div className="tl-row" key={`leg${k}`}>
         <div className="tl-rail" />
@@ -117,8 +117,16 @@ export function DayTimeline({ plan, home, dayIndex, onChange, onError, onOpenPla
             {/* M51: '↓ 11분 · 7.3km' — the word 이동 is implied by the arrow on the route line */}
             {l ? `${minutesLabel(l.minutes)}${km}` : byCar ? t('tl.legByCarShort') : t('tl.legPending')}
           </button>
-          {/* M51: arriving well before a fixed start — the wait shows here, between the stops, not inside the card */}
-          {waitAt !== null && waitStop?.arrive != null && <span className="tn-tag is-warn tl-wait">{t('tl.waitGap', { arrive: clock(waitStop.arrive), gap: minutesLabel(waitAt) })}</span>}
+          {/* M54 (replaces M51's wait caption): leave by F − 15 − the drive; spare time to stay longer, or a missed margin */}
+          {leave && (
+            <span className={`tn-tag tl-wait${leave.tone === 'spare' ? ' is-warn' : leave.tone === 'short' ? ' is-error' : ' is-ink'}`} title={t('tl.leaveHint')}>
+              {leave.tone === 'spare'
+                ? t('tl.leaveSpare', { time: clock(leave.time), gap: minutesLabel(leave.spare!) })
+                : leave.tone === 'short'
+                  ? t('tl.leaveShort', { time: clock(leave.time), gap: minutesLabel(-leave.spare!) })
+                  : t('tl.departAt', { time: clock(leave.time) })}
+            </span>
+          )}
         </div>
       </div>
     );

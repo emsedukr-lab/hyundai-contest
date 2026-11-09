@@ -1,7 +1,7 @@
 import { randomId } from '@tteonaljido/shared';
 import { error, json, readJson } from './http';
 import { searchPlaces } from './kakao';
-import { routeDurations } from './route';
+import { routeDurations, routePaths } from './route';
 import { resolveShare } from './resolve';
 
 export { PairingSession } from './pairingSession';
@@ -60,13 +60,13 @@ export default {
       return searchPlaces(body, env.KAKAO_REST_KEY);
     }
 
-    if (parts[2] === 'routes' && parts[3] === 'durations') {
+    if (parts[2] === 'routes' && (parts[3] === 'durations' || parts[3] === 'paths')) {
       if (req.method !== 'POST') return error('NOT_FOUND');
       if (await limited(env.RL_ROUTE, ip)) return error('RATE_LIMITED');
-      // Coordinates of the stops in question only (never home); passed to Kakao Mobility, not stored or logged.
+      // Coordinates of the day's stops (home too when set in 설정); passed to Kakao Mobility, not stored or logged.
       const body = await readJson<Record<string, unknown>>(req, 4096);
       if (!body || body === 'TOO_LARGE') return error('BAD_REQUEST');
-      return routeDurations(body, env.KAKAO_REST_KEY);
+      return parts[3] === 'paths' ? routePaths(body, env.KAKAO_REST_KEY) : routeDurations(body, env.KAKAO_REST_KEY);
     }
 
     if (parts[2] === 'places' && parts[3] === 'resolve') {

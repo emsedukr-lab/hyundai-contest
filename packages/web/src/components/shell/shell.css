@@ -507,6 +507,10 @@
   background: color-mix(in srgb, #02c265 14%, transparent);
   color: light-dark(#05701e, #41aa4b);
 }
+.tn-tag.is-error {
+  background: color-mix(in srgb, #ff3b1f 12%, transparent);
+  color: var(--color-text-error);
+}
 
 /* The saved version (v3) as quiet meta text. */
 .tn-rev {

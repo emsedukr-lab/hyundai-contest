@@ -119,7 +119,7 @@ export function recommendRoute(plan: Trip, home: Home | null): Trip {
 }
 
 /** Orders one day's visitIds: fixed times are hard anchors (by time); free stops are inserted toward the lodging; meal→cafe. */
-function orderDay(plan: Trip, home: Home | null, dayIndex: number, ids: string[]): string[] {
+export function orderDay(plan: Trip, home: Home | null, dayIndex: number, ids: string[]): string[] {
   type Node = { visitId: string | null; pt: Pt | null };
   const vis = (id: string) => visitOf(plan, id)!;
   const fixed = ids.filter((id) => vis(id).fixed).sort((a, b) => vis(a).fixed!.time.localeCompare(vis(b).fixed!.time) || a.localeCompare(b));
@@ -165,7 +165,7 @@ function orderDay(plan: Trip, home: Home | null, dayIndex: number, ids: string[]
 }
 
 /** Bubbles the day's stops into `target` order using the adjacent-swap `move`, so only changed legs are cleared. */
-function reorderDay(plan: Trip, dayIndex: number, target: string[]): Trip {
+export function reorderDay(plan: Trip, dayIndex: number, target: string[]): Trip {
   let p = plan;
   for (let i = 0; i < target.length; i++) {
     const cur = p.days[dayIndex - 1].visitOrder.indexOf(target[i]);
@@ -224,4 +224,72 @@ export function summarizeRecommendation(before: Trip, after: Trip): Recommendati
     return !b || b.visitOrder.length !== d.visitOrder.length || b.visitOrder.some((id, i) => id !== d.visitOrder[i]);
   });
   return { changes, addedCount, movedCount, overflowCount, noCoordsCount, changed: orderChanged };
+}
+
+/* ---------- M54: a faster order for one day (the editor's '더 빠른 순서' card) ---------- */
+
+/** Straight-line metres of a day's chain start → stops (in `order`) → end; Infinity when a stop has no coordinates. */
+export function chainMetres(plan: Trip, home: Home | null, dayIndex: number, order: string[]): number {
+  const pts = [startPt(plan, home, dayIndex), ...order.map((id) => visitPt(plan, id)), endPt(plan, home, dayIndex)];
+  let m = 0;
+  for (let i = 0; i + 1 < pts.length; i++) {
+    if (!hasCoord(pts[i]) || !hasCoord(pts[i + 1])) {
+      if (i === 0 || i + 1 === pts.length - 1) continue; // an unknown start/end (home without an address) adds nothing either way
+      return Infinity;
+    }
+    m += dist(pts[i], pts[i + 1]);
+  }
+  return m;
+}
+
+/** A stop's time anchor: its fixed time, else its 희망 time; null for a free stop. */
+const anchorTime = (plan: Trip, id: string): string | null => {
+  const v = visitOf(plan, id);
+  return v?.fixed?.time ?? v?.desiredTime ?? null;
+};
+/** Stops with a time (fixed or 희망) must stay in time order among themselves. */
+const anchorsInOrder = (plan: Trip, order: string[]) => {
+  const times = order.map((id) => anchorTime(plan, id)).filter((x): x is string => x !== null);
+  return times.every((x, i) => i === 0 || times[i - 1] <= x);
+};
+
+/** 2-opt on the straight-line chain; a reversal never flips two timed stops (so their order holds). */
+function twoOpt(plan: Trip, home: Home | null, dayIndex: number, start: string[]): string[] {
+  let best = [...start];
+  let bestLen = chainMetres(plan, home, dayIndex, best);
+  for (let improved = true, pass = 0; improved && pass < 20; pass++) {
+    improved = false;
+    for (let i = 0; i < best.length - 1; i++) {
+      for (let j = i + 1; j < best.length; j++) {
+        const seg = best.slice(i, j + 1);
+        if (seg.filter((id) => anchorTime(plan, id) !== null).length > 1) continue;
+        const next = [...best.slice(0, i), ...seg.reverse(), ...best.slice(j + 1)];
+        const len = chainMetres(plan, home, dayIndex, next);
+        if (len < bestLen - 1 && anchorsInOrder(plan, next)) {
+          best = next;
+          bestLen = len;
+          improved = true;
+        }
+      }
+    }
+  }
+  return best;
+}
+
+/**
+ * A shorter visiting order for one day by straight-line distance — the cheap first check before asking Kakao (M54).
+ * Tries the recommender's own order and a 2-opt of the current one; timed stops (fixed or 희망) keep their time order.
+ * null when the day has fewer than 2 stops, a stop without coordinates, or nothing at least `minGain` shorter.
+ */
+export function shorterDayOrder(plan: Trip, home: Home | null, dayIndex: number, minGain = 0.1): string[] | null {
+  const ids = plan.days[dayIndex - 1]?.visitOrder ?? [];
+  if (ids.length < 2) return null;
+  const now = chainMetres(plan, home, dayIndex, ids);
+  if (!isFinite(now) || now <= 0) return null;
+  const tries = [twoOpt(plan, home, dayIndex, ids)];
+  const rec = orderDay(plan, home, dayIndex, ids);
+  if (anchorsInOrder(plan, rec)) tries.push(twoOpt(plan, home, dayIndex, rec));
+  const best = tries.reduce((a, b) => (chainMetres(plan, home, dayIndex, b) < chainMetres(plan, home, dayIndex, a) ? b : a));
+  if (best.join() === ids.join()) return null;
+  return chainMetres(plan, home, dayIndex, best) <= now * (1 - minGain) ? best : null;
 }
