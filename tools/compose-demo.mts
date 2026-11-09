@@ -75,7 +75,7 @@ const frameHtml = `<style>${css}
   .l { position: absolute; font-size: 20px; color: #b4b9c2; font-weight: 600; }
   .slot { position: absolute; background: #1b1e24; border-radius: 6px; }
 </style>
-<div class="t">떠날지도<span>휴대폰에서 만든 여행을 QR로 차에 불러오기</span></div>
+<div class="t">떠날지도<span>가고 싶은 곳만 담으면 날짜별 동선은 자동으로, 안내는 차가</span></div>
 <div class="n">Pleos Connect 에뮬레이터(release APK)와 휴대폰 브라우저를 실서버로 연결해 녹화 · 기다리는 구간만 잘라냄</div>
 <div class="l" style="left:${CAR.x}px; top:${CAR.y - 32}px">차량 화면 · Pleos Connect</div>
 <div class="l" style="left:${PHONE.x}px; top:${PHONE.y - 32}px">휴대폰 · 모바일 웹</div>
@@ -83,7 +83,7 @@ const frameHtml = `<style>${css}
 <div class="slot" style="left:${PHONE.x - 4}px; top:${PHONE.y - 4}px; width:${PHONE.w + 8}px; height:${PHONE.h + 8}px"></div>`;
 
 const captionHtml = (text: string) => {
-  const m = text.match(/^([①-⑳])\s*(.*)$/);
+  const m = text.match(/^([①-⑳㉑-㉟])\s*(.*)$/);
   const badge = m ? `<b>${m[1]}</b>` : '';
   const body = (m ? m[2] : text).replace(/ · /g, '<i> · </i>');
   return `<style>${css}
