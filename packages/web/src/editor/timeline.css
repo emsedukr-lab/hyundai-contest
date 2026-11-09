@@ -982,3 +982,150 @@
   height: 16px;
   color: var(--color-icon-secondary);
 }
+
+/*
+ * M51 compact day timeline (scoped to .tl-day so the 여행 정보 rail keeps its own layout).
+ * Stops: 2 fixed lines (~70px) — name + 꼭 | lock · start ~ end · stay · desired · memo, both lines nowrap + ellipsis.
+ * Start/lodging/home: a 1-line slim bar (~50px) on a faint grey — [tag] name … time. Legs: 28px rows, '↓ 11분 · 7.3km',
+ * with the wait before a fixed start as an amber caption beside it. Card gaps 4 → 2, leg rows 40 → 28 (about 30% less).
+ */
+.tl-day .tl-card,
+.tl-day .tl-swipe {
+  margin: 2px 0;
+}
+.tl-day .tl-card-main {
+  gap: 2px;
+  padding: 9px 4px 9px 16px;
+}
+.tl-day .tl-name-row {
+  flex-wrap: nowrap;
+  min-width: 0;
+}
+.tl-day .tl-name-row .tl-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tl-day .tl-name-row .tn-tag {
+  flex: none;
+}
+.tl-line2 {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.tl-lock {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  color: var(--color-icon-secondary);
+}
+.tl-lock svg {
+  width: 16px;
+  height: 16px;
+}
+.tl-lock.is-fixed {
+  color: var(--color-text-accent);
+}
+.tl-range {
+  flex: none;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+.tl-range.is-fixed {
+  color: var(--color-text-accent);
+}
+.tl-range.is-unknown {
+  font-weight: 400;
+  color: var(--color-text-secondary);
+}
+.tl-rest {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tl-day .tl-card-end {
+  align-self: center;
+  padding: 0 4px 0 0;
+}
+
+/* Slim bars: start, lodging, home. */
+.tl-day .tl-card.tl-bar {
+  background: light-dark(rgba(19, 20, 23, 0.04), rgba(255, 255, 255, 0.05));
+}
+.tl-day .tl-card.tl-bar:not(.is-error):not(.is-required):not(.is-warn) {
+  border: 1px solid var(--color-border);
+}
+.tl-day .tl-bar .tl-card-main {
+  padding: 12px 16px;
+}
+.tl-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  min-height: 24px;
+}
+.tl-bar-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 700;
+}
+.tl-bar-name.is-quiet {
+  font-weight: 400;
+  color: var(--color-text-secondary);
+}
+.tl-bar-name.tl-required-text {
+  font-size: 16px;
+  line-height: 24px;
+}
+.tl-bar-time {
+  flex: none;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.tl-bar-time.is-quiet {
+  font-weight: 400;
+  color: var(--color-text-secondary);
+}
+
+/* Rail markers line up with the first line of each card; the route line meets the bars at their middle. */
+.tl-day .tl-marker {
+  margin-top: 12px;
+}
+.tl-day .tl-row.is-first .tl-rail::before {
+  top: 26px;
+}
+.tl-day .tl-row.is-last .tl-rail::before {
+  height: 26px;
+}
+
+/* Legs: shorter rows, and the wait before a fixed start beside the travel time. */
+.tl-day .tl-legrow {
+  min-height: 28px;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.tl-day .tl-leg {
+  min-height: 28px;
+  padding: 2px 8px;
+}
+.tl-wait {
+  flex: none;
+}

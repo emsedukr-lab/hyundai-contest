@@ -179,3 +179,5 @@ export const BedIcon = () => <Outline d="M3.5 18.5v-11m0 7h17v4m0-4V12a2.5 2.5 0
 export const SearchIcon = () => <Outline d="M10.5 17a6.5 6.5 0 1 0 0-13 6.5 6.5 0 0 0 0 13Zm4.75-1.75L20 20" />;
 /** Check — a finished step. */
 export const CheckIcon = () => <Outline d="m5 12.5 4.5 4.5L19 7.5" />;
+/** Lock — a stop whose time (or date) stays put (M51). */
+export const LockIcon = () => <Outline d="M7.5 10.5V8a4.5 4.5 0 0 1 9 0v2.5M6.5 10.5h11a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1Z" />;

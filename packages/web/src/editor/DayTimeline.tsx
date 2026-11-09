@@ -4,12 +4,12 @@ import { SortableContext, sortableKeyboardCoordinates, useSortable, verticalList
 import { CSS } from '@dnd-kit/utilities';
 import { Banner } from '@astryxdesign/core/Banner';
 import { dayEnd, hhmm, timeline, type DayIssue, type Home, type Trip } from '@tteonaljido/shared';
-import { BedIcon, FlagIcon, GripIcon } from '../components/shell/icons';
+import { BedIcon, FlagIcon, GripIcon, LockIcon } from '../components/shell/icons';
 import { minutesLabel, shortDate } from '../lib/format';
 import { t } from '../lib/i18n';
 import { Tag } from '../components/shell/Tag';
 import { kmLabel } from '../lib/routeTimes';
-import { issueText, legKeys, moveTo, nodeIssues, placeOf, visitOf } from '../lib/trips';
+import { issueText, legKeys, moveTo, nodeIssues, placeOf, stopRangeText, visitOf, waitBeforeStart } from '../lib/trips';
 import { dayEnds, legEnds } from './dayInfo';
 import { useNotes } from './NotesContext';
 import './timeline.css';
@@ -44,11 +44,7 @@ interface Props {
 export function DayTimeline({ plan, home, dayIndex, onChange, onError, onOpenPlace, onOpenStart, onOpenLeg, onOpenEnd, onRemoveStop, legMeters, startAt, askable }: Props) {
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }));
   const { day, i, isFirst, isLast, startName, endName } = dayEnds(plan, dayIndex);
-  const { notes, lodgingTbd } = useNotes();
-  // Phone-only notes shown in grey: the night's lodging (check-in/out, memo) and, on the next morning, its check-out.
-  const lodgingNote = !isLast && day.lodgingPlaceRef ? notes[day.lodgingPlaceRef] : undefined;
-  const prevCheckOut = !isFirst ? notes[plan.days[i - 1]?.lodgingPlaceRef ?? '']?.checkOut : undefined;
-  const lodgingTimes = [lodgingNote?.checkIn ? t('tl.checkInAt', { time: lodgingNote.checkIn }) : '', lodgingNote?.checkOut ? t('tl.checkOutAt', { time: lodgingNote.checkOut }) : ''].filter(Boolean).join(' · ');
+  const { lodgingTbd } = useNotes();
   const times = useMemo(() => Object.fromEntries(timeline(plan, day.dayIndex, startAt).map((st) => [st.visitId, st])), [plan, day.dayIndex, startAt]);
   const issues = useMemo(() => nodeIssues(plan, day.dayIndex), [plan, day.dayIndex]);
   const keys = useMemo(() => legKeys(plan, day.dayIndex), [plan, day.dayIndex]);
@@ -101,7 +97,6 @@ export function DayTimeline({ plan, home, dayIndex, onChange, onError, onOpenPla
   const lodgingRequired = lodgingMissing && !lodgingTbdHere;
   const lastLodging = isLast && !!day.lodgingPlaceRef;
   const endWarn = lastLodging;
-  const endTimes = [endAt !== null ? t('days.dayEnd', { time: clock(endAt) }) : '', day.endBy ? t('tl.endBy', { time: day.endBy }) : ''].filter(Boolean).join(' · ');
 
   const leg = (k: number) => {
     const l = day.legs[k];
@@ -110,21 +105,26 @@ export function DayTimeline({ plan, home, dayIndex, onChange, onError, onOpenPla
     const km = l && m ? ` · ${kmLabel(m)}` : '';
     // Empty: Kakao hasn't answered yet (a warning), or the leg can't be asked at all — the car's navigation times it (neutral).
     const byCar = !l && !(keys[k] && askable?.has(keys[k]!));
+    const waitStop = k < day.visitOrder.length ? times[day.visitOrder[k]] : undefined;
+    const waitAt = waitBeforeStart(waitStop);
     return (
       <div className="tl-row" key={`leg${k}`}>
         <div className="tl-rail" />
         <div className="tl-legrow">
           <button type="button" className={`tl-leg${l || byCar ? '' : ' is-missing'}`} aria-label={`${t('tl.legTitle')} · ${t('tl.legRoute', { from, to })}`} onClick={() => onOpenLeg(k)}>
             {l || byCar ? <span aria-hidden="true">↓</span> : <span className="tn-warn-dot" aria-hidden="true" />}
-            {l ? `${t('tl.legMinutes', { duration: minutesLabel(l.minutes) })}${km}` : byCar ? t('tl.legByCar') : t('tl.legPending')}
+            {/* M51: '↓ 11분 · 7.3km' — the word 이동 is implied by the arrow on the route line */}
+            {l ? `${minutesLabel(l.minutes)}${km}` : byCar ? t('tl.legByCarShort') : t('tl.legPending')}
           </button>
+          {/* M51: arriving well before a fixed start — the wait shows here, between the stops, not inside the card */}
+          {waitAt !== null && waitStop?.arrive != null && <span className="tn-tag is-warn tl-wait">{t('tl.waitGap', { arrive: clock(waitStop.arrive), gap: minutesLabel(waitAt) })}</span>}
         </div>
       </div>
     );
   };
 
   return (
-    <div className="tl">
+    <div className="tl tl-day">
       {issues.other.map((x, n) => (
         <div key={`${x.code}${n}`} style={{ marginBottom: 8 }}>
           <Banner status="error" title={issueText(x)} />
@@ -135,13 +135,15 @@ export function DayTimeline({ plan, home, dayIndex, onChange, onError, onOpenPla
         <div className="tl-rail">
           <span className="tl-marker is-accent" aria-hidden="true" />
         </div>
-        <div className={`tl-card${issues.start.length ? ' is-error' : !startTime ? ' is-warn' : ''}`}>
-          <button type="button" className="tl-card-main" onClick={onOpenStart}>
-            <span className="tl-kicker">{`${t('tl.start')} · ${shortDate(day.date)}`}</span>
-            <span className="tl-name">{startName}</span>
-            {/* Departure is optional (M48): without one the card says so quietly instead of asking for it. */}
-            {startTime ? <span className="tl-line">{startTime}</span> : <span className="tl-meta">{t('tl.departFree')}</span>}
-            {prevCheckOut && <span className="tl-memo">{t('tl.checkOutAt', { time: prevCheckOut })}</span>}
+        {/* M51: a 1-line slim bar — [출발] name … 09:30 출발. Check-out times stay in the lodging sheet. */}
+        <div className={`tl-card tl-bar${issues.start.length ? ' is-error' : ''}`}>
+          <button type="button" className="tl-card-main" onClick={onOpenStart} aria-label={`${t('tl.start')} · ${shortDate(day.date)} · ${startName}`}>
+            <span className="tl-bar-row">
+              <Tag>{t('tl.start')}</Tag>
+              <span className="tl-bar-name">{startName}</span>
+              {/* Departure is optional (M48): without one the bar says so quietly instead of asking for it. */}
+              <span className={`tl-bar-time${startTime ? '' : ' is-quiet'}`}>{startTime ?? t('tl.departFree')}</span>
+            </span>
             {issues.start.map((x, n) => (
               <span key={n} className="tl-error-text">
                 {issueText(x)}
@@ -182,19 +184,20 @@ export function DayTimeline({ plan, home, dayIndex, onChange, onError, onOpenPla
             {isLast ? <FlagIcon /> : <BedIcon />}
           </span>
         </div>
-        <div className={`tl-card${issues.end.length ? ' is-error' : lodgingRequired ? ' is-required' : endWarn ? ' is-warn' : ''}`}>
+        {/* M51: a 1-line slim bar — [숙소]/[귀가] name … 17:45 도착. Check-in/out and memo live in the lodging sheet. */}
+        <div className={`tl-card tl-bar${issues.end.length ? ' is-error' : lodgingRequired ? ' is-required' : endWarn ? ' is-warn' : ''}`}>
           <button type="button" className="tl-card-main" onClick={onOpenEnd}>
-            <span className="tl-kicker">{isLast ? t('tl.home') : t('common.lodging')}</span>
-            {lodgingTbdHere ? (
-              <span className="tl-name tl-meta" style={{ fontSize: 17 }}>{t('tl.lodgingTbd')}</span>
-            ) : lodgingMissing ? (
-              <span className="tl-name tl-required-text" style={{ fontSize: 17 }}>{t('tl.lodgingUnset')}</span>
-            ) : (
-              <span className="tl-name">{endName}</span>
-            )}
-            {endTimes && <span className="tl-line">{endTimes}</span>}
-            {lodgingTimes && <span className="tl-memo">{lodgingTimes}</span>}
-            {lodgingNote?.memo && <span className="tl-memo">{lodgingNote.memo}</span>}
+            <span className="tl-bar-row">
+              <Tag>{isLast ? t('tl.home') : t('common.lodging')}</Tag>
+              {lodgingTbdHere ? (
+                <span className="tl-bar-name is-quiet">{t('tl.lodgingTbd')}</span>
+              ) : lodgingMissing ? (
+                <span className="tl-bar-name tl-required-text">{t('tl.lodgingUnset')}</span>
+              ) : (
+                <span className="tl-bar-name">{endName}</span>
+              )}
+              {endAt !== null && <span className="tl-bar-time">{t('tl.barArrive', { time: clock(endAt) })}</span>}
+            </span>
             {lastLodging && <span className="tl-warn-text">{t('trip.warn.lastLodging')}</span>}
             {issues.end.map((x, n) => (
               <span key={n} className="tl-error-text">
@@ -236,16 +239,16 @@ function StopCard({
   const p = placeOf(plan, v.placeRef)!;
   const memo = notes[p.placeRef]?.memo;
   const conflict = issues.length > 0;
-  const timeText =
-    !time || time.start === null
-      ? t('days.timeCheck')
-      : time.arrive === null
-        ? t('days.timeStart', { start: clock(time.start) })
-        : time.arrive === time.start // no parking time is counted (M42): most stops start on arrival
-          ? t('days.arriveOnly', { arrive: clock(time.arrive) })
-          : t('days.times', { arrive: clock(time.arrive), start: clock(time.start) });
+  // M51 — line 2: 'start ~ end · stay' (no 도착/머무는 시간 labels). A fixed time leads with a blue lock (the time it is
+  // held to); a stop whose date or time is only held, not set, a grey one. Desired time and memo trail and truncate.
+  const known = stopRangeText(time);
+  const range = known ?? t('days.timeCheck');
+  const lock = v.fixed ? 'fixed' : !v.timeFlexible || !v.dateFlexible ? 'firm' : null;
+  const lockLabel = [v.fixed ? t('common.fixedAt', { time: v.fixed.time }) : !v.timeFlexible ? t('days.timeFirm') : '', !v.dateFlexible ? t('days.dateFirm') : '']
+    .filter(Boolean)
+    .join(' · ');
   // Unknown opening hours stay in the place's details (M45) — on every card they were noise, not information.
-  const meta = [t('days.stay', { duration: minutesLabel(v.stayMinutes) }), v.desiredTime ? t('days.desired', { time: v.desiredTime }) : '']
+  const rest = [minutesLabel(v.stayMinutes), !v.fixed && v.desiredTime ? t('days.desired', { time: v.desiredTime }) : '', memo ?? '']
     .filter(Boolean)
     .join(' · ');
   const fixedSlot = !!v.fixed && !/:(00|30)$/.test(v.fixed.time);
@@ -262,16 +265,20 @@ function StopCard({
       </div>
       <SwipeToRemove cardClass={conflict ? ' is-error' : fixedSlot ? ' is-warn' : ''} actionLabel={t('tl.unassignPlace', { name: p.name })} onRemove={onRemove}>
         <button type="button" className="tl-card-main" onClick={() => onOpen(p.placeRef)}>
+          {/* M51 — line 1: the name on one line (ellipsis) and only 꼭 beside it. */}
           <span className="tl-name-row">
             <span className="tl-name">{p.name}</span>
-            {v.fixed && <Tag tone="accent">{t('common.fixedAt', { time: v.fixed.time })}</Tag>}
             {v.importance === 'MUST' && <Tag tone="ink">{t('common.must')}</Tag>}
-            {!v.fixed && !v.timeFlexible && <Tag>{t('days.timeFirm')}</Tag>}
-            {!v.dateFlexible && <Tag>{t('days.dateFirm')}</Tag>}
           </span>
-          <span className="tl-line">{timeText}</span>
-          <span className="tl-meta">{meta}</span>
-          {memo && <span className="tl-memo">{memo}</span>}
+          <span className="tl-line2">
+            {lock && (
+              <span className={`tl-lock${lock === 'fixed' ? ' is-fixed' : ''}`} role="img" aria-label={lockLabel}>
+                <LockIcon />
+              </span>
+            )}
+            <span className={`tl-range${lock === 'fixed' ? ' is-fixed' : ''}${known ? '' : ' is-unknown'}`}>{range}</span>
+            <span className="tl-rest">{` · ${rest}`}</span>
+          </span>
           {issues.map((x, n) => (
             <span key={n} className="tl-error-text">
               {issueText(x)}

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { parseTransfer, sampleTrip, type Trip } from '@tteonaljido/shared';
-import { suggestVisitTime, updateVisit, fillNights, laterEmptyNights, lodgingSuggestions, addPlace, addToDay, cleanLodgingTbd, cleanSetup, moveToDay, placeRoom, setReservation, setupReady, assign, changeCategory, emptyPlan, isEndpointOnly, move, moveTo, endpointFromPreset, newDoc, nodeIssues, planWarnings, relinkLegs, rememberLegs, removePlace, savePlan, setDepart, setEndBy, setLeg, setEndpoint, setLodging, setOrigin, setPeriod, startFromPreset, toTransfer, unassign, type LegBook } from './trips';
+import { stopRangeText, waitBeforeStart, suggestVisitTime, updateVisit, fillNights, laterEmptyNights, lodgingSuggestions, addPlace, addToDay, cleanLodgingTbd, cleanSetup, moveToDay, placeRoom, setReservation, setupReady, assign, changeCategory, emptyPlan, isEndpointOnly, move, moveTo, endpointFromPreset, newDoc, nodeIssues, planWarnings, relinkLegs, rememberLegs, removePlace, savePlan, setDepart, setEndBy, setLeg, setEndpoint, setLodging, setOrigin, setPeriod, startFromPreset, toTransfer, unassign, type LegBook } from './trips';
 
 // The warning assertions below check the Korean copy; jsdom reports navigator.language as en-US.
 vi.hoisted(() => Object.defineProperty(navigator, 'language', { value: 'ko-KR', configurable: true }));
@@ -442,5 +442,22 @@ describe('suggested stop time (M50)', () => {
     const plus1 = `${String(Number(fixed.slice(0, 2)) + 1).padStart(2, '0')}:${fixed.slice(3)}`;
     expect(suggestVisitTime(t0, 'not-on-day-2-yet', 2)).toBe(plus1);
     expect(suggestVisitTime(t0, 'x', 99)).toBe('09:00');
+  });
+});
+
+describe('compact card times (M51)', () => {
+  it('writes a stop as start ~ end, the stay added on', () => {
+    expect(stopRangeText({ start: 14 * 60 + 10, end: 15 * 60 + 10 })).toBe('14:10 ~ 15:10');
+    expect(stopRangeText({ start: 23 * 60 + 30, end: 24 * 60 + 30 })).toBe('23:30 ~ 00:30(+1)'); // past midnight, as the car writes it
+    expect(stopRangeText({ start: null, end: null })).toBeNull();
+    expect(stopRangeText(undefined)).toBeNull();
+  });
+
+  it('finds the wait before a fixed start only from 15 minutes up', () => {
+    expect(waitBeforeStart({ arrive: 9 * 60 + 37, start: 13 * 60 })).toBe(203); // 09:37 → 13:00 = 3시간 23분
+    expect(waitBeforeStart({ arrive: 12 * 60 + 46, start: 13 * 60 })).toBe(null); // 14 minutes
+    expect(waitBeforeStart({ arrive: 12 * 60 + 45, start: 13 * 60 })).toBe(15);
+    expect(waitBeforeStart({ arrive: null, start: 13 * 60 })).toBeNull();
+    expect(waitBeforeStart({ arrive: 13 * 60, start: 13 * 60 })).toBeNull();
   });
 });

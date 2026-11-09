@@ -725,6 +725,9 @@ const ko = {
   'time.dawnShow': '새벽 시간 보기 (0:00~5:30)',
   'time.dawnHide': '새벽 시간 접기',
   'time.suggested': '추천 {time}',
+  'tl.legByCarShort': '차량 내비가 계산',
+  'tl.waitGap': '{arrive} 도착 · {gap} 여유',
+  'tl.barArrive': '{time} 도착',
 } as const satisfies Record<string, string>;
 
 export type Key = keyof typeof ko;
@@ -1448,6 +1451,9 @@ const en: Record<Key, string> = {
   'time.dawnShow': 'Show early hours (0:00–5:30)',
   'time.dawnHide': 'Hide early hours',
   'time.suggested': 'Suggested {time}',
+  'tl.legByCarShort': 'Timed by the car',
+  'tl.waitGap': 'Arrive {arrive} · {gap} to spare',
+  'tl.barArrive': 'Arrive {time}',
 };
 
 /** Both tables, for tests. */

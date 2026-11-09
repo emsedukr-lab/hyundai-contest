@@ -4,6 +4,7 @@ import {
   contentHash,
   dayIssues,
   epochDay,
+  hhmm,
   TRANSFER_LIMITS,
   type Day,
   type DayIssue,
@@ -454,6 +455,18 @@ export function suggestVisitTime(plan: Trip, visitId: string, dayIndex?: number)
   }
   return '09:00';
 }
+
+/* ---------- compact timeline cards (M51) ---------- */
+
+/** A stop's time on its card: "14:10 ~ 15:10" (start to end); null when it can't be known yet. */
+export function stopRangeText(st: { start: number | null; end: number | null } | undefined): string | null {
+  if (!st || st.start === null || st.end === null) return null;
+  return `${hhmm(st.start)} ~ ${hhmm(st.end)}`;
+}
+
+/** Minutes between arriving and starting (a fixed time later than the arrival) when it is 15 or more; else null. */
+export const waitBeforeStart = (st: { arrive: number | null; start: number | null } | undefined): number | null =>
+  st && st.arrive !== null && st.start !== null && st.start - st.arrive >= 15 ? st.start - st.arrive : null;
 
 /** Puts one lodging on several nights at once. */
 export const fillNights = (plan: Trip, nights: readonly number[], placeRef: string): Trip => nights.reduce((p, n) => setLodging(p, n, placeRef), plan);
