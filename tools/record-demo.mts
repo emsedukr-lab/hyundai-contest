@@ -187,7 +187,7 @@ try {
   if (await save.count()) await save.click(); // 저장 shows only with unsaved edits (else 경로 보고 차로 보내기)
   await sleep(1500);
   await click(page, '뒤로');
-  await page.getByText('내 여행').waitFor();
+  await page.getByText('다음 여행').waitFor(); // M45: the 여행 tab leads with the next-trip card
   await sleep(800);
 
   caption('① 주차 중 차량에서 「모바일 여행 불러오기」 · QR은 5분 동안 한 번만 쓸 수 있어요');

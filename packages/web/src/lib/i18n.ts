@@ -699,6 +699,18 @@ const ko = {
   'tl.daySummary.home': '귀가 {time}',
   'tl.daySummary.unknown': '이동시간 {n}구간 미확인',
   'tl.dayTabs': '일차로 이동',
+  'visit.section.schedule': '일정',
+  'visit.section.place': '장소 정보',
+  'visit.timeMode': '도착 시각',
+  'visit.timeMode.free': '자유',
+  'visit.timeMode.desired': '희망',
+  'visit.timeMode.fixed': '고정',
+  'visit.timeMode.freeHint': '앞 장소와 이동시간으로 도착 시각이 정해져요',
+  'visit.timeMode.desiredHint': '경로 추천이 방문 순서를 정할 때 참고해요',
+  'visit.stayTitle': '머무는 시간',
+  'visit.stayLess': '15분 줄이기',
+  'visit.stayMore': '15분 늘리기',
+  'visit.hoursTitle': '영업시간',
 } as const satisfies Record<string, string>;
 
 export type Key = keyof typeof ko;
@@ -1396,6 +1408,18 @@ const en: Record<Key, string> = {
   'tl.daySummary.home': 'Home by {time}',
   'tl.daySummary.unknown': '{n} {n|leg|legs} without a time',
   'tl.dayTabs': 'Jump to a day',
+  'visit.section.schedule': 'Schedule',
+  'visit.section.place': 'Place details',
+  'visit.timeMode': 'Arrival',
+  'visit.timeMode.free': 'Any time',
+  'visit.timeMode.desired': 'Preferred',
+  'visit.timeMode.fixed': 'Fixed',
+  'visit.timeMode.freeHint': 'Arrival follows the stops and travel times before it',
+  'visit.timeMode.desiredHint': 'Route suggestions use it to order the stops',
+  'visit.stayTitle': 'Time there',
+  'visit.stayLess': '15 minutes less',
+  'visit.stayMore': '15 minutes more',
+  'visit.hoursTitle': 'Opening hours',
 };
 
 /** Both tables, for tests. */
