@@ -17,10 +17,19 @@ import io.tteonaljido.car.storage.SecureBox
 import io.tteonaljido.car.storage.SessionStore
 import io.tteonaljido.car.storage.TripRepository
 import io.tteonaljido.car.storage.TripStore
-import io.tteonaljido.car.vehicle.PleosEnergySignals
+import io.tteonaljido.car.vehicle.PleosVehicleReader
+import io.tteonaljido.trip.DriveSession
+import io.tteonaljido.trip.DriveSessions
 import io.tteonaljido.trip.LocalTrip
+import io.tteonaljido.trip.VehicleSnapshot
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 class App : Application() {
     lateinit var container: Container
@@ -42,9 +51,12 @@ class Container(private val app: Application) : TripStore {
     val client = PairingClient(BuildConfig.API_BASE)
     val navi: NaviGateway = if (isAutomotive) PleosNaviGateway(app) else OfflineNaviGateway()
 
-    /** Read-only energy (SOC/fuel/range) for charge·refuel advice; only on a real car (the emulator can't inject signals). */
-    private val energySignals: PleosEnergySignals? = if (isAutomotive) PleosEnergySignals(app).also { it.start() } else null
-    suspend fun readEnergy(): EnergyState? = energySignals?.read()
+    /** Read-only vehicle readings (Pleos Vehicle SDK); only on a real car (the emulator can't inject signals). */
+    private val vehicle: PleosVehicleReader? = if (isAutomotive) PleosVehicleReader(app).also { it.start() } else null
+    /** SOC/fuel/range for charge·refuel advice. */
+    suspend fun readEnergy(): EnergyState? = vehicle?.readEnergy()
+    /** Warning lamps, fluids, doors, seats, gear, drive mode, odometer — for the departure check and rest advice (M57). */
+    suspend fun readSnapshot(): VehicleSnapshot? = vehicle?.readSnapshot()
 
     /** Demo mode (emulator only) uses a separate store and an in-app driving switch. */
     val demo = MutableStateFlow(false)
@@ -82,4 +94,35 @@ class Container(private val app: Application) : TripStore {
     fun deleteAllTrips() { locked { it.deleteAll() } }
 
     val tracker = GuidanceTracker(this)
+
+    /**
+     * How long the car has been driven without a real break (M57). App-scoped so it keeps counting while the navigation
+     * is in front; it follows the same driving state as the screens (demo switch in demo mode) and holds nothing but
+     * two timestamps and the odometer at the start — in memory only.
+     */
+    val driveSession = MutableStateFlow(DriveSession())
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    @Volatile private var driving = false
+    fun isDriving() = driving
+    /** The odometer reading (when the car reports one) says how far this stretch has gone. */
+    fun noteOdometer(km: Double?) { if (km != null) driveSession.update { DriveSessions.step(it, driving, nowMs(), km) } }
+
+    init {
+        // Unknown is "locked" for the screens but is not counted as driving: only a state the platform reports as restricted is.
+        scope.launch {
+            combine(demo, carGate?.state ?: unknown, demoGate.state) { d, car, dm -> (if (d) dm else car) == DriveState.RESTRICTED }.collect { moving ->
+                driving = moving
+                driveSession.update { DriveSessions.step(it, moving, nowMs()) }
+            }
+        }
+        // The demo clock moves the app's "now"; the stretch moves with it instead of suddenly looking days long.
+        scope.launch {
+            var last = clockOffset.value
+            clockOffset.collect { offset ->
+                val delta = offset - last
+                last = offset
+                if (delta != 0L) driveSession.update { it.shifted(delta) }
+            }
+        }
+    }
 }

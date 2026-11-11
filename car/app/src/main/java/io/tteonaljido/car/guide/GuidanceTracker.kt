@@ -5,7 +5,9 @@ import io.tteonaljido.car.navi.NaviArrival
 import io.tteonaljido.trip.ArrivalRule
 import io.tteonaljido.trip.CarOverlay
 import io.tteonaljido.trip.GuidingTarget
+import io.tteonaljido.trip.TodayRoute
 import io.tteonaljido.trip.VisitHow
+import io.tteonaljido.trip.arrivedWaypoint
 import io.tteonaljido.trip.VisitStamp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -45,6 +47,14 @@ class GuidanceTracker(private val c: Container) {
         val note = c.locked { repo ->
             val t = repo.load().trips.filter { it.overlay.guiding != null }.maxByOrNull { it.overlay.guiding!!.requestedAt } ?: return@locked null
             val g = t.overlay.guiding!!
+            // On a multi-stop route ('오늘 경로 전송') the waypoints come first: the navigation's waypoint event, or the
+            // demo signal while waypoints are still ahead. The stop is marked and the route goes on.
+            val waypoint = if (a.waypoint || a.demo) TodayRoute.waypointArrived(t.overlay, a.name, here?.latE7, here?.lonE7, a.demo) else null
+            if (waypoint != null) {
+                repo.save(t.copy(overlay = t.overlay.arrivedWaypoint(waypoint, now, how)))
+                return@locked ArrivalNote(t.localId, waypoint.visitId, waypoint.name, now, a.demo)
+            }
+            if (a.waypoint) return@locked null // a waypoint this app did not send: nothing to mark
             if (!a.demo && !ArrivalRule.matches(g, a.name, here?.latE7, here?.lonE7)) return@locked null
             repo.save(t.copy(overlay = t.overlay.arrived(g, now, how)))
             ArrivalNote(t.localId, g.visitId, g.name, now, a.demo)
@@ -56,8 +66,8 @@ class GuidanceTracker(private val c: Container) {
     fun dismiss() { _last.value = null }
 }
 
-/** Arriving at a stop marks it visited; arriving at the night's lodging or the final destination just ends guiding. */
+/** Arriving at a stop marks it visited; arriving at the night's lodging or the final destination just ends guiding. Either way the sent route is over. */
 fun CarOverlay.arrived(g: GuidingTarget, now: Long, how: VisitHow): CarOverlay {
-    val id = g.visitId ?: return copy(guiding = null)
-    return copy(visited = visited + id, visitedAt = visitedAt + (id to VisitStamp(now, how)), guiding = null)
+    val id = g.visitId ?: return copy(guiding = null, guidingStops = emptyList())
+    return copy(visited = visited + id, visitedAt = visitedAt + (id to VisitStamp(now, how)), guiding = null, guidingStops = emptyList())
 }

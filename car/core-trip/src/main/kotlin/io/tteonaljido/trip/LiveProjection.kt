@@ -49,6 +49,8 @@ data class Projection(
     val defer: DeferSuggestion? = null,
     /** Charge/refuel recommendation from the car's energy reading + the day's remaining distance; null when none applies. */
     val energy: EnergyAdvisory? = null,
+    /** Rough distance (km, straight lines) between the remaining stops and on to the day's end; null when coordinates are missing. */
+    val remainKm: Int? = null,
 )
 
 object LiveProjection {
@@ -69,6 +71,10 @@ object LiveProjection {
         vehicleKind: VehicleKind = VehicleKind.UNKNOWN,
         energyPercent: Int? = null,
         rangeKm: Int? = null,
+        /** The navigation's estimate for the leg to the next stop (`requestTrip`): battery on arrival and road distance. */
+        naviSocAtNext: Int? = null,
+        nextLegMetres: Int? = null,
+        driveMode: DriveMode? = null,
     ): Projection {
         val day = trip.days[dayIndex - 1]
         val order = day.visitOrder
@@ -177,8 +183,10 @@ object LiveProjection {
             if (pts.size < 2) null else (1 until pts.size).sumOf { metres(pts[it - 1].first, pts[it - 1].second, pts[it].first, pts[it].second) }.let { (it / 1000).toInt() }
         }
         val lodgingAhead = dayIndex != trip.days.size && day.lodgingPlaceRef != null
-        val energy = EnergyPolicy.advise(vehicleKind, energyPercent, rangeKm, remainKm, lodgingAhead)
-        return Projection(dayIndex, nextVisitId, stops.first().arrive, basis, stops, vsPlan, fixed, endExpected, endBy, deadlineKind, deadlineSlack, status, approximate, skip, defer, energy)
+        // The battery at the end of today's route, from SOC + range + the navigation's estimate together (EV/PHEV only).
+        val socAtDayEnd = if (vehicleKind == VehicleKind.EV || vehicleKind == VehicleKind.PHEV) EnergyOutlook.socAtDayEnd(energyPercent, rangeKm, remainKm, naviSocAtNext, nextLegMetres) else null
+        val energy = EnergyPolicy.advise(vehicleKind, energyPercent, rangeKm, remainKm, lodgingAhead, socAtDayEnd, driveMode)
+        return Projection(dayIndex, nextVisitId, stops.first().arrive, basis, stops, vsPlan, fixed, endExpected, endBy, deadlineKind, deadlineSlack, status, approximate, skip, defer, energy, remainKm)
     }
 
     private fun status(hasDeadline: Boolean, slack: Int?): Punctuality = when {

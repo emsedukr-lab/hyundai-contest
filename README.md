@@ -29,17 +29,18 @@
 - QR 불러오기: 일회용 QR → 6자리 확인 코드 → 재검증 요약 → 결정표(새 여행·업데이트·사본·불러오지 않기).
 - 다음 목적지 안내(NaviHelper), 오늘 경로 묶음 전송(최대 3스톱), 이름만 있는 장소는 내비 검색으로 확인.
 - 시간 지킴이(내비 남은 시간으로 여유·빠듯·늦음), 건너뛰기·미루기 제안, 자동 도착, '여기서 출발'(내비 예상·도착 시 배터리), EV·연료 권장.
+- 차량 신호 조합(M57, 모두 조회 전용): 출발 전 점검(주행가능거리 × 오늘 남은 거리, 탑승 × 안전벨트, 문·트렁크, 충전 포트 등), 일정 끝 배터리 예상, 2시간 연속 운전 시 쉬어 가기 권고(휴게소 거리·일정 여유와 함께), 오늘 경로를 보낸 뒤 경유지마다 도착 표시·다음 장소 기준 도착 예정, 가는 길 정체. 무엇을 써서 무엇을 만들었는지는 [docs/research/04_Pleos_SDK_API_활용.md](docs/research/04_Pleos_SDK_API_활용.md).
 - 주행 중에는 QR·승인 화면을 숨기고 다음 목적지 카드 하나만 보여 줍니다.
 
 ## 저장소 구조
 
 | 경로 | 내용 |
 |---|---|
-| `packages/shared` | 전송 스키마(zod), 정규화 해시, 무결성 검사, WebCrypto E2E, 세션 상태 전이, 시각표, 샘플 여행 |
-| `packages/worker` | Worker 라우터(`/api/v1`), `PairingSession` Durable Object, 카카오 장소 검색·길찾기(시간·거리·도로 경로)·공유 링크 해석, 웹 정적 파일 제공. 설정은 `wrangler.jsonc` |
+| `packages/shared` | 전송 스키마(zod), 정규화 해시, 무결성 검사, WebCrypto E2E, 세션 상태 전이, 시각표, 샘플 여행, Fleet 웹훅 payload 검사·준비 점검(`fleet.ts`) |
+| `packages/worker` | Worker 라우터(`/api/v1`), `PairingSession` Durable Object, 카카오 장소 검색·길찾기(시간·거리·도로 경로)·공유 링크 해석, Fleet API 웹훅 수신(`FleetVehicle` Durable Object, 토큰이 없으면 꺼짐), 웹 정적 파일 제공. 설정은 `wrangler.jsonc` |
 | `packages/web` | 모바일 웹: 여행·편집기·연결(`/c`)·설정·개인정보 화면 |
 | `packages/mobile` | 휴대폰 앱(Android·iOS): 모바일 웹 화면을 Capacitor로 포장한 네이티브 프로젝트. 뼈대 단계 — [packages/mobile/README.md](packages/mobile/README.md) |
-| `car/` | 차량 앱: `core-trip`(파서·재검증·결정표·시각표), `core-pairing`(E2E 암호화·상태 머신), `app`(Compose UI·내비·저장소) |
+| `car/` | 차량 앱: `core-trip`(파서·재검증·결정표·시각표·출발 전 점검·배터리 예상·쉬어 가기), `core-pairing`(E2E 암호화·상태 머신), `app`(Compose UI·내비·차량 신호 조회·저장소) |
 | `schema/` | 언어 중립 계약: JSON Schema, 연결 프로토콜, TS·Kotlin 교차 시험 fixture |
 | `design/` | Pleos 공식 디자인 에셋에서 추출한 토큰·Android 리소스·글꼴 ([design/README.md](design/README.md)) |
 | `tools/` | E2E·스모크·실제 폰 시험, 시연 녹화·편집, 대비 점검, 접수양식 채우기 |
@@ -51,7 +52,7 @@
 
 | 파일 | 상태 |
 |---|---|
-| `apk/떠날지도_release.apk` | 서명된 release (prod, 서버 `https://tteonaljido.tteonaljido-worker.workers.dev`). 버전 0.3.0(3), 2026-11-10 M55 차량 화면 재구성 후 재빌드(서명 v2+v3). 0.2.0에서 반영한 Pleos 가이드 점검(주행가능거리용 `CAR_DRIVE` 읽기, 로터리 미지원 선언, 적응형 아이콘) 포함. 제출 시 `팀명_떠날지도_release.apk`로 이름 변경. 해시는 `apk/SHA256SUMS.txt` |
+| `apk/떠날지도_release.apk` | 서명된 release (prod, 서버 `https://tteonaljido.tteonaljido-worker.workers.dev`). 버전 0.4.0(4), 2026-11-12 M57 차량 신호 조합 후 재빌드(서명 v2+v3). 권한은 조회 전용뿐: 내비 3종과 `CAR_ENERGY`·`CAR_DRIVE`·`CAR_SAFETY`·`CAR_DOORS`·`CAR_SEATS`(제어·비공개 권한 없음). 로터리 미지원 선언·적응형 아이콘 포함. 제출 시 `팀명_떠날지도_release.apk`로 이름 변경. 해시는 `apk/SHA256SUMS.txt` |
 | `car/app/build/outputs/apk/dev/debug/app-dev-debug.apk` | 로컬 개발용 (`./gradlew :app:assembleDevDebug`) |
 
 ## 실행 방법
@@ -90,20 +91,21 @@ adb shell am start --user 10 -n io.tteonaljido.car/.MainActivity   # 사용자 �
 ## 시험
 
 ```sh
-npm test                    # shared 53 · worker 38 · web 147 (TypeScript 238)
+npm test                    # shared 93 · worker 50 · web 147 (TypeScript 290)
 npm run typecheck
-(cd car && ./gradlew test)  # Kotlin 137 (car 모듈)
+(cd car && ./gradlew test)  # Kotlin 188 (car 모듈)
 npm run smoke               # 서버 흐름 (기본 http://localhost:8787, 다른 주소는 `npm run smoke -- <URL>`)
 npm run e2e                 # Chrome 휴대폰 + 가짜 차량 (같은 방식으로 주소 지정, 화면은 docs/evidence/m3/에 덮어씀)
 npm run e2e:car             # 에뮬레이터 차량 앱(dev debug) + Chrome 휴대폰 (기본 emulator-5580)
 npx tsx tools/live-pair.mts # 서명 release APK + 배포된 모바일 웹·서버 실제 연동, 양쪽 화면을 docs/evidence/live-pair/에 저장
+npx tsx tools/fleet-webhook-sample.mts       # Fleet 웹훅 예시 payload → 로컬 wrangler dev (토큰은 .dev.vars, 파일 머리말 참고)
 npx tsx tools/phone-test.mts                 # 실제 폰 + 가짜 차량 (Mac 화면에 QR 표시, 기본 배포 서버)
 npx tsx tools/record-demo.mts emulator-5580  # release APK + 배포 서버 전체 흐름 녹화·메모리 기록
 npx tsx tools/compose-demo.mts               # 녹화 → media/demo/떠날지도_시연.mp4
 npx tsx tools/compose-shorts.mts             # 녹화 → media/demo/떠날지도_숏폼.mp4 (세로)
 ```
 
-2026-11-10(M55) 기준 TypeScript 234개와 Kotlin 146개가 모두 통과하고, 모바일 E2E(`npm run e2e`)와 차량 에뮬레이터 E2E(`tools/e2e-car.mts`, 16항목)도 통과합니다. 같은 날 서명 release APK 0.3.0과 배포 서버·모바일 웹의 실제 연동(`tools/live-pair.mts`, 15항목)과 내비 경로 안내까지 확인했습니다 — 화면은 `docs/evidence/live-pair/overview.png`. 전송 스키마를 바꾸면 `npm run schema`로 JSON Schema·fixture를 다시 만들고 TS·Kotlin 시험을 모두 돌립니다.
+2026-11-12(M57) 기준 TypeScript 290개와 Kotlin 188개가 모두 통과하고, 모바일 E2E(`npm run e2e`)와 차량 에뮬레이터 E2E(`tools/e2e-car.mts`, 16항목)도 통과합니다. 같은 날 서명 release APK 0.3.0과 배포 서버·모바일 웹의 실제 연동(`tools/live-pair.mts`, 15항목)과 내비 경로 안내까지 확인했습니다 — 화면은 `docs/evidence/live-pair/overview.png`. 전송 스키마를 바꾸면 `npm run schema`로 JSON Schema·fixture를 다시 만들고 TS·Kotlin 시험을 모두 돌립니다.
 
 ## 배포
 

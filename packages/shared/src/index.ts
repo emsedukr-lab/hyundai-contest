@@ -5,3 +5,5 @@ export * from './crypto';
 export * from './protocol';
 export * from './sample';
 export * from './timeline';
+export * from './fleet';
+export * from './fleetSamples';

@@ -72,6 +72,11 @@ data class CarOverlay(
     /** What this app last handed to the navigation, so its arrival event can be matched to a stop. */
     val guiding: GuidingTarget? = null,
     /**
+     * The stops of the last '오늘 경로 전송' in driving order (waypoints, then the destination, which is also [guiding]).
+     * Lets a waypoint arrival mark its stop and the waypoint's remaining time feed the live view. Empty for a single-stop route.
+     */
+    val guidingStops: List<GuidingTarget> = emptyList(),
+    /**
      * Confirmed parking/stay measurements for this trip (local only; deleted with the trip). M42: kept for saved-trip
      * compatibility and as groundwork for estimating real parking time later — not read by the current screens or timetable.
      */

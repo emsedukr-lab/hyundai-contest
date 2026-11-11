@@ -40,3 +40,17 @@ class ArrivedTest {
         assertFalse(after.visited.isEmpty())
     }
 }
+
+/** M57: a multi-stop route ('오늘 경로 전송') ends with its last stop — the remembered stops go with it. */
+class ArrivedRouteTest {
+    private fun stop(visitId: String?) = GuidingTarget(1, visitId, visitId?.let { "p-$it" }, 0, 0, "목적지 $visitId", 0)
+
+    @Test fun arrivingAtTheLastStopClearsTheSentRoute() {
+        val before = CarOverlay(visited = setOf("v1"), guiding = stop("v3"), guidingStops = listOf(stop("v2"), stop("v3")))
+        val after = before.arrived(stop("v3"), 5L, VisitHow.NAVI_ARRIVED)
+        assertTrue("v3" in after.visited)
+        assertNull(after.guiding)
+        assertTrue(after.guidingStops.isEmpty())
+        assertFalse("a waypoint the navigation never reported stays unvisited", "v2" in after.visited)
+    }
+}

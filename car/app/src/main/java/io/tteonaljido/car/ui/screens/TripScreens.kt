@@ -64,15 +64,19 @@ import io.tteonaljido.car.ui.text
 import io.tteonaljido.car.ui.theme.Pleos
 import io.tteonaljido.trip.Basis
 import io.tteonaljido.trip.DeadlineKind
+import io.tteonaljido.trip.DriveMode
 import io.tteonaljido.trip.Endpoint
+import io.tteonaljido.trip.FluidLevel
 import io.tteonaljido.trip.LocalTrip
 import io.tteonaljido.trip.NextDestination
 import io.tteonaljido.trip.Punctuality
+import io.tteonaljido.trip.RestAdvice
 import io.tteonaljido.trip.Severity
 import io.tteonaljido.trip.Target
 import io.tteonaljido.trip.TripOverview
 import io.tteonaljido.trip.TripValidator
 import io.tteonaljido.trip.TripWhen
+import io.tteonaljido.trip.VehicleSnapshot
 import io.tteonaljido.trip.Visit
 import io.tteonaljido.trip.originFor
 import io.tteonaljido.trip.zoneOrUtc
@@ -201,12 +205,18 @@ fun TripDetailScreen(vm: TripsViewModel, localId: String, drive: DriveState, dem
     val here by vm.here.collectAsState()
     val arrival by vm.lastArrival.collectAsState()
     val energy by vm.energy.collectAsState()
+    val vehicle by vm.vehicle.collectAsState()
+    val session by vm.drive.collectAsState()
     val t = trips.firstOrNull { it.localId == localId } ?: return onBack()
     var day by remember(localId) { mutableIntStateOf(vm.todayIndex(t) ?: 1) }
     var confirmDelete by remember { mutableStateOf(false) }
     val todayDate = vm.today(t, now)
     val report = remember(t, todayDate) { TripValidator.validate(t.plan, t.overlay, todayDate) }
-    val live = remember(t, day, now, naviLive, here, energy) { vm.live(t, day, now, naviLive, here) }
+    val live = remember(t, day, now, naviLive, here, energy, vehicle) { vm.live(t, day, now, naviLive, here) }
+    // M57: what the car reported, read against today's plan. Both exist only for the day the car is actually on.
+    val isToday = vm.todayIndex(t, now) == day
+    val rest = remember(now, live, naviLive, vehicle, session) { vm.rest(now, live, naviLive, session) }
+    val departure = remember(live, vehicle, energy) { if (isToday) vm.departure(live) else null }
 
     Screen {
         // While driving the card below is the whole screen; Back still works, there is nothing to tap.
@@ -218,7 +228,7 @@ fun TripDetailScreen(vm: TripsViewModel, localId: String, drive: DriveState, dem
         if (demoClock) DemoClockLine(now)
         if (!drive.parked) {
             // Driving: one glanceable card, no scrolling, no buttons; it changes only as text.
-            DrivingTripView(t, vm.todayIndex(t, now) ?: day, live, naviLive)
+            DrivingTripView(t, vm.todayIndex(t, now) ?: day, live, naviLive, rest)
             return@Screen
         }
         report.issues.firstOrNull { it.code == "PAST_TRIP" }?.let { past ->
@@ -239,7 +249,8 @@ fun TripDetailScreen(vm: TripsViewModel, localId: String, drive: DriveState, dem
             }
             val side: @Composable () -> Unit = {
                 Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
-                    NextPanel(vm, t, day, live, vm.hereFor(t, day, now, here), arrival?.takeIf { it.localId == t.localId })
+                    NextPanel(vm, t, day, live, vm.hereFor(t, day, now, here), arrival?.takeIf { it.localId == t.localId }, naviLive, rest.takeIf { isToday })
+                    departure?.let { DepartureCard(it) }
                     ToCheck(vm, t, day, report)
                     TextAction(stringResource(R.string.delete_trip), { confirmDelete = true }, tone = TagTone.ERROR)
                 }
@@ -249,7 +260,8 @@ fun TripDetailScreen(vm: TripsViewModel, localId: String, drive: DriveState, dem
                 Column(Modifier.weight(0.45f).verticalScroll(rememberScrollState())) { side(); Spacer(Modifier.height(32.dp)) }
             } else Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(32.dp)) {
                 // Half screen (840dp): what to do next first, then the day.
-                NextPanel(vm, t, day, live, vm.hereFor(t, day, now, here), arrival?.takeIf { it.localId == t.localId })
+                NextPanel(vm, t, day, live, vm.hereFor(t, day, now, here), arrival?.takeIf { it.localId == t.localId }, naviLive, rest.takeIf { isToday })
+                departure?.let { DepartureCard(it) }
                 route()
                 ToCheck(vm, t, day, report)
                 TextAction(stringResource(R.string.delete_trip), { confirmDelete = true }, tone = TagTone.ERROR)
@@ -330,7 +342,7 @@ private fun LiveLines(l: LiveLine, large: Boolean) {
 }
 
 @Composable
-private fun DrivingTripView(t: LocalTrip, day: Int, live: LiveView?, naviLive: NaviLive?) {
+private fun DrivingTripView(t: LocalTrip, day: Int, live: LiveView?, naviLive: NaviLive?, rest: RestAdvice?) {
     val step = remember(t, day) { NextDestination.of(t.plan, t.overlay, day) }
     val secondary = colorResource(R.color.pleos_text_dark_secondary)
     val label = when (val tg = step.target) {
@@ -340,21 +352,28 @@ private fun DrivingTripView(t: LocalTrip, day: Int, live: LiveView?, naviLive: N
     }
     // '꼭': the next stop has a fixed reservation time, so it must not be dropped.
     val mustKeep = (step.target as? Target.Stop)?.let { s -> t.plan.visits.first { it.visitId == s.visitId }.fixed != null } == true
-    // The navigation's live remaining distance, only while it is actually guiding to this destination.
-    val remainMetres = naviLive?.remainMetres?.takeIf { naviLive.guiding && live?.naviElsewhere == null }
+    // The navigation's live remaining distance to this stop: its destination's, or on a multi-stop route the waypoint's.
+    val remainMetres = live?.naviRemainMetres
     PleosCard(padding = 48.dp, gap = 20.dp) {
         PleosText(stringResource(R.string.next_destination_day, day), Pleos.type.bodyMedium, secondary, maxLines = 1)
         PleosText(label, Pleos.type.headline, maxLines = 1)
         if (mustKeep) Tag(stringResource(R.string.drive_must), TagTone.INK, large = true)
         remainMetres?.let { PleosText(stringResource(R.string.drive_remain, String.format(Locale.ROOT, "%.1f", it / 1000.0)), Pleos.type.titleMedium) }
         live?.let { v -> liveStatus(t, v)?.let { LiveLines(it, large = true) } }
+        // Still text only: congestion on the route, and a break when one is due (no buttons while driving).
+        if (live?.naviElsewhere == null) trafficText(naviLive)?.let { PleosText(it, Pleos.type.bodyLarge, secondary, maxLines = 1) }
+        rest?.let { r ->
+            val (why, what) = restTexts(r)
+            Tag(why, TagTone.WARN, large = true)
+            PleosText(what, Pleos.type.bodyLarge, maxLines = 2)
+        }
         PleosText(stringResource(R.string.guide_when_parked), Pleos.type.bodyMedium.copy(fontWeight = FontWeight.Normal), secondary, maxLines = 1)
     }
 }
 
 /** 다음 목적지: the name, how it goes against the next fixed time, and what can be done about it here. */
 @Composable
-private fun NextPanel(vm: TripsViewModel, t: LocalTrip, day: Int, live: LiveView?, here: HereEstimate?, arrival: ArrivalNote?) {
+private fun NextPanel(vm: TripsViewModel, t: LocalTrip, day: Int, live: LiveView?, here: HereEstimate?, arrival: ArrivalNote?, naviLive: NaviLive?, rest: RestAdvice?) {
     val step = remember(t, day) { NextDestination.of(t.plan, t.overlay, day) }
     // "오늘 경로 전송" needs at least two upcoming stops with coordinates (destination + ≥1 waypoint).
     val canBundle = remember(t, day) {
@@ -379,6 +398,16 @@ private fun NextPanel(vm: TripsViewModel, t: LocalTrip, day: Int, live: LiveView
         live?.let { v ->
             liveStatus(t, v)?.let { LiveLines(it, large = false) }
             v.naviElsewhere?.let { StatusLine(stringResource(R.string.live_navi_elsewhere, it), Tone.INFO) }
+            // What the navigation knows about the route it is driving for us: congestion, incidents, toll.
+            if (v.naviElsewhere == null) {
+                trafficText(naviLive)?.let { StatusLine(it, Tone.WARNING) }
+                tollText(naviLive)?.let { StatusLine(it, Tone.INFO) }
+            }
+        }
+        rest?.let { r ->
+            val (why, what) = restTexts(r)
+            StatusLine(why, Tone.WARNING)
+            StatusLine(what, Tone.INFO)
         }
         here?.socAtDest?.let { soc -> StatusLine(stringResource(if (soc < LOW_SOC) R.string.soc_low else R.string.soc_at_dest, soc), if (soc < LOW_SOC) Tone.WARNING else Tone.INFO) }
         val lowSoc = (here?.socAtDest?.let { it < LOW_SOC } == true) || vm.naviLive.collectAsState().value?.lowBattery == true
@@ -395,10 +424,13 @@ private fun NextPanel(vm: TripsViewModel, t: LocalTrip, day: Int, live: LiveView
                 when (e.action) {
                     io.tteonaljido.trip.EnergyAction.FAST_CHARGE -> stringResource(R.string.energy_fast, pct)
                     io.tteonaljido.trip.EnergyAction.SLOW_CHARGE -> stringResource(R.string.energy_slow, pct)
-                    io.tteonaljido.trip.EnergyAction.REFUEL -> stringResource(R.string.energy_refuel, pct)
+                    io.tteonaljido.trip.EnergyAction.REFUEL -> if (e.reasonCode == "refuel_range") stringResource(R.string.energy_refuel_range) else stringResource(R.string.energy_refuel, pct)
                 },
                 Tone.WARNING,
             )
+            // The outlook behind the advice (SOC + range + the navigation's estimate), and a drive-mode hint when it applies.
+            e.socAtDayEnd?.let { StatusLine(stringResource(R.string.energy_day_end, it), if (it <= io.tteonaljido.trip.EnergyPolicy.EV_LOW_SOC) Tone.WARNING else Tone.INFO) }
+            if (e.ecoHint) StatusLine(stringResource(R.string.energy_eco_hint), Tone.INFO)
         }
         val skippedToday = t.plan.days[day - 1].visitOrder.filter { it in t.overlay.skipped }
         val deferredToday = t.plan.days[day - 1].visitOrder.filter { it in t.overlay.deferred }
@@ -414,7 +446,7 @@ private fun NextPanel(vm: TripsViewModel, t: LocalTrip, day: Int, live: LiveView
             PleosButton(stringResource(R.string.depart_here), { vm.departHere(t.localId, day) }, type = ButtonType.SECONDARY, enabled = isToday, tag = "departHere")
             if (t.overlay.originFor(day) != null) PleosButton(stringResource(R.string.undo_depart), { vm.undoDepartHere(t.localId, day) }, type = ButtonType.SECONDARY, tag = "undoDepart")
         }
-        if (skip != null || defer != null || energy != null || arrival?.visitId != null || skippedToday.isNotEmpty() || deferredToday.isNotEmpty() || deferredAway.isNotEmpty() || lowSoc) {
+        if (skip != null || defer != null || energy != null || rest != null || arrival?.visitId != null || skippedToday.isNotEmpty() || deferredToday.isNotEmpty() || deferredAway.isNotEmpty() || lowSoc) {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 skip?.let { s -> PleosButton(stringResource(R.string.skip), { vm.skip(t.localId, s.visitId) }, size = ButtonSize.SMALL, tag = "skip") }
                 defer?.let { s -> PleosButton(stringResource(R.string.defer_back), { vm.defer(t.localId, s.visitId) }, type = ButtonType.SECONDARY, size = ButtonSize.SMALL, tag = "defer") }
@@ -428,6 +460,7 @@ private fun NextPanel(vm: TripsViewModel, t: LocalTrip, day: Int, live: LiveView
                     PleosButton(stringResource(if (refuel) R.string.find_fuel else R.string.nearby_chargers), { if (refuel) vm.openFuelSearch() else vm.openChargers() }, type = ButtonType.SECONDARY, size = ButtonSize.SMALL, tag = "energy")
                 }
                 if (lowSoc && energy == null) PleosButton(stringResource(R.string.nearby_chargers), vm::openChargers, type = ButtonType.SECONDARY, size = ButtonSize.SMALL, tag = "chargers")
+                if (rest != null) PleosButton(stringResource(R.string.find_rest_area), vm::openRestAreas, type = ButtonType.SECONDARY, size = ButtonSize.SMALL, tag = "restArea")
             }
         }
     }
@@ -435,6 +468,16 @@ private fun NextPanel(vm: TripsViewModel, t: LocalTrip, day: Int, live: LiveView
 
 /** Our own threshold for a low battery at the destination (the navigation's estimate), stated as such in the docs. */
 private const val LOW_SOC = 20
+
+/** Emulator demo samples for the departure check (M57): one with things to look at, one all clear. */
+private val DEMO_VEHICLE = VehicleSnapshot(
+    powerLimited = false, washerLow = true, brakeFluid = FluidLevel.OK,
+    doorsOpen = 0, trunkOpen = true, chargePortOpen = true, occupants = 3, unbuckled = 1, gearPark = true, driveMode = DriveMode.SPORT,
+)
+private val DEMO_VEHICLE_OK = VehicleSnapshot(
+    powerLimited = false, washerLow = false, brakeFluid = FluidLevel.OK,
+    doorsOpen = 0, trunkOpen = false, chargePortOpen = false, occupants = 2, unbuckled = 0, gearPark = true, driveMode = DriveMode.NORMAL,
+)
 
 @Composable
 private fun GuideDialogs(vm: TripsViewModel, g: Guide) {
@@ -522,6 +565,10 @@ fun SettingsScreen(
                                 PleosButton(stringResource(R.string.presend_demo), { presend = true }, type = ButtonType.SECONDARY, size = ButtonSize.SMALL, tag = "presend")
                                 PleosButton(stringResource(R.string.demo_energy_ev, 18), { vm.seedDemoEnergy(io.tteonaljido.trip.VehicleKind.EV, 18, 250) }, type = ButtonType.SECONDARY, size = ButtonSize.SMALL, tag = "seedEvEnergy")
                                 PleosButton(stringResource(R.string.demo_energy_ice, 25), { vm.seedDemoEnergy(io.tteonaljido.trip.VehicleKind.ICE, 25, null) }, type = ButtonType.SECONDARY, size = ButtonSize.SMALL, tag = "seedIceEnergy")
+                                // M57: the emulator cannot inject vehicle signals, so labelled samples stand in for the departure check and the rest advice.
+                                PleosButton(stringResource(R.string.demo_vehicle), { vm.seedDemoVehicle(DEMO_VEHICLE) }, type = ButtonType.SECONDARY, size = ButtonSize.SMALL, tag = "seedVehicle")
+                                PleosButton(stringResource(R.string.demo_vehicle_ok), { vm.seedDemoVehicle(DEMO_VEHICLE_OK) }, type = ButtonType.SECONDARY, size = ButtonSize.SMALL, tag = "seedVehicleOk")
+                                PleosButton(stringResource(R.string.demo_drive), { vm.seedDemoDrive(130) }, type = ButtonType.SECONDARY, size = ButtonSize.SMALL, tag = "seedDrive")
                             }
                         }
                     }

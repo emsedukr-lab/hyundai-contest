@@ -1,13 +1,16 @@
 import { randomId } from '@tteonaljido/shared';
+import { fleet } from './fleet';
 import { error, json, readJson } from './http';
 import { searchPlaces } from './kakao';
 import { routeDurations, routePaths } from './route';
 import { resolveShare } from './resolve';
 
 export { PairingSession } from './pairingSession';
+export { FleetVehicle } from './fleetVehicle';
 
 export interface Env {
   PAIRING: DurableObjectNamespace<import('./pairingSession').PairingSession>;
+  FLEET: DurableObjectNamespace<import('./fleetVehicle').FleetVehicle>;
   ASSETS: Fetcher;
   RL_CREATE: RateLimit;
   RL_CLAIM: RateLimit;
@@ -15,6 +18,8 @@ export interface Env {
   RL_SEARCH: RateLimit;
   RL_ROUTE: RateLimit;
   KAKAO_REST_KEY?: string;
+  /** Unset in production, which leaves the Fleet webhook routes answering 404 (see fleet.ts). */
+  FLEET_WEBHOOK_TOKEN?: string;
   TTL_QR?: string;
   TTL_UPLOAD?: string;
   TTL_RESULT?: string;
@@ -110,6 +115,7 @@ async function api(req: Request, env: Env, url: URL): Promise<Response> {
     return resolveShare(body);
   }
 
+  if (parts[2] === 'fleet') return fleet(req, env, url, parts);
 
   if (parts[2] !== 'sessions') return error('NOT_FOUND');
 
