@@ -11,12 +11,14 @@ import { chromium } from 'playwright-core';
 const DIR = (process.argv[2] ?? 'docs/evidence/live-pair').replace(/\/?$/, '/');
 const CHROME = process.env.CHROME_PATH ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 
-const results: { ok: boolean; what: string }[] = JSON.parse(readFileSync(`${DIR}results.json`, 'utf8')).results ?? JSON.parse(readFileSync(`${DIR}results.json`, 'utf8'));
+const run = JSON.parse(readFileSync(`${DIR}results.json`, 'utf8'));
+const results: { ok: boolean; what: string }[] = run.results ?? run;
 const find = (re: RegExp) => results.map((r) => r.what.match(re)?.[1]).find(Boolean) ?? '';
 const version = find(/release ([\d.]+)/);
 const code = find(/same confirm code \(([\d ]+)\)/);
 const passed = results.filter((r) => r.ok).length;
-const date = new Date().toISOString().slice(0, 10);
+// The day the check ran, in local time (toISOString would give the UTC day).
+const date = new Date(run.at ?? Date.now()).toLocaleDateString('sv-SE');
 
 const img = (name: string, kind: 'car' | 'phone') => {
   const file = `${DIR}${name}`;
@@ -51,7 +53,7 @@ const steps: { n: string; title: string; shots: Shot[] }[] = [
     { file: '08-phone.png', kind: 'phone', caption: '휴대폰: "차량에 새 여행으로 불러왔어요"' },
   ] },
   { n: '6', title: '차량에 도착한 여행', shots: [
-    { file: existsSync(`${DIR}10-car.png`) ? '10-car.png' : '09-car.png', kind: 'car', caption: '왼쪽 하루 동선, 오른쪽 다음 목적지' },
+    { file: '09-car.png', kind: 'car', caption: '왼쪽 하루 동선, 오른쪽 다음 목적지' },
   ] },
   { n: '7', title: '같은 여행을 다시 보내면', shots: [
     { file: '11-car.png', kind: 'car', caption: '차량: "이미 불러온 여행과 같아요"(중복 없음)' },

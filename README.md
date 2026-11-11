@@ -7,10 +7,10 @@
 - 차량 앱: Kotlin · Jetpack Compose · Pleos Connect 2.1.5 디자인 토큰 · NaviHelper 3.0.5
 - 모바일 웹: React 19 · Astryx 컴포넌트 + Pleos 모바일 테마 · 이 브라우저에만 저장 (계정 없음)
 - 중계 서버: Cloudflare Worker + Durable Object · 종단간 암호화 (서버는 내용을 볼 수 없음) · 카카오 장소 검색·길찾기 중계 (저장·로그 없음)
-- 배포: **https://tteonaljido.tteonaljido-worker.workers.dev** (모바일 웹 + API, 개인정보 안내 `/privacy`). 현재 M55 (2026-11-10, 차량 앱 화면을 휴대폰과 같은 디자인으로 재구성)
+- 배포: **https://tteonaljido.tteonaljido-worker.workers.dev** (모바일 웹 + API, 개인정보 안내 `/privacy`). 현재 M58 (2026-11-12, 차량 앱과 휴대폰 웹의 디자인을 Pleos Connect 공식 디자인 명세 `design/DESIGN.md`로 전면 교체, 서명 APK 0.5.0)
 - 시연 영상: [`media/demo/떠날지도_시연.mp4`](media/demo/떠날지도_시연.mp4) (3분 42초, 2026-11-10 M55 재녹화) — 새 여행의 동선 자동 구성부터 차량 불러오기·내비 안내까지, release APK 0.3.0(Pleos 에뮬레이터)와 휴대폰 브라우저를 배포 서버로 연결한 실제 화면 녹화
 - 세로 숏폼: [`media/demo/떠날지도_숏폼.mp4`](media/demo/떠날지도_숏폼.mp4) (56초, 1080×1920) — 같은 녹화에서 편집, 게시 문구는 `submission/숏폼_게시문구.md`
-- 시연 영상은 2026-11-10 지금 화면으로 다시 녹화했습니다. 숏폼은 아직 2026-11-05 녹화본(휴대폰은 예전 화면)입니다.
+- 시연 영상(2026-11-10)과 숏폼(2026-11-05)은 디자인 교체(M58, 2026-11-12) 전 화면입니다. 기능과 흐름은 같고, 지금 화면은 `docs/evidence/m58`·`docs/evidence/live-pair`(차량 ↔ 휴대폰 실제 연동)와 소개서에 있습니다. 영상은 다시 녹화할 예정입니다.
 
 ## 주요 기능
 
@@ -105,7 +105,7 @@ npx tsx tools/compose-demo.mts               # 녹화 → media/demo/떠날지�
 npx tsx tools/compose-shorts.mts             # 녹화 → media/demo/떠날지도_숏폼.mp4 (세로)
 ```
 
-2026-11-12(M57) 기준 TypeScript 290개와 Kotlin 188개가 모두 통과하고, 모바일 E2E(`npm run e2e`)와 차량 에뮬레이터 E2E(`tools/e2e-car.mts`, 16항목)도 통과합니다. 같은 날 디자인을 `design/DESIGN.md` 기준으로 전면 교체(M58)한 서명 release APK 0.5.0과 배포 서버·모바일 웹의 실제 연동(`tools/live-pair.mts`, 15항목)을 다시 확인했습니다([다음 목적지 안내]의 내비 경로 안내는 0.4.0으로 확인) — 화면은 `docs/evidence/live-pair/overview.png`(2026-11-10 0.3.0 때 저장, 이 흐름의 화면은 0.4.0에서도 같음). 전송 스키마를 바꾸면 `npm run schema`로 JSON Schema·fixture를 다시 만들고 TS·Kotlin 시험을 모두 돌립니다.
+2026-11-12(M57) 기준 TypeScript 290개와 Kotlin 188개가 모두 통과하고, 모바일 E2E(`npm run e2e`)와 차량 에뮬레이터 E2E(`tools/e2e-car.mts`, 16항목)도 통과합니다. 같은 날 디자인을 `design/DESIGN.md` 기준으로 전면 교체(M58)한 서명 release APK 0.5.0과 배포 서버·모바일 웹의 실제 연동(`tools/live-pair.mts`, 15항목)을 다시 확인했습니다([다음 목적지 안내]로 Pleos 내비가 경로 안내를 시작하는 것까지 0.5.0으로 확인) — 화면은 `docs/evidence/live-pair/overview.png`(2026-11-12 0.5.0·새 디자인으로 다시 저장). 전송 스키마를 바꾸면 `npm run schema`로 JSON Schema·fixture를 다시 만들고 TS·Kotlin 시험을 모두 돌립니다.
 
 ## 배포
 
