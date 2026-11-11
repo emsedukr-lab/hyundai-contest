@@ -11,11 +11,14 @@ import { JS_KEY, escapeHtml, loadKakao, numberPin } from '../lib/kakaoSdk';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-const ROUTE = '#3182F6';
+/** A Pleos token's value (shell.css `:root`) as Kakao's drawing API needs it: a plain color string. */
+const token = (el: Element, name: string) => getComputedStyle(el).getPropertyValue(name).trim();
 
 /**
  * 경로 미리보기 (real map): a day's stops as numbered markers with the route drawn between them, on a Kakao map — the
- * roads Kakao's directions take (M54), a dashed straight line only where no road is known. Needs a
+ * roads Kakao's directions take (M54), a dashed straight line only where no road is known. The tiles and the plain
+ * start/end pins are Kakao's own; what we draw on top — the route and the numbered pins — is ink (Pleos static/dark)
+ * on a light casing, the same in both themes because the tiles are always light. Needs a
  * build-time `VITE_KAKAO_JS_KEY`; with no key — or if the SDK fails to load — it falls back to the no-key SVG
  * {@link RouteSketch}, so the strict-CSP path keeps working. Advisory only; it never changes the plan.
  */
@@ -43,6 +46,8 @@ export function KakaoMap({ plan, home, dayIndex }: { plan: Trip; home: Home | nu
         if (cancelled || !ref.current) return;
         ref.current.innerHTML = ''; // a day switch re-runs this effect on the same div; clear the old map so they don't stack
         ref.current.dataset.route = 'sketch';
+        const ink = token(ref.current, '--pleos-static-dark-100');
+        const casing = token(ref.current, '--pleos-static-light-100');
         const map = new kakao.maps.Map(ref.current, { center: new kakao.maps.LatLng(coords[0].latE7 / 1e7, coords[0].lonE7 / 1e7), level: 6 });
         const path: any[] = [];
         for (const p of coords) {
@@ -62,7 +67,7 @@ export function KakaoMap({ plan, home, dayIndex }: { plan: Trip; home: Home | nu
           }
         }
         // A light dashed straight line right away; replaced by the roads as soon as Kakao's directions answer (M54).
-        const dashed = (p: any[]) => new kakao.maps.Polyline({ path: p, strokeWeight: 3, strokeColor: ROUTE, strokeOpacity: 0.55, strokeStyle: 'shortdash', map, zIndex: 1 });
+        const dashed = (p: any[]) => new kakao.maps.Polyline({ path: p, strokeWeight: 3, strokeColor: ink, strokeOpacity: 0.55, strokeStyle: 'shortdash', map, zIndex: 1 });
         const sketch = path.length > 1 ? dashed(path) : null;
         if (runs.length > 0)
           void roadLines(runs).then((lines) => {
@@ -72,9 +77,9 @@ export function KakaoMap({ plan, home, dayIndex }: { plan: Trip; home: Home | nu
               if (l.path === null) dashed([new kakao.maps.LatLng(l.from.latE7 / 1e7, l.from.lonE7 / 1e7), new kakao.maps.LatLng(l.to.latE7 / 1e7, l.to.lonE7 / 1e7)]);
               else if (l.path.length > 1) {
                 const road = l.path.map(([lat, lon]) => new kakao.maps.LatLng(lat, lon));
-                // like a navigation route: a white casing under the blue line keeps it readable over roads and labels
-                new kakao.maps.Polyline({ path: road, strokeWeight: 8, strokeColor: '#FFFFFF', strokeOpacity: 1, strokeStyle: 'solid', map, zIndex: 1 });
-                new kakao.maps.Polyline({ path: road, strokeWeight: 5, strokeColor: ROUTE, strokeOpacity: 0.95, strokeStyle: 'solid', map, zIndex: 2 });
+                // like a navigation route: a light casing under the ink line keeps it readable over roads and labels
+                new kakao.maps.Polyline({ path: road, strokeWeight: 8, strokeColor: casing, strokeOpacity: 1, strokeStyle: 'solid', map, zIndex: 1 });
+                new kakao.maps.Polyline({ path: road, strokeWeight: 5, strokeColor: ink, strokeOpacity: 0.95, strokeStyle: 'solid', map, zIndex: 2 });
               }
             }
             if (ref.current) ref.current.dataset.route = 'road'; // for tests: the roads are drawn

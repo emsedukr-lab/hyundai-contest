@@ -1,10 +1,14 @@
-/* 다음 여행 card (M45): a white container on the canvas; the route drawing is the screen's one bright element. */
+/*
+ * 다음 여행 card: a container on the canvas (surface/basic, 1px divider/secondary outline). Like the car's route
+ * sketch, the day ahead is drawn in ink — a solid line and numbered stops — and the other days stay quiet; no hue.
+ */
 .tn-next {
   margin: 0 20px;
   display: flex;
   flex-direction: column;
   gap: 12px;
   padding: 20px 16px 12px;
+  border: 1px solid var(--pleos-divider-secondary);
   border-radius: var(--radius-container);
   background: var(--color-background-card);
   color: inherit;
@@ -13,7 +17,7 @@
   transition: background-color 120ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 .tn-next:active {
-  background: color-mix(in srgb, var(--color-background-card) 92%, var(--color-text-primary));
+  background-image: linear-gradient(var(--pleos-dim-dark-secondary), var(--pleos-dim-dark-secondary));
 }
 .tn-next:focus-visible {
   outline: 2px solid var(--color-accent);
@@ -29,7 +33,7 @@
   font-size: 14px;
   line-height: 20px;
   font-weight: 700;
-  color: var(--color-text-accent);
+  color: var(--color-text-primary);
   font-variant-numeric: tabular-nums;
 }
 .tn-next-name {
@@ -44,17 +48,17 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* The drawing sits on a canvas-coloured inset so the dashed route reads like a map panel. */
+/* The drawing sits on a surface/low inset so the dashed route reads like a map panel. */
 .tn-next-map {
   display: block;
   width: 100%;
   height: auto;
   border-radius: 12px;
-  background: var(--color-background-body);
+  background: var(--pleos-surface-low);
 }
 .tn-next-quiet {
   fill: none;
-  stroke: var(--color-border-emphasized);
+  stroke: var(--pleos-divider-tertiary);
   stroke-width: 2;
   stroke-dasharray: 4 4;
   stroke-linecap: round;
@@ -65,36 +69,36 @@
   opacity: 0.55;
 }
 .tn-next-lodging {
-  fill: var(--color-background-body);
+  fill: var(--pleos-surface-low);
   stroke: var(--color-text-secondary);
   stroke-width: 1.5;
 }
 .tn-next-lodging.is-focus {
-  stroke: var(--color-text-accent);
+  stroke: var(--color-text-primary);
   stroke-width: 2;
 }
 .tn-next-focus {
   fill: none;
-  stroke: var(--color-text-accent);
+  stroke: var(--color-text-primary);
   stroke-width: 2.5;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 .tn-next-stop circle {
   fill: var(--color-background-card);
-  stroke: var(--color-text-accent);
+  stroke: var(--color-text-primary);
   stroke-width: 2;
 }
 .tn-next-stop text {
-  fill: var(--color-text-accent);
-  font-size: 10px;
+  fill: var(--color-text-primary);
+  font-size: 13px; /* viewBox units: 12px (Label S, the smallest size) on a 360pt screen, where the drawing is 286px wide */
   font-weight: 700;
   font-family: inherit;
 }
 .tn-next-empty {
   padding: 24px 16px;
   border-radius: 12px;
-  background: var(--color-background-body);
+  background: var(--pleos-surface-low);
   font-size: 14px;
   line-height: 20px;
   color: var(--color-text-secondary);
@@ -111,10 +115,11 @@
   line-height: 20px;
   color: var(--color-text-secondary);
 }
+/* What still needs doing: bold ink behind the ink caution dot (.tn-warn-dot). */
 .tn-next-todo {
   flex: 1 1 auto;
   min-width: 0;
-  color: var(--color-text-warning);
+  color: var(--color-text-primary);
   font-weight: 700;
 }
 .tn-next-done {

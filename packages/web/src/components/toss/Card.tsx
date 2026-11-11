@@ -3,7 +3,7 @@ import { VStack } from '@astryxdesign/core/Stack';
 import { Heading, Text } from '@astryxdesign/core/Text';
 
 /**
- * Pleos 모바일의 컨테이너 카드(M45): 회색 캔버스 위 흰 면(Surface/container), 모서리 16, 장식 보더 없음.
+ * Pleos 모바일의 컨테이너 카드: surface/basic 면에 1px divider/secondary 보더, 모서리 19, 그림자 없음(차량 앱과 같음).
  * `pad={0}`이면 List처럼 자체 패딩을 가진 내용을 풀블리드로 담는 컨테이너가 된다(overflow hidden).
  */
 export function Card({ children, pad = 16, style }: { children: ReactNode; pad?: number; style?: CSSProperties }) {
@@ -11,6 +11,7 @@ export function Card({ children, pad = 16, style }: { children: ReactNode; pad?:
     <div
       style={{
         background: 'var(--color-background-card)',
+        border: '1px solid var(--pleos-divider-secondary)',
         borderRadius: 'var(--radius-container)',
         overflow: 'hidden',
         padding: pad,

@@ -1,8 +1,9 @@
 /*
  * The editor's day timeline: start → (travel → stop)… → add → travel → lodging/home, top to bottom.
  * A 32px rail on the left carries the route (dashed between places) and each node's marker; cards sit to its right.
- * Cards are the grey Pleos section surface (radius 20) used across the app; problems tint the card's edge, not a box
- * at the bottom of the page.
+ * Cards are the app's container (surface/basic, a 1px divider/secondary outline, radius 19, no shadow). A problem
+ * marks its own card: an error draws the outline in informative/negative, a caution is a bold ink line with an ink dot.
+ * Colors come from the theme variables and the --pleos-* tokens in shell.css; pressed = dim/dark/secondary.
  */
 .tl {
   display: flex;
@@ -28,7 +29,7 @@
   top: 0;
   bottom: 0;
   left: 50%;
-  border-left: 2px dashed var(--color-border-emphasized);
+  border-left: 2px dashed var(--pleos-divider-tertiary);
   transform: translateX(-1px);
 }
 .tl-row.is-first .tl-rail::before {
@@ -65,9 +66,10 @@
   background: var(--color-accent);
   color: var(--color-on-accent);
 }
+/* A caution on a stop keeps the ink marker; the words on its card say what to check. */
 .tl-marker.is-warn {
-  border-color: var(--color-border-warning);
-  color: var(--color-text-warning);
+  border-color: var(--color-text-primary);
+  color: var(--color-text-primary);
 }
 
 /* Cards: start, stop, lodging/home. The whole text area is one button; handle and menu sit beside it. */
@@ -79,13 +81,13 @@
   margin: 4px 0;
   border-radius: var(--radius-container);
   background: var(--color-background-card);
-  border: 1.5px solid transparent;
+  border: 1px solid var(--pleos-divider-secondary);
 }
-.tl-card.is-warn {
-  border-color: #ff8a00;
-}
+/* An error: the outline in informative/negative, 2px (a 1px line inside the border, so nothing shifts). */
 .tl-card.is-error {
-  border-color: var(--color-border-error);
+  border-color: var(--color-error);
+  outline: 1px solid var(--color-error);
+  outline-offset: -2px;
 }
 .tl-card-main {
   flex: 1 1 auto;
@@ -100,11 +102,11 @@
   font: inherit;
   text-align: left;
   cursor: pointer;
-  border-radius: var(--radius-container);
+  border-radius: calc(var(--radius-container) - 1px);
   transition: background-color 120ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 .tl-card-main:active {
-  background: var(--color-background-muted);
+  background: var(--pleos-dim-dark-secondary);
 }
 .tl-card-main:focus-visible,
 .tl-leg:focus-visible,
@@ -148,11 +150,22 @@
   color: var(--color-text-secondary);
   white-space: pre-wrap;
 }
+/* A caution: bold ink, and on a card an ink dot in front (the tone mark of the tags). */
 .tl-warn-text {
   font-size: 14px;
   line-height: 20px;
   font-weight: 700;
-  color: var(--color-text-warning);
+  color: var(--color-text-primary);
+}
+.tl-card .tl-warn-text::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 6px;
+  border-radius: 9999px;
+  background: currentColor;
+  vertical-align: 2px;
 }
 .tl-error-text {
   font-size: 14px;
@@ -180,7 +193,7 @@
   touch-action: none;
 }
 
-/* Travel leg: a pill on the dashed line. Missing time is a warning pill that opens the minutes sheet. */
+/* Travel leg: a quiet line beside the dashed rail. A missing time is bold ink with an ink dot, and opens the leg sheet. */
 .tl-legrow {
   min-height: 40px;
   display: flex;
@@ -194,7 +207,7 @@
   margin-left: -8px;
   padding: 4px 8px;
   border: 0;
-  border-radius: 8px;
+  border-radius: 7px;
   background: transparent;
   color: var(--color-text-secondary);
   font: inherit;
@@ -205,17 +218,18 @@
   transition: background-color 120ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 .tl-leg.is-missing {
-  color: var(--color-text-warning);
+  color: var(--color-text-primary);
   font-weight: 700;
 }
 
+/* "Something on this day needs a look": an ink dot beside the heading. */
 .tl-dot {
   display: inline-block;
   flex: none;
   width: 8px;
   height: 8px;
   border-radius: 9999px;
-  background: #ff8a00;
+  background: var(--color-text-primary);
 }
 
 /* Editor title (M53): just the dates and n박 n일 on one line; tapping it goes to 여행 정보. No name, no pencil. */
@@ -276,16 +290,17 @@
   border-radius: 9999px;
   background: var(--color-accent);
   color: var(--color-on-accent);
-  box-shadow: var(--shadow-med);
+  box-shadow: var(--pleos-shadow-level1);
   cursor: pointer;
-  transition: transform 120ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: background-color 120ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 .tl-fab svg {
   width: 26px;
   height: 26px;
 }
+/* Pressed: the filled face one step darker (button/filled/pressed), the shadow unchanged. */
 .tl-fab:active {
-  transform: scale(0.96);
+  background: var(--pleos-button-filled-pressed);
 }
 .tl-fab:focus-visible {
   outline: 2px solid var(--color-accent);
@@ -309,9 +324,10 @@
   font-variant-numeric: tabular-nums;
   text-align: center;
 }
+/* A place with a fixed time is waiting off the plan: the count turns to solid ink. */
 .tl-fab-badge.is-warn {
-  background: #ff8a00;
-  color: #131417;
+  background: var(--color-text-primary);
+  color: var(--color-background-card);
 }
 
 /* Sheets: a header row, a padded body, and a footer that stays reachable while the body scrolls. */
@@ -386,9 +402,9 @@
   gap: 10px;
   min-height: 44px;
   padding: 2px 4px 2px 14px;
-  border: 1px solid var(--color-border-emphasized);
+  border: 1px solid var(--pleos-divider-tertiary);
   border-radius: var(--radius-element);
-  background: var(--color-background-body);
+  background: var(--pleos-surface-low);
 }
 .tl-lodging-text {
   flex: 1 1 auto;
@@ -412,6 +428,7 @@
   flex-direction: column;
   gap: 10px;
   padding: 16px 18px 14px;
+  border: 1px solid var(--pleos-divider-secondary);
   border-radius: var(--radius-container);
   background: var(--color-background-card);
 }
@@ -458,20 +475,19 @@
 .tl-textbtn:focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
-  border-radius: 6px;
+  border-radius: 5px;
 }
 
 /* 여행 정보 collapsed: the summary card is one button; the header carries the 접기/펼치기 toggle. */
 .tl-infosummary {
   width: 100%;
-  border: 0;
   color: inherit;
   font: inherit;
   text-align: left;
   cursor: pointer;
 }
 .tl-infosummary:active {
-  background: var(--color-background-muted);
+  background-image: linear-gradient(var(--pleos-dim-dark-secondary), var(--pleos-dim-dark-secondary));
 }
 .tl-infosummary:focus-visible {
   outline: 2px solid var(--color-accent);
@@ -537,33 +553,49 @@
 .tl-extlink:focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
-  border-radius: 6px;
+  border-radius: 5px;
 }
 
 /* 되돌리기 snackbar: floats above the bottom bar (the + button moves up while it shows). */
 .tl-fab {
-  transition: bottom 160ms ease-out;
+  transition:
+    bottom 160ms ease-out,
+    background-color 120ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 .tl-fab.is-raised {
   bottom: calc(96px + 68px + env(safe-area-inset-bottom));
 }
 
-/* The place sheet's quiet confirmation under the search ("'경포호'을(를) 저장 목록에 담았어요"); empty keeps its slot. */
+/*
+ * The place sheet's quiet confirmation under the search ("'경포호'을(를) 저장 목록에 담았어요"): bold ink behind an
+ * informative/active dot (done); empty keeps its slot.
+ */
 .tl-added-line {
   min-height: 20px;
   font-size: 14px;
   line-height: 20px;
   font-weight: 700;
-  color: var(--color-text-accent, var(--color-accent));
+  color: var(--color-text-primary);
+}
+.tl-added-line:not(:empty)::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 6px;
+  border-radius: 9999px;
+  background: var(--pleos-informative-active);
+  vertical-align: 2px;
 }
 
 /*
- * A night without lodging (M41) — toss text-field error instead of the brown warning: a 1.5px red-500 #F04452 border
- * on a flat card (no tint), the bed marker in the same red, and the helper line in red under the field. A night marked
- * 미정 drops all of it.
+ * A night without lodging (M41) — a field error: the card's outline in informative/negative (2px, no tint), the bed
+ * marker in the same color, and the helper line under the field. A night marked 미정 drops all of it.
  */
 .tl-card.is-required {
   border-color: var(--color-error);
+  outline: 1px solid var(--color-error);
+  outline-offset: -2px;
 }
 .tl-marker.is-required {
   border-color: var(--color-error);
@@ -574,13 +606,16 @@
   line-height: 20px;
   color: var(--color-text-error);
 }
-/* The 미정 chip: same size and grey as the lodging choices beside it; on = toss chip active (dark fill, light text). */
+/*
+ * Chips are `ivi_toggle_button` Small × 0.6 (radius 10): off on button/basic/enabled, on = button/switch/enabled
+ * with Shadow Level2 and bold primary text — the raised face of a selected segment, not a dark fill.
+ */
 .tl-chip {
   height: 32px;
   padding: 0 12px;
   border: 0;
   border-radius: 10px;
-  background: light-dark(rgba(19, 20, 23, 0.05), rgba(255, 255, 255, 0.08));
+  background: var(--pleos-dim-dark-primary);
   color: var(--color-text-primary);
   font: inherit;
   font-size: 14px;
@@ -591,8 +626,8 @@
   transition: background-color 120ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 .tl-chip.is-on {
-  background: var(--color-accent);
-  color: var(--color-on-accent);
+  background: var(--pleos-button-switch-enabled);
+  box-shadow: var(--pleos-shadow-level2);
   font-weight: 700;
 }
 .tl-chip:focus-visible {
@@ -649,8 +684,8 @@
 .tl-setup-dot {
   width: 28px;
   height: 4px;
-  border-radius: 2px;
-  background: var(--color-border);
+  border-radius: 9999px;
+  background: var(--pleos-divider-secondary);
 }
 .tl-setup-dot.is-on {
   background: var(--color-accent);
@@ -751,34 +786,39 @@
 }
 
 /*
- * M45 Pleos editor: the day chip bar (Pleos Tabs · Box) sticks under the top bar; sections land just below it when a
- * chip is tapped. Unselected chips are ink 5%, the selected one graphite — like the car app's day tabs.
+ * The day tab bar — `ivi_segmented_control/solid` Medium × 0.6, like the car app's day tabs — sticks under the top
+ * bar; sections land just below it when a tab is tapped. One 48 bar on controller/tab_background (radius 14, 5px
+ * inside) holding 38 segments (radius 10): the selected one on button/switch/enabled with Shadow Level1 and bold
+ * primary text, the others bare with secondary text. Segments share the bar's width and, on a long trip, scroll
+ * sideways inside it. The stuck block stays 56 tall (48 + 7 + the hairline), which the editor's scroll code counts on.
  */
 .tl-daytabs {
   position: sticky;
   top: calc(56px + env(safe-area-inset-top));
   z-index: 4;
   background: var(--color-background-body);
-  box-shadow: 0 1px 0 var(--color-border);
+  border-bottom: 1px solid var(--pleos-divider-secondary);
 }
 .tl-daytabs-row {
   display: flex;
-  gap: 8px;
   overflow-x: auto;
-  padding: 8px 20px 12px;
+  margin: 0 20px 7px;
+  padding: 5px;
+  border-radius: 14px;
+  background: var(--pleos-controller-tab-background);
   scrollbar-width: none;
 }
 .tl-daytabs-row::-webkit-scrollbar {
   display: none;
 }
 .tl-daytab {
-  flex: none;
-  height: 36px;
-  padding: 0 14px;
+  flex: 1 0 auto;
+  height: 38px;
+  padding: 0 11px;
   border: 0;
   border-radius: 10px;
-  background: light-dark(rgba(19, 20, 23, 0.05), rgba(255, 255, 255, 0.08));
-  color: var(--color-text-primary);
+  background: transparent;
+  color: var(--color-text-secondary);
   font: inherit;
   font-size: 14px;
   line-height: 20px;
@@ -787,9 +827,13 @@
   cursor: pointer;
   transition: background-color 120ms cubic-bezier(0.22, 1, 0.36, 1);
 }
+.tl-daytab:active {
+  background: var(--pleos-dim-dark-secondary);
+}
 .tl-daytab[aria-current='true'] {
-  background: var(--color-accent);
-  color: var(--color-on-accent);
+  background: var(--pleos-button-switch-enabled);
+  box-shadow: var(--pleos-shadow-level1);
+  color: var(--color-text-primary);
   font-weight: 700;
 }
 .tl-daytab:focus-visible {
@@ -818,7 +862,7 @@
 }
 .tl-leg:active,
 .tl-chip:active {
-  background: var(--color-background-muted);
+  background: var(--pleos-dim-dark-secondary);
 }
 @media (prefers-reduced-motion: reduce) {
   .tl-leg,
@@ -859,8 +903,9 @@
 /*
  * M51 compact day timeline (scoped to .tl-day so the 여행 정보 rail keeps its own layout).
  * Stops: 2 fixed lines (~70px) — name + 꼭 | lock · start ~ end · stay · desired · memo, both lines nowrap + ellipsis.
- * Start/lodging/home: a 1-line slim bar (~50px) on a faint grey — [tag] name … time. Legs: 28px rows, '↓ 11분 · 7.3km',
- * with the wait before a fixed start as an amber caption beside it. Card gaps 4 → 2, leg rows 40 → 28 (about 30% less).
+ * Start/lodging/home: a 1-line slim bar (~50px) — [tag] name … time. Legs: 28px rows, '↓ 11분 · 7.3km', with the time
+ * to leave for a fixed start as a tag beside it (ink dot = time to spare, informative/negative dot = too late).
+ * Card gaps 4 → 2, leg rows 40 → 28 (about 30% less).
  */
 .tl-day .tl-card,
 .tl-day .tl-swipe {
@@ -906,16 +951,14 @@
   width: 16px;
   height: 16px;
 }
+/* A fixed (reserved) time: the lock in primary ink beside the bold time — weight and ink, not a hue. */
 .tl-lock.is-fixed {
-  color: var(--color-text-accent);
+  color: var(--color-icon-primary);
 }
 .tl-range {
   flex: none;
   font-weight: 700;
   color: var(--color-text-primary);
-}
-.tl-range.is-fixed {
-  color: var(--color-text-accent);
 }
 .tl-range.is-unknown {
   font-weight: 400;
@@ -931,13 +974,7 @@
   padding: 0 4px 0 0;
 }
 
-/* Slim bars: start, lodging, home. */
-.tl-day .tl-card.tl-bar {
-  background: light-dark(rgba(19, 20, 23, 0.04), rgba(255, 255, 255, 0.05));
-}
-.tl-day .tl-card.tl-bar:not(.is-error):not(.is-required):not(.is-warn) {
-  border: 1px solid var(--color-border);
-}
+/* Slim bars: start, lodging, home — the same container as a stop, one line tall (the car's Bar). */
 .tl-day .tl-bar .tl-card-main {
   padding: 12px 16px;
 }
@@ -1005,7 +1042,7 @@
 
 /*
  * M53 여행 정보, collapsed: one two-line card under the chip bar (no heading row — the chip names the section).
- * Line 1 the trip name (+ an orange dot when a night has no lodging) and the chevron; line 2 route · lodging · version.
+ * Line 1 the trip name (+ an ink dot when a night has no lodging) and the chevron; line 2 route · lodging · version.
  */
 .tl-info:not(.is-open) #trip-info-body {
   padding-top: 12px;
@@ -1068,9 +1105,9 @@
   gap: 2px;
   margin: 0 0 8px;
   padding: 14px 16px 12px 18px;
+  border: 1px solid var(--pleos-divider-secondary);
   border-radius: var(--radius-container);
   background: var(--color-background-card);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, #0064ff 28%, transparent);
 }
 .tl-faster-title {
   margin: 0;

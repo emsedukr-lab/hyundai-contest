@@ -1,7 +1,7 @@
 /*
- * 장소 검색창 — the M38 behaviour (SOCAR `input-filled`: a filled field with the magnifier inside, no border at rest, a
- * border on focus) in Pleos colours (M45): rest = ink 5% fill, placeholder and icon in the secondary ink, focus = Pleos
- * field/focused (#313236, dark #EDEEF2). 48px tall, radius 14 (Pleos text field 24dp × 0.6), Body S 16/24.
+ * 장소 검색창 — the M38 behaviour (a filled field with the magnifier inside, no border at rest, a border on focus) in
+ * Pleos tokens: rest = dim/dark/primary fill, placeholder and icon in the secondary ink, focus = field/focused.
+ * 48px tall, radius 14 (Pleos text field 24dp × 0.6), Body S 16/24.
  * The doubled class outranks Astryx's single-class atomic styles on the same element.
  */
 .tn-searchbar.tn-searchbar {
@@ -12,7 +12,7 @@
   padding: 0 8px 0 12px;
   border: 1px solid transparent;
   border-radius: 14px;
-  background: light-dark(rgba(19, 20, 23, 0.05), rgba(255, 255, 255, 0.08));
+  background: var(--pleos-dim-dark-primary);
   box-shadow: none;
   outline: none;
   transition: border-color 120ms cubic-bezier(0.22, 1, 0.36, 1);
@@ -21,7 +21,7 @@
   border-color: transparent;
 }
 .tn-searchbar.tn-searchbar:focus-within {
-  border-color: light-dark(#313236, #edeef2);
+  border-color: var(--pleos-field-focused);
   box-shadow: none;
   outline: none;
 }

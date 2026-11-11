@@ -34,8 +34,9 @@ export function loadKakao(key: string): Promise<any> {
 export const escapeHtml = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
 
 /**
- * A numbered map pin for a Kakao CustomOverlay. The element sits inside the themed page, so it takes the accent colour
- * (and follows dark mode) from the CSS variable. `title` is set as a DOM property, never parsed as HTML.
+ * A numbered map pin for a Kakao CustomOverlay: ink with a light ring and Shadow Level1, from the Pleos static tokens
+ * (shell.css) — the same in both themes, because Kakao's tiles are always light. `title` is set as a DOM property,
+ * never parsed as HTML.
  */
 export function numberPin(n: number, title: string, clickable = false): HTMLDivElement {
   const el = document.createElement('div');
@@ -44,8 +45,8 @@ export function numberPin(n: number, title: string, clickable = false): HTMLDivE
   el.setAttribute(
     'style',
     'display:flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:999px;' +
-      'background:var(--color-accent,#3182F6);color:var(--color-on-accent,#fff);font:700 12px/1 sans-serif;' +
-      `border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.4)${clickable ? ';cursor:pointer' : ''}`,
+      'background:var(--pleos-static-dark-100);color:var(--pleos-static-light-100);font-weight:700;font-size:12px;line-height:1;' +
+      `border:2px solid var(--pleos-static-light-100);box-shadow:var(--pleos-shadow-level1)${clickable ? ';cursor:pointer' : ''}`,
   );
   return el;
 }

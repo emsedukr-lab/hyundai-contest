@@ -27,7 +27,7 @@
   flex-direction: column;
   gap: 12px;
   padding: 20px 0;
-  border-top: 1px solid var(--color-border);
+  border-top: 1px solid var(--pleos-divider-secondary);
 }
 .vd-group-title {
   margin: 0;
@@ -92,7 +92,7 @@
   place-items: center;
   border: 0;
   border-radius: 10px;
-  background: light-dark(rgba(19, 20, 23, 0.05), rgba(255, 255, 255, 0.08));
+  background: var(--pleos-dim-dark-primary);
   color: var(--color-text-primary);
   font: inherit;
   font-size: 22px;
@@ -101,7 +101,7 @@
   transition: background-color 120ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 .vd-step:active {
-  background: var(--color-background-muted);
+  background: var(--pleos-dim-dark-secondary);
 }
 .vd-step:disabled {
   color: var(--color-text-disabled);

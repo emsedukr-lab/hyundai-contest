@@ -10,9 +10,10 @@ import { Tag } from './shell/Tag';
 import './nextTrip.css';
 
 /**
- * 다음 여행 (M45): the 여행 tab's one bright element. Name, when it leaves, and the whole route drawn on the same dashed
- * line with numbered stops as the editor — the day ahead in blue, the other days quiet. Below, what still needs doing
- * (orange) or the last version sent to the car. The whole card opens the trip.
+ * 다음 여행 (M45): the 여행 tab's lead card. Name, when it leaves (bold ink), and the whole route drawn on the same
+ * dashed line with numbered stops as the editor — the day ahead in ink, the other days quiet, like the car's route
+ * sketch. Below, what still needs doing (bold ink behind an ink dot) or the last version sent to the car. The whole
+ * card opens the trip.
  */
 export function NextTrip({ doc, sent, overlaps = 0 }: { doc: TripDoc; sent?: SendLogEntry; overlaps?: number }) {
   const { plan } = doc;
@@ -62,7 +63,7 @@ export function NextTrip({ doc, sent, overlaps = 0 }: { doc: TripDoc; sent?: Sen
   );
 }
 
-/** The whole-trip route: other days as a quiet dashed line with dots, the day ahead solid blue with numbered stops. */
+/** The whole-trip route: other days as a quiet dashed line with dots, the day ahead solid ink with numbered stops. */
 function RouteDrawing({ sketch, focusDay, name }: { sketch: TripSketch; focusDay: number | null; name: string }) {
   const line = (d: TripSketch['days'][number]) => [...(d.from ? [d.from] : []), ...d.points].map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
   const quiet = sketch.days.filter((d) => d.dayIndex !== focusDay);
