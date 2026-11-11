@@ -80,6 +80,7 @@ class PleosVehicleReader(context: Context) {
     /* ---------- snapshot (M57) ---------- */
 
     /** One reading of everything the trip logic combines. Groups are asked side by side, so a silent one costs one timeout, not many. */
+    @Suppress("DEPRECATION") // isEvChargePortOpen / getCurrentGearSelectionState are the 2.3.2 read paths; their Google car properties are a later migration (like the range above).
     suspend fun readSnapshot(): VehicleSnapshot? {
         if (!started) return null
         return coroutineScope {

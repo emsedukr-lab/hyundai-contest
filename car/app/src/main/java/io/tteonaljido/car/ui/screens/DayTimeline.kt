@@ -27,6 +27,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -41,9 +42,10 @@ import io.tteonaljido.car.ui.components.Dot
 import io.tteonaljido.car.ui.components.Icon
 import io.tteonaljido.car.ui.components.PleosCard
 import io.tteonaljido.car.ui.components.PleosText
+import io.tteonaljido.car.ui.components.Radius
+import io.tteonaljido.car.ui.components.Space
 import io.tteonaljido.car.ui.components.Tag
-import io.tteonaljido.car.ui.components.TagTone
-import io.tteonaljido.car.ui.components.tagFg
+import io.tteonaljido.car.ui.components.Tone
 import io.tteonaljido.car.ui.theme.Pleos
 import io.tteonaljido.trip.Endpoint
 import io.tteonaljido.trip.Importance
@@ -61,10 +63,11 @@ import java.util.Locale
  * (name and 꼭 / time range and stay), and '↓ 15분' between them. Read-only here: the plan is edited on the phone.
  */
 
-private val RAIL = 72.dp
-private val MARKER = 48.dp
+/** The rail column is an icon button wide (80), its markers 48 — the design system's icon sizes. */
+private val RAIL @Composable get() = dimensionResource(R.dimen.pleos_buttons_icon_medium_width)
+private val MARKER @Composable get() = Space.x48
 /** Distance from the row top to the marker's top, so the marker sits on the card's first line. */
-private val MARKER_TOP = 26.dp
+private val MARKER_TOP @Composable get() = Space.x24
 
 /** 30분 · 1시간 · 1시간 30분 (the phone's minutesLabel). */
 @Composable
@@ -86,7 +89,7 @@ fun DayHeading(t: LocalTrip, day: Int) {
         s.endAt?.let { stringResource(if (s.lastDay) R.string.sum_home else R.string.sum_lodging, TripValidator.hhmm(it)) },
         if (s.unknownLegs > 0) stringResource(R.string.sum_unknown, s.unknownLegs) else null,
     )
-    Column(Modifier.fillMaxWidth().padding(bottom = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    Column(Modifier.fillMaxWidth().padding(bottom = Space.x8), verticalArrangement = Arrangement.spacedBy(Space.x4)) {
         PleosText(stringResource(R.string.day_header, day, dateLabel(d.date)), Pleos.type.titleSmall, maxLines = 1)
         if (drive != null || rest.isNotEmpty()) BasicText(
             buildAnnotatedString {
@@ -122,7 +125,7 @@ fun DayTimeline(t: LocalTrip, day: Int, live: LiveView?) {
     val endAt = TripValidator.dayEnd(plan, day, t.overlay)
 
     Column(Modifier.fillMaxWidth()) {
-        RailRow(top = false, marker = { Marker(fill = colorResource(R.color.pleos_informative_positive), size = 36.dp) }) {
+        RailRow(top = false, marker = { Marker(fill = colorResource(R.color.pleos_icon_dark_primary), size = Space.x32) }) {
             Bar(
                 stringResource(R.string.tl_start), startName,
                 startAt?.let { stringResource(R.string.tl_depart_at, TripValidator.hhmm(it)) } ?: stringResource(R.string.tl_depart_free),
@@ -134,29 +137,30 @@ fun DayTimeline(t: LocalTrip, day: Int, live: LiveView?) {
             val v = plan.visits.first { it.visitId == id }
             val time = times[id]
             val status = when {
-                id in t.overlay.skipped -> stringResource(R.string.tag_skipped) to TagTone.NEUTRAL
-                id in t.overlay.visited -> (t.overlay.visitedAt[id]?.let { stringResource(R.string.tag_visited_at, clock(it.at, zone)) } ?: stringResource(R.string.tag_visited)) to TagTone.OK
-                id in t.overlay.deferredTo -> stringResource(R.string.tag_deferred_to, t.overlay.deferredTo.getValue(id).toString()) to TagTone.NEUTRAL
-                id in t.overlay.deferred -> stringResource(R.string.tag_deferred) to TagTone.NEUTRAL
+                id in t.overlay.skipped -> stringResource(R.string.tag_skipped) to Tone.NEUTRAL
+                id in t.overlay.visited -> (t.overlay.visitedAt[id]?.let { stringResource(R.string.tag_visited_at, clock(it.at, zone)) } ?: stringResource(R.string.tag_visited)) to Tone.OK
+                id in t.overlay.deferredTo -> stringResource(R.string.tag_deferred_to, t.overlay.deferredTo.getValue(id).toString()) to Tone.NEUTRAL
+                id in t.overlay.deferred -> stringResource(R.string.tag_deferred) to Tone.NEUTRAL
                 else -> null
             }
             val done = id in t.overlay.visited || id in t.overlay.skipped
             RailRow(marker = { NumberMarker(k + 1, done) }) {
-                PleosCard(Modifier.padding(vertical = 6.dp), padding = 24.dp, gap = 6.dp) {
-                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                PleosCard(Modifier.padding(vertical = Space.x8), padding = Space.x24, gap = Space.x8) {
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.x12)) {
+                        Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.x12)) {
                             PleosText(
                                 TripValidator.placeName(plan, v.placeRef), Pleos.type.bodyLargeStrong,
                                 colorResource(if (done) R.color.pleos_text_dark_secondary else R.color.pleos_text_dark_primary),
                                 Modifier.weight(1f, fill = false), maxLines = 1,
                             )
-                            if (v.importance == Importance.MUST) Tag(stringResource(R.string.tl_must), TagTone.INK)
+                            if (v.importance == Importance.MUST) Tag(stringResource(R.string.tl_must))
                         }
                         status?.let { (text, tone) -> Tag(text, tone) }
                     }
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        val fixedColor = tagFg(TagTone.ACCENT)
-                        if (v.fixed != null) Icon(R.drawable.ic_lock, 28.dp, fixedColor)
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.x8)) {
+                        // A fixed time is marked by the lock and the bold time — weight, not color.
+                        val fixedColor = colorResource(R.color.pleos_text_dark_primary)
+                        if (v.fixed != null) Icon(R.drawable.ic_lock, Space.x32, colorResource(R.color.pleos_icon_dark_primary))
                         val start = time?.start
                         val end = time?.end
                         if (start != null) {
@@ -171,7 +175,7 @@ fun DayTimeline(t: LocalTrip, day: Int, live: LiveView?) {
                                 maxLines = 1, overflow = TextOverflow.Ellipsis,
                             )
                         } else {
-                            PleosText(stringResource(R.string.time_check) + " · " + durationLabel(v.stayMinutes), Pleos.type.bodyMedium.copy(fontWeight = FontWeight.Normal), colorResource(R.color.pleos_text_dark_secondary), maxLines = 1)
+                            PleosText(stringResource(R.string.time_check) + " · " + durationLabel(v.stayMinutes), Pleos.type.bodyMediumNormal, colorResource(R.color.pleos_text_dark_secondary), maxLines = 1)
                         }
                     }
                     // Only when the live time differs from the plan: the same number twice is noise.
@@ -179,7 +183,7 @@ fun DayTimeline(t: LocalTrip, day: Int, live: LiveView?) {
                         val planned = time?.arrive
                         Tag(
                             stringResource(R.string.tag_eta_now, TripValidator.hhmm(now)) + (planned?.let { " · " + stringResource(R.string.tag_eta_plan, TripValidator.hhmm(it)) } ?: ""),
-                            TagTone.ACCENT,
+                            Tone.INFO,
                         )
                     }
                 }
@@ -203,23 +207,27 @@ private fun clock(ms: Long, zone: java.time.ZoneId) =
 @Composable
 private fun RailRow(top: Boolean = true, bottom: Boolean = true, marker: (@Composable () -> Unit)?, content: @Composable () -> Unit) {
     val line = colorResource(R.color.pleos_divider_tertiary)
+    val markerTop = MARKER_TOP
+    val markerSize = MARKER
+    val dashLength = Space.x8
+    val stroke = Space.x4
     Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min)) {
         Box(
             Modifier.width(RAIL).fillMaxHeight().drawBehind {
                 val x = size.width / 2
-                val mid = (MARKER_TOP + MARKER / 2).toPx()
+                val mid = (markerTop + markerSize / 2).toPx()
                 val y0 = if (top) 0f else mid
                 val y1 = if (bottom) size.height else mid
                 if (y1 > y0) {
-                    val dash = 8.dp.toPx()
-                    drawLine(line, Offset(x, y0), Offset(x, y1), strokeWidth = 3.dp.toPx(), cap = StrokeCap.Round, pathEffect = PathEffect.dashPathEffect(floatArrayOf(dash, dash)))
+                    val dash = dashLength.toPx()
+                    drawLine(line, Offset(x, y0), Offset(x, y1), strokeWidth = stroke.toPx(), cap = StrokeCap.Round, pathEffect = PathEffect.dashPathEffect(floatArrayOf(dash, dash * 2)))
                 }
             },
             contentAlignment = Alignment.TopCenter,
         ) {
-            if (marker != null) Box(Modifier.padding(top = MARKER_TOP).size(MARKER), contentAlignment = Alignment.Center) { marker() }
+            if (marker != null) Box(Modifier.padding(top = markerTop).size(markerSize), contentAlignment = Alignment.Center) { marker() }
         }
-        Box(Modifier.weight(1f).padding(start = 8.dp)) { content() }
+        Box(Modifier.weight(1f).padding(start = Space.x8)) { content() }
     }
 }
 
@@ -231,10 +239,10 @@ private fun Marker(fill: androidx.compose.ui.graphics.Color? = null, @DrawableRe
             .size(size)
             .clip(CircleShape)
             .background(fill ?: colorResource(R.color.pleos_surface_basic))
-            .then(if (fill == null) Modifier.border(3.dp, ring, CircleShape) else Modifier),
+            .then(if (fill == null) Modifier.border(Space.x4, ring, CircleShape) else Modifier),
         contentAlignment = Alignment.Center,
     ) {
-        if (icon != null) Icon(icon, 28.dp, colorResource(R.color.pleos_text_dark_secondary))
+        if (icon != null) Icon(icon, Space.x32, colorResource(R.color.pleos_icon_dark_secondary))
     }
 }
 
@@ -245,10 +253,10 @@ private fun NumberMarker(n: Int, done: Boolean) {
             .size(MARKER)
             .clip(CircleShape)
             .background(colorResource(if (done) R.color.pleos_surface_high else R.color.pleos_surface_basic))
-            .border(3.dp, colorResource(if (done) R.color.pleos_divider_secondary else R.color.pleos_text_dark_primary), CircleShape),
+            .border(Space.x4, colorResource(if (done) R.color.pleos_divider_secondary else R.color.pleos_icon_dark_primary), CircleShape),
         contentAlignment = Alignment.Center,
     ) {
-        PleosText("$n", Pleos.type.bodyMedium, colorResource(if (done) R.color.pleos_text_dark_tertiary else R.color.pleos_text_dark_primary), maxLines = 1)
+        PleosText("$n", Pleos.type.label, colorResource(if (done) R.color.pleos_text_dark_tertiary else R.color.pleos_text_dark_primary), maxLines = 1)
     }
 }
 
@@ -256,20 +264,22 @@ private fun NumberMarker(n: Int, done: Boolean) {
 @Composable
 private fun Bar(tag: String, name: String, time: String?, quietTime: Boolean = false, quietName: Boolean = false) {
     val secondary = colorResource(R.color.pleos_text_dark_secondary)
+    val shape = androidx.compose.foundation.shape.RoundedCornerShape(Radius.r24)
     Row(
         Modifier
             .fillMaxWidth()
-            .padding(vertical = 6.dp)
-            .heightIn(min = 88.dp)
-            .clip(androidx.compose.foundation.shape.RoundedCornerShape(24.dp))
+            .padding(vertical = Space.x8)
+            .heightIn(min = dimensionResource(R.dimen.pleos_buttons_basic_medium_height))
+            .clip(shape)
             .background(colorResource(R.color.pleos_surface_basic))
-            .padding(horizontal = 24.dp, vertical = 16.dp),
+            .border(dimensionResource(R.dimen.pleos_page_navigation_border_bottom), colorResource(R.color.pleos_divider_secondary), shape)
+            .padding(horizontal = Space.x24, vertical = Space.x16),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        horizontalArrangement = Arrangement.spacedBy(Space.x16),
     ) {
-        Tag(tag, TagTone.NEUTRAL)
+        Tag(tag)
         PleosText(name, if (quietName) Pleos.type.bodyLarge else Pleos.type.bodyLargeStrong, if (quietName) secondary else colorResource(R.color.pleos_text_dark_primary), Modifier.weight(1f), maxLines = 1)
-        time?.let { PleosText(it, Pleos.type.bodyMedium.copy(fontWeight = if (quietTime) FontWeight.Normal else FontWeight.Bold), if (quietTime) secondary else colorResource(R.color.pleos_text_dark_primary), maxLines = 1) }
+        time?.let { PleosText(it, if (quietTime) Pleos.type.bodyMediumNormal else Pleos.type.bodyMedium, if (quietTime) secondary else colorResource(R.color.pleos_text_dark_primary), maxLines = 1) }
     }
 }
 
@@ -278,10 +288,10 @@ private fun Bar(tag: String, name: String, time: String?, quietTime: Boolean = f
 private fun LegRow(t: LocalTrip, day: Int, k: Int) {
     val leg = TripValidator.leg(t.plan, t.overlay, day, k)
     RailRow(marker = null) {
-        Row(Modifier.heightIn(min = 56.dp).padding(start = 16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Row(Modifier.heightIn(min = Space.x48).padding(start = Space.x16), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.x12)) {
             if (leg == null) {
-                Dot(TagTone.WARN, 12.dp)
-                PleosText(stringResource(R.string.tl_leg_unknown), Pleos.type.bodySmall, tagFg(TagTone.WARN), maxLines = 1)
+                Dot(Tone.CAUTION, Space.x12)
+                PleosText(stringResource(R.string.tl_leg_unknown), Pleos.type.bodySmallStrong, maxLines = 1)
             } else {
                 PleosText(
                     stringResource(if (leg.from == LegFrom.NAVI) R.string.tl_leg_navi else R.string.tl_leg, durationLabel(leg.minutes)),

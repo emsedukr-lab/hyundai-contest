@@ -24,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -40,13 +41,14 @@ import io.tteonaljido.car.ui.components.NumberedStep
 import io.tteonaljido.car.ui.components.PleosButton
 import io.tteonaljido.car.ui.components.PleosCard
 import io.tteonaljido.car.ui.components.PleosText
+import io.tteonaljido.car.ui.components.Radius
+import io.tteonaljido.car.ui.components.Space
 import io.tteonaljido.car.ui.components.Screen
 import io.tteonaljido.car.ui.components.StatusLine
 import io.tteonaljido.car.ui.components.StepHeader
 import io.tteonaljido.car.ui.components.Tag
-import io.tteonaljido.car.ui.components.TagTone
 import io.tteonaljido.car.ui.components.Tone
-import io.tteonaljido.car.ui.components.TopBar
+import io.tteonaljido.car.ui.components.PleosHeader
 import io.tteonaljido.car.ui.issueText
 import io.tteonaljido.car.ui.theme.Pleos
 import io.tteonaljido.pairing.CarHandoffMachine
@@ -120,11 +122,12 @@ fun ImportScreen(vm: ImportViewModel, drive: DriveState, onClose: () -> Unit, on
     }
     SideEffect { lastStep = step }
 
-    Screen {
-        TopBar(stringResource(R.string.import_title), stringResource(R.string.import_subtitle)) {
-            PleosButton(stringResource(R.string.close), { vm.dismissIfFinished(); onClose() }, type = ButtonType.SECONDARY)
+    Screen(header = {
+        PleosHeader(stringResource(R.string.import_title), stringResource(R.string.import_subtitle)) {
+            PleosButton(stringResource(R.string.close), { vm.dismissIfFinished(); onClose() }, type = ButtonType.BASIC)
         }
-        if (offline && !CarHandoffMachine.isTerminal(state)) StatusLine(stringResource(R.string.reconnecting), Tone.WARNING)
+    }) {
+        if (offline && !CarHandoffMachine.isTerminal(state)) StatusLine(stringResource(R.string.reconnecting), Tone.CAUTION)
 
         if (!drive.parked && hideable) {
             // QR display and import approval are parked-only (Pleos: "QR 로그인" is restricted while driving).
@@ -139,53 +142,54 @@ fun ImportScreen(vm: ImportViewModel, drive: DriveState, onClose: () -> Unit, on
         when (val s = state) {
             HandoffState.Idle, HandoffState.Creating -> StatusLine(stringResource(R.string.creating_qr))
             is HandoffState.ShowingQr -> BoxWithConstraints(Modifier.fillMaxWidth().weight(1f)) {
-                val wide = maxWidth >= 1000.dp
+                val wide = maxWidth > dimensionResource(R.dimen.pleos_window_apps_portrait_width)
+                // QR size is the handoff spec's (24-7), not a design-system dimension: as large as the window allows, capped.
                 val side = if (wide) minOf(maxHeight * 0.85f, 600.dp) else minOf(maxWidth * 0.7f, 520.dp)
                 val qr: @Composable () -> Unit = {
                     // QR on a white container like the phone's connect screen (no intrinsic sizing: QrImage subcomposes).
-                    Box(Modifier.clip(RoundedCornerShape(24.dp)).background(colorResource(R.color.pleos_surface_basic)).padding(24.dp)) {
+                    Box(Modifier.clip(RoundedCornerShape(Radius.r24)).background(colorResource(R.color.pleos_static_light_100)).padding(Space.x24)) {
                         QrImage(s.qrUrl, side, Modifier.size(side))
                     }
                 }
                 val info: @Composable () -> Unit = {
-                    Column(verticalArrangement = Arrangement.spacedBy(28.dp)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(Space.x24)) {
                         NumberedStep(1, stringResource(R.string.qr_scan))
                         NumberedStep(2, stringResource(R.string.qr_compare))
                         NumberedStep(3, stringResource(R.string.qr_approve))
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Column(verticalArrangement = Arrangement.spacedBy(Space.x8)) {
                             PleosText(stringResource(R.string.time_left, countdown(s.deadline - now)), Pleos.type.titleMedium, maxLines = 1)
                             PleosText(stringResource(R.string.qr_note), Pleos.type.bodySmall, secondary)
                         }
-                        PleosButton(stringResource(R.string.cancel), vm::cancel, type = ButtonType.SECONDARY)
+                        PleosButton(stringResource(R.string.cancel), vm::cancel, type = ButtonType.BASIC)
                     }
                 }
-                if (wide) Row(horizontalArrangement = Arrangement.spacedBy(64.dp), verticalAlignment = Alignment.CenterVertically) { qr(); info() }
-                else Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(32.dp), horizontalAlignment = Alignment.CenterHorizontally) { qr(); info() }
+                if (wide) Row(horizontalArrangement = Arrangement.spacedBy(Space.x48), verticalAlignment = Alignment.CenterVertically) { qr(); info() }
+                else Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(Space.x32), horizontalAlignment = Alignment.CenterHorizontally) { qr(); info() }
             }
-            is HandoffState.Claimed -> PleosCard(Modifier.widthIn(max = 1200.dp), padding = 40.dp, gap = 24.dp) {
-                Tag(stringResource(R.string.phone_connected), TagTone.OK, large = true)
+            is HandoffState.Claimed -> PleosCard(Modifier.widthIn(max = dimensionResource(R.dimen.pleos_popup_system_large_width)), padding = Space.x40, gap = Space.x24) {
+                Tag(stringResource(R.string.phone_connected), Tone.OK, large = true)
                 // The phone's grey code box: label over the big code.
                 Column(
-                    Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(colorResource(R.color.pleos_button_basic_enabled)).padding(horizontal = 40.dp, vertical = 32.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    Modifier.fillMaxWidth().clip(RoundedCornerShape(Radius.r24)).background(colorResource(R.color.pleos_dim_dark_primary)).padding(horizontal = Space.x40, vertical = Space.x32),
+                    verticalArrangement = Arrangement.spacedBy(Space.x8),
                 ) {
                     PleosText(stringResource(R.string.confirm_code), Pleos.type.bodyMedium, secondary, maxLines = 1)
                     PleosText(codeLabel(s.code), Pleos.type.code, maxLines = 1)
                 }
                 PleosText(stringResource(R.string.claimed_body), Pleos.type.bodyLarge)
                 PleosText(stringResource(R.string.time_left, countdown(s.deadline - now)), Pleos.type.bodyMedium, secondary)
-                PleosButton(stringResource(R.string.not_my_phone), vm::cancel, type = ButtonType.SECONDARY)
+                PleosButton(stringResource(R.string.not_my_phone), vm::cancel, type = ButtonType.BASIC)
             }
             is HandoffState.Receiving -> StatusLine(stringResource(R.string.receiving))
             is HandoffState.Review -> review?.let { ReviewCard(it, s.code, vm) } ?: StatusLine(stringResource(R.string.checking))
             HandoffState.Applying -> StatusLine(stringResource(R.string.applying))
-            is HandoffState.Done -> PleosCard(Modifier.widthIn(max = 1200.dp), padding = 40.dp, gap = 28.dp) {
+            is HandoffState.Done -> PleosCard(Modifier.widthIn(max = dimensionResource(R.dimen.pleos_popup_system_large_width)), padding = Space.x40, gap = Space.x24) {
                 val declined = s.resultCode == "USER_DECLINED"
-                Tag(stringResource(RESULT_TEXT[s.resultCode] ?: R.string.result_done), if (declined) TagTone.NEUTRAL else TagTone.OK, large = true)
-                if (drive.parked) Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                Tag(stringResource(RESULT_TEXT[s.resultCode] ?: R.string.result_done), if (declined) Tone.NEUTRAL else Tone.OK, large = true)
+                if (drive.parked) Row(horizontalArrangement = Arrangement.spacedBy(Space.x16)) {
                     val id = s.localId
                     if (id != null && !declined) PleosButton(stringResource(R.string.open_trip), { vm.dismissIfFinished(); onOpenTrip(id) })
-                    PleosButton(stringResource(R.string.close), { vm.dismissIfFinished(); onClose() }, type = ButtonType.SECONDARY)
+                    PleosButton(stringResource(R.string.close), { vm.dismissIfFinished(); onClose() }, type = ButtonType.BASIC)
                 }
             }
             is HandoffState.Expired -> Ended(stringResource(EXPIRE_TEXT[s.reason] ?: R.string.expired_generic), vm, drive.parked, onClose)
@@ -197,11 +201,11 @@ fun ImportScreen(vm: ImportViewModel, drive: DriveState, onClose: () -> Unit, on
 
 @Composable
 private fun Ended(text: String, vm: ImportViewModel, parked: Boolean, onClose: () -> Unit) {
-    PleosCard(Modifier.widthIn(max = 1200.dp), padding = 40.dp, gap = 28.dp) {
-        Tag(text, TagTone.WARN, large = true, maxLines = 2)
-        if (parked) Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+    PleosCard(Modifier.widthIn(max = dimensionResource(R.dimen.pleos_popup_system_large_width)), padding = Space.x40, gap = Space.x24) {
+        Tag(text, Tone.CAUTION, large = true, maxLines = 2)
+        if (parked) Row(horizontalArrangement = Arrangement.spacedBy(Space.x16)) {
             PleosButton(stringResource(R.string.new_qr), vm::start)
-            PleosButton(stringResource(R.string.close), { vm.dismissIfFinished(); onClose() }, type = ButtonType.SECONDARY)
+            PleosButton(stringResource(R.string.close), { vm.dismissIfFinished(); onClose() }, type = ButtonType.BASIC)
         }
     }
 }
@@ -210,9 +214,9 @@ private fun Ended(text: String, vm: ImportViewModel, parked: Boolean, onClose: (
 @Composable
 fun SeverityLine(severity: Severity, text: String) {
     val label = stringResource(if (severity == Severity.CONFLICT) R.string.severity_conflict else R.string.severity_uncertain)
-    Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-        Box(Modifier.padding(top = 12.dp)) { Dot(if (severity == Severity.CONFLICT) TagTone.ERROR else TagTone.WARN) }
-        PleosText(stringResource(R.string.labeled, label, text), Pleos.type.bodyMedium.copy(fontWeight = FontWeight.Normal), maxLines = 2)
+    Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(Space.x16)) {
+        Box(Modifier.padding(top = Space.x12)) { Dot(if (severity == Severity.CONFLICT) Tone.ERROR else Tone.CAUTION) }
+        PleosText(stringResource(R.string.labeled, label, text), Pleos.type.bodyMediumNormal, maxLines = 2)
     }
 }
 
@@ -220,7 +224,7 @@ fun SeverityLine(severity: Severity, text: String) {
 private fun ReviewCard(r: ReviewData, code: String, vm: ImportViewModel) {
     val t = r.transfer.trip
     val secondary = colorResource(R.color.pleos_text_dark_secondary)
-    val body = Pleos.type.bodyMedium.copy(fontWeight = FontWeight.Normal)
+    val body = Pleos.type.bodyMediumNormal
     val fixed = t.visits.count { it.fixed != null }
     val unassigned = t.visits.count { it.unassignedReason != null }
     val first = when (val f = t.firstDay) {
@@ -238,9 +242,9 @@ private fun ReviewCard(r: ReviewData, code: String, vm: ImportViewModel) {
         ImportCase.DIVERGED -> stringResource(R.string.case_diverged)
     }
     BoxWithConstraints(Modifier.fillMaxWidth()) {
-        val wide = maxWidth >= 1400.dp
+        val wide = maxWidth > dimensionResource(R.dimen.pleos_window_apps_portrait_width)
         val summary: @Composable () -> Unit = {
-            PleosCard(gap = 16.dp) {
+            PleosCard(gap = Space.x16) {
                 PleosText(stringResource(R.string.review_header, codeLabel(code)), Pleos.type.bodyMedium, secondary, maxLines = 1)
                 PleosText(stringResource(R.string.review_name, t.name, t.revision), Pleos.type.titleLarge, maxLines = 2)
                 PleosText(stringResource(R.string.labeled, periodLabel(t), nightsLabel(t)), Pleos.type.bodyLarge)
@@ -249,30 +253,30 @@ private fun ReviewCard(r: ReviewData, code: String, vm: ImportViewModel) {
             }
         }
         val recheck: @Composable () -> Unit = {
-            PleosCard(gap = 16.dp) {
+            PleosCard(gap = Space.x16) {
                 PleosText(stringResource(R.string.recheck_title), Pleos.type.titleSmall)
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Tag(stringResource(R.string.count_conflicts, r.report.conflicts), if (r.report.conflicts > 0) TagTone.ERROR else TagTone.NEUTRAL)
-                    Tag(stringResource(R.string.count_uncertain, r.report.uncertain), if (r.report.uncertain > 0) TagTone.WARN else TagTone.NEUTRAL)
+                Row(horizontalArrangement = Arrangement.spacedBy(Space.x12)) {
+                    Tag(stringResource(R.string.count_conflicts, r.report.conflicts), if (r.report.conflicts > 0) Tone.ERROR else Tone.NEUTRAL)
+                    Tag(stringResource(R.string.count_uncertain, r.report.uncertain), if (r.report.uncertain > 0) Tone.CAUTION else Tone.NEUTRAL)
                 }
                 PleosText(stringResource(R.string.recheck_unchanged), body, secondary, maxLines = 1)
                 r.report.issues.filter { it.severity != Severity.INFO }.take(4).forEach { SeverityLine(it.severity, issueText(it)) }
             }
         }
         val decide: @Composable () -> Unit = {
-            PleosCard(gap = 16.dp) {
+            PleosCard(gap = Space.x16) {
                 PleosText(caseText, Pleos.type.titleSmall, maxLines = 2)
                 r.decision.changes.take(3).forEach { PleosText("· ${changeText(it)}", body, secondary, maxLines = 1) }
-                Row(horizontalArrangement = Arrangement.spacedBy(16.dp), modifier = Modifier.padding(top = 8.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(Space.x16), modifier = Modifier.padding(top = Space.x8)) {
                     r.decision.choices.forEach { c ->
-                        PleosButton(stringResource(CHOICE_LABEL.getValue(c)), { vm.choose(c) }, type = if (c == ImportChoice.CANCEL) ButtonType.SECONDARY else ButtonType.PRIMARY, tag = "choice_${c.name}")
+                        PleosButton(stringResource(CHOICE_LABEL.getValue(c)), { vm.choose(c) }, type = if (c == ImportChoice.CANCEL) ButtonType.BASIC else ButtonType.FILLED, tag = "choice_${c.name}")
                     }
                 }
             }
         }
-        if (wide) Row(horizontalArrangement = Arrangement.spacedBy(32.dp)) {
-            Column(Modifier.weight(0.5f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(24.dp)) { summary(); decide() }
+        if (wide) Row(horizontalArrangement = Arrangement.spacedBy(Space.x32)) {
+            Column(Modifier.weight(0.5f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(Space.x24)) { summary(); decide() }
             Column(Modifier.weight(0.5f).verticalScroll(rememberScrollState())) { recheck() }
-        } else Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(24.dp)) { summary(); recheck(); decide() }
+        } else Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(Space.x24)) { summary(); recheck(); decide() }
     }
 }

@@ -2,6 +2,8 @@
 
 공식 Figma 파일 2종을 단일 출처로 사용한다. 앱 UI의 색·치수·타이포·컴포넌트는 **여기서 추출한 값만** 쓰고 임의 값을 만들지 않는다.
 
+**먼저 읽을 것: [`DESIGN.md`](DESIGN.md)** — 두 파일의 Foundation·Components·Form factors를 글로 옮긴 디자인 명세(색·타이포·레이아웃·그림자·모양·컴포넌트별 구조와 상태 색·Do/Don't). Variant별 전체 레이어 스펙과 폼팩터 4종의 사이즈 토큰은 [`DESIGN-reference.md`](DESIGN-reference.md). 화면은 이 명세대로 만든다(M58, 2026-11-12).
+
 | 원본 | 내용 |
 |---|---|
 | `source/Pleos_Connect_design_assets_215.fig` | Foundation(Typography·Iconography·Colors·App Cover), Components(버튼·체크박스·드롭다운·필드·키패드·슬라이더·스위치·팝업·토스트·탭·타이틀 등 37세트) |

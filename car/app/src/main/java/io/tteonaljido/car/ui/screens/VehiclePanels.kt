@@ -12,9 +12,9 @@ import io.tteonaljido.car.R
 import io.tteonaljido.car.navi.NaviLive
 import io.tteonaljido.car.ui.components.PleosCard
 import io.tteonaljido.car.ui.components.PleosText
+import io.tteonaljido.car.ui.components.Space
 import io.tteonaljido.car.ui.components.StatusLine
 import io.tteonaljido.car.ui.components.Tag
-import io.tteonaljido.car.ui.components.TagTone
 import io.tteonaljido.car.ui.components.Tone
 import io.tteonaljido.car.ui.theme.Pleos
 import io.tteonaljido.trip.CheckCode
@@ -50,15 +50,15 @@ private fun checkText(i: CheckItem): String = when (i.code) {
 @Composable
 fun DepartureCard(report: DepartureReport) {
     val secondary = colorResource(R.color.pleos_text_dark_secondary)
-    PleosCard(gap = 16.dp) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+    PleosCard(gap = Space.x16) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.x16)) {
             PleosText(stringResource(R.string.departure_title), Pleos.type.titleSmall, maxLines = 1)
-            if (report.ready) Tag(stringResource(R.string.departure_ready), TagTone.OK)
-            else Tag(stringResource(R.string.departure_count, report.items.size), if (report.level == CheckLevel.STOP) TagTone.ERROR else TagTone.WARN)
+            if (report.ready) Tag(stringResource(R.string.departure_ready), Tone.OK)
+            else Tag(stringResource(R.string.departure_count, report.items.size), if (report.level == CheckLevel.STOP) Tone.ERROR else Tone.CAUTION)
         }
-        report.items.take(3).forEach { StatusLine(checkText(it), if (it.level == CheckLevel.STOP) Tone.NEGATIVE else Tone.WARNING) }
-        if (report.items.size > 3) PleosText(stringResource(R.string.check_more, report.items.size - 3), Pleos.type.bodyMedium.copy(fontWeight = FontWeight.Normal), secondary, maxLines = 1)
-        if (report.ready) PleosText(stringResource(R.string.departure_basis, report.known), Pleos.type.bodyMedium.copy(fontWeight = FontWeight.Normal), secondary, maxLines = 2)
+        report.items.take(3).forEach { StatusLine(checkText(it), if (it.level == CheckLevel.STOP) Tone.ERROR else Tone.CAUTION) }
+        if (report.items.size > 3) PleosText(stringResource(R.string.check_more, report.items.size - 3), Pleos.type.bodyMediumNormal, secondary, maxLines = 1)
+        if (report.ready) PleosText(stringResource(R.string.departure_basis, report.known), Pleos.type.bodyMediumNormal, secondary, maxLines = 2)
     }
 }
 

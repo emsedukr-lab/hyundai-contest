@@ -27,18 +27,39 @@ private fun weight(w: Int) = Font(R.font.asta_sans, FontWeight(w), variationSett
 
 val AstaSans = FontFamily(weight(400), weight(500), weight(700), weight(800))
 
+/**
+ * The styles the screens use, by their design-file names (design/DESIGN.md Typography):
+ * Headline 48/64 · Title 40/52, 36/44, 32/40 · Body 30/38, 28/36, 26/34 · Label 24/28, 20/24. Nothing below 20sp.
+ */
 @Immutable
 data class PleosType(
+    /** Headline/Small/Strong. */
     val headline: TextStyle,
+    /** Title/Large/Extra_Strong: popup titles. */
+    val titleLargeExtra: TextStyle,
+    /** Title/Large/Strong: header titles. */
     val titleLarge: TextStyle,
+    /** Title/Medium/Strong. */
     val titleMedium: TextStyle,
+    /** Title/Small/Strong: Large buttons, section labels. */
     val titleSmall: TextStyle,
+    /** Body/Large/Normal: descriptions. */
     val bodyLarge: TextStyle,
+    /** Body/Large/Strong: Medium buttons, list items, segments. */
     val bodyLargeStrong: TextStyle,
+    /** Body/Medium/Strong. */
     val bodyMedium: TextStyle,
+    /** Body/Medium/Normal. */
+    val bodyMediumNormal: TextStyle,
+    /** Body/Small/Normal: secondary lines. */
     val bodySmall: TextStyle,
+    /** Body/Small/Strong: Small buttons. */
+    val bodySmallStrong: TextStyle,
+    /** Label/Medium. */
     val label: TextStyle,
+    /** Label/Small: the smallest text there is (20sp). */
     val labelSmall: TextStyle,
+    /** Headline/Medium/Extra_Strong: the confirm code. */
     val code: TextStyle,
 )
 
@@ -59,13 +80,17 @@ private fun read(context: Context, @StyleRes style: Int): TextStyle {
 
 fun pleosType(context: Context) = PleosType(
     headline = read(context, R.style.TextAppearance_Pleos_Headline_Small_Strong),
+    titleLargeExtra = read(context, R.style.TextAppearance_Pleos_Title_Large_Extra_Strong),
     titleLarge = read(context, R.style.TextAppearance_Pleos_Title_Large_Strong),
     titleMedium = read(context, R.style.TextAppearance_Pleos_Title_Medium_Strong),
     titleSmall = read(context, R.style.TextAppearance_Pleos_Title_Small_Strong),
     bodyLarge = read(context, R.style.TextAppearance_Pleos_Body_Large_Normal),
     bodyLargeStrong = read(context, R.style.TextAppearance_Pleos_Body_Large_Strong),
     bodyMedium = read(context, R.style.TextAppearance_Pleos_Body_Medium_Strong),
+    // Body/Medium comes in Strong and Normal; the generated styles carry only Strong, so Normal is the same style at 400.
+    bodyMediumNormal = read(context, R.style.TextAppearance_Pleos_Body_Medium_Strong).copy(fontWeight = FontWeight.Normal),
     bodySmall = read(context, R.style.TextAppearance_Pleos_Body_Small_Normal),
+    bodySmallStrong = read(context, R.style.TextAppearance_Pleos_Body_Small_Strong),
     label = read(context, R.style.TextAppearance_Pleos_Label_Medium),
     labelSmall = read(context, R.style.TextAppearance_Pleos_Label_Small),
     code = read(context, R.style.TextAppearance_Pleos_Headline_Medium_Extra_Strong),

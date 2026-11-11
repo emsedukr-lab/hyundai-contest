@@ -22,29 +22,31 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import io.tteonaljido.car.R
-import io.tteonaljido.car.ui.components.tagFg
-import io.tteonaljido.car.ui.components.TagTone
+import io.tteonaljido.car.ui.components.Radius
 import io.tteonaljido.car.ui.theme.AstaSans
+import io.tteonaljido.car.ui.theme.Pleos
 import io.tteonaljido.trip.SketchDay
 import io.tteonaljido.trip.TripSketch
 
 /**
  * The whole trip's route on the next-trip card (M55, the phone's M45 drawing): other days as a quiet dashed line with
- * dots, the day ahead solid blue with numbered stops, lodgings as rings. No map tiles, nothing leaves the car.
+ * dots, the day ahead solid ink with numbered stops, lodgings as rings. No map tiles, nothing leaves the car.
  */
 @Composable
 fun RouteSketch(sketch: TripSketch, focusDay: Int?, description: String, modifier: Modifier = Modifier) {
     val quiet = colorResource(R.color.pleos_divider_tertiary)
     val dot = colorResource(R.color.pleos_text_dark_tertiary)
-    val accent = tagFg(TagTone.ACCENT)
+    // The day ahead is drawn in ink, the others quietly: emphasis by value, not by a hue.
+    val accent = colorResource(R.color.pleos_icon_dark_primary)
     val card = colorResource(R.color.pleos_surface_basic)
-    val inset = colorResource(R.color.tn_canvas)
+    val inset = colorResource(R.color.pleos_dim_dark_primary)
+    val minLabelPx = with(androidx.compose.ui.platform.LocalDensity.current) { Pleos.type.labelSmall.fontSize.toPx() }
     val measurer = rememberTextMeasurer()
     val label = TextStyle(fontFamily = AstaSans, fontWeight = FontWeight.Bold, color = accent)
     Canvas(
         modifier
             .aspectRatio((sketch.width / sketch.height).toFloat())
-            .clip(RoundedCornerShape(20.dp))
+            .clip(RoundedCornerShape(Radius.r24))
             .background(inset)
             .semantics { contentDescription = description },
     ) {
@@ -74,9 +76,11 @@ fun RouteSketch(sketch: TripSketch, focusDay: Int?, description: String, modifie
                     drawCircle(inset, 4f * s, c)
                     drawCircle(accent, 4f * s, c, style = Stroke(2f * s))
                 } else {
-                    drawCircle(card, 8f * s, c)
-                    drawCircle(accent, 8f * s, c, style = Stroke(2f * s))
-                    val text = measurer.measure("${p.n}", label.copy(fontSize = (10f * s).toSp()))
+                    val r = maxOf(8f * s, minLabelPx * 0.8f)
+                    drawCircle(card, r, c)
+                    drawCircle(accent, r, c, style = Stroke(2f * s))
+                    // Never under the system's smallest text (Label/Small, 20sp).
+                    val text = measurer.measure("${p.n}", label.copy(fontSize = maxOf(10f * s, minLabelPx).toSp()))
                     drawText(text, topLeft = Offset(c.x - text.size.width / 2f, c.y - text.size.height / 2f))
                 }
             }
