@@ -42,7 +42,7 @@
 | `packages/mobile` | 휴대폰 앱(Android·iOS): 모바일 웹 화면을 Capacitor로 포장한 네이티브 프로젝트. 뼈대 단계 — [packages/mobile/README.md](packages/mobile/README.md) |
 | `car/` | 차량 앱: `core-trip`(파서·재검증·결정표·시각표·출발 전 점검·배터리 예상·쉬어 가기), `core-pairing`(E2E 암호화·상태 머신), `app`(Compose UI·내비·차량 신호 조회·저장소) |
 | `schema/` | 언어 중립 계약: JSON Schema, 연결 프로토콜, TS·Kotlin 교차 시험 fixture |
-| `design/` | Pleos 공식 디자인 에셋에서 추출한 토큰·Android 리소스·글꼴 ([design/README.md](design/README.md)) |
+| `design/` | 디자인의 단일 기준 [design/DESIGN.md](design/DESIGN.md)(Pleos Connect 2.1.5 공식 디자인 에셋 명세)와, 같은 에셋에서 추출한 토큰·Android 리소스·글꼴 ([design/README.md](design/README.md)) |
 | `tools/` | E2E·스모크·실제 폰 시험, 시연 녹화·편집, 대비 점검, 접수양식 채우기 |
 | `docs/` | 설계 문서 6종(아래), 화면 증거 `docs/evidence/`, 공모전·Pleos 조사 `docs/research/` |
 | `submission/` | 제출물(아래) |
@@ -52,7 +52,7 @@
 
 | 파일 | 상태 |
 |---|---|
-| `apk/떠날지도_release.apk` | 서명된 release (prod, 서버 `https://tteonaljido.tteonaljido-worker.workers.dev`). 버전 0.4.0(4), 2026-11-12 M57 차량 신호 조합 후 재빌드(서명 v2+v3). 권한은 조회 전용뿐: 내비 3종과 `CAR_ENERGY`·`CAR_DRIVE`·`CAR_SAFETY`·`CAR_DOORS`·`CAR_SEATS`(제어·비공개 권한 없음). 로터리 미지원 선언·적응형 아이콘 포함. 제출 시 `팀명_떠날지도_release.apk`로 이름 변경. 해시는 `apk/SHA256SUMS.txt` |
+| `apk/떠날지도_release.apk` | 서명된 release (prod, 서버 `https://tteonaljido.tteonaljido-worker.workers.dev`). 버전 0.5.0(5), 2026-11-12 M58 디자인 전면 교체(`design/DESIGN.md`) 후 재빌드(서명 v2+v3). 권한은 조회 전용뿐: 내비 3종과 `CAR_ENERGY`·`CAR_DRIVE`·`CAR_SAFETY`·`CAR_DOORS`·`CAR_SEATS`(제어·비공개 권한 없음). 로터리 미지원 선언·적응형 아이콘 포함. 제출 시 `팀명_떠날지도_release.apk`로 이름 변경. 해시는 `apk/SHA256SUMS.txt` |
 | `car/app/build/outputs/apk/dev/debug/app-dev-debug.apk` | 로컬 개발용 (`./gradlew :app:assembleDevDebug`) |
 
 ## 실행 방법
@@ -105,7 +105,7 @@ npx tsx tools/compose-demo.mts               # 녹화 → media/demo/떠날지�
 npx tsx tools/compose-shorts.mts             # 녹화 → media/demo/떠날지도_숏폼.mp4 (세로)
 ```
 
-2026-11-12(M57) 기준 TypeScript 290개와 Kotlin 188개가 모두 통과하고, 모바일 E2E(`npm run e2e`)와 차량 에뮬레이터 E2E(`tools/e2e-car.mts`, 16항목)도 통과합니다. 같은 날 서명 release APK 0.4.0과 배포 서버·모바일 웹의 실제 연동(`tools/live-pair.mts`, 15항목)과 [다음 목적지 안내]의 내비 경로 안내를 다시 확인했습니다 — 화면은 `docs/evidence/live-pair/overview.png`(2026-11-10 0.3.0 때 저장, 이 흐름의 화면은 0.4.0에서도 같음). 전송 스키마를 바꾸면 `npm run schema`로 JSON Schema·fixture를 다시 만들고 TS·Kotlin 시험을 모두 돌립니다.
+2026-11-12(M57) 기준 TypeScript 290개와 Kotlin 188개가 모두 통과하고, 모바일 E2E(`npm run e2e`)와 차량 에뮬레이터 E2E(`tools/e2e-car.mts`, 16항목)도 통과합니다. 같은 날 디자인을 `design/DESIGN.md` 기준으로 전면 교체(M58)한 서명 release APK 0.5.0과 배포 서버·모바일 웹의 실제 연동(`tools/live-pair.mts`, 15항목)을 다시 확인했습니다([다음 목적지 안내]의 내비 경로 안내는 0.4.0으로 확인) — 화면은 `docs/evidence/live-pair/overview.png`(2026-11-10 0.3.0 때 저장, 이 흐름의 화면은 0.4.0에서도 같음). 전송 스키마를 바꾸면 `npm run schema`로 JSON Schema·fixture를 다시 만들고 TS·Kotlin 시험을 모두 돌립니다.
 
 ## 배포
 
