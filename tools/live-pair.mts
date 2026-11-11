@@ -100,7 +100,8 @@ try {
   await phone.goto(`${BASE}/?sample=1`, { waitUntil: 'networkidle' });
   await phone.getByText('강릉 3박 4일').first().waitFor();
   await phoneShot(phone, '01');
-  check(true, 'car app (release 0.3.0) and mobile web (deployed) are both open: car has no trips, phone has "강릉 3박 4일"');
+  const carVersion = sh(`dumpsys package ${PKG}`).match(/versionName=(\S+)/)?.[1] ?? '?';
+  check(true, `car app (release ${carVersion}) and mobile web (deployed) are both open: car has no trips, phone has "강릉 3박 4일"`);
 
   /* ---------- 1. car shows a QR, phone opens it ---------- */
   const url1 = await newQr('02');

@@ -105,7 +105,7 @@ npx tsx tools/compose-demo.mts               # 녹화 → media/demo/떠날지�
 npx tsx tools/compose-shorts.mts             # 녹화 → media/demo/떠날지도_숏폼.mp4 (세로)
 ```
 
-2026-11-12(M57) 기준 TypeScript 290개와 Kotlin 188개가 모두 통과하고, 모바일 E2E(`npm run e2e`)와 차량 에뮬레이터 E2E(`tools/e2e-car.mts`, 16항목)도 통과합니다. 같은 날 서명 release APK 0.3.0과 배포 서버·모바일 웹의 실제 연동(`tools/live-pair.mts`, 15항목)과 내비 경로 안내까지 확인했습니다 — 화면은 `docs/evidence/live-pair/overview.png`. 전송 스키마를 바꾸면 `npm run schema`로 JSON Schema·fixture를 다시 만들고 TS·Kotlin 시험을 모두 돌립니다.
+2026-11-12(M57) 기준 TypeScript 290개와 Kotlin 188개가 모두 통과하고, 모바일 E2E(`npm run e2e`)와 차량 에뮬레이터 E2E(`tools/e2e-car.mts`, 16항목)도 통과합니다. 같은 날 서명 release APK 0.4.0과 배포 서버·모바일 웹의 실제 연동(`tools/live-pair.mts`, 15항목)과 [다음 목적지 안내]의 내비 경로 안내를 다시 확인했습니다 — 화면은 `docs/evidence/live-pair/overview.png`(2026-11-10 0.3.0 때 저장, 이 흐름의 화면은 0.4.0에서도 같음). 전송 스키마를 바꾸면 `npm run schema`로 JSON Schema·fixture를 다시 만들고 TS·Kotlin 시험을 모두 돌립니다.
 
 ## 배포
 
