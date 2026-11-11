@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { t } from '../lib/i18n';
+import { isNativeApp } from '../lib/platform';
 
 /**
  * "홈 화면에 추가" 안내. 지도앱의 공유 시트에 "떠날지도"가 뜨려면 PWA가 홈 화면에 설치돼 있어야 하고(그것도 Android
@@ -21,6 +22,7 @@ interface BeforeInstallPromptEvent extends Event {
 const DISMISS_KEY = 'tteonaljido.installHintDismissed';
 
 const isStandalone = (): boolean => {
+  if (isNativeApp) return true; // the phone app is already installed: no "add to home screen"
   try {
     return window.matchMedia('(display-mode: standalone)').matches || (navigator as { standalone?: boolean }).standalone === true;
   } catch {

@@ -9,6 +9,7 @@ import { Row, Section } from '../components/shell/rows';
 import { TabScreen } from '../components/shell/Screens';
 import { trips } from '../lib/db';
 import { checkBackupTrip } from '../lib/backup';
+import { saveFile } from '../lib/fileOut';
 import { t } from '../lib/i18n';
 import { navigate } from '../lib/router';
 import { PRESET_SLOTS, presetLabel, presetPlace } from '../lib/settings';
@@ -34,12 +35,7 @@ export function SettingsPage() {
 
   const exportAll = () => {
     const blob = new Blob([JSON.stringify({ format: 'tteonaljido-backup', version: 1, trips: docs }, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = t('home.backupFileName', { date: nowIso().slice(0, 10) });
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 30_000); // revoking at once can abort the download on some mobile browsers
+    void saveFile(new File([blob], t('home.backupFileName', { date: nowIso().slice(0, 10) }), { type: 'application/json' }));
   };
 
   const importFile = async (file: File) => {

@@ -6,6 +6,7 @@ import { TabScreen } from '../components/shell/Screens';
 import { sendLog, trips } from '../lib/db';
 import { dateLabel, dayOf } from '../lib/format';
 import { t } from '../lib/i18n';
+import { SERVER_ORIGIN } from '../lib/platform';
 import { navigate } from '../lib/router';
 import { carQrTarget } from '../lib/qrLink';
 import { QrScanner } from '../components/QrScanner';
@@ -110,7 +111,7 @@ export function CarPage() {
         <QrScanner
           onClose={() => setScanning(false)}
           onResult={(text) => {
-            const target = carQrTarget(text, location.origin);
+            const target = carQrTarget(text, SERVER_ORIGIN);
             if (!target) return false;
             setScanning(false);
             navigate(target);

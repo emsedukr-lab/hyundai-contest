@@ -19,6 +19,7 @@ import {
   utf8,
 } from '@tteonaljido/shared';
 import { pairings, sendLog, type PairingRecord } from './db';
+import { apiUrl } from './platform';
 import { toTransfer, type TripDoc } from './trips';
 
 /** Phone side of one handoff. Every network step is safe to repeat after a reload or a dropped connection. */
@@ -34,7 +35,7 @@ export class ApiError extends Error {
 async function api<T>(method: string, path: string, token?: string | null, body?: unknown): Promise<T> {
   let res: Response;
   try {
-    res = await fetch(`/api/v1${path}`, {
+    res = await fetch(apiUrl(`/api/v1${path}`), {
       method,
       headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
       body: body === undefined ? undefined : JSON.stringify(body),

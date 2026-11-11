@@ -1,3 +1,4 @@
+import { apiUrl } from './platform';
 import type { LegRun, Point } from './routeTimes';
 
 /**
@@ -28,7 +29,7 @@ export function decodePath(flat: number[]): [number, number][] {
 
 async function askPaths(run: LegRun, fetcher: Fetcher): Promise<Paths | null> {
   try {
-    const res = await fetcher('/api/v1/routes/paths', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ points: run.points }) });
+    const res = await fetcher(apiUrl('/api/v1/routes/paths'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ points: run.points }) });
     if (!res.ok) return null;
     const data = (await res.json()) as { paths?: unknown };
     if (!Array.isArray(data.paths) || data.paths.length !== run.keys.length) return null;

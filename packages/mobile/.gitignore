@@ -1,0 +1,4 @@
+# 웹을 --mode app으로 빌드한 결과 (npm run build:app). cap sync가 네이티브 프로젝트로 복사한다.
+www/
+# 빌드해 둔 시험용 APK (서명·서버 상태에 따라 달라지므로 저장소에 넣지 않는다)
+apk/

@@ -1,4 +1,5 @@
 import { dayEnd, type Home, type Trip } from '@tteonaljido/shared';
+import { apiUrl } from './platform';
 import { legKeys, setLeg } from './trips';
 
 /**
@@ -111,7 +112,7 @@ export const runSignature = (run: LegRun) => `${run.dayIndex}:${run.keys.join(',
 /** Asks the relay (which asks Kakao Mobility). null = directions unavailable right now. */
 export async function fetchRun(run: LegRun): Promise<RunResult | null> {
   try {
-    const res = await fetch('/api/v1/routes/durations', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ points: run.points }) });
+    const res = await fetch(apiUrl('/api/v1/routes/durations'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ points: run.points }) });
     if (!res.ok) return null;
     const data = (await res.json()) as { minutes?: unknown; meters?: unknown };
     const list = (v: unknown) => (Array.isArray(v) && v.length === run.keys.length ? v.map((m) => (typeof m === 'number' ? m : null)) : null);

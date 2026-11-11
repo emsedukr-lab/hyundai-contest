@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 차량 앱과 같은 바탕(Pleos 캔버스 회색). -->
+    <color name="ic_launcher_background">#FFF7F8FA</color>
+</resources>

@@ -38,6 +38,7 @@
 | `packages/shared` | 전송 스키마(zod), 정규화 해시, 무결성 검사, WebCrypto E2E, 세션 상태 전이, 시각표, 샘플 여행 |
 | `packages/worker` | Worker 라우터(`/api/v1`), `PairingSession` Durable Object, 카카오 장소 검색·길찾기(시간·거리·도로 경로)·공유 링크 해석, 웹 정적 파일 제공. 설정은 `wrangler.jsonc` |
 | `packages/web` | 모바일 웹: 여행·편집기·연결(`/c`)·설정·개인정보 화면 |
+| `packages/mobile` | 휴대폰 앱(Android·iOS): 모바일 웹 화면을 Capacitor로 포장한 네이티브 프로젝트. 뼈대 단계 — [packages/mobile/README.md](packages/mobile/README.md) |
 | `car/` | 차량 앱: `core-trip`(파서·재검증·결정표·시각표), `core-pairing`(E2E 암호화·상태 머신), `app`(Compose UI·내비·저장소) |
 | `schema/` | 언어 중립 계약: JSON Schema, 연결 프로토콜, TS·Kotlin 교차 시험 fixture |
 | `design/` | Pleos 공식 디자인 에셋에서 추출한 토큰·Android 리소스·글꼴 ([design/README.md](design/README.md)) |
@@ -89,7 +90,7 @@ adb shell am start --user 10 -n io.tteonaljido.car/.MainActivity   # 사용자 �
 ## 시험
 
 ```sh
-npm test                    # shared 53 · worker 34 · web 147 (TypeScript 234)
+npm test                    # shared 53 · worker 38 · web 147 (TypeScript 238)
 npm run typecheck
 (cd car && ./gradlew test)  # Kotlin 137 (car 모듈)
 npm run smoke               # 서버 흐름 (기본 http://localhost:8787, 다른 주소는 `npm run smoke -- <URL>`)

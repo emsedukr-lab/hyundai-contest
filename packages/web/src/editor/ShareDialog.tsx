@@ -5,7 +5,9 @@ import { Card } from '@astryxdesign/core/Card';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { HStack, VStack } from '@astryxdesign/core/Stack';
 import { Heading, Text } from '@astryxdesign/core/Text';
+import { saveFile } from '../lib/fileOut';
 import { t } from '../lib/i18n';
+import { isNativeApp } from '../lib/platform';
 import { exportShare, newPasscode, type ShareFile } from '../lib/share';
 import type { TripDoc } from '../lib/trips';
 
@@ -48,11 +50,14 @@ export function ShareDialog({ isOpen, doc, onClose }: { isOpen: boolean; doc: Tr
     try {
       const f = asFile(file);
       const nav = navigator as Navigator & { canShare?: (d: { files: File[] }) => boolean };
-      if (nav.canShare?.({ files: [f] }) && navigator.share) {
+      if (isNativeApp) {
+        // The app's web view has no Web Share for files: use the system share sheet through the app.
+        await saveFile(f, { title: t('share.shareTitle'), text: t('share.shareTextNoCode') });
+      } else if (nav.canShare?.({ files: [f] }) && navigator.share) {
         // The passcode stays out of the message: sent together with the file, it would open it for anyone who sees it.
         await navigator.share({ files: [f], title: t('share.shareTitle'), text: t('share.shareTextNoCode') });
       } else {
-        download(f);
+        await download(f);
       }
     } catch {
       /* user cancelled the share sheet — nothing to do */
@@ -61,14 +66,9 @@ export function ShareDialog({ isOpen, doc, onClose }: { isOpen: boolean; doc: Tr
     }
   };
 
-  const download = (f: File = asFile(file!)) => {
-    const url = URL.createObjectURL(f);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = f.name;
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 30_000); // revoking at once can abort the download on some mobile browsers
-    setNote(t('share.saved'));
+  const download = async (f: File = asFile(file!)) => {
+    // Web: a download. App: the share sheet (save to files); nothing is claimed when it was closed without a choice.
+    if (await saveFile(f)) setNote(t('share.saved'));
   };
 
   return (
@@ -91,7 +91,7 @@ export function ShareDialog({ isOpen, doc, onClose }: { isOpen: boolean; doc: Tr
         <HStack gap={2} hAlign="between">
           <Button label={t('common.close')} variant="secondary" onClick={onClose} />
           <HStack gap={2}>
-            <Button label={t('share.saveFile')} variant="secondary" isDisabled={!file} onClick={() => download()} />
+            <Button label={t('share.saveFile')} variant="secondary" isDisabled={!file} onClick={() => void download()} />
             <Button label={busy ? t('share.building') : t('share.send')} variant="primary" isDisabled={!file || busy} onClick={send} />
           </HStack>
         </HStack>

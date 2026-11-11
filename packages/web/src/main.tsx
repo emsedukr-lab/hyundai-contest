@@ -13,6 +13,8 @@ import { requestPersistence } from './lib/db';
 import { lang } from './lib/i18n';
 
 void requestPersistence();
+// Phone app build only; the condition is a build-time constant, so the web bundle carries none of this.
+if (import.meta.env.VITE_APP_SHELL === '1') void import('./lib/nativeShell').then((m) => m.startNativeShell());
 document.documentElement.lang = lang;
 const dark = window.matchMedia?.('(prefers-color-scheme: dark)').matches;
 // Astryx's own strings and date/time formats ("Required", "Nov 20", "8:00 AM") follow this locale; English is built in.

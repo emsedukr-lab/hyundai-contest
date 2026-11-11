@@ -4,12 +4,15 @@
   "workspaces": [
     "packages/shared",
     "packages/worker",
-    "packages/web"
+    "packages/web",
+    "packages/mobile"
   ],
   "scripts": {
     "test": "npm test --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "build": "npm run build -w @tteonaljido/web",
+    "build:app": "npm run build:app -w @tteonaljido/web",
+    "app:sync": "npm run sync -w @tteonaljido/mobile",
     "dev": "npm run build -w @tteonaljido/web && npm run dev -w @tteonaljido/worker",
     "schema": "npm run schema -w @tteonaljido/shared",
     "e2e": "tsx tools/e2e-mobile.mts",
