@@ -27,3 +27,6 @@ fun countdown(ms: Long): String {
     val s = (ms.coerceAtLeast(0) + 999) / 1000
     return "%d:%02d".format(Locale.ROOT, s / 60, s % 60)
 }
+
+/** Road distance as the navigation measured it: one decimal under 100 km, whole kilometres above. */
+fun kmLabel(metres: Int): String = if (metres >= 100_000) "%d".format(Locale.ROOT, (metres + 500) / 1000) else "%.1f".format(Locale.ROOT, metres / 1000.0)

@@ -85,6 +85,8 @@ object ImportDecision {
             deferredTo = overlay.deferredTo.filter { (id, day) -> id in visits && day in 1..incoming.days.size },
             visitRecords = overlay.visitRecords.filter { it.placeId in places },
             legEstimates = estimates,
+            // A newer plan from the phone is the order to follow: an order chosen in the car for the old one is dropped.
+            orderOverrides = emptyMap(),
             guiding = guiding,
         )
     }

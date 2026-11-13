@@ -95,6 +95,17 @@ class Container(private val app: Application) : TripStore {
 
     val tracker = GuidanceTracker(this)
 
+    /** M63: on while the navigation measures legs, so the app is not frozen behind it ([io.tteonaljido.car.navi.MeasureService]). */
+    fun keepRunning(on: Boolean) { if (on) io.tteonaljido.car.navi.MeasureService.start(app) else io.tteonaljido.car.navi.MeasureService.stop(app) }
+
+    /**
+     * Asks for this app's screen back once the measurement is over. The system usually declines while the navigation is
+     * in front (background activity start, seen on the emulator); the driver then returns by hand, and the result waits.
+     */
+    fun toFront() {
+        runCatching { app.startActivity(android.content.Intent(app, MainActivity::class.java).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP or android.content.Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)) }
+    }
+
     /**
      * How long the car has been driven without a real break (M57). App-scoped so it keeps counting while the navigation
      * is in front; it follows the same driving state as the screens (demo switch in demo mode) and holds nothing but

@@ -28,6 +28,8 @@ import android.util.Log
 import io.tteonaljido.car.BuildConfig
 import io.tteonaljido.trip.Match
 import io.tteonaljido.trip.NaviBinding
+import io.tteonaljido.trip.NaviMeasure
+import io.tteonaljido.trip.metres
 import io.tteonaljido.trip.PlaceMatch
 import io.tteonaljido.trip.RestAreas
 import kotlinx.coroutines.CompletableDeferred
@@ -99,6 +101,16 @@ data class NaviEstimate(val seconds: Int, val metres: Int, val socAtDest: Int?) 
 
 data class HereLocation(val latE7: Int, val lonE7: Int, val address: String)
 
+/**
+ * What a measuring route gave back (M63, [NaviGateway.measure]): the navigation's remaining time and distance to every
+ * point sent, in order — or how many waypoints it kept when that was fewer than sent, so the caller can plan shorter routes.
+ */
+sealed interface MeasureOutcome {
+    data class Read(val readings: List<NaviMeasure.Reading>) : MeasureOutcome
+    data class Fewer(val accepted: Int) : MeasureOutcome
+    data object NoAnswer : MeasureOutcome
+}
+
 /** The only door to the Hyundai navigation. `route` changes the real destination, so it runs only on an explicit tap. */
 interface NaviGateway {
     val status: StateFlow<NaviStatus>
@@ -111,8 +123,17 @@ interface NaviGateway {
      * `fastest` asks for the shortest-time route option instead of the navigation's default (used when 시간 지킴이 says the next fixed time is tight).
      */
     suspend fun route(target: RouteTarget, previous: NaviBinding? = null, fastest: Boolean = false): RouteOutcome
-    /** Load the day's route in one request: the final stop is the destination, earlier stops are waypoints (the nav takes at most two: FIRST, SECOND). Confirmation matches the final destination, like [route]. Explicit parked tap only. */
+    /** Load the day's route in one request: the final stop is the destination, earlier stops are waypoints in order. Confirmation matches the final destination, like [route]. Explicit parked tap only. */
     suspend fun routeTrip(dest: RouteTarget, waypoints: List<RouteTarget>, previous: NaviBinding? = null): RouteOutcome
+    /**
+     * Measures the legs between `points` (M63): starts a route through them in order, reads what the navigation says is
+     * left to each from the car, and leaves the route up — the caller sends the next one or ends with [cancelRoute].
+     * This is a real route start (the navigation has no query for a leg the car is not on), so it replaces whatever
+     * the navigation was guiding to: explicit parked tap only.
+     */
+    suspend fun measure(points: List<RouteTarget>): MeasureOutcome
+    /** Ends the navigation's current route and waits until it reports no guidance. */
+    suspend fun cancelRoute()
     suspend fun currentLocation(): HereLocation?
     suspend fun estimate(target: RouteTarget): NaviEstimate?
     /** How many waypoints the navigation's route now holds (`getWaypointInfo`); null when it did not answer. */
@@ -132,6 +153,10 @@ private fun DestinationInfo.binding() = NaviBinding(poiId.orEmpty(), poiSubId.or
 private fun BookmarkInfo.binding() = NaviBinding(poiId.orEmpty(), poiSubId.orEmpty(), poiProvider.orEmpty(), e7(latitude), e7(longitude), name.orEmpty(), address.orEmpty())
 
 private const val TAG = "TteonaljidoNavi"
+/** A measuring route: how long the navigation gets to start it, then to report every point, and how far a point it reports may sit from the one sent. */
+private const val MEASURE_START_MS = 40_000L
+private const val MEASURE_READ_MS = 25_000L
+private const val MEASURE_MATCH_METRES = 500.0
 
 class PleosNaviGateway(context: Context) : NaviGateway {
     private val navi = NaviHelper(context)
@@ -147,6 +172,7 @@ class PleosNaviGateway(context: Context) : NaviGateway {
     @Volatile private var locationWaiter: CompletableDeferred<CurrentLocationInfo?>? = null
     @Volatile private var tripWaiter: CompletableDeferred<TripInfo?>? = null
     @Volatile private var waypointWaiter: CompletableDeferred<List<WaypointInfo>>? = null
+    @Volatile private var startWaiter: CompletableDeferred<Unit>? = null
     /** Debug builds only: logs every navigation callback and runs single queries (see NaviProbe). */
     val probe: NaviProbe? = if (BuildConfig.DEBUG) NaviProbe(navi) else null
 
@@ -185,6 +211,7 @@ class PleosNaviGateway(context: Context) : NaviGateway {
             val prev = _live.value
             _live.value = NaviLive(true, routeStartInfo.name, prev?.destLatE7, prev?.destLonE7, routeStartInfo.duration.takeIf { it > 0 }, routeStartInfo.distance.takeIf { it > 0 }, tollWon = routeStartInfo.tollFare.takeIf { it > 0 })
             runCatching { navi.getDestinationInfo() } // fills in the destination's coordinates
+            startWaiter?.complete(Unit)
         }
         override fun onDrivingInfo(drivingInfo: DrivingInfo) {
             val d = drivingInfo.destination
@@ -312,9 +339,30 @@ class PleosNaviGateway(context: Context) : NaviGateway {
         if (_status.value != NaviStatus.CONNECTED) return RouteOutcome.Unavailable(io.tteonaljido.car.R.string.navi_not_connected)
         val lat = dest.latE7 ?: return RouteOutcome.NoAnswer
         val lon = dest.lonE7 ?: return RouteOutcome.NoAnswer
-        // The SDK names two waypoints (FIRST, SECOND) and this push sends two. The emulator's navigation took nine when the
-        // rest went out as SECOND (docs/evidence/navi-waypoints); what a real car's navigation takes is not known.
-        val wps = waypoints.filter { it.latE7 != null && it.lonE7 != null }.take(2).mapIndexed { i, w ->
+        try {
+            navi.requestRouteWithWaypoints(waypointRoute(dest, lat, lon, waypoints.filter { it.latE7 != null && it.lonE7 != null }))
+        } catch (e: Throwable) {
+            return RouteOutcome.Unavailable(io.tteonaljido.car.R.string.navi_rejected)
+        }
+        return confirmRoute(dest, previous)
+    }
+
+    /**
+     * A route through `waypoints` to `dest`, in the order given. The SDK names two waypoints (FIRST, SECOND); the rest go
+     * out as SECOND, which the emulator's navigation appended in order up to nine (docs/evidence/navi-waypoints). What a
+     * real car's navigation keeps is read back by the caller ([waypointCount], [measure]).
+     */
+    private fun waypointRoute(dest: RouteTarget, lat: Int, lon: Int, waypoints: List<RouteTarget>) = RouteWithWaypointsRequest(
+        RouteInfo(
+            latitude = lat / 1e7,
+            longitude = lon / 1e7,
+            poiName = dest.name,
+            poiId = dest.poiId.orEmpty(),
+            address = dest.address,
+            poiSubId = dest.poiSubId ?: "0",
+            poiProvider = dest.poiProvider.orEmpty(),
+        ),
+        waypoints.mapIndexed { i, w ->
             RequestWaypointInfo(
                 latitude = w.latE7!! / 1e7,
                 longitude = w.lonE7!! / 1e7,
@@ -325,26 +373,70 @@ class PleosNaviGateway(context: Context) : NaviGateway {
                 poiSubId = w.poiSubId ?: "0",
                 poiProvider = w.poiProvider.orEmpty(),
             )
-        }
+        },
+    )
+
+    private suspend fun waypoints(): List<WaypointInfo>? {
+        val w = CompletableDeferred<List<WaypointInfo>>().also { waypointWaiter = it }
+        runCatching { navi.getWaypointInfo() }.onFailure { return null }
+        return withTimeoutOrNull(3_000) { w.await() }
+    }
+
+    override suspend fun measure(points: List<RouteTarget>): MeasureOutcome {
+        if (_status.value != NaviStatus.CONNECTED || points.size < 2 || points.any { it.latE7 == null || it.lonE7 == null }) return MeasureOutcome.NoAnswer
+        val dest = points.last()
+        val via = points.dropLast(1)
+        // Only a route that starts after this request counts: an older route's numbers must not be read as the answer.
+        val started = CompletableDeferred<Unit>().also { startWaiter = it }
         try {
-            navi.requestRouteWithWaypoints(
-                RouteWithWaypointsRequest(
-                    RouteInfo(
-                        latitude = lat / 1e7,
-                        longitude = lon / 1e7,
-                        poiName = dest.name,
-                        poiId = dest.poiId.orEmpty(),
-                        address = dest.address,
-                        poiSubId = dest.poiSubId ?: "0",
-                        poiProvider = dest.poiProvider.orEmpty(),
-                    ),
-                    wps,
-                ),
-            )
+            navi.requestRouteWithWaypoints(waypointRoute(dest, dest.latE7!!, dest.lonE7!!, via))
         } catch (e: Throwable) {
-            return RouteOutcome.Unavailable(io.tteonaljido.car.R.string.navi_rejected)
+            return MeasureOutcome.NoAnswer
         }
-        return confirmRoute(dest, previous)
+        withTimeoutOrNull(MEASURE_START_MS) { started.await() } ?: return MeasureOutcome.NoAnswer
+        // The waypoint list and the destination's remainder follow the start by a moment (up to ten seconds on a long route).
+        var fewer: Int? = null
+        val read = withTimeoutOrNull(MEASURE_READ_MS) {
+            var out: List<NaviMeasure.Reading>? = null
+            while (out == null) {
+                val w = waypoints()
+                val d = destination(3_000)
+                if (w != null && d != null && d.remainTime > 0 && metres(e7(d.latitude), e7(d.longitude), dest.latE7, dest.lonE7) <= MEASURE_MATCH_METRES) {
+                    // Every waypoint has to be the one sent, in the order sent: a list the navigation reordered or trimmed is not read.
+                    val inOrder = w.size == via.size && w.indices.all { i -> w[i].remainTime > 0 && sameWaypoint(w[i], via[i]) }
+                    if (inOrder) out = w.map { NaviMeasure.Reading(it.remainTime, it.remainDistance) } + NaviMeasure.Reading(d.remainTime, d.remainDistance)
+                    else if (w.size < via.size) fewer = w.size
+                }
+                if (out == null) delay(1_000)
+            }
+            out
+        }
+        if (BuildConfig.DEBUG) Log.d(TAG, "measure points=${points.size} read=${read?.size} fewer=$fewer")
+        return read?.let { MeasureOutcome.Read(it) } ?: fewer?.let { MeasureOutcome.Fewer(it) } ?: MeasureOutcome.NoAnswer
+    }
+
+    /**
+     * Whether a waypoint the navigation lists is the one sent at that position. The emulator's navigation returns
+     * waypoints without coordinates (0, 0) but with the name they were sent under (docs/evidence/navi-waypoints), so:
+     * by position where it gives one, else by name, else by its place in the list alone.
+     */
+    private fun sameWaypoint(w: WaypointInfo, sent: RouteTarget): Boolean = when {
+        w.latitude != 0.0 || w.longitude != 0.0 -> metres(e7(w.latitude), e7(w.longitude), sent.latE7!!, sent.lonE7!!) <= MEASURE_MATCH_METRES
+        w.name.isNotBlank() && sent.name.isNotBlank() -> w.name.trim() == sent.name.trim()
+        else -> true
+    }
+
+    /**
+     * Ends the navigation's route — only when the navigation itself says it has one. A cancel sent with no route
+     * fails inside the emulator's navigation ("NOT_CANCEL_ABLE_TRIP") and leaves it refusing every later cancel as
+     * "already working" until its app restarts (docs/evidence/navi-waypoints), so one is never sent on a guess: no
+     * answer about the destination counts as "do not cancel".
+     */
+    override suspend fun cancelRoute() {
+        if (_status.value != NaviStatus.CONNECTED) return
+        if ((destination(3_000) ?: destination(3_000)) == null) return
+        runCatching { navi.cancelRoute() }
+        withTimeoutOrNull(8_000) { while (destination(2_000) != null) delay(500) }
     }
 
     override suspend fun currentLocation(): HereLocation? {
@@ -367,12 +459,7 @@ class PleosNaviGateway(context: Context) : NaviGateway {
         return NaviEstimate(info.eta, info.distance, info.estimatedSocAtDest.takeIf { it in 0..100 })
     }
 
-    override suspend fun waypointCount(): Int? {
-        if (_status.value != NaviStatus.CONNECTED) return null
-        val w = CompletableDeferred<List<WaypointInfo>>().also { waypointWaiter = it }
-        runCatching { navi.getWaypointInfo() }.onFailure { return null }
-        return withTimeoutOrNull(3_000) { w.await() }?.size
-    }
+    override suspend fun waypointCount(): Int? = if (_status.value != NaviStatus.CONNECTED) null else waypoints()?.size
 
     override fun refreshLive() {
         if (_status.value != NaviStatus.CONNECTED) return
@@ -404,6 +491,8 @@ class OfflineNaviGateway : NaviGateway {
     override suspend fun currentLocation(): HereLocation? = null
     override suspend fun estimate(target: RouteTarget): NaviEstimate? = null
     override suspend fun waypointCount(): Int? = null
+    override suspend fun measure(points: List<RouteTarget>): MeasureOutcome = MeasureOutcome.NoAnswer
+    override suspend fun cancelRoute() {}
     override fun refreshLive() {}
     override fun openSearch(keyword: String) {}
     override fun openAddHome() {}

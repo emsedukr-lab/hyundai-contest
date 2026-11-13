@@ -13,6 +13,8 @@
     <uses-permission android:name="pleos.car.permission.CAR_DOORS" />
     <!-- 조회 전용(M57): 착좌·안전벨트(Seat) → 출발 전 점검의 '탑승 n명 중 m명 미착용'. 좌석 위치·열선 제어는 하지 않음. -->
     <uses-permission android:name="pleos.car.permission.CAR_SEATS" />
+    <!-- M63: 내비로 구간을 재는 동안(사용자가 누른 뒤 1~2분)만 앱이 멈추지 않게 하는 짧은 포그라운드 서비스. 내비가 앞에 나오면 뒤에 있는 앱은 시스템이 정지시킴. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-feature android:name="android.hardware.type.automotive" android:required="false" />
     <application
         android:name=".App"
@@ -39,5 +41,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <service android:name=".navi.MeasureService" android:exported="false" android:foregroundServiceType="shortService" />
     </application>
 </manifest>

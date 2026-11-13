@@ -14,7 +14,14 @@ data class LocalTrip(
     val plan: Trip,
     val overlay: CarOverlay = CarOverlay(),
     val meta: ImportMeta,
-)
+) {
+    /**
+     * The plan as the car follows it (M63): the phone's plan with the stop order chosen in the car laid over it
+     * ([CarOrder]). Screens and guidance read this; `plan` stays what the phone sent, for storage and re-imports.
+     * Not stored: a delegated property is left out of the saved file.
+     */
+    val view: Trip by lazy { CarOrder.apply(plan, overlay) }
+}
 
 @Serializable
 data class ImportMeta(
@@ -126,8 +133,16 @@ data class CarOverlay(
     val deferred: Set<String> = emptySet(),
     /** Stops the driver chose to do on a different day (visitId → target dayIndex): removed from their own day, shown at the tail of the target day. The plan itself is unchanged. */
     val deferredTo: Map<String, Int> = emptyMap(),
-    /** Travel times measured by the car's navigation, keyed by [LegKeys] ("from>to"). Used only where the plan has none. */
+    /**
+     * Travel times and distances from the car's navigation, keyed by [LegKeys] ("from>to"). Where a leg has one it is
+     * the leg's time (M63); the phone's value stands only for legs the navigation has not timed.
+     */
     val legEstimates: Map<String, LegEstimate> = emptyMap(),
+    /**
+     * The stop order chosen in the car for a day (dayIndex → visitIds), from the navigation's own times ([RouteOptimizer]).
+     * The plan itself is unchanged; an order that no longer matches the day's stops is ignored ([CarOrder.of]).
+     */
+    val orderOverrides: Map<Int, List<String>> = emptyMap(),
     /** What this app last handed to the navigation, so its arrival event can be matched to a stop. */
     val guiding: GuidingTarget? = null,
     /**
@@ -150,7 +165,10 @@ enum class VisitHow { MANUAL, NAVI_ARRIVED, DEMO_SIGNAL }
 @Serializable
 data class VisitStamp(val at: Long, val how: VisitHow)
 
-/** A leg's travel time as the navigation estimated it from the car's position (`requestTrip`), never typed or guessed. */
+/**
+ * A leg's travel time and distance from the navigation, never typed or guessed: its estimate from the car's position
+ * (`requestTrip`, source "NAVI") or read off a waypoint route ([NaviMeasure], source "NAVI_ROUTE").
+ */
 @Serializable
 data class LegEstimate(val minutes: Int, val metres: Int, val at: Long, val source: String = "NAVI")
 

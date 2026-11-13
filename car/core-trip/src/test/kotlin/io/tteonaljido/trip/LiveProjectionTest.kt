@@ -121,10 +121,12 @@ class LiveProjectionTest {
 
     /* ---------- leg sources ---------- */
 
-    @Test fun planLegWinsOverNaviEstimateAndNaviFillsGaps() {
+    @Test fun naviTimeWinsOverThePlanLegAndFillsGaps() {
+        // M63: where the navigation has timed a leg, that is the leg's time; the phone's value stands for the rest.
         val o = CarOverlay(legEstimates = mapOf("skybay>lake" to LegEstimate(30, 3_000, 0), "@home>cheolttuk" to LegEstimate(170, 230_000, 0)))
-        assertEquals(LegValue(5, LegFrom.USER), TripValidator.leg(sample, o, 2, 0))
-        assertEquals(LegValue(170, LegFrom.NAVI), TripValidator.leg(sample, o, 1, 0))
+        assertEquals(LegValue(30, LegFrom.NAVI, 3_000), TripValidator.leg(sample, o, 2, 0))
+        assertEquals(LegValue(10, LegFrom.USER), TripValidator.leg(sample, o, 2, 1))
+        assertEquals(LegValue(170, LegFrom.NAVI, 230_000), TripValidator.leg(sample, o, 1, 0))
         val codes = TripValidator.validate(sample, o).issues.filter { it.dayIndex == 1 }.map { it.code }
         assertFalse("LEG_UNKNOWN" in codes)
         assertTrue("LEG_NAVI" in codes)
@@ -136,7 +138,7 @@ class LiveProjectionTest {
         val moved = CarOverlay(originOverride = here)
         assertNull(TripValidator.leg(planned, moved, 1, 0)) // the 30 min was from home
         val estimated = moved.copy(legEstimates = mapOf("@origin>cheolttuk" to LegEstimate(165, 225_000, 0)))
-        assertEquals(LegValue(165, LegFrom.NAVI), TripValidator.leg(planned, estimated, 1, 0))
+        assertEquals(LegValue(165, LegFrom.NAVI, 225_000), TripValidator.leg(planned, estimated, 1, 0))
         assertEquals(LegValue(30, LegFrom.USER), TripValidator.leg(planned, CarOverlay(), 1, 0))
     }
 
@@ -165,7 +167,7 @@ class LiveProjectionTest {
         assertNull(LegKeys.of(noLodging, CarOverlay(), 2, 0))                     // nowhere to start from by the plan
         assertEquals("@origin>lake", LegKeys.of(noLodging, day2, 2, 0))
         val estimated = day2.copy(legEstimates = mapOf("@origin>lake" to LegEstimate(40, 30_000, 0)))
-        assertEquals(LegValue(40, LegFrom.NAVI), TripValidator.leg(noLodging, estimated, 2, 0))
+        assertEquals(LegValue(40, LegFrom.NAVI, 30_000), TripValidator.leg(noLodging, estimated, 2, 0))
     }
 
     @Test fun aTripWithNoStartPlaceStartsFromTheCurrentLocation() {
@@ -177,7 +179,7 @@ class LiveProjectionTest {
         assertTrue("RETURN_HOME_UNKNOWN" in codes)                                // it still returns home
         val pinned = CarOverlay(originOverrides = mapOf(1 to here), legEstimates = mapOf("@origin>cheolttuk" to LegEstimate(165, 225_000, 0)))
         assertEquals("@origin>cheolttuk", LegKeys.of(current, pinned, 1, 0))
-        assertEquals(LegValue(165, LegFrom.NAVI), TripValidator.leg(current, pinned, 1, 0))
+        assertEquals(165 to LegFrom.NAVI, TripValidator.leg(current, pinned, 1, 0)!!.let { it.minutes to it.from })
     }
 
     @Test fun aFirstLegThePlanCouldNotTimeIsTheCarsToMeasure() {
@@ -216,12 +218,12 @@ class LiveProjectionTest {
         assertTrue(DayStart.needsMeasure(current, measured, here.latE7 + 50_000, here.lonE7, now + 60_000)) // ~550 m away
         assertTrue(DayStart.needsMeasure(current, measured, here.latE7, here.lonE7, now + DayStart.FRESH_MS + 1))
         // once measured the first leg is the navigation's, and the day's times can be worked out
-        assertEquals(LegValue(152, LegFrom.NAVI), TripValidator.leg(current, measured, 1, 0))
+        assertEquals(LegValue(152, LegFrom.NAVI, 202_500), TripValidator.leg(current, measured, 1, 0))
         assertFalse(TripValidator.validate(current, measured).issues.any { it.code == "LEG_UNKNOWN" && it.dayIndex == 1 })
         // at home the leg is the plan's own ("집 > 첫 장소"), no pin needed
         val atHome = CarOverlay(home = here, legEstimates = mapOf("@home>cheolttuk" to LegEstimate(150, 200_000, now)))
         assertTrue(DayStart.estimateFresh(sample, atHome, now + 60_000))
-        assertEquals(LegValue(150, LegFrom.NAVI), TripValidator.leg(sample, atHome, 1, 0))
+        assertEquals(LegValue(150, LegFrom.NAVI, 200_000), TripValidator.leg(sample, atHome, 1, 0))
     }
 
     /* ---------- next destination, arrival, update ---------- */

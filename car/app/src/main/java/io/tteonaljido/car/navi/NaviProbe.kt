@@ -23,13 +23,16 @@ import android.util.Log
  * (no place names, addresses or coordinates) and runs single queries on request. Attached only when BuildConfig.DEBUG; release builds never construct it.
  *   adb shell am start --user 10 -n io.tteonaljido.car/.MainActivity --es probe "trip:37.7955,128.8975"
  *   probe values: trip:<lat,lon> | route:<lat,lon> | location | state | destination | chargers | cancel | tbt | waypoints | via:<lat,lon>|<lat,lon>|<lat,lon>
- *                 | add:<lat,lon>,<FIRST|SECOND> | remove:<FIRST|SECOND|ALL>
+ *                 | add:<lat,lon>,<FIRST|SECOND> | remove:<FIRST|SECOND|ALL> | cancel-in:<ms> | via-cancel:<ms>|<lat,lon>|… | keep (holds the app running behind the navigation)
  * `via:` sends every point it is given (the last is the destination): the third waypoint onwards goes out as SECOND, to
  * see what the navigation does with more than the two the SDK can name.
  */
 class NaviProbe(private val navi: NaviHelper) {
     private val tag = "TteonaljidoProbe"
     private fun log(m: String) { Log.d(tag, m) }
+    /** The points of the last `via:` (waypoints, then the destination), to say how far the navigation's own points sit from them. */
+    @Volatile private var sent: List<List<Double>> = emptyList()
+    @Volatile private var cancelAfterStart: Long? = null
 
     val listener = object : NaviHelperEventListener {
         override fun onDrivingInfo(drivingInfo: DrivingInfo) {
@@ -37,8 +40,14 @@ class NaviProbe(private val navi: NaviHelper) {
             log("onDrivingInfo named=${d.name.isNotBlank()} duration=${d.duration} distance=${d.distance} charge=${d.remainDestinationChargingValue} waypoints=${drivingInfo.waypoints.size} waypointLegs=${drivingInfo.waypoints.joinToString { "${it.duration}s/${it.distance}m" }}")
         }
         override fun onNavigationStatus(navigationStatus: NavigationStatus) = log("onNavigationStatus $navigationStatus")
-        override fun onRouteStarted(routeStartInfo: RouteStartInfo) =
+        override fun onRouteStarted(routeStartInfo: RouteStartInfo) {
             log("onRouteStarted named=${routeStartInfo.name.isNotBlank()} duration=${routeStartInfo.duration} distance=${routeStartInfo.distance} toll=${routeStartInfo.tollFare} charge=${routeStartInfo.remainDestinationChargingValue}")
+            // "via-cancel:<ms>|…": cancel that long after the route started, without this app coming to the front again.
+            cancelAfterStart?.let { ms ->
+                cancelAfterStart = null
+                Thread { Thread.sleep(ms); log("probe cancel ($ms ms after start)"); runCatching { navi.cancelRoute() }.onFailure { log("cancel failed ${it.javaClass.simpleName}") } }.start()
+            }
+        }
         override fun onRouteEnded() = log("onRouteEnded")
         override fun onRouteCancelled() = log("onRouteCancelled")
         override fun onReRouteEnded() = log("onReRouteEnded")
@@ -47,13 +56,18 @@ class NaviProbe(private val navi: NaviHelper) {
             log("onDestinationArrived named=${!destinationArrivedInfo.name.isNullOrBlank()} duration=${destinationArrivedInfo.duration} distance=${destinationArrivedInfo.distance}")
         override fun onWayPointArrived(waypointArrivedInfo: WaypointArrivedInfo) = log("onWayPointArrived named=${!waypointArrivedInfo.name.isNullOrBlank()}")
         override fun onDestinationInfo(destinationInfo: DestinationInfo) =
-            log("onDestinationInfo named=${destinationInfo.name.isNotBlank()} remainTime=${destinationInfo.remainTime} remainDistance=${destinationInfo.remainDistance} toll=${destinationInfo.tollFare} located=${destinationInfo.latitude != 0.0}")
+            log("onDestinationInfo named=${destinationInfo.name.isNotBlank()} remainTime=${destinationInfo.remainTime} remainDistance=${destinationInfo.remainDistance} toll=${destinationInfo.tollFare} located=${destinationInfo.latitude != 0.0} offSent=${sent.lastOrNull()?.let { p -> io.tteonaljido.trip.metres((destinationInfo.latitude * 1e7).toInt(), (destinationInfo.longitude * 1e7).toInt(), (p[0] * 1e7).toInt(), (p[1] * 1e7).toInt()).toInt() }}")
         override fun onCurrentLocationInfo(currentLocationInfo: CurrentLocationInfo) =
             log("onCurrentLocationInfo located=${currentLocationInfo.latitude != 0.0} heading=${currentLocationInfo.heading} addressed=${!currentLocationInfo.address.isNullOrBlank()}")
         override fun onRouteStateInfo(routeStateInfo: RouteStateInfo) =
             log("onRouteStateInfo mode=${routeStateInfo.naviMode} routing=${routeStateInfo.isRouting} option=${routeStateInfo.routeOption} charge=${routeStateInfo.remainDestinationChargingInt} traffic=${routeStateInfo.trafficStatus?.let { t -> "dist=${t.summary.totalCongestionDist} time=${t.summary.totalCongestionTime} avgSpeed=${t.summary.totalCongestionAvrSpeed} segments=${t.congestionItemList.size} first=${t.congestionItemList.take(3).joinToString { c -> "${c.trafficCongestionType}:${c.distance}/${c.trafficCongestionTime}" }} events=${t.trafficEventList.map { e -> e.eventType }}" }}")
         override fun onTBTInfo(tbtInfoList: List<TBTInfo>) = log("onTBTInfo n=${tbtInfoList.size} sum=${tbtInfoList.sumOf { it.distance }} list=${tbtInfoList.joinToString { "${it.type.name.removePrefix("TURN_")}@${it.distance.toInt()}" }}")
-        override fun onWayPointInfo(waypointInfoList: List<WaypointInfo>) = log("onWayPointInfo n=${waypointInfoList.size} legs=${waypointInfoList.joinToString { "${it.remainTime}s/${it.remainDistance}m" }}")
+        // Where the reported waypoints sit is logged as distances only (to the point sent, when `via:` sent one): no coordinates.
+        override fun onWayPointInfo(waypointInfoList: List<WaypointInfo>) = log(
+            "onWayPointInfo n=${waypointInfoList.size} legs=${waypointInfoList.joinToString { "${it.remainTime}s/${it.remainDistance}m" }}" +
+                " located=${waypointInfoList.count { it.latitude != 0.0 }} offSent=${waypointInfoList.mapIndexed { i, w -> sent.getOrNull(i)?.let { p -> io.tteonaljido.trip.metres((w.latitude * 1e7).toInt(), (w.longitude * 1e7).toInt(), (p[0] * 1e7).toInt(), (p[1] * 1e7).toInt()).toInt() } }}" +
+                " offDisplay=${waypointInfoList.mapIndexed { i, w -> sent.getOrNull(i)?.let { p -> w.displayLatitude?.let { la -> w.displayLongitude?.let { lo -> io.tteonaljido.trip.metres((la * 1e7).toInt(), (lo * 1e7).toInt(), (p[0] * 1e7).toInt(), (p[1] * 1e7).toInt()).toInt() } } } }}",
+        )
         override fun onWaypointChanged(waypointChangedInfo: ai.pleos.playground.navi.data.WaypointChangedInfo) =
             log("onWaypointChanged index=${waypointChangedInfo.index} cmd=${waypointChangedInfo.cmdType} duration=${waypointChangedInfo.routeStartInfo.duration} distance=${waypointChangedInfo.routeStartInfo.distance}")
         override fun onRoutingCompleted() = log("onRoutingCompleted")
@@ -62,8 +76,13 @@ class NaviProbe(private val navi: NaviHelper) {
         override fun onError(errorCode: NaviErrorCode) = log("onError $errorCode")
     }
 
-    fun run(cmd: String) {
-        log("probe ${cmd.substringBefore(':')}") // the command's coordinates stay out of the log
+    fun run(command: String) {
+        // "via-cancel:<ms>|<lat,lon>|…" is "via:" plus a cancel <ms> after the route starts.
+        val cmd = if (command.startsWith("via-cancel:")) {
+            cancelAfterStart = command.removePrefix("via-cancel:").substringBefore('|').trim().toLong()
+            "via:" + command.substringAfter('|')
+        } else command
+        log("probe ${command.substringBefore(':')}") // the command's coordinates stay out of the log
         runCatching {
             when {
                 cmd.startsWith("trip:") -> {
@@ -79,10 +98,16 @@ class NaviProbe(private val navi: NaviHelper) {
                 cmd == "destination" -> navi.getDestinationInfo()
                 cmd == "chargers" -> navi.requestNavigationScreen(NavigationScreenRequest.NearbyChargingStations)
                 cmd == "cancel" -> navi.cancelRoute()
+                // "cancel-in:<ms>": cancels after a delay, so the cancel can be made to land while another app is in front.
+                cmd.startsWith("cancel-in:") -> {
+                    val ms = cmd.removePrefix("cancel-in:").trim().toLong()
+                    Thread { Thread.sleep(ms); log("probe cancel (delayed)"); runCatching { navi.cancelRoute() }.onFailure { log("delayed cancel failed ${it.javaClass.simpleName}") } }.start()
+                }
                 // A route with waypoints: "via:<lat,lon>|<lat,lon>|<lat,lon>" — the last point is the destination.
                 cmd.startsWith("via:") -> {
                     val pts = cmd.removePrefix("via:").split('|').map { p -> p.split(',').map { it.trim().toDouble() } }
                     val (dLat, dLon) = pts.last()
+                    sent = pts
                     navi.requestRouteWithWaypoints(
                         ai.pleos.playground.navi.data.RouteWithWaypointsRequest(
                             ai.pleos.playground.navi.data.RouteInfo(latitude = dLat, longitude = dLon, poiName = "probe-dest", poiId = "", address = "", poiSubId = "0", poiProvider = ""),

@@ -22,8 +22,8 @@ data class StopTime(val visitId: String, val arrive: Int?, val start: Int?, val 
 
 enum class LegFrom { USER, NAVI }
 
-/** A leg's travel time and where it came from: the phone's plan first, else the car navigation's estimate. */
-data class LegValue(val minutes: Int, val from: LegFrom)
+/** A leg's travel time and where it came from: the car navigation's own time first (with its distance), else the phone's plan. */
+data class LegValue(val minutes: Int, val from: LegFrom, val metres: Int? = null)
 
 /** Keys for car-side leg estimates: "from>to", where each end is a placeRef, [HOME] or [ORIGIN]. */
 object LegKeys {
@@ -87,14 +87,15 @@ object TripValidator {
     private fun visit(trip: Trip, id: String) = trip.visits.first { it.visitId == id }
 
     /**
-     * Travel time of leg k: the plan's own value first, else the navigation's estimate. After "여기서 출발" the plan's
-     * first-day leg (from home) no longer applies, so only an estimate from the new origin counts.
+     * Travel time of leg k: the navigation's own time where it has timed the leg (M63: in the car the Hyundai
+     * navigation is the measure), else the value the phone planned with. After "여기서 출발" the plan's first-day leg
+     * (from home) no longer applies, so only a time from the new origin counts.
      */
     fun leg(trip: Trip, overlay: CarOverlay, dayIndex: Int, k: Int): LegValue? {
-        val navi = LegKeys.of(trip, overlay, dayIndex, k)?.let(overlay.legEstimates::get)?.let { LegValue(it.minutes, LegFrom.NAVI) }
+        val navi = LegKeys.of(trip, overlay, dayIndex, k)?.let(overlay.legEstimates::get)?.let { LegValue(it.minutes, LegFrom.NAVI, it.metres) }
         // After "여기서 출발" on this day, the plan's first leg (from the lodging or origin) no longer applies.
         if (k == 0 && overlay.originFor(trip, dayIndex) != null) return navi
-        return trip.days[dayIndex - 1].legs.getOrNull(k)?.let { LegValue(it.minutes, LegFrom.USER) } ?: navi
+        return navi ?: trip.days[dayIndex - 1].legs.getOrNull(k)?.let { LegValue(it.minutes, LegFrom.USER) }
     }
 
     /** Departure minute of a day, or null when it cannot be known. */

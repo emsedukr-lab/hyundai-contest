@@ -23,6 +23,9 @@ import io.tteonaljido.trip.originFor
 import io.tteonaljido.trip.GuidingTarget
 import io.tteonaljido.trip.LegEstimate
 import io.tteonaljido.trip.LegKeys
+import io.tteonaljido.trip.NaviMeasure
+import io.tteonaljido.trip.RouteOptimizer
+import io.tteonaljido.car.navi.MeasureOutcome
 import io.tteonaljido.trip.LiveProjection
 import io.tteonaljido.trip.LocalTrip
 import io.tteonaljido.trip.Match
@@ -45,6 +48,8 @@ import io.tteonaljido.trip.VisitStamp
 import io.tteonaljido.trip.metres
 import io.tteonaljido.trip.zoneOrUtc
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -61,6 +66,15 @@ sealed interface Guide {
     data class ConfirmReplace(val current: String, val target: String) : Guide
     data class ConfirmPlace(val found: NaviBinding, val wanted: String, val metres: Int) : Guide
     data class ConfirmHome(val home: NaviBinding) : Guide
+    /**
+     * Before a measurement (M63): the navigation comes to the front and shows `routes` routes one after another, and a
+     * route it is guiding on (`current`) ends. Nothing is sent until the driver agrees.
+     */
+    data class ConfirmMeasure(val current: String?, val routes: Int) : Guide
+    /** A measurement is running; closing it stops the measurement and clears the measuring route. */
+    data class Measuring(val msg: Msg) : Guide
+    /** A measurement that gave nothing, or an order that cannot be compared: said under its own title, not as failed guidance. */
+    data class MeasureFailed(val msg: Msg) : Guide
     data class Done(val msg: Msg) : Guide
     data class Failed(val msg: Msg, val canSearch: Boolean) : Guide
 }
@@ -110,6 +124,10 @@ class TripsViewModel(
     private val driveSession: MutableStateFlow<DriveSession> = MutableStateFlow(DriveSession()),
     private val isDriving: () -> Boolean = { false },
     private val noteOdometer: (Double?) -> Unit = {},
+    /** M63: on while the navigation measures legs — it comes to the front, and an app behind it is frozen unless this holds it. */
+    private val keepRunning: (Boolean) -> Unit = {},
+    /** Asks for this app's screen back after a measurement (the system may decline). */
+    private val toFront: () -> Unit = {},
 ) : ViewModel() {
     private val _trips = MutableStateFlow<List<LocalTrip>>(emptyList())
     val trips: StateFlow<List<LocalTrip>> = _trips
@@ -138,6 +156,12 @@ class TripsViewModel(
     /** Trips whose automatic first-leg measurement the driver undid: left alone for the rest of this session. */
     private val autoOff = mutableSetOf<String>()
     private var autoJob: Job? = null
+    /** M63: the running measurement with the navigation, what it was asked to do, and how many waypoints this navigation has kept per route. */
+    private var measureJob: Job? = null
+    private var measureAsk: Pair<String, Int?>? = null
+    private var naviWaypoints = NaviMeasure.MAX_WAYPOINTS
+    /** A measurement gives up after this long (the platform allows a short foreground service about three minutes). */
+    private val MEASURE_BUDGET_MS = 150_000L
 
     private data class Pending(val localId: String, val placeRef: String?, val target: RouteTarget, val kind: Kind, val previous: NaviBinding? = null, val dayIndex: Int = 0, val visitId: String? = null)
     private enum class Kind { ROUTE, SEARCH, HOME }
@@ -235,7 +259,13 @@ class TripsViewModel(
     fun seedDemoDrive(minutes: Int) { driveSession.value = DriveSession(since = nowMs() - minutes * 60_000L) }
 
     fun dismissArrival() = tracker.dismiss()
-    fun dismissGuide() { _guide.value = Guide.Idle; pending = null }
+    fun dismissGuide() {
+        _guide.value = Guide.Idle
+        pending = null
+        measureAsk = null
+        // Closing the progress popup stops the measurement; the job itself clears its measuring route on the way out.
+        measureJob?.takeIf { it.isActive }?.cancel()
+    }
     fun openChargers() = navi.openNearbyChargers()
     /** ICE refuel: open the navigation's own station search (which shows the OEM fuel prices), near the route. */
     fun openFuelSearch() = navi.openSearch("주유소")
@@ -263,11 +293,11 @@ class TripsViewModel(
         return RestAdvisor.advise(s, now, live?.naviRemainMinutes, slack, restArea)
     }
 
-    fun today(t: LocalTrip, now: Long = _now.value): LocalDate = Instant.ofEpochMilli(now).atZone(t.plan.zoneOrUtc()).toLocalDate()
+    fun today(t: LocalTrip, now: Long = _now.value): LocalDate = Instant.ofEpochMilli(now).atZone(t.view.zoneOrUtc()).toLocalDate()
     /** Which day of the trip "now" falls on. A 4-hour grace keeps it on the current day just past midnight (still driving to that night's lodging). */
     fun todayIndex(t: LocalTrip, now: Long = _now.value): Int? = moment(t, now)?.dayIndex
     /** That day and the minute counted from its midnight (past 1440 in the grace hours), so the live view compares like with like. */
-    private fun moment(t: LocalTrip, now: Long) = runCatching { NextDestination.momentOf(t.plan, now) }.getOrNull()
+    private fun moment(t: LocalTrip, now: Long) = runCatching { NextDestination.momentOf(t.view, now) }.getOrNull()
 
     private fun placeTarget(t: LocalTrip, p: Place): RouteTarget {
         val b = t.overlay.poiBindings[p.placeRef]
@@ -277,7 +307,7 @@ class TripsViewModel(
 
     private fun homeTarget(t: LocalTrip): RouteTarget? {
         t.overlay.home?.let { return RouteTarget(it.name, it.address, it.latE7, it.lonE7, it.poiId, it.poiSubId, it.poiProvider) }
-        t.plan.home?.let { return RouteTarget(homeLabel, it.address, it.latE7, it.lonE7, null, null, null) }
+        t.view.home?.let { return RouteTarget(homeLabel, it.address, it.latE7, it.lonE7, null, null, null) }
         return null
     }
 
@@ -305,7 +335,7 @@ class TripsViewModel(
      */
     fun live(t: LocalTrip, day: Int, now: Long, live: NaviLive?, here: Map<String, HereEstimate>): LiveView? {
         val moment = moment(t, now)?.takeIf { it.dayIndex == day } ?: return null
-        val step = NextDestination.of(t.plan, t.overlay, day)
+        val step = NextDestination.of(t.view, t.overlay, day)
         val target = targetOf(t, step)?.first
         val guidingThere = live?.guiding == true && target != null && (
             (live.destLatE7 != null && live.destLonE7 != null && target.latE7 != null && PlaceMatch.classify(target.latE7, target.lonE7, target.poiId, live.destLatE7, live.destLonE7, null) == Match.SAME) ||
@@ -324,16 +354,16 @@ class TripsViewModel(
         val naviRemain = if (fresh) (if (guidingThere) live!!.remainMinutes else viaWaypoint) else null
         val e = _energy.value
         val p = LiveProjection.project(
-            t.plan, t.overlay, day, moment.minute,
+            t.view, t.overlay, day, moment.minute,
             naviRemain, h?.minutes,
             vehicleKind = e?.kind ?: VehicleKind.UNKNOWN, energyPercent = e?.percent, rangeKm = e?.rangeKm,
             naviSocAtNext = h?.socAtDest, nextLegMetres = h?.metres, driveMode = _vehicle.value?.driveMode,
         )
         // A destination the car already reached (the navigation may keep it after arriving) is not "elsewhere".
-        val stale = live?.destLatE7 != null && live.destLonE7 != null && t.plan.days[day - 1].visitOrder.filter { it in t.overlay.visited }.any { id ->
-            val ref = t.plan.visits.first { it.visitId == id }.placeRef
+        val stale = live?.destLatE7 != null && live.destLonE7 != null && t.view.days[day - 1].visitOrder.filter { it in t.overlay.visited }.any { id ->
+            val ref = t.view.visits.first { it.visitId == id }.placeRef
             val b = t.overlay.poiBindings[ref]
-            val p0 = t.plan.places.first { it.placeRef == ref }
+            val p0 = t.view.places.first { it.placeRef == ref }
             val lat = b?.latE7 ?: p0.latE7
             val lon = b?.lonE7 ?: p0.lonE7
             lat != null && lon != null && metres(lat, lon, live.destLatE7, live.destLonE7) <= PlaceMatch.SAME_METRES
@@ -346,14 +376,14 @@ class TripsViewModel(
 
     /** The latest estimate from here, if it is still about the next step and less than an hour old. */
     fun hereFor(t: LocalTrip, day: Int, now: Long, here: Map<String, HereEstimate>): HereEstimate? {
-        val step = NextDestination.of(t.plan, t.overlay, day)
+        val step = NextDestination.of(t.view, t.overlay, day)
         return here[t.localId]?.takeIf { it.targetKey == stepKey(day, step) && now - it.at < HERE_TTL_MS }
     }
 
     /** Step 11 of the flow: hand the next destination to the real navigation, only on an explicit tap while parked. */
     fun guideNext(localId: String, dayIndex: Int) {
         val t = trip(localId) ?: return
-        val step = NextDestination.of(t.plan, t.overlay, dayIndex)
+        val step = NextDestination.of(t.view, t.overlay, dayIndex)
         val (target, placeRef) = when (step.target) {
             null -> return run { _guide.value = Guide.Failed(Msg(R.string.next_no_lodging, dayIndex.toString()), false) }
             else -> targetOf(t, step) ?: return run { _guide.value = Guide.Failed(Msg(R.string.guide_no_home), false) }
@@ -372,18 +402,18 @@ class TripsViewModel(
     }
 
     /**
-     * Load today's remaining route (up to the next three stops with coordinates) into the navigation in one request —
+     * Load today's remaining route (every stop still ahead that has coordinates, up to ten) into the navigation in one request —
      * the planned route "sent" to the nav. Parked, explicit tap only. It does not touch arrival tracking or the live
      * projection; the per-stop '다음 목적지 안내' stays for precise ETA and auto-arrival. Fewer than two routable stops
      * fall back to the single-stop flow.
      */
     fun guideToday(localId: String, dayIndex: Int) {
         val t = trip(localId) ?: return
-        val stops = NextDestination.upcoming(t.plan, t.overlay, dayIndex).mapNotNull { id ->
-            val v = t.plan.visits.first { it.visitId == id }
-            val p = t.plan.places.first { it.placeRef == v.placeRef }
+        val stops = NextDestination.upcoming(t.view, t.overlay, dayIndex).mapNotNull { id ->
+            val v = t.view.visits.first { it.visitId == id }
+            val p = t.view.places.first { it.placeRef == v.placeRef }
             if (p.latE7 == null) null else Triple(id, p.placeRef, placeTarget(t, p))
-        }.take(3)
+        }.take(NaviMeasure.MAX_WAYPOINTS + 1)
         val targets = stops.map { it.third }
         if (targets.size < 2) return guideNext(localId, dayIndex)
         val dest = targets.last()
@@ -450,7 +480,7 @@ class TripsViewModel(
     fun searchInNavi() {
         val p = pending ?: return
         val t = trip(p.localId) ?: return
-        val place = t.plan.places.firstOrNull { it.placeRef == p.placeRef } ?: return
+        val place = t.view.places.firstOrNull { it.placeRef == p.placeRef } ?: return
         pending = p.copy(kind = Kind.SEARCH)
         _guide.value = Guide.Working(if (p.target.latE7 == null) Msg(R.string.guide_search_name_only, place.name) else Msg(R.string.guide_search))
         navi.openSearch(PlaceMatch.keyword(place))
@@ -518,10 +548,10 @@ class TripsViewModel(
             // Re-setting the day's start point only makes sense before any of that day's stops are done — and only where
             // the plan leaves the start open (M59): the first day, or a day after a night with no lodging. A later day
             // keeps starting from the lodging of the night before; there this only asks for the estimate from here.
-            val fresh = DayStart.canDepartHere(t0.plan, day) && t0.plan.days[day - 1].visitOrder.none { it in t0.overlay.visited }
+            val fresh = DayStart.canDepartHere(t0.view, day) && t0.view.days[day - 1].visitOrder.none { it in t0.overlay.visited }
             val origin = NaviBinding("", "", "", here.latE7, here.lonE7, here.address, here.address)
             val t = if (fresh) update(localId) { it.copy(overlay = it.overlay.copy(originOverrides = it.overlay.originOverrides + (day to origin), originPinnedAuto = if (day == 1) false else it.overlay.originPinnedAuto)) } ?: t0 else t0
-            val step = NextDestination.of(t.plan, t.overlay, day)
+            val step = NextDestination.of(t.view, t.overlay, day)
             val target = targetOf(t, step)?.first
             if (target?.latE7 == null) {
                 reload()
@@ -531,7 +561,7 @@ class TripsViewModel(
             val est = navi.estimate(target) ?: return@launch run { reload(); _guide.value = Guide.Failed(Msg(R.string.estimate_failed, target.name), false) }
             val now = nowMs()
             _here.value = _here.value + (localId to HereEstimate(target.name, stepKey(day, step), est.minutes, est.metres, est.socAtDest, now))
-            LegKeys.startingAt(t.plan, t.overlay, day, here.latE7, here.lonE7)?.let { key ->
+            LegKeys.startingAt(t.view, t.overlay, day, here.latE7, here.lonE7)?.let { key ->
                 update(localId) { it.copy(overlay = it.overlay.copy(legEstimates = it.overlay.legEstimates + (key to LegEstimate(est.minutes, est.metres, now)))) }
             }
             reload()
@@ -546,9 +576,9 @@ class TripsViewModel(
     /** Undo "여기서 출발": the day starts from the plan again, and its from-here estimate is dropped. */
     fun undoDepartHere(localId: String, day: Int) {
         val t = trip(localId) ?: return
-        if (t.overlay.originFor(t.plan, day) == null) return
+        if (t.overlay.originFor(t.view, day) == null) return
         // The leg key is "@origin>…" only while the override is still active, so read it before clearing.
-        val key = LegKeys.of(t.plan, t.overlay, day, 0)
+        val key = LegKeys.of(t.view, t.overlay, day, 0)
         update(localId) {
             it.copy(overlay = it.overlay.copy(
                 originOverrides = it.overlay.originOverrides - day,
@@ -574,32 +604,32 @@ class TripsViewModel(
      */
     fun measureFirstLeg(localId: String) {
         val t0 = trip(localId) ?: return
-        if (localId in autoOff || autoJob?.isActive == true) return
-        if (today(t0).isAfter(LocalDate.parse(t0.plan.startDate))) return // the first day is behind us
-        if (!DayStart.untimed(t0.plan, t0.overlay)) return
-        if (t0.overlay.originFor(t0.plan, 1) != null && !t0.overlay.originPinnedAuto) return
+        if (localId in autoOff || autoJob?.isActive == true || measureJob?.isActive == true) return
+        if (today(t0).isAfter(LocalDate.parse(t0.view.startDate))) return // the first day is behind us
+        if (!DayStart.untimed(t0.view, t0.overlay)) return
+        if (t0.overlay.originFor(t0.view, 1) != null && !t0.overlay.originPinnedAuto) return
         autoJob = viewModelScope.launch {
             val here = navi.currentLocation() ?: return@launch
             var t = trip(localId) ?: return@launch
-            if (!DayStart.untimed(t.plan, t.overlay)) return@launch
-            if (DayStart.atPlanStart(t.plan, t.overlay, here.latE7, here.lonE7)) {
+            if (!DayStart.untimed(t.view, t.overlay)) return@launch
+            if (DayStart.atPlanStart(t.view, t.overlay, here.latE7, here.lonE7)) {
                 // At the plan's own start: a pin of ours goes, and the leg is asked as the plan has it.
                 if (t.overlay.originPinnedAuto) {
-                    val pinnedKey = LegKeys.of(t.plan, t.overlay, 1, 0)
+                    val pinnedKey = LegKeys.of(t.view, t.overlay, 1, 0)
                     t = update(localId) {
                         val o = it.overlay
                         it.copy(overlay = o.copy(originOverrides = o.originOverrides - 1, originOverride = null, originPinnedAuto = false, legEstimates = if (pinnedKey != null) o.legEstimates - pinnedKey else o.legEstimates))
                     } ?: return@launch
                 }
-                if (DayStart.estimateFresh(t.plan, t.overlay, nowMs())) return@launch run { reload() }
+                if (DayStart.estimateFresh(t.view, t.overlay, nowMs())) return@launch run { reload() }
             } else {
-                if (!DayStart.needsMeasure(t.plan, t.overlay, here.latE7, here.lonE7, nowMs())) return@launch
+                if (!DayStart.needsMeasure(t.view, t.overlay, here.latE7, here.lonE7, nowMs())) return@launch
                 val origin = NaviBinding("", "", "", here.latE7, here.lonE7, here.address, here.address)
                 t = update(localId) { it.copy(overlay = it.overlay.copy(originOverrides = it.overlay.originOverrides + (1 to origin), originPinnedAuto = true)) } ?: return@launch
             }
             // Kept only when the car stands at the leg's start — which is where it now is, either way.
-            val key = LegKeys.startingAt(t.plan, t.overlay, 1, here.latE7, here.lonE7)
-            val step = NextDestination.of(t.plan, t.overlay, 1)
+            val key = LegKeys.startingAt(t.view, t.overlay, 1, here.latE7, here.lonE7)
+            val step = NextDestination.of(t.view, t.overlay, 1)
             val target = targetOf(t, step)?.first
             if (key != null && target?.latE7 != null) {
                 navi.estimate(target)?.let { est ->
@@ -610,5 +640,152 @@ class TripsViewModel(
             }
             reload()
         }
+    }
+
+    /* ---------- M63: the Hyundai navigation times, measures and orders the trip ---------- */
+
+    private fun pointTarget(t: LocalTrip, p: NaviMeasure.Point): RouteTarget = when (p.key) {
+        LegKeys.HOME -> (homeTarget(t) ?: RouteTarget(homeLabel, "", null, null, null, null, null)).copy(latE7 = p.latE7, lonE7 = p.lonE7)
+        LegKeys.ORIGIN -> RouteTarget(t.overlay.originOverrides.values.firstOrNull { it.latE7 == p.latE7 && it.lonE7 == p.lonE7 }?.name?.ifBlank { null } ?: "·", "", p.latE7, p.lonE7, null, null, null)
+        else -> t.view.places.firstOrNull { it.placeRef == p.key }?.let { placeTarget(t, it) }?.copy(latE7 = p.latE7, lonE7 = p.lonE7) ?: RouteTarget(p.key, "", p.latE7, p.lonE7, null, null, null)
+    }
+
+    /** [전 구간 내비로 측정]: every leg of the trip from today on, in the order the car follows. */
+    fun measureTrip(localId: String) = askMeasure(localId, null)
+
+    /** [N일차 순서 최적화]: every leg some order of that day's stops could use; the screen then shows the fastest order. */
+    fun measureDay(localId: String, day: Int) = askMeasure(localId, day)
+
+    /** The legs a measurement would ask for: the trip's legs from today on, or what is still missing of one day's matrix. */
+    private fun wantedLegs(t: LocalTrip, matrixDay: Int?): List<NaviMeasure.Edge> =
+        if (matrixDay != null) {
+            // Legs read off a route a moment ago are not asked again: only the rest of the day's matrix.
+            val fresh = nowMs() - DayStart.FRESH_MS
+            NaviMeasure.dayMatrix(t.view, t.overlay, matrixDay).filter { e -> t.overlay.legEstimates[e.key]?.let { it.source == NaviMeasure.SOURCE && it.at >= fresh } != true }
+        } else NaviMeasure.tripLegs(t.view, t.overlay, todayIndex(t) ?: 1)
+
+    /**
+     * A tap on a measuring button: says what is about to happen and waits for a yes. Measuring is not a query — each
+     * route really starts in the navigation, which comes to the front for it, and a route it was guiding on ends.
+     */
+    private fun askMeasure(localId: String, matrixDay: Int?) {
+        val t = trip(localId) ?: return
+        if (measureJob?.isActive == true || isDriving()) return
+        if (navi.status.value != NaviStatus.CONNECTED) return run { _guide.value = Guide.Failed(Msg(R.string.navi_not_connected), false) }
+        val wanted = wantedLegs(t, matrixDay)
+        val routes = NaviMeasure.chains(wanted, naviWaypoints).size
+        if (routes == 0) {
+            // Nothing to drive: legs between two ends on one spot are zero as they are, and a day whose matrix is fresh is answered from it.
+            val zero = NaviMeasure.zeroLegs(wanted, nowMs())
+            if (zero.isNotEmpty()) edit(localId) { it.copy(overlay = it.overlay.copy(legEstimates = it.overlay.legEstimates + zero)) }
+            _guide.value = if (matrixDay != null) orderGuide(localId, matrixDay) else Guide.MeasureFailed(Msg(R.string.measure_nothing))
+            return
+        }
+        viewModelScope.launch {
+            val current = navi.currentDestination()
+            measureAsk = localId to matrixDay
+            _guide.value = Guide.ConfirmMeasure(current?.name?.ifBlank { null }, routes)
+        }
+    }
+
+    /** The driver agreed: the navigation may come to the front and its current route may end. */
+    fun confirmMeasure() {
+        val (localId, day) = measureAsk ?: return
+        measureAsk = null
+        measure(localId, day)
+    }
+
+    /**
+     * Measures legs with the navigation's waypoint routes ([NaviMeasure]) — parked, after the driver's yes. Legs are
+     * saved route by route, so stopping midway keeps what was read; the last measuring route is always cancelled.
+     * A navigation that keeps fewer waypoints than sent gets shorter routes from then on. The app is held running
+     * for the duration ([keepRunning]) because the navigation is in front the whole time.
+     */
+    private fun measure(localId: String, matrixDay: Int?) {
+        val t0 = trip(localId) ?: return
+        if (measureJob?.isActive == true || isDriving()) return
+        measureJob = viewModelScope.launch {
+            val wanted = wantedLegs(t0, matrixDay)
+            val zero = NaviMeasure.zeroLegs(wanted, nowMs())
+            var left = wanted.filterNot { it.sameSpot }.distinct()
+            val total = left.size
+            var read = 0
+            var unsupported = false
+            keepRunning(true)
+            try {
+                if (zero.isNotEmpty()) update(localId) { it.copy(overlay = it.overlay.copy(legEstimates = it.overlay.legEstimates + zero)) }
+                val here = navi.currentLocation()
+                val began = System.nanoTime()
+                var failures = 0
+                // The whole measurement stays inside the platform's limit for a short foreground service, and ends the
+                // moment the car moves: a measuring route is not something to drive on.
+                while (left.isNotEmpty() && failures < 2 && !isDriving() && (System.nanoTime() - began) / 1_000_000 < MEASURE_BUDGET_MS) {
+                    _guide.value = Guide.Measuring(Msg(R.string.measure_working, (total - left.size).toString(), total.toString()))
+                    fun standsAt(p: NaviMeasure.Point) = here != null && metres(here.latE7, here.lonE7, p.latE7, p.lonE7) <= PlaceMatch.SAME_METRES
+                    val chain = NaviMeasure.chains(left, naviWaypoints, ::standsAt).first()
+                    // A route cannot begin with a waypoint where the car already stands: that point is the car itself (nothing left to it).
+                    val atCar = standsAt(chain[0])
+                    val sent = if (atCar) chain.drop(1) else chain
+                    // One leg that starts at the car needs no route at all: that is what the navigation's own query answers.
+                    val outcome = if (sent.size == 1) navi.estimate(pointTarget(t0, sent[0]))?.let { MeasureOutcome.Read(listOf(NaviMeasure.Reading(it.seconds, it.metres))) } ?: MeasureOutcome.NoAnswer
+                    else navi.measure(sent.map { pointTarget(t0, it) })
+                    when (val r = outcome) {
+                        is MeasureOutcome.Read -> {
+                            val readings = if (atCar) listOf(NaviMeasure.Reading(0, 0)) + r.readings else r.readings
+                            val legs = NaviMeasure.legs(chain, readings, nowMs())
+                            // A route may hop between two wanted legs; only the legs that were asked for are counted.
+                            read += legs.keys.count { key -> left.any { it.key == key } }
+                            // The measuring route replaced whatever this app had sent before, so that guidance is over.
+                            update(localId) { it.copy(overlay = it.overlay.copy(legEstimates = it.overlay.legEstimates + legs, guiding = null, guidingStops = emptyList())) }
+                            // Every leg this route drove is done with, read or not: one whose numbers did not add up is not asked twice.
+                            val driven = chain.zipWithNext().map { (a, b) -> "${a.key}>${b.key}" }.toSet()
+                            left = left.filterNot { it.key in driven }
+                            failures = 0
+                        }
+                        is MeasureOutcome.Fewer -> {
+                            if (r.accepted < 1) { unsupported = true; break }
+                            naviWaypoints = r.accepted // shorter routes from here on
+                        }
+                        MeasureOutcome.NoAnswer -> failures += 1
+                    }
+                }
+            } finally {
+                withContext(NonCancellable) {
+                    navi.cancelRoute()
+                    reload()
+                }
+                keepRunning(false)
+            }
+            _guide.value = when {
+                unsupported -> Guide.MeasureFailed(Msg(R.string.measure_unsupported))
+                read == 0 && zero.isEmpty() -> Guide.MeasureFailed(Msg(R.string.measure_failed))
+                matrixDay != null && left.isEmpty() -> orderGuide(localId, matrixDay)
+                left.isNotEmpty() -> Guide.Done(Msg(R.string.measure_partial, read.toString(), total.toString()))
+                else -> Guide.Done(Msg(R.string.measure_done, read.toString()))
+            }
+            toFront()
+        }
+    }
+
+    /** What the day's measured legs say about its order, as the message closing an order measurement. */
+    private fun orderGuide(localId: String, day: Int): Guide {
+        val t = trip(localId) ?: return Guide.Idle
+        return when (val o = RouteOptimizer.suggest(t.plan, t.overlay, day)) {
+            is RouteOptimizer.Outcome.Faster -> Guide.Done(Msg(R.string.order_found, day.toString()))
+            is RouteOptimizer.Outcome.Best -> Guide.Done(Msg(R.string.order_best, day.toString()))
+            is RouteOptimizer.Outcome.NeedsMeasure -> Guide.MeasureFailed(Msg(R.string.measure_failed))
+            is RouteOptimizer.Outcome.NotApplicable -> Guide.MeasureFailed(Msg(R.string.order_not_applicable))
+        }
+    }
+
+    /** Follow the navigation's faster order for that day in the car; the phone's plan is not changed and the order can be put back. */
+    fun applyOrder(localId: String, day: Int, order: List<String>) {
+        edit(localId) { it.copy(overlay = it.overlay.copy(orderOverrides = it.overlay.orderOverrides + (day to order))) }
+        _guide.value = Guide.Done(Msg(R.string.order_applied, day.toString()))
+    }
+
+    fun resetOrder(localId: String, day: Int) {
+        edit(localId) { it.copy(overlay = it.overlay.copy(orderOverrides = it.overlay.orderOverrides - day)) }
+        _guide.value = Guide.Done(Msg(R.string.order_reset, day.toString()))
     }
 }

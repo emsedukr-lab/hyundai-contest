@@ -81,11 +81,16 @@ internal fun durationLabel(min: Int): String = when {
 /** '2일차 · 11월 21일 (토)' over '운전 55분 · 숙소 도착 16:10' — only the driving time in bold (phone M54). */
 @Composable
 fun DayHeading(t: LocalTrip, day: Int) {
-    val d = t.plan.days[day - 1]
-    val s = remember(t, day) { TripOverview.daySummary(t.plan, t.overlay, day) }
+    val d = t.view.days[day - 1]
+    val s = remember(t, day) { TripOverview.daySummary(t.view, t.overlay, day) }
     val primary = colorResource(R.color.pleos_text_dark_primary)
     val secondary = colorResource(R.color.pleos_text_dark_secondary)
-    val drive = if (s.driveMinutes > 0) stringResource(R.string.sum_drive, durationLabel(s.driveMinutes)) else null
+    val km = s.driveMetres
+    val drive = when {
+        s.driveMinutes <= 0 -> null
+        km != null && km > 0 -> stringResource(R.string.sum_drive_km, durationLabel(s.driveMinutes), kmLabel(km))
+        else -> stringResource(R.string.sum_drive, durationLabel(s.driveMinutes))
+    }
     val rest = listOfNotNull(
         s.endAt?.let { stringResource(if (s.lastDay) R.string.sum_home else R.string.sum_lodging, TripValidator.hhmm(it)) },
         if (s.unknownLegs > 0) stringResource(R.string.sum_unknown, s.unknownLegs) else null,
@@ -106,7 +111,7 @@ fun DayHeading(t: LocalTrip, day: Int) {
 
 @Composable
 fun DayTimeline(t: LocalTrip, day: Int, live: LiveView?) {
-    val plan = t.plan
+    val plan = t.view
     val d = plan.days[day - 1]
     val times = remember(t, day) { TripValidator.timeline(plan, day, t.overlay).associateBy { it.visitId } }
     // Live timetable: re-timed arrivals for today's stops still to come (empty on other days — `live` is today's only).
@@ -288,18 +293,23 @@ private fun Bar(tag: String, name: String, time: String?, quietTime: Boolean = f
     }
 }
 
-/** '↓ 15분' between two places; '↓ 15분 · 내비' when the car's navigation timed it; an orange dot when nobody has. */
+/** '↓ 15분' between two places (the phone's value); '↓ 15분 · 6.3km · 내비' when the car's navigation measured it; an orange dot when nobody has. */
 @Composable
 private fun LegRow(t: LocalTrip, day: Int, k: Int) {
-    val leg = TripValidator.leg(t.plan, t.overlay, day, k)
+    val leg = TripValidator.leg(t.view, t.overlay, day, k)
     RailRow(marker = null) {
         Row(Modifier.heightIn(min = Space.x48).padding(start = Space.x16), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.x12)) {
             if (leg == null) {
                 Dot(Tone.CAUTION, Space.x12)
                 PleosText(stringResource(R.string.tl_leg_unknown), Pleos.type.bodySmallStrong, maxLines = 1)
             } else {
+                val metres = leg.metres
                 PleosText(
-                    stringResource(if (leg.from == LegFrom.NAVI) R.string.tl_leg_navi else R.string.tl_leg, durationLabel(leg.minutes)),
+                    when {
+                        leg.from != LegFrom.NAVI -> stringResource(R.string.tl_leg, durationLabel(leg.minutes))
+                        metres != null && metres > 0 -> stringResource(R.string.tl_leg_navi_km, durationLabel(leg.minutes), kmLabel(metres))
+                        else -> stringResource(R.string.tl_leg_navi, durationLabel(leg.minutes))
+                    },
                     Pleos.type.bodySmall, colorResource(R.color.pleos_text_dark_secondary), maxLines = 1,
                 )
             }

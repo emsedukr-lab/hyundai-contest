@@ -15,6 +15,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.produceState
+import io.tteonaljido.trip.CarOrder
+import io.tteonaljido.trip.NaviMeasure
+import io.tteonaljido.trip.RouteOptimizer
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -106,8 +112,8 @@ fun TripsScreen(vm: TripsViewModel, drive: DriveState, demoClock: Boolean, onImp
             return@Screen
         }
         val today = { t: LocalTrip -> vm.today(t, now) }
-        val next = remember(trips, now) { TripOverview.pickNext(trips, { it.plan }, today) }
-        val others = remember(trips, now, next) { TripOverview.sortOthers(trips.filter { it !== next }, { it.plan }, today) }
+        val next = remember(trips, now) { TripOverview.pickNext(trips, { it.view }, today) }
+        val others = remember(trips, now, next) { TripOverview.sortOthers(trips.filter { it !== next }, { it.view }, today) }
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(Space.x16)) {
             next?.let { t ->
                 SectionLabel(stringResource(R.string.next_trip))
@@ -118,8 +124,8 @@ fun TripsScreen(vm: TripsViewModel, drive: DriveState, demoClock: Boolean, onImp
                 PleosCard(padding = Space.x24, gap = 0.dp) {
                     others.forEachIndexed { i, t ->
                         if (i > 0) RowDivider()
-                        ListRow(tripTitle(t), stringResource(R.string.labeled, periodLabel(t.plan), nightsLabel(t.plan)), onClick = { onOpen(t.localId) }) {
-                            val w = TripOverview.tripWhen(t.plan.startDate, t.plan.endDate, today(t))
+                        ListRow(tripTitle(t), stringResource(R.string.labeled, periodLabel(t.view), nightsLabel(t.view)), onClick = { onOpen(t.localId) }) {
+                            val w = TripOverview.tripWhen(t.view.startDate, t.view.endDate, today(t))
                             Tag(whenLabel(w))
                         }
                     }
@@ -141,9 +147,9 @@ private fun whenLabel(w: TripWhen): String = when (w) {
 /** 다음 여행: when it leaves, the name, the period, the whole route (the screen's one bright element), what to check. */
 @Composable
 private fun NextTripCard(t: LocalTrip, today: java.time.LocalDate, onClick: () -> Unit) {
-    val w = remember(t, today) { TripOverview.tripWhen(t.plan.startDate, t.plan.endDate, today) }
-    val report = remember(t, today) { TripValidator.validate(t.plan, t.overlay, today) }
-    val sketch = remember(t) { TripOverview.sketch(t.plan, 300.0, 240.0, 18.0) }
+    val w = remember(t, today) { TripOverview.tripWhen(t.view.startDate, t.view.endDate, today) }
+    val report = remember(t, today) { TripValidator.validate(t.view, t.overlay, today) }
+    val sketch = remember(t) { TripOverview.sketch(t.view, 300.0, 240.0, 18.0) }
     val secondary = colorResource(R.color.pleos_text_dark_secondary)
     PleosCard(onClick = onClick, padding = Space.x32, gap = Space.x24) {
         BoxWithConstraints(Modifier.fillMaxWidth()) {
@@ -153,7 +159,7 @@ private fun NextTripCard(t: LocalTrip, today: java.time.LocalDate, onClick: () -
                     // When it leaves: weight carries the emphasis (no accent color), a past trip steps back to secondary.
                     PleosText(whenLabel(w), Pleos.type.bodyMedium, if (w is TripWhen.Past) secondary else colorResource(R.color.pleos_text_dark_primary), maxLines = 1)
                     PleosText(tripTitle(t), Pleos.type.titleLarge, maxLines = 2)
-                    PleosText(stringResource(R.string.trip_summary, periodLabel(t.plan), nightsLabel(t.plan), t.plan.places.size), Pleos.type.bodyMediumNormal, secondary, maxLines = 2)
+                    PleosText(stringResource(R.string.trip_summary, periodLabel(t.view), nightsLabel(t.view), t.view.places.size), Pleos.type.bodyMediumNormal, secondary, maxLines = 2)
                 }
             }
             val foot: @Composable () -> Unit = {
@@ -173,7 +179,7 @@ private fun NextTripCard(t: LocalTrip, today: java.time.LocalDate, onClick: () -
                 }
             }
             val drawing: @Composable (Modifier) -> Unit = { m ->
-                if (sketch.plotted >= 2) RouteSketch(sketch, w.focusDay, stringResource(R.string.sketch_desc, t.plan.name), m)
+                if (sketch.plotted >= 2) RouteSketch(sketch, w.focusDay, stringResource(R.string.sketch_desc, t.view.name), m)
                 else Box(m.padding(vertical = Space.x24)) { PleosText(stringResource(R.string.no_route), Pleos.type.bodySmall, secondary, maxLines = 2) }
             }
             if (wide) Row(horizontalArrangement = Arrangement.spacedBy(Space.x48), verticalAlignment = Alignment.CenterVertically) {
@@ -186,7 +192,7 @@ private fun NextTripCard(t: LocalTrip, today: java.time.LocalDate, onClick: () -
 
 /** A detached copy keeps the plan's own name; the "(사본)" marker is metadata, added here in the UI language. */
 @Composable
-private fun tripTitle(t: LocalTrip): String = if (t.meta.copy) t.plan.name + stringResource(R.string.copy_suffix) else t.plan.name
+private fun tripTitle(t: LocalTrip): String = if (t.meta.copy) t.view.name + stringResource(R.string.copy_suffix) else t.view.name
 
 /** Emulator demo clock: always visible while on, so a recorded demo never passes for real time. */
 @Composable
@@ -217,7 +223,7 @@ fun TripDetailScreen(vm: TripsViewModel, localId: String, drive: DriveState, dem
     var day by remember(localId) { mutableIntStateOf(vm.todayIndex(t) ?: 1) }
     var confirmDelete by remember { mutableStateOf(false) }
     val todayDate = vm.today(t, now)
-    val report = remember(t, todayDate) { TripValidator.validate(t.plan, t.overlay, todayDate) }
+    val report = remember(t, todayDate) { TripValidator.validate(t.view, t.overlay, todayDate) }
     val live = remember(t, day, now, naviLive, here, energy, vehicle) { vm.live(t, day, now, naviLive, here) }
     // M57: what the car reported, read against today's plan. Both exist only for the day the car is actually on.
     val isToday = vm.todayIndex(t, now) == day
@@ -228,7 +234,7 @@ fun TripDetailScreen(vm: TripsViewModel, localId: String, drive: DriveState, dem
         // While driving the card below is the whole screen; Back still works, there is nothing to tap.
         PleosHeader(
             tripTitle(t),
-            stringResource(R.string.detail_subtitle, periodLabel(t.plan), nightsLabel(t.plan), t.meta.revision),
+            stringResource(R.string.detail_subtitle, periodLabel(t.view), nightsLabel(t.view), t.meta.revision),
             onBack = if (drive.parked) onBack else null,
         )
     }) {
@@ -244,9 +250,9 @@ fun TripDetailScreen(vm: TripsViewModel, localId: String, drive: DriveState, dem
                 PleosButton(stringResource(R.string.delete_trip), { confirmDelete = true }, type = ButtonType.BASIC, size = ButtonSize.SMALL, tag = "pastDelete")
             }
         }
-        val chipLabels = t.plan.days.associate { it.dayIndex to stringResource(R.string.day_n, it.dayIndex) }
+        val chipLabels = t.view.days.associate { it.dayIndex to stringResource(R.string.day_n, it.dayIndex) }
         // One day has nothing to switch between.
-        if (t.plan.days.size > 1) SegmentedControl(t.plan.days.map { it.dayIndex }, day, { chipLabels.getValue(it) }, { "day$it" }) { day = it }
+        if (t.view.days.size > 1) SegmentedControl(t.view.days.map { it.dayIndex }, day, { chipLabels.getValue(it) }, { "day$it" }) { day = it }
         BoxWithConstraints(Modifier.fillMaxWidth().weight(1f)) {
             val wide = maxWidth > dimensionResource(R.dimen.pleos_window_apps_portrait_width)
             val route: @Composable () -> Unit = {
@@ -259,6 +265,7 @@ fun TripDetailScreen(vm: TripsViewModel, localId: String, drive: DriveState, dem
                 Column(verticalArrangement = Arrangement.spacedBy(Space.x24)) {
                     NextPanel(vm, t, day, live, vm.hereFor(t, day, now, here), arrival?.takeIf { it.localId == t.localId }, naviLive, rest.takeIf { isToday })
                     departure?.let { DepartureCard(it) }
+                    NaviPlanCard(vm, t, day, now)
                     ToCheck(vm, t, day, report)
                     DeleteTrip { confirmDelete = true }
                 }
@@ -271,6 +278,7 @@ fun TripDetailScreen(vm: TripsViewModel, localId: String, drive: DriveState, dem
                 NextPanel(vm, t, day, live, vm.hereFor(t, day, now, here), arrival?.takeIf { it.localId == t.localId }, naviLive, rest.takeIf { isToday })
                 departure?.let { DepartureCard(it) }
                 route()
+                NaviPlanCard(vm, t, day, now)
                 ToCheck(vm, t, day, report)
                 DeleteTrip { confirmDelete = true }
                 Spacer(Modifier.height(Space.x32))
@@ -294,6 +302,55 @@ private fun DeleteTrip(onClick: () -> Unit) {
     PleosButton(stringResource(R.string.delete_trip), onClick, type = ButtonType.BASIC, size = ButtonSize.SMALL)
 }
 
+/**
+ * 현대차 내비로 계산 (M63): how much of the trip the navigation has timed, the button that has it time every leg, and for
+ * the day on screen the navigation's fastest order — measured on request, offered when it saves enough, put back with a tap.
+ */
+@Composable
+private fun NaviPlanCard(vm: TripsViewModel, t: LocalTrip, day: Int, now: Long) {
+    val secondary = colorResource(R.color.pleos_text_dark_secondary)
+    val from = vm.todayIndex(t, now) ?: 1
+    val cover = remember(t, from) { NaviMeasure.coverage(t.view, t.overlay, from) }
+    // Every order of the day is weighed off the main thread; null while that runs.
+    val advice by produceState<RouteOptimizer.Outcome?>(null, t, day) { value = withContext(Dispatchers.Default) { RouteOptimizer.suggest(t.plan, t.overlay, day) } }
+    val carOrder = remember(t, day) { CarOrder.of(t.plan, t.overlay, day) }
+    val zone = remember(t) { t.view.zoneOrUtc() }
+    fun clock(ms: Long) = java.time.Instant.ofEpochMilli(ms).atZone(zone).let { String.format(Locale.ROOT, "%02d:%02d", it.hour, it.minute) }
+    PleosCard(gap = Space.x16) {
+        PleosText(stringResource(R.string.navi_plan_title), Pleos.type.titleSmall)
+        val at = cover.latestAt
+        PleosText(
+            when {
+                cover.total == 0 -> stringResource(R.string.navi_plan_none)
+                cover.measured == 0 -> stringResource(R.string.navi_plan_phone)
+                cover.measured < cover.total || at == null -> stringResource(R.string.navi_plan_some, cover.total, cover.measured)
+                else -> stringResource(R.string.navi_plan_all, cover.total, clock(at))
+            },
+            Pleos.type.bodyMediumNormal, secondary,
+        )
+        when (val a = advice) {
+            is RouteOptimizer.Outcome.Faster -> {
+                val names = a.order.map { id -> TripValidator.placeName(t.view, t.view.visits.first { it.visitId == id }.placeRef) }
+                StatusLine(stringResource(R.string.order_faster, day, durationLabel(a.savedMinutes)), Tone.OK)
+                PleosText(names.joinToString(" → "), Pleos.type.bodyMediumNormal, maxLines = 4)
+                PleosText(stringResource(R.string.order_faster_detail, durationLabel(a.minutes + a.savedMinutes), durationLabel(a.minutes), kmLabel(a.metres)), Pleos.type.bodyMediumNormal, secondary)
+            }
+            is RouteOptimizer.Outcome.Best -> StatusLine(stringResource(R.string.order_best_line, day, durationLabel(a.minutes), kmLabel(a.metres)), Tone.OK)
+            is RouteOptimizer.Outcome.NotApplicable -> if (a.why == RouteOptimizer.Why.OPEN_ENDS || a.why == RouteOptimizer.Why.TOO_MANY) PleosText(stringResource(R.string.order_cannot, day), Pleos.type.bodyMediumNormal, secondary)
+            else -> Unit
+        }
+        if (carOrder != null) StatusLine(stringResource(R.string.order_car, day), Tone.NEUTRAL)
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.x12), verticalArrangement = Arrangement.spacedBy(Space.x12)) {
+            (advice as? RouteOptimizer.Outcome.Faster)?.let { a -> PleosButton(stringResource(R.string.order_apply), { vm.applyOrder(t.localId, day, a.order) }, tag = "applyOrder") }
+            if (cover.total > 0) PleosButton(stringResource(R.string.navi_measure_all), { vm.measureTrip(t.localId) }, type = ButtonType.BASIC, tag = "naviMeasure")
+            val canOrder = advice.let { it != null && (it !is RouteOptimizer.Outcome.NotApplicable) }
+            if (canOrder) PleosButton(stringResource(R.string.navi_optimize_day, day), { vm.measureDay(t.localId, day) }, type = ButtonType.BASIC, tag = "naviOptimize")
+            if (carOrder != null) PleosButton(stringResource(R.string.order_reset_btn), { vm.resetOrder(t.localId, day) }, type = ButtonType.BASIC, tag = "resetOrder")
+        }
+        PleosText(stringResource(R.string.navi_plan_note), Pleos.type.bodySmall, secondary)
+    }
+}
+
 /** 확인할 점: the day's conflicts and open questions, each with its severity in words and a colored dot. */
 @Composable
 private fun ToCheck(vm: TripsViewModel, t: LocalTrip, day: Int, report: io.tteonaljido.trip.ValidationReport) {
@@ -303,7 +360,7 @@ private fun ToCheck(vm: TripsViewModel, t: LocalTrip, day: Int, report: io.tteon
         val shown = (report.forDay(day) + report.issues.filter { it.dayIndex == null && it.code != "PAST_TRIP" }).filter { it.severity != Severity.INFO }.take(5)
         if (shown.isEmpty()) PleosText(stringResource(R.string.nothing_to_check), Pleos.type.bodyMediumNormal, secondary)
         shown.forEach { SeverityLine(it.severity, issueText(it)) }
-        if (t.plan.home == null && t.overlay.home == null && (t.plan.origin is Endpoint.Home || t.plan.finalDestination is Endpoint.Home)) {
+        if (t.view.home == null && t.overlay.home == null && (t.view.origin is Endpoint.Home || t.view.finalDestination is Endpoint.Home)) {
             PleosButton(stringResource(R.string.load_navi_home), { vm.loadNaviHome(t.localId) }, type = ButtonType.BASIC, tag = "naviHome")
         }
     }
@@ -324,7 +381,7 @@ private fun liveStatus(t: LocalTrip, v: LiveView): LiveLine? {
     // The binding deadline the projection chose (the more urgent of the fixed stop and the return-by time).
     val deadline = when (p.deadlineKind) {
         DeadlineKind.FIXED -> p.fixed?.let { f ->
-            val fixed = t.plan.visits.first { it.visitId == f.visitId }.fixed!!
+            val fixed = t.view.visits.first { it.visitId == f.visitId }.fixed!!
             stringResource(if (fixed.kind == Visit.Fixed.Kind.RESERVATION) R.string.deadline_reservation else R.string.deadline_fixed, fixed.time)
         }
         DeadlineKind.END_BY -> p.endBy?.let { stringResource(R.string.deadline_end_by, TripValidator.hhmm(it)) }
@@ -357,7 +414,7 @@ private fun LiveLines(l: LiveLine, large: Boolean) {
 
 @Composable
 private fun DrivingTripView(t: LocalTrip, day: Int, live: LiveView?, naviLive: NaviLive?, rest: RestAdvice?) {
-    val step = remember(t, day) { NextDestination.of(t.plan, t.overlay, day) }
+    val step = remember(t, day) { NextDestination.of(t.view, t.overlay, day) }
     val secondary = colorResource(R.color.pleos_text_dark_secondary)
     val label = when (val tg = step.target) {
         null -> stringResource(R.string.none)
@@ -365,7 +422,7 @@ private fun DrivingTripView(t: LocalTrip, day: Int, live: LiveView?, naviLive: N
         else -> tg.label
     }
     // '꼭': the next stop has a fixed reservation time, so it must not be dropped.
-    val mustKeep = (step.target as? Target.Stop)?.let { s -> t.plan.visits.first { it.visitId == s.visitId }.fixed != null } == true
+    val mustKeep = (step.target as? Target.Stop)?.let { s -> t.view.visits.first { it.visitId == s.visitId }.fixed != null } == true
     // The navigation's live remaining distance to this stop: its destination's, or on a multi-stop route the waypoint's.
     val remainMetres = live?.naviRemainMetres
     PleosCard(padding = Space.x48, gap = Space.x20) {
@@ -388,11 +445,11 @@ private fun DrivingTripView(t: LocalTrip, day: Int, live: LiveView?, naviLive: N
 /** 다음 목적지: the name, how it goes against the next fixed time, and what can be done about it here. */
 @Composable
 private fun NextPanel(vm: TripsViewModel, t: LocalTrip, day: Int, live: LiveView?, here: HereEstimate?, arrival: ArrivalNote?, naviLive: NaviLive?, rest: RestAdvice?) {
-    val step = remember(t, day) { NextDestination.of(t.plan, t.overlay, day) }
+    val step = remember(t, day) { NextDestination.of(t.view, t.overlay, day) }
     // "오늘 경로 전송" needs at least two upcoming stops with coordinates (destination + ≥1 waypoint).
     val canBundle = remember(t, day) {
-        NextDestination.upcoming(t.plan, t.overlay, day).count { id ->
-            t.plan.visits.firstOrNull { it.visitId == id }?.placeRef?.let { ref -> t.plan.places.firstOrNull { it.placeRef == ref }?.latE7 } != null
+        NextDestination.upcoming(t.view, t.overlay, day).count { id ->
+            t.view.visits.firstOrNull { it.visitId == id }?.placeRef?.let { ref -> t.view.places.firstOrNull { it.placeRef == ref }?.latE7 } != null
         } >= 2
     }
     val secondary = colorResource(R.color.pleos_text_dark_secondary)
@@ -402,7 +459,7 @@ private fun NextPanel(vm: TripsViewModel, t: LocalTrip, day: Int, live: LiveView
         is Target.Final -> tg.place?.name ?: home
         else -> tg.label
     }
-    val zone = remember(t) { t.plan.zoneOrUtc() }
+    val zone = remember(t) { t.view.zoneOrUtc() }
     fun clock(ms: Long) = java.time.Instant.ofEpochMilli(ms).atZone(zone).let { String.format(Locale.ROOT, "%02d:%02d", it.hour, it.minute) }
     PleosCard(gap = Space.x16) {
         PleosText(stringResource(R.string.next_destination_day, day), Pleos.type.bodyMedium, secondary, maxLines = 1)
@@ -429,7 +486,7 @@ private fun NextPanel(vm: TripsViewModel, t: LocalTrip, day: Int, live: LiveView
         val skip = live?.projection?.skip
         val defer = live?.projection?.defer
         // Skip and defer point at the same optional stop; show one line naming it, then offer both choices.
-        skip?.let { s -> StatusLine(stringResource(R.string.skip_suggest, TripValidator.placeName(t.plan, t.plan.visits.first { it.visitId == s.visitId }.placeRef)), Tone.CAUTION) }
+        skip?.let { s -> StatusLine(stringResource(R.string.skip_suggest, TripValidator.placeName(t.view, t.view.visits.first { it.visitId == s.visitId }.placeRef)), Tone.CAUTION) }
         // 충전·주유 권장 (EV fast/slow, ICE refuel) from the car's energy reading; the nav screen shows prices/types.
         val energy = live?.projection?.energy
         energy?.let { e ->
@@ -446,10 +503,10 @@ private fun NextPanel(vm: TripsViewModel, t: LocalTrip, day: Int, live: LiveView
             e.socAtDayEnd?.let { StatusLine(stringResource(R.string.energy_day_end, it), if (it <= io.tteonaljido.trip.EnergyPolicy.EV_LOW_SOC) Tone.CAUTION else Tone.NEUTRAL) }
             if (e.ecoHint) StatusLine(stringResource(R.string.energy_eco_hint), Tone.NEUTRAL)
         }
-        val skippedToday = t.plan.days[day - 1].visitOrder.filter { it in t.overlay.skipped }
-        val deferredToday = t.plan.days[day - 1].visitOrder.filter { it in t.overlay.deferred }
-        val deferredAway = t.plan.days[day - 1].visitOrder.filter { it in t.overlay.deferredTo }
-        val nextDay = if (day < t.plan.days.size) day + 1 else null
+        val skippedToday = t.view.days[day - 1].visitOrder.filter { it in t.overlay.skipped }
+        val deferredToday = t.view.days[day - 1].visitOrder.filter { it in t.overlay.deferred }
+        val deferredAway = t.view.days[day - 1].visitOrder.filter { it in t.overlay.deferredTo }
+        val nextDay = if (day < t.view.days.size) day + 1 else null
         // Marking an arrival or starting from here only makes sense for the day you are on.
         val isToday = vm.todayIndex(t) == day
         Spacer(Modifier.height(Space.x4))
@@ -460,7 +517,7 @@ private fun NextPanel(vm: TripsViewModel, t: LocalTrip, day: Int, live: LiveView
             // On the first day this also moves the day's start to where the car stands; on a later day the start stays the
             // lodging of the night before and this only asks the navigation for the time from here (M59).
             PleosButton(stringResource(R.string.depart_here), { vm.departHere(t.localId, day) }, type = ButtonType.BASIC, enabled = isToday, tag = "departHere")
-            if (t.overlay.originFor(t.plan, day) != null) PleosButton(stringResource(R.string.undo_depart), { vm.undoDepartHere(t.localId, day) }, type = ButtonType.BASIC, tag = "undoDepart")
+            if (t.overlay.originFor(t.view, day) != null) PleosButton(stringResource(R.string.undo_depart), { vm.undoDepartHere(t.localId, day) }, type = ButtonType.BASIC, tag = "undoDepart")
         }
         if (skip != null || defer != null || energy != null || rest != null || arrival?.visitId != null || skippedToday.isNotEmpty() || deferredToday.isNotEmpty() || deferredAway.isNotEmpty() || lowSoc) {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.x12), verticalArrangement = Arrangement.spacedBy(Space.x12)) {
@@ -500,6 +557,14 @@ private fun GuideDialogs(vm: TripsViewModel, g: Guide) {
     when (g) {
         Guide.Idle -> Unit
         is Guide.Working -> PleosSystemPopup(stringResource(R.string.wait_title), text(g.msg), stringResource(R.string.close), vm::dismissGuide)
+        is Guide.MeasureFailed -> PleosSystemPopup(stringResource(R.string.measure_failed_title), text(g.msg), stringResource(R.string.confirm), vm::dismissGuide)
+        is Guide.Measuring -> PleosSystemPopup(stringResource(R.string.measure_title), text(g.msg), stringResource(R.string.measure_stop), vm::dismissGuide)
+        is Guide.ConfirmMeasure -> PleosSystemPopup(
+            stringResource(R.string.measure_confirm_title),
+            stringResource(R.string.measure_confirm_body, g.routes, g.routes * 15) + (g.current?.let { " " + stringResource(R.string.measure_confirm_ends, it) } ?: ""),
+            stringResource(R.string.measure_confirm_yes), { vm.confirmMeasure() },
+            cancel = stringResource(R.string.cancel), onCancel = vm::dismissGuide,
+        )
         is Guide.ConfirmReplace -> PleosSystemPopup(
             stringResource(R.string.replace_title), stringResource(R.string.replace_body, g.current, g.target), stringResource(R.string.replace_yes), { vm.confirmReplace() },
             cancel = stringResource(R.string.replace_no), onCancel = vm::dismissGuide,

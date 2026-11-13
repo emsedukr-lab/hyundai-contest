@@ -47,7 +47,7 @@ class MainActivity : ComponentActivity() {
                 val autoArrive by c.autoArrive.collectAsState()
                 val trips: TripsViewModel = viewModel(
                     key = "trips-$demo",
-                    factory = viewModelFactory { initializer { TripsViewModel(c::trips, c::updateTrip, c::deleteTrip, c::deleteAllTrips, c.navi, c.tracker, c::nowMs, c.clockOffset, getString(R.string.home), getString(R.string.home_bookmark), energyReader = if (c.isAutomotive) suspend { c.readEnergy() } else null, snapshotReader = if (c.isAutomotive) suspend { c.readSnapshot() } else null, driveSession = c.driveSession, isDriving = c::isDriving, noteOdometer = c::noteOdometer) } },
+                    factory = viewModelFactory { initializer { TripsViewModel(c::trips, c::updateTrip, c::deleteTrip, c::deleteAllTrips, c.navi, c.tracker, c::nowMs, c.clockOffset, getString(R.string.home), getString(R.string.home_bookmark), energyReader = if (c.isAutomotive) suspend { c.readEnergy() } else null, snapshotReader = if (c.isAutomotive) suspend { c.readSnapshot() } else null, driveSession = c.driveSession, isDriving = c::isDriving, noteOdometer = c::noteOdometer, keepRunning = c::keepRunning, toFront = c::toFront) } },
                 )
                 tripsVm = trips
                 val import: ImportViewModel = viewModel(
@@ -95,7 +95,7 @@ class MainActivity : ComponentActivity() {
     /** Day 2 of the earliest stored trip at 09:00 in its time zone (the sample: 2026-11-21 09:00 KST). */
     private fun demoDayTwo(): java.time.ZonedDateTime {
         val c = (application as App).container
-        val t = c.trips().load().trips.minByOrNull { it.plan.startDate }
+        val t = c.trips().load().trips.minByOrNull { it.view.startDate }
         val zone = java.time.ZoneId.of(t?.plan?.timezone ?: "Asia/Seoul")
         val start = java.time.LocalDate.parse(t?.plan?.startDate ?: "2026-11-20")
         return start.plusDays(1).atTime(9, 0).atZone(zone)
@@ -114,7 +114,7 @@ class MainActivity : ComponentActivity() {
         if (intent.getBooleanExtra("demoWipe", false)) { c.deleteAllTrips(); c.sessions.clearActive(); c.sessions.clearPending(); tripsVm?.reload() } // a clean slate: trips and any resumable import session
         intent.getStringExtra("demoNow")?.let { v -> setDemoClock(if (v == "off") null else java.time.LocalDateTime.parse(v).atZone(java.time.ZoneId.of("Asia/Seoul"))) }
         if (intent.getBooleanExtra("demoArrive", false) && c.demo.value) c.navi.demoArrive()
-        intent.getStringExtra("probe")?.let { (c.navi as? io.tteonaljido.car.navi.PleosNaviGateway)?.probe?.run(it) }
+        intent.getStringExtra("probe")?.let { if (it == "keep" && BuildConfig.DEBUG) c.keepRunning(true) else (c.navi as? io.tteonaljido.car.navi.PleosNaviGateway)?.probe?.run(it) }
     }
 
     override fun onResume() {

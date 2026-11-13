@@ -35,4 +35,14 @@ adb shell am start --user 10 -n io.tteonaljido.car.probe/io.tteonaljido.car.Main
 - 실차 내비가 경유지를 몇 곳까지 받는지(에뮬레이터 내비 기준 9곳까지만 시험). SDK 문서는 "내비 앱의 구현에 따라 다를 수 있다"고만 한다.
 - 안내 시작 때 음성이 나오는지, 주행 중 요청이 어떻게 처리되는지.
 
-시험 뒤 `cancel`로 경로를 지웠고(`FREE_DRIVE`, 목적지 없음) probe 패키지를 제거했다. 앱 동작은 바꾸지 않았다('오늘 경로 전송'은 지금도 경유지 2곳 + 목적지).
+시험 뒤 `cancel`로 경로를 지웠고(`FREE_DRIVE`, 목적지 없음) probe 패키지를 제거했다.
+
+## 앱에 넣으며 더 확인한 것 (M63, 같은 날)
+
+- **내비가 돌려주는 경유지에는 좌표가 없다.** `WaypointInfo`의 위도·경도가 0으로 온다(목적지는 보낸 좌표 그대로). 이름은 보낸 그대로라, 같은 경유지인지는 이름과 순서로 확인한다.
+- **경로를 걸면 내비 앱이 앞에 나온다.** 뒤로 간 앱은 약 10초 뒤 정지된다(`dumpsys activity processes`의 `isFrozen=true`) — 경로 시작(9~11초)과 값이 오는 시점이 그 뒤라, 붙잡아 두지 않으면 값을 받지 못한다.
+- **경로가 없을 때 `cancelRoute`를 보내면 안 된다.** 내비 로그에 `NOT_CANCEL_ABLE_TRIP(507) … cancelTrip failed`가 찍히고, 그 뒤의 취소는 모두 `cancelTrip is already working`으로 무시된다(실제 경로가 있어도). 내비 앱을 다시 시작해야 풀린다. `probe cancel`을 경로 없이 한 번 보내면 재현된다.
+- 경로가 있을 때의 취소는 시작 1초 뒤에 보내도 된다(`cancelTrip success`, `via-cancel:1000|…`).
+- 차가 있는 곳에서 시작하는 한 구간은 경로 없이 `requestTrip`으로 잰다.
+
+앱 반영은 `docs/evidence/m63`에 있다.

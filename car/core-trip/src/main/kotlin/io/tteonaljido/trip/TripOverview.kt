@@ -27,7 +27,8 @@ sealed interface TripWhen {
 }
 
 /** 운전 55분 · 숙소 도착 16:10 · 이동시간 1구간 미확인. [endAt] is null when an unknown leg or departure hides it. */
-data class DaySummary(val driveMinutes: Int, val unknownLegs: Int, val endAt: Int?, val lastDay: Boolean)
+/** `driveMetres` is set only when the navigation measured every leg of the day (the phone's plan carries no distances). */
+data class DaySummary(val driveMinutes: Int, val unknownLegs: Int, val endAt: Int?, val lastDay: Boolean, val driveMetres: Int? = null)
 
 object TripOverview {
     /**
@@ -97,6 +98,7 @@ object TripOverview {
             unknownLegs = legs.count { it == null },
             endAt = TripValidator.dayEnd(trip, dayIndex, overlay),
             lastDay = dayIndex == trip.days.size,
+            driveMetres = legs.takeIf { all -> all.isNotEmpty() && all.all { it?.metres != null } }?.sumOf { it!!.metres!! },
         )
     }
 

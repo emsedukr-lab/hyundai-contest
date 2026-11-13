@@ -5,6 +5,7 @@
  *   npx tsx tools/live-pair.mts [emulator-serial] [out-dir]
  *   LIVE_ORIGIN=CURRENT … sends the same trip starting from the car's current location (no start place chosen).
  *   LIVE_START=2026-11-13 … sends it moved to start on that day.
+ *   LIVE_DAY1=v3,v1,v2 … sends it with day 1 in that order and its legs untimed (M63: a day the car's navigation can reorder).
  * Needs: the emulator running with apk/떠날지도_release.apk installed fresh (empty trip list).
  */
 import { execFileSync } from 'node:child_process';
@@ -103,8 +104,8 @@ try {
   await phone.getByText('강릉 3박 4일').first().waitFor();
   // LIVE_ORIGIN=CURRENT: the same trip with no start place chosen (M59) — the first day starts from where the car is.
   // LIVE_START=YYYY-MM-DD: the same trip moved to start on that day (so day 1 can be "today" on the car).
-  if (process.env.LIVE_ORIGIN === 'CURRENT' || process.env.LIVE_START) {
-    await phone.evaluate(async ({ current, start }) => {
+  if (process.env.LIVE_ORIGIN === 'CURRENT' || process.env.LIVE_START || process.env.LIVE_DAY1) {
+    await phone.evaluate(async ({ current, start, day1 }) => {
       const db = await new Promise<IDBDatabase>((r) => { const q = indexedDB.open('tteonaljido'); q.onsuccess = () => r(q.result); });
       const tx = db.transaction('trips', 'readwrite');
       const st = tx.objectStore('trips');
@@ -118,9 +119,13 @@ try {
         d.plan.startDate = d.plan.days[0].date;
         d.plan.endDate = d.plan.days[d.plan.days.length - 1].date;
       }
+      if (day1) {
+        d.plan.days[0].visitOrder = day1;
+        d.plan.days[0].legs = d.plan.days[0].legs.map(() => null);
+      }
       st.put(d);
       await new Promise((r) => (tx.oncomplete = r));
-    }, { current: process.env.LIVE_ORIGIN === 'CURRENT', start: process.env.LIVE_START ?? null });
+    }, { current: process.env.LIVE_ORIGIN === 'CURRENT', start: process.env.LIVE_START ?? null, day1: process.env.LIVE_DAY1?.split(',') ?? null });
     await phone.reload({ waitUntil: 'networkidle' });
     await phone.getByText('강릉 3박 4일').first().waitFor();
   }
