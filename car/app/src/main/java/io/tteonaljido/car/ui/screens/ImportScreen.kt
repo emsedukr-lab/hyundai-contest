@@ -231,7 +231,7 @@ private fun ReviewCard(r: ReviewData, code: String, vm: ImportViewModel) {
         is FirstDay.DepartOrigin -> f.departTime?.let { stringResource(R.string.first_depart, it) } ?: stringResource(R.string.first_depart_free)
         is FirstDay.ArriveFirstStop -> stringResource(R.string.first_arrive, f.arriveTime)
     }
-    val origin = stringResource(if (t.origin is Endpoint.Home) R.string.home else R.string.place)
+    val origin = stringResource(when (t.origin) { is Endpoint.Home -> R.string.home; is Endpoint.Current -> R.string.origin_here; is Endpoint.AtPlace -> R.string.place })
     val back = stringResource(if (t.finalDestination is Endpoint.Home) R.string.home else R.string.place)
     val existing = r.decision.existing?.meta?.revision ?: 0
     val caseText = when (r.decision.case) {

@@ -8,6 +8,7 @@ import { Token } from '@astryxdesign/core/Token';
 import { useEffect, useState, type ReactNode } from 'react';
 import type { OpeningHours, Place, Trip, Visit } from '@tteonaljido/shared';
 import { dateLabel, minutesLabel, shortDate } from '../lib/format';
+import { hoursLines, isSimpleHours } from '../lib/hours';
 import { t } from '../lib/i18n';
 import { REASON_LABEL, changeCategory, moveToDay, removePlace, suggestVisitTime, updatePlace, updateVisit } from '../lib/trips';
 import { LodgingNoteFields, PlaceMemoField } from './NotesContext';
@@ -121,6 +122,10 @@ export function VisitDialog({
 
   const hours = place.hours;
   const daily = hours.status === 'USER_ENTERED' ? hours.weekly[0] : null;
+  // Hours with a break or times that differ by weekday (as a sample or an imported place may have) are shown as read:
+  // the two time fields and the weekday chips below can only hold one pair of times for every open day.
+  const grouped = hours.status === 'USER_ENTERED' && !isSimpleHours(hours) ? hoursLines(hours) : null;
+  const daysLabel = (days: number[]) => (days.length === 7 ? t('visit.hours.everyDay') : days.map((d) => t(WEEKDAYS[d - 1])).join('·'));
   const closedDates = hours.status === 'USER_ENTERED' ? hours.closedDates : [];
   // Keeps the weekly hours; only the closed-date list changes (deduped, sorted, capped as the schema allows).
   const setClosedDates = (dates: string[]) => hours.status === 'USER_ENTERED' && setPlace({ hours: { ...hours, closedDates: [...new Set(dates)].sort().slice(0, 31) } });
@@ -265,7 +270,26 @@ export function VisitDialog({
             onChange={(on) => (on ? setDaily('09:00', '21:00') : setPlace({ hours: { status: 'UNKNOWN' } }))}
           />
           {!daily && <p className="vd-hint">{t('visit.hours.detail')}</p>}
-          {daily && (
+          {daily && grouped && (
+            <>
+              <ul className="vd-hours">
+                {grouped.open.map((l) => (
+                  <li key={l.days.join('')}>
+                    <span className="vd-hours-days">{daysLabel(l.days)}</span>
+                    <span>{l.spans.map((x) => `${x.open}–${x.close}`).join(' · ')}</span>
+                  </li>
+                ))}
+                {grouped.closed.length > 0 && (
+                  <li>
+                    <span className="vd-hours-days">{daysLabel(grouped.closed)}</span>
+                    <span>{t('visit.hours.closed')}</span>
+                  </li>
+                )}
+              </ul>
+              <p className="vd-hint">{t('visit.hours.grouped')}</p>
+            </>
+          )}
+          {daily && !grouped && (
             <>
               <div className="vd-pair">
                 <TimeSelect label={t('visit.opens')} value={daily.open} onChange={(v) => v && setDaily(v, daily.close)} />
@@ -282,6 +306,10 @@ export function VisitDialog({
                 ))}
               </div>
               <p className="vd-hint">{t('visit.openDays.detail')}</p>
+            </>
+          )}
+          {daily && (
+            <>
               <DateInput
                 label={t('visit.closedDates')}
                 isLabelHidden

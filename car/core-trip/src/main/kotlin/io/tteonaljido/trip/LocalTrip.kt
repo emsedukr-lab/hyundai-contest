@@ -30,8 +30,23 @@ data class ImportMeta(
 /** The trip's time zone. The parser rejects unknown ids, but a file from an older build must not crash a screen. */
 fun Trip.zoneOrUtc(): java.time.ZoneId = runCatching { java.time.ZoneId.of(timezone) }.getOrDefault(java.time.ZoneOffset.UTC)
 
-/** Where the day now starts from after "여기서 출발", or null if it still starts from the plan. Reads the per-day map, falling back to the legacy first-day field. */
-fun CarOverlay.originFor(dayIndex: Int): NaviBinding? = originOverrides[dayIndex] ?: if (dayIndex == 1) originOverride else null
+/**
+ * Where a day starts (M59). The first day starts from the trip's origin — a saved place (집, 회사, 즐겨찾기), a place of
+ * the trip, or the car's current location — and every later day from the lodging of the night before. "여기서 출발" can
+ * re-set the start to where the car stands only where the plan leaves it open to that: on the first day, or on a later
+ * day whose previous night has no lodging.
+ */
+object DayStart {
+    fun canDepartHere(trip: Trip, dayIndex: Int): Boolean = dayIndex == 1 || trip.days.getOrNull(dayIndex - 2)?.lodgingPlaceRef == null
+}
+
+/**
+ * Where the day now starts from after "여기서 출발", or null if it still starts from the plan. Reads the per-day map,
+ * falling back to the legacy first-day field. A later day that has a lodging the night before always starts there, so an
+ * override saved for such a day by an older version no longer applies ([DayStart]).
+ */
+fun CarOverlay.originFor(trip: Trip, dayIndex: Int): NaviBinding? =
+    if (!DayStart.canDepartHere(trip, dayIndex)) null else originOverrides[dayIndex] ?: if (dayIndex == 1) originOverride else null
 
 /** A place as confirmed in the Hyundai navigation (never a Kakao or manual id). */
 @Serializable

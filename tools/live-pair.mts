@@ -3,6 +3,7 @@
  * mobile web (a phone-sized Chrome) talking through the deployed server. No debug hooks: the QR is read from the car's
  * own screen, the car is driven only by taps on its UI. Screenshots of both screens at every step go to OUT.
  *   npx tsx tools/live-pair.mts [emulator-serial] [out-dir]
+ *   LIVE_ORIGIN=CURRENT … sends the same trip starting from the car's current location (no start place chosen).
  * Needs: the emulator running with apk/떠날지도_release.apk installed fresh (empty trip list).
  */
 import { execFileSync } from 'node:child_process';
@@ -99,6 +100,21 @@ try {
   });
   await phone.goto(`${BASE}/?sample=1`, { waitUntil: 'networkidle' });
   await phone.getByText('강릉 3박 4일').first().waitFor();
+  // LIVE_ORIGIN=CURRENT: the same trip with no start place chosen (M59) — the first day starts from where the car is.
+  if (process.env.LIVE_ORIGIN === 'CURRENT') {
+    await phone.evaluate(async () => {
+      const db = await new Promise<IDBDatabase>((r) => { const q = indexedDB.open('tteonaljido'); q.onsuccess = () => r(q.result); });
+      const tx = db.transaction('trips', 'readwrite');
+      const st = tx.objectStore('trips');
+      const all = await new Promise<any[]>((r) => { const q = st.getAll(); q.onsuccess = () => r(q.result); }); // eslint-disable-line @typescript-eslint/no-explicit-any
+      const d = all.find((x) => x.plan.name === '강릉 3박 4일');
+      d.plan.origin = { kind: 'CURRENT' };
+      st.put(d);
+      await new Promise((r) => (tx.oncomplete = r));
+    });
+    await phone.reload({ waitUntil: 'networkidle' });
+    await phone.getByText('강릉 3박 4일').first().waitFor();
+  }
   await phoneShot(phone, '01');
   const carVersion = sh(`dumpsys package ${PKG}`).match(/versionName=(\S+)/)?.[1] ?? '?';
   check(true, `car app (release ${carVersion}) and mobile web (deployed) are both open: car has no trips, phone has "강릉 3박 4일"`);

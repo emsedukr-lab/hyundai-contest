@@ -148,13 +148,36 @@ class LiveProjectionTest {
         assertEquals("@origin>cheolttuk", LegKeys.of(sample, CarOverlay(originOverride = here), 1, 0))
     }
 
-    @Test fun startHereWorksOnAnyDayNotJustTheFirst() {
+    @Test fun laterDaysStartFromTheLodgingOfTheNightBefore() {
+        // M59: "여기서 출발" re-sets the first day only. An override left on day 2 (an older version allowed it) no longer applies.
+        val day2 = CarOverlay(originOverrides = mapOf(2 to here), legEstimates = mapOf("@origin>lake" to LegEstimate(40, 30_000, 0)))
+        assertFalse(DayStart.canDepartHere(sample, 2))
+        assertNull(day2.originFor(sample, 2))
+        assertEquals("skybay>lake", LegKeys.of(sample, day2, 2, 0))
+        assertEquals(LegValue(5, LegFrom.USER), TripValidator.leg(sample, day2, 2, 0)) // the plan's lodging → first stop leg stands
+        assertTrue(DayStart.canDepartHere(sample, 1))
+    }
+
+    @Test fun aDayAfterANightWithNoLodgingCanStartFromHere() {
+        val noLodging = withDay(sample, 1) { it.copy(lodgingPlaceRef = null) }
         val day2 = CarOverlay(originOverrides = mapOf(2 to here))
-        assertEquals("@origin>lake", LegKeys.of(sample, day2, 2, 0))              // leaves from here, not the night's lodging
-        assertNull(TripValidator.leg(sample, day2, 2, 0))                         // plan's lodging→first-stop leg no longer applies
+        assertTrue(DayStart.canDepartHere(noLodging, 2))
+        assertNull(LegKeys.of(noLodging, CarOverlay(), 2, 0))                     // nowhere to start from by the plan
+        assertEquals("@origin>lake", LegKeys.of(noLodging, day2, 2, 0))
         val estimated = day2.copy(legEstimates = mapOf("@origin>lake" to LegEstimate(40, 30_000, 0)))
-        assertEquals(LegValue(40, LegFrom.NAVI), TripValidator.leg(sample, estimated, 2, 0))
-        assertEquals("skybay>lake", LegKeys.of(sample, CarOverlay(), 2, 0))       // other days untouched
+        assertEquals(LegValue(40, LegFrom.NAVI), TripValidator.leg(noLodging, estimated, 2, 0))
+    }
+
+    @Test fun aTripWithNoStartPlaceStartsFromTheCurrentLocation() {
+        val current = sample.copy(origin = Endpoint.Current)
+        assertNull(LegKeys.of(current, CarOverlay(), 1, 0))                       // no fixed point until the car pins it
+        assertNull(TripValidator.leg(current, CarOverlay(), 1, 0))
+        val codes = TripValidator.validate(current, CarOverlay()).issues.map { it.code }
+        assertFalse("ORIGIN_HOME_UNKNOWN" in codes)                               // nothing to confirm about a home it does not start from
+        assertTrue("RETURN_HOME_UNKNOWN" in codes)                                // it still returns home
+        val pinned = CarOverlay(originOverrides = mapOf(1 to here), legEstimates = mapOf("@origin>cheolttuk" to LegEstimate(165, 225_000, 0)))
+        assertEquals("@origin>cheolttuk", LegKeys.of(current, pinned, 1, 0))
+        assertEquals(LegValue(165, LegFrom.NAVI), TripValidator.leg(current, pinned, 1, 0))
     }
 
     /* ---------- next destination, arrival, update ---------- */

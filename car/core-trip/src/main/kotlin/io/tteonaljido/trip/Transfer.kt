@@ -54,6 +54,13 @@ sealed interface Endpoint {
 
     @Serializable @SerialName("PLACE")
     data class AtPlace(val placeRef: String) : Endpoint
+
+    /**
+     * Wherever the car is when it leaves (M59): the first day's start when no saved place was chosen. The phone sends no
+     * coordinates for it; the car's navigation supplies them on "여기서 출발". Valid as the origin only.
+     */
+    @Serializable @SerialName("CURRENT")
+    data object Current : Endpoint
 }
 
 @Serializable

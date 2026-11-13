@@ -3,6 +3,8 @@
  * cut from the same raw take as the landscape demo (tools/record-demo.mts → .work/demo/).
  *   npx tsx tools/compose-shorts.mts            → media/demo/떠날지도_숏폼.mp4
  * Structure follows the challenge guide: Spot (the moment) → Solve (app screens) → Scene (using it), then an end card.
+ * The story starts where the project does: picking places is quick, building the day-by-day route is what takes long —
+ * the phone builds it, the car takes it over with one QR. The cards are neutral (no hue), like the product (M58).
  * Scenes are anchored on the recorder's caption timestamps, network/page-load waits are trimmed, and each scene is
  * sped up so the whole short fits in TARGET seconds. Text stays inside the area Reels/Shorts leave uncovered
  * (top ~160 px, bottom ~370 px and the right-hand buttons are covered by the platform UI).
@@ -53,16 +55,19 @@ interface Roi { x: number; y: number; w: number; h: number }
 interface Scene { anchor: string; until: string; title: string; sub: string; car?: Roi; phone?: { y: number; h: number }; skipStart?: number; weight?: number }
 const FULL_PHONE = { y: 0, h: 1688 };
 const SCENES: Scene[] = [
-  { anchor: '휴대폰에서 짠', until: '①', phone: FULL_PHONE, title: '여행은 휴대폰에서\n다 짰는데', sub: '차에 타면 목적지를 또 하나씩 입력?', weight: 0.7 },
-  { anchor: '①', until: '②', car: CAR_APP, title: '차 화면에 QR 한 번', sub: '주차 중에만 · 5분 동안 한 번만 쓰는 QR', skipStart: 0.5, weight: 0.7 },
-  { anchor: '②', until: '③', phone: FULL_PHONE, title: '휴대폰 카메라로 스캔', sub: '앱 설치도, 로그인도 없어요', weight: 0.7 },
-  { anchor: '③', until: '④', car: { x: 860, y: 180, w: 900, h: 360 }, phone: { y: 220, h: 600 }, title: '두 화면 코드가 같으면\n내 차 맞아요', sub: '종단간 암호화 · 서버도 내용을 볼 수 없어요', weight: 0.8 },
-  { anchor: '⑤', until: '⑦', car: CAR_APP, title: '차가 일정을 다시 검사', sub: '예약 시각 · 숙소 · 이동시간 확인 필요를 표시', weight: 0.8 },
-  { anchor: '⑦', until: '⑧', car: { x: 860, y: 170, w: 1300, h: 560 }, phone: { y: 160, h: 560 }, title: '차에서 한 번 더 승인하면 끝', sub: '휴대폰에도 바로 「적용됨」', weight: 0.7 },
-  { anchor: '⑨', until: '⑩', car: CAR_APP, title: '여기서 출발하면\n내비가 시간·배터리 예상', sub: '비어 있던 이동시간이 채워져요' },
-  { anchor: '⑪', until: '⑫', car: CAR_APP, title: '버튼 하나로 내비 안내', sub: '현대자동차그룹 내비게이션이 경로를 안내해요', weight: 0.8 },
-  { anchor: '⑫', until: '⑭', car: CAR_APP, title: '늦을 것 같으면\n먼저 알려 줘요', sub: '내비 남은 시간으로 다시 계산 · 선택 일정 건너뛰기 제안' },
-  { anchor: '⑭', until: '떠날지도', car: CAR_APP, title: '도착하면 자동으로 방문 표시', sub: '내비 도착 알림 연동 (에뮬레이터는 시연 신호)', weight: 0.7 },
+  // Spot: the moment everyone knows — picking places is quick, turning them into a day-by-day route is not.
+  { anchor: '가고 싶은 곳은', until: '①', phone: FULL_PHONE, title: '갈 곳은 금방 골라도\n동선 짜기는 오래 걸려요', sub: '날짜별로 나누고 순서를 정하는 일', weight: 0.7 },
+  // Solve: the phone app.
+  { anchor: '②', until: '③', phone: { y: 0, h: 1250 }, title: '가고 싶은 곳만\n담으세요', sub: '카카오 장소 검색 · 순서는 신경 쓰지 않아도 돼요' },
+  { anchor: '④', until: '⑤', phone: FULL_PHONE, title: '동선은 자동으로', sub: '날짜 나누기 · 방문 순서 · 실제 운전 시간까지', weight: 0.9 },
+  { anchor: '⑤', until: '⑥', phone: { y: 120, h: 1100 }, title: '예약에 맞춰\n언제 떠날지도 알려 줘요', sub: '13:00 예약이면 앞 장소에서 「12:35 출발」', skipStart: 1.5, weight: 0.8 },
+  { anchor: '⑦', until: '⑧', phone: { y: 120, h: 1100 }, title: '더 빠른 순서가 있으면\n먼저 알려 줘요', sub: '카카오 실제 시간으로 확인 · [바꾸기] 한 번', weight: 0.8 },
+  // Scene: in the car.
+  { anchor: '⑧', until: '⑨', car: CAR_APP, title: '차에 타면 QR 한 번', sub: '휴대폰 카메라로 스캔 · 앱 설치도 로그인도 없어요', skipStart: 0.5, weight: 0.7 },
+  { anchor: '⑩', until: '⑪', car: { x: 900, y: 360, w: 1180, h: 300 }, phone: { y: 220, h: 470 }, title: '두 화면 코드가 같으면\n내 차 맞아요', sub: '종단간 암호화 · 서버도 내용을 볼 수 없어요', weight: 0.8 },
+  { anchor: '⑬', until: '⑮', car: CAR_APP, title: '차가 다시 검사하고\n한 번 더 승인', sub: '예약 시각 · 숙소 · 이동시간을 확인해요', weight: 0.8 },
+  { anchor: '⑯', until: '⑰', car: CAR_APP, title: '여행 당일, 오늘 일정과\n다음 목적지', sub: '차량 신호로 출발 전 점검 · 일정 끝 배터리 예상', weight: 0.8 },
+  { anchor: '⑱', until: '⑲', car: CAR_APP, title: '버튼 하나로 내비 안내', sub: '현대자동차그룹 내비게이션이 경로를 안내해요', weight: 0.8 },
 ];
 
 const capAt = (prefix: string) => {
@@ -98,7 +103,7 @@ const font = `${root}design/fonts/asta_sans.ttf`;
 const css = `@font-face { font-family: Asta; src: url('file://${font}'); }
 * { margin: 0; box-sizing: border-box; }
 html, body { width: ${W}px; height: ${H}px; background: #0f1115; color: #fff; font-family: Asta, 'Apple SD Gothic Neo', sans-serif; overflow: hidden; }
-.brand { position: absolute; left: 60px; top: 170px; font-size: 30px; font-weight: 700; color: #6ea0ff; letter-spacing: -0.3px; }
+.brand { position: absolute; left: 60px; top: 170px; font-size: 30px; font-weight: 700; color: #b4b9c2; letter-spacing: -0.3px; }
 .title { position: absolute; left: 60px; right: 60px; top: 220px; font-size: 76px; line-height: 1.18; font-weight: 800; letter-spacing: -2px; white-space: pre-line; }
 .sub { position: absolute; left: 60px; right: 60px; font-size: 40px; line-height: 1.35; font-weight: 500; color: #b4b9c2; letter-spacing: -0.5px; }
 .label { position: absolute; font-size: 26px; font-weight: 600; color: #7d838d; }`;
@@ -112,7 +117,7 @@ const sceneHtml = (s: (typeof scenes)[number], i: number) => {
   const avail = SAFE_BOTTOM - top;
   const gap = s.car && s.phone ? 64 : 0;
   let cw = s.car ? Math.min(1000, s.car.w * 1.2) : 0; // up to 1.2× of the 2560-px display
-  let pw = s.phone ? (s.car ? Math.min(760, s.phone.h > 1000 ? 560 : 760) : 600) : 0;
+  let pw = s.phone ? (s.car ? Math.min(760, s.phone.h > 1000 ? 560 : 760) : 860) : 0; // alone: as wide as the height allows
   let ch = s.car ? (cw * s.car.h) / s.car.w : 0;
   let ph = s.phone ? (pw * s.phone.h) / 780 : 0;
   const fit = Math.min(1, (avail - gap) / (ch + ph));
@@ -137,9 +142,9 @@ const endHtml = `<style>${css}
   .n { font-size: 150px; font-weight: 800; letter-spacing: -5px; }
   .t { margin-top: 30px; font-size: 52px; font-weight: 700; line-height: 1.3; letter-spacing: -1px; }
   .s { margin-top: 40px; font-size: 34px; color: #9aa0aa; line-height: 1.5; }
-  .bar { width: 120px; height: 8px; background: #276ef1; margin: 46px auto 0; border-radius: 4px; }
-</style><div class="c"><div class="n">떠날지도</div><div class="t">휴대폰에서 짠 여행을<br>QR 한 번으로 차에</div><div class="bar"></div>
-<div class="s">Pleos Connect 차량용 앱<br>계정 연결 없음 · 내비 남은 시간으로 예약 시각을 지켜요</div></div>`;
+  .bar { width: 120px; height: 8px; background: #e0e1e6; margin: 46px auto 0; border-radius: 4px; }
+</style><div class="c"><div class="n">떠날지도</div><div class="t">가고 싶은 곳만 담으면<br>동선은 자동으로, 안내는 차가</div><div class="bar"></div>
+<div class="s">Pleos Connect 차량용 앱 · 모바일 웹<br>계정 연결 없음 · QR 한 번으로 차에 불러와요</div></div>`;
 
 const browser = await chromium.launch({ executablePath: process.env.CHROME_PATH ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true });
 const page = await browser.newPage({ viewport: { width: W, height: H } });

@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { parseTransfer, sampleTrip, timeline, type Trip } from '@tteonaljido/shared';
-import { stopRangeText, leaveFor, FIXED_BUFFER, suggestVisitTime, updateVisit, fillNights, laterEmptyNights, lodgingSuggestions, addPlace, addToDay, cleanLodgingTbd, cleanSetup, moveToDay, placeRoom, setReservation, setupReady, assign, changeCategory, emptyPlan, isEndpointOnly, move, moveTo, endpointFromPreset, newDoc, nodeIssues, planWarnings, relinkLegs, rememberLegs, removePlace, savePlan, setDepart, setEndBy, setLeg, setEndpoint, setLodging, setOrigin, setPeriod, startFromPreset, toTransfer, unassign, type LegBook } from './trips';
+import { emptyRuns } from './routeTimes';
+import { stopRangeText, leaveFor, FIXED_BUFFER, suggestVisitTime, updateVisit, fillNights, laterEmptyNights, lodgingSuggestions, addPlace, addToDay, cleanLodgingTbd, cleanSetup, moveToDay, placeRoom, setReservation, setupReady, assign, changeCategory, emptyPlan, isEndpointOnly, move, moveTo, endpointFromPreset, newDoc, nodeIssues, planWarnings, relinkLegs, rememberLegs, removePlace, savePlan, setDepart, setEndBy, setLeg, setEndpoint, setLodging, setOrigin, setPeriod, startFromPreset, toTransfer, unassign, legKeys, type LegBook } from './trips';
 
 // The warning assertions below check the Korean copy; jsdom reports navigator.language as en-US.
 vi.hoisted(() => Object.defineProperty(navigator, 'language', { value: 'ko-KR', configurable: true }));
@@ -176,7 +177,7 @@ describe('timetable on the phone', () => {
   });
 
   it('unknown opening hours leave lodging out, as the car does', () => {
-    expect(planWarnings(sampleTrip(), home).map((x) => x.text)).toContain('영업정보 미확인 11곳');
+    expect(planWarnings(sampleTrip(), home).map((x) => x.text)).toContain('영업정보 미확인 2곳'); // 경포호 · 안목해변 커피거리 list no hours
   });
 });
 
@@ -311,6 +312,45 @@ describe('return destination presets (M27)', () => {
     expect(setEndpoint(atGym, 'finalDestination', { kind: 'HOME' }).places.some((x) => x.placeRef === ref)).toBe(false);
     const both = startFromPreset(atGym, gym);
     expect(setEndpoint(both, 'finalDestination', { kind: 'HOME' }).places.some((x) => x.placeRef === ref)).toBe(true);
+  });
+});
+
+describe('where a trip starts (M59)', () => {
+  const gym = { name: '양재 체육관', address: '서울 서초구 양재동', latE7: 374_700_000, lonE7: 1_270_300_000 };
+
+  it('a new trip starts from the current location until a place is chosen, and still returns home', async () => {
+    const t = emptyPlan();
+    expect(t.origin).toEqual({ kind: 'CURRENT' });
+    expect(t.finalDestination).toEqual({ kind: 'HOME' });
+    expect(await parseTransfer(JSON.stringify(await toTransfer(await newDoc(t, null), false)))).toMatchObject({ ok: true });
+  });
+
+  it('the current location has no fixed point, so the first leg has no key and is left to the car', () => {
+    const t = setOrigin(sampleTrip(), { kind: 'CURRENT' });
+    expect(legKeys(t, 1)[0]).toBeNull();
+    expect(legKeys(t, 2)[0]).toBe('skybay>lake'); // later days start from the lodging of the night before
+    expect(emptyRuns(t, home).some((r) => r.dayIndex === 1 && r.fromK === 0)).toBe(false); // not asked even with a home address
+  });
+
+  it('choosing a saved place and going back to the current location leaves no stray place', () => {
+    const atGym = startFromPreset(setOrigin(sampleTrip(), { kind: 'CURRENT' }), gym);
+    const ref = (atGym.origin as { placeRef: string }).placeRef;
+    const back = setOrigin(atGym, { kind: 'CURRENT' });
+    expect(back.origin).toEqual({ kind: 'CURRENT' });
+    expect(back.places.some((x) => x.placeRef === ref)).toBe(false);
+  });
+
+  it('removing the place a trip starts from falls back to the current location; the return falls back to home', () => {
+    const t = endpointFromPreset(startFromPreset(sampleTrip(), gym), 'finalDestination', gym);
+    const ref = (t.origin as { placeRef: string }).placeRef;
+    const gone = removePlace(t, ref);
+    expect(gone.origin).toEqual({ kind: 'CURRENT' });
+    expect(gone.finalDestination).toEqual({ kind: 'HOME' });
+  });
+
+  it('the current location is never a place to return to', () => {
+    const t = sampleTrip();
+    expect(setEndpoint(t, 'finalDestination', { kind: 'CURRENT' })).toBe(t);
   });
 });
 

@@ -400,6 +400,39 @@
           "code": "DEPART_PREVIOUS_DAY",
           "dayIndex": 1,
           "args": []
+        },
+        {
+          "severity": "CONFLICT",
+          "code": "OUTSIDE_HOURS",
+          "dayIndex": 1,
+          "args": [
+            "1",
+            "철뚝소머리집",
+            "00:30",
+            "01:30"
+          ]
+        },
+        {
+          "severity": "CONFLICT",
+          "code": "OUTSIDE_HOURS",
+          "dayIndex": 1,
+          "args": [
+            "1",
+            "강릉영진횟집",
+            "01:45",
+            "03:00"
+          ]
+        },
+        {
+          "severity": "CONFLICT",
+          "code": "OUTSIDE_HOURS",
+          "dayIndex": 1,
+          "args": [
+            "1",
+            "보헤미안박이추커피",
+            "03:10",
+            "04:10"
+          ]
         }
       ]
     },
@@ -722,7 +755,30 @@
         }
       ],
       "dayEnd": 1575,
-      "issues": []
+      "issues": [
+        {
+          "severity": "CONFLICT",
+          "code": "OUTSIDE_HOURS",
+          "dayIndex": 3,
+          "args": [
+            "3",
+            "원조강릉교동반점 본점",
+            "22:50",
+            "23:50"
+          ]
+        },
+        {
+          "severity": "CONFLICT",
+          "code": "OUTSIDE_HOURS",
+          "dayIndex": 3,
+          "args": [
+            "3",
+            "테라로사 커피공장 강릉본점",
+            "00:10(+1)",
+            "01:40(+1)"
+          ]
+        }
+      ]
     },
     {
       "dayIndex": 4,

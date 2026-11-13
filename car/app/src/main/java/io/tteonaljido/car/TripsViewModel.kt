@@ -16,6 +16,7 @@ import io.tteonaljido.trip.DepartureCheck
 import io.tteonaljido.trip.DepartureReport
 import io.tteonaljido.trip.DriveSession
 import io.tteonaljido.trip.DriveSessions
+import io.tteonaljido.trip.DayStart
 import io.tteonaljido.trip.Endpoint
 import io.tteonaljido.trip.originFor
 import io.tteonaljido.trip.GuidingTarget
@@ -278,6 +279,7 @@ class TripsViewModel(
         is Target.Final -> when (tg.endpoint) {
             is Endpoint.Home -> homeTarget(t)?.let { it to null }
             is Endpoint.AtPlace -> tg.place?.let { placeTarget(t, it) to it.placeRef }
+            is Endpoint.Current -> null // never a place to return to (the parser rejects it)
         }
     }
 
@@ -497,6 +499,9 @@ class TripsViewModel(
      */
     fun departHere(localId: String, day: Int) {
         val t0 = trip(localId) ?: return
+        // A later day starts from the lodging of the night before; only the first day (or a day after a night with no
+        // lodging) can start from where the car stands (M59).
+        if (!DayStart.canDepartHere(t0.plan, day)) return
         viewModelScope.launch {
             _guide.value = Guide.Working(Msg(R.string.here_checking))
             val here = navi.currentLocation() ?: return@launch run { _guide.value = Guide.Failed(Msg(R.string.here_no_location), false) }
@@ -529,7 +534,7 @@ class TripsViewModel(
     /** Undo "여기서 출발": the day starts from the plan again, and its from-here estimate is dropped. */
     fun undoDepartHere(localId: String, day: Int) {
         val t = trip(localId) ?: return
-        if (t.overlay.originFor(day) == null) return
+        if (t.overlay.originFor(t.plan, day) == null) return
         // The leg key is "@origin>…" only while the override is still active, so read it before clearing.
         val key = LegKeys.of(t.plan, t.overlay, day, 0)
         update(localId) {

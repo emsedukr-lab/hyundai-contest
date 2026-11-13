@@ -44,7 +44,7 @@ const visitPt = (plan: Trip, visitId: string): Pt | null => {
   return v ? placePt(plan, v.placeRef) : null;
 };
 const endpointPt = (plan: Trip, home: Home | null, e: Endpoint): Pt | null =>
-  e.kind === 'HOME' ? (home ? { latE7: home.latE7, lonE7: home.lonE7 } : null) : placePt(plan, e.placeRef);
+  e.kind === 'HOME' ? (home ? { latE7: home.latE7, lonE7: home.lonE7 } : null) : e.kind === 'PLACE' ? placePt(plan, e.placeRef) : null; // 현재 위치: no point until the car leaves
 
 /** Where a day starts from: day 1 = origin; later days = the previous night's lodging. */
 const startPt = (plan: Trip, home: Home | null, dayIndex: number): Pt | null =>

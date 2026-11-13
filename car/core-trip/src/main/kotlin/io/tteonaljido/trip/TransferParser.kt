@@ -82,6 +82,7 @@ internal object SchemaRules {
             is FirstDay.ArriveFirstStop -> need(TIME.matches(f.arriveTime) && f.prepMinutes in 0..240, "firstDay")
         }
         listOf(trip.origin, trip.finalDestination).forEach { if (it is Endpoint.AtPlace) need(REF.matches(it.placeRef), "endpoint") }
+        need(trip.finalDestination !is Endpoint.Current, "endpoint") // the current location is a place to start from, not one to return to (M59)
         trip.home?.let { need(it.address.length in 1..120 && lat(it.latE7) && lon(it.lonE7), "home") }
         need(trip.places.size <= 100 && trip.visits.size <= 100 && trip.days.size in 1..14, "sizes")
         trip.places.forEach { p ->

@@ -114,8 +114,12 @@ fun DayTimeline(t: LocalTrip, day: Int, live: LiveView?) {
     val home = stringResource(R.string.home)
     val undecided = stringResource(R.string.lodging_undecided)
     val startName = when {
-        t.overlay.originFor(day) != null -> stringResource(R.string.origin_here)
-        day == 1 -> if (plan.origin is Endpoint.Home) home else (plan.origin as? Endpoint.AtPlace)?.let { TripValidator.placeName(plan, it.placeRef) } ?: stringResource(R.string.origin_place)
+        t.overlay.originFor(plan, day) != null -> stringResource(R.string.origin_here)
+        day == 1 -> when (val o = plan.origin) {
+            is Endpoint.Home -> home
+            is Endpoint.AtPlace -> TripValidator.placeName(plan, o.placeRef)
+            is Endpoint.Current -> stringResource(R.string.origin_here) // no saved place chosen: the car's position when it leaves (M59)
+        }
         else -> plan.days[day - 2].lodgingPlaceRef?.let { TripValidator.placeName(plan, it) } ?: undecided
     }
     val startAt = TripValidator.departure(plan, day, t.overlay)

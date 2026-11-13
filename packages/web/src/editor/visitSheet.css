@@ -58,6 +58,27 @@
   flex: 1 1 auto;
   min-width: 0;
 }
+/* Hours that the two time fields cannot hold (a break, or times that differ by weekday): read as lines. */
+.vd-hours {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 16px;
+  line-height: 24px;
+  font-variant-numeric: tabular-nums;
+}
+.vd-hours li {
+  display: flex;
+  gap: 12px;
+}
+.vd-hours-days {
+  flex: none;
+  min-width: 96px;
+  color: var(--color-text-secondary);
+}
 .vd-hint {
   margin: 0;
   font-size: 14px;

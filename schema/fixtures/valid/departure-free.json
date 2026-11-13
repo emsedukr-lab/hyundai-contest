@@ -2,7 +2,7 @@
   "schema": "trip-transfer",
   "schemaVersion": 1,
   "exportedAt": "2026-11-05T09:30:00+09:00",
-  "contentHash": "eQfhuiyWwJP_Uh7qp0LmoCOFp1ZIeP5zv27pnAdgTvo",
+  "contentHash": "mf8akj8v_9kXANrFBO-Pv0K-kbNPwyT1t3hNzXJCXIc",
   "trip": {
     "tripId": "6f1c2d4e-8a3b-4c5d-9e7f-0a1b2c3d4e5f",
     "revision": 1,
@@ -36,13 +36,46 @@
         },
         "naviPoi": null,
         "hours": {
-          "status": "UNKNOWN"
+          "status": "USER_ENTERED",
+          "weekly": [
+            {
+              "weekday": 1,
+              "open": "07:00",
+              "close": "16:00"
+            },
+            {
+              "weekday": 2,
+              "open": "07:00",
+              "close": "16:00"
+            },
+            {
+              "weekday": 3,
+              "open": "07:00",
+              "close": "16:00"
+            },
+            {
+              "weekday": 5,
+              "open": "07:00",
+              "close": "16:00"
+            },
+            {
+              "weekday": 6,
+              "open": "07:00",
+              "close": "16:00"
+            },
+            {
+              "weekday": 7,
+              "open": "07:00",
+              "close": "16:00"
+            }
+          ],
+          "closedDates": []
         }
       },
       {
         "placeRef": "youngjin",
         "name": "강릉영진횟집",
-        "address": "강릉시 연곡면 해안로 1429",
+        "address": "강릉시 연곡면 해안로 1427",
         "latE7": 378730000,
         "lonE7": 1288420000,
         "category": "FOOD",
@@ -52,7 +85,40 @@
         },
         "naviPoi": null,
         "hours": {
-          "status": "UNKNOWN"
+          "status": "USER_ENTERED",
+          "weekly": [
+            {
+              "weekday": 1,
+              "open": "11:00",
+              "close": "22:00"
+            },
+            {
+              "weekday": 2,
+              "open": "11:00",
+              "close": "22:00"
+            },
+            {
+              "weekday": 3,
+              "open": "11:00",
+              "close": "22:00"
+            },
+            {
+              "weekday": 4,
+              "open": "11:00",
+              "close": "22:00"
+            },
+            {
+              "weekday": 5,
+              "open": "11:00",
+              "close": "22:00"
+            },
+            {
+              "weekday": 6,
+              "open": "11:00",
+              "close": "22:00"
+            }
+          ],
+          "closedDates": []
         }
       },
       {
@@ -68,7 +134,45 @@
         },
         "naviPoi": null,
         "hours": {
-          "status": "UNKNOWN"
+          "status": "USER_ENTERED",
+          "weekly": [
+            {
+              "weekday": 1,
+              "open": "09:00",
+              "close": "18:00"
+            },
+            {
+              "weekday": 2,
+              "open": "09:00",
+              "close": "18:00"
+            },
+            {
+              "weekday": 3,
+              "open": "09:00",
+              "close": "18:00"
+            },
+            {
+              "weekday": 4,
+              "open": "09:00",
+              "close": "18:00"
+            },
+            {
+              "weekday": 5,
+              "open": "09:00",
+              "close": "18:00"
+            },
+            {
+              "weekday": 6,
+              "open": "09:00",
+              "close": "18:00"
+            },
+            {
+              "weekday": 7,
+              "open": "09:00",
+              "close": "18:00"
+            }
+          ],
+          "closedDates": []
         }
       },
       {
@@ -116,7 +220,70 @@
         },
         "naviPoi": null,
         "hours": {
-          "status": "UNKNOWN"
+          "status": "USER_ENTERED",
+          "weekly": [
+            {
+              "weekday": 1,
+              "open": "07:00",
+              "close": "16:00"
+            },
+            {
+              "weekday": 1,
+              "open": "17:00",
+              "close": "19:30"
+            },
+            {
+              "weekday": 2,
+              "open": "07:00",
+              "close": "16:00"
+            },
+            {
+              "weekday": 2,
+              "open": "17:00",
+              "close": "19:30"
+            },
+            {
+              "weekday": 4,
+              "open": "07:00",
+              "close": "16:00"
+            },
+            {
+              "weekday": 4,
+              "open": "17:00",
+              "close": "19:30"
+            },
+            {
+              "weekday": 5,
+              "open": "07:00",
+              "close": "16:00"
+            },
+            {
+              "weekday": 5,
+              "open": "17:00",
+              "close": "19:30"
+            },
+            {
+              "weekday": 6,
+              "open": "07:00",
+              "close": "16:00"
+            },
+            {
+              "weekday": 6,
+              "open": "17:00",
+              "close": "19:30"
+            },
+            {
+              "weekday": 7,
+              "open": "07:00",
+              "close": "16:00"
+            },
+            {
+              "weekday": 7,
+              "open": "17:00",
+              "close": "19:30"
+            }
+          ],
+          "closedDates": []
         }
       },
       {
@@ -132,7 +299,45 @@
         },
         "naviPoi": null,
         "hours": {
-          "status": "UNKNOWN"
+          "status": "USER_ENTERED",
+          "weekly": [
+            {
+              "weekday": 1,
+              "open": "11:00",
+              "close": "18:00"
+            },
+            {
+              "weekday": 2,
+              "open": "11:00",
+              "close": "18:00"
+            },
+            {
+              "weekday": 3,
+              "open": "11:00",
+              "close": "18:00"
+            },
+            {
+              "weekday": 4,
+              "open": "11:00",
+              "close": "18:00"
+            },
+            {
+              "weekday": 5,
+              "open": "11:00",
+              "close": "18:00"
+            },
+            {
+              "weekday": 6,
+              "open": "11:00",
+              "close": "18:00"
+            },
+            {
+              "weekday": 7,
+              "open": "11:00",
+              "close": "18:00"
+            }
+          ],
+          "closedDates": []
         }
       },
       {
@@ -148,7 +353,45 @@
         },
         "naviPoi": null,
         "hours": {
-          "status": "UNKNOWN"
+          "status": "USER_ENTERED",
+          "weekly": [
+            {
+              "weekday": 1,
+              "open": "11:00",
+              "close": "23:00"
+            },
+            {
+              "weekday": 2,
+              "open": "11:00",
+              "close": "23:00"
+            },
+            {
+              "weekday": 3,
+              "open": "11:00",
+              "close": "23:00"
+            },
+            {
+              "weekday": 4,
+              "open": "11:00",
+              "close": "23:00"
+            },
+            {
+              "weekday": 5,
+              "open": "11:00",
+              "close": "23:00"
+            },
+            {
+              "weekday": 6,
+              "open": "11:00",
+              "close": "23:00"
+            },
+            {
+              "weekday": 7,
+              "open": "11:00",
+              "close": "23:00"
+            }
+          ],
+          "closedDates": []
         }
       },
       {
@@ -180,7 +423,40 @@
         },
         "naviPoi": null,
         "hours": {
-          "status": "UNKNOWN"
+          "status": "USER_ENTERED",
+          "weekly": [
+            {
+              "weekday": 2,
+              "open": "10:00",
+              "close": "18:00"
+            },
+            {
+              "weekday": 3,
+              "open": "10:00",
+              "close": "18:00"
+            },
+            {
+              "weekday": 4,
+              "open": "10:00",
+              "close": "18:00"
+            },
+            {
+              "weekday": 5,
+              "open": "10:00",
+              "close": "18:00"
+            },
+            {
+              "weekday": 6,
+              "open": "10:00",
+              "close": "18:00"
+            },
+            {
+              "weekday": 7,
+              "open": "10:00",
+              "close": "18:00"
+            }
+          ],
+          "closedDates": []
         }
       },
       {
@@ -196,7 +472,45 @@
         },
         "naviPoi": null,
         "hours": {
-          "status": "UNKNOWN"
+          "status": "USER_ENTERED",
+          "weekly": [
+            {
+              "weekday": 1,
+              "open": "09:00",
+              "close": "20:00"
+            },
+            {
+              "weekday": 2,
+              "open": "09:00",
+              "close": "20:00"
+            },
+            {
+              "weekday": 3,
+              "open": "09:00",
+              "close": "20:00"
+            },
+            {
+              "weekday": 4,
+              "open": "09:00",
+              "close": "20:00"
+            },
+            {
+              "weekday": 5,
+              "open": "09:00",
+              "close": "20:00"
+            },
+            {
+              "weekday": 6,
+              "open": "09:00",
+              "close": "20:00"
+            },
+            {
+              "weekday": 7,
+              "open": "09:00",
+              "close": "20:00"
+            }
+          ],
+          "closedDates": []
         }
       },
       {
@@ -228,7 +542,45 @@
         },
         "naviPoi": null,
         "hours": {
-          "status": "UNKNOWN"
+          "status": "USER_ENTERED",
+          "weekly": [
+            {
+              "weekday": 1,
+              "open": "09:00",
+              "close": "15:30"
+            },
+            {
+              "weekday": 2,
+              "open": "09:00",
+              "close": "15:30"
+            },
+            {
+              "weekday": 3,
+              "open": "09:00",
+              "close": "15:30"
+            },
+            {
+              "weekday": 4,
+              "open": "09:00",
+              "close": "15:30"
+            },
+            {
+              "weekday": 5,
+              "open": "09:00",
+              "close": "15:30"
+            },
+            {
+              "weekday": 6,
+              "open": "08:00",
+              "close": "15:30"
+            },
+            {
+              "weekday": 7,
+              "open": "08:00",
+              "close": "15:30"
+            }
+          ],
+          "closedDates": []
         }
       },
       {

@@ -38,6 +38,7 @@ const endpointRef = (e: Endpoint) => (e.kind === 'PLACE' ? e.placeRef : null);
 
 function anchor(plan: Trip, home: Home | null, e: Endpoint, homeLabel: string): { latE7: number | null; lonE7: number | null; label: string } | null {
   if (e.kind === 'HOME') return home ? { latE7: home.latE7, lonE7: home.lonE7, label: homeLabel } : null;
+  if (e.kind === 'CURRENT') return null; // the car's position when it leaves: nothing to draw yet
   const p = placeOf(plan, endpointRef(e));
   return p ? { latE7: p.latE7, lonE7: p.lonE7, label: p.name } : null;
 }

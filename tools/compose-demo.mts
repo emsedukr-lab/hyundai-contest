@@ -89,9 +89,9 @@ const captionHtml = (text: string) => {
   return `<style>${css}
     html, body { background: transparent; }
     .c { position: absolute; left: ${CAR.x}px; top: ${CAR.y + CAR.h + 18}px; width: ${CAR.w}px; min-height: 112px;
-         background: rgba(255,255,255,0.06); border-left: 6px solid #276ef1; border-radius: 4px; padding: 18px 28px;
+         background: rgba(255,255,255,0.06); border-left: 6px solid #e0e1e6; border-radius: 4px; padding: 18px 28px;
          display: flex; gap: 18px; align-items: center; color: #fff; font-size: 31px; line-height: 1.38; font-weight: 600; letter-spacing: -0.3px; }
-    b { color: #6ea0ff; font-size: 40px; font-weight: 700; }
+    b { color: #fff; font-size: 40px; font-weight: 700; }
     i { font-style: normal; color: #7d838d; }
   </style><div class="c">${badge}<div>${body}</div></div>`;
 };

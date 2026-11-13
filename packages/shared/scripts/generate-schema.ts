@@ -1,8 +1,9 @@
 /**
  * Regenerates schema/trip-transfer.v1.schema.json and the parity fixtures used by both TS and Kotlin tests.
- * Crypto vectors are created once (random keys) and then kept stable; pass --new-vectors to replace them.
+ * Crypto vectors are created once (random keys) and then kept stable; pass --new-vectors to replace them. On a normal
+ * run only the sealed sample (plaintext hash, ciphertext) is refreshed, so it follows a change to the sample trip.
  */
-import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { z } from 'zod';
@@ -87,6 +88,8 @@ byName.visits.push({ ...byName.visits[0], visitId: 'v12', placeRef: 'mukho', una
 await valid('place-without-coordinates', byName);
 // M48: departure is optional on every day — the first day too (no time chosen = null).
 await valid('departure-free', { ...sampleTrip(), firstDay: { basis: 'DEPART_ORIGIN', departTime: null } });
+// M59: the first day starts from the car's current location (no place chosen); the navigation supplies it on the day.
+await valid('origin-current', { ...sampleTrip(), origin: { kind: 'CURRENT' } });
 
 await invalid('half-coordinates', 'SCHEMA', (t) => (t.places[0].lonE7 = null));
 await invalid('unknown-field', 'SCHEMA', () => {}, { raw: (t) => ((t.trip as Record<string, unknown>).memo = '예약번호 1234') });
@@ -97,6 +100,8 @@ await invalid('float-coordinate', 'SCHEMA', () => {}, {
 await invalid('bad-calendar-date', 'SCHEMA', (t) => (t.endDate = '2026-02-30'));
 await invalid('bad-time', 'SCHEMA', (t) => (t.visits[4].fixed = { time: '24:00', kind: 'USER' }));
 await invalid('bad-timezone', 'SCHEMA', (t) => (t.timezone = 'Asia/Nowhere'));
+// the current location is a place to start from, never one to return to
+await invalid('return-current', 'SCHEMA', () => {}, { raw: (t) => ((t.trip as Record<string, unknown>).finalDestination = { kind: 'CURRENT' }) });
 await invalid('unsupported-version', 'UNSUPPORTED_VERSION', () => {}, { raw: (t) => (t.schemaVersion = 2) });
 await invalid('date-range', 'DATE_RANGE', (t) => (t.endDate = '2026-11-19'));
 await invalid('day-count', 'DAY_COUNT_MISMATCH', (t) => (t.endDate = '2026-11-24'));
@@ -193,5 +198,12 @@ if (!existsSync(vectorsPath) || process.argv.includes('--new-vectors')) {
     plaintextFixture: 'valid/sample.json (canonical form)',
     ciphertext: sealed.ct,
   });
+} else {
+  // Same keys, session and IV; only the sealed sample follows valid/sample.json when the sample trip changes.
+  const v = JSON.parse(readFileSync(vectorsPath, 'utf8'));
+  const from = (t: string) => Uint8Array.from(atob(t.replace(/-/g, '+').replace(/_/g, '/')), (c) => c.charCodeAt(0));
+  const plaintext = canonicalJson(await buildTransfer(sampleTrip(), EXPORTED));
+  const sealed = await encrypt(from(v.key), utf8(plaintext), aadFor(v.sid, 1), from(v.iv));
+  write('fixtures/crypto/vectors.json', { ...v, plaintextSha256: b64url(new Uint8Array(await crypto.subtle.digest('SHA-256', utf8(plaintext)))), ciphertext: sealed.ct });
 }
 console.log(`schema + ${Object.keys(expectations).length} fixtures written to ${root}`);

@@ -9,11 +9,12 @@ import { t } from '../lib/i18n';
 import { PRESET_SLOTS, presetLabel, presetPlace } from '../lib/settings';
 import { endpointFromPreset, presetInPlan, setEndpoint, type EndpointSide } from '../lib/trips';
 
-export const endpointValue = (e: Endpoint) => (e.kind === 'HOME' ? 'HOME' : e.placeRef);
-export const toEndpoint = (v: string): Endpoint => (v === 'HOME' ? { kind: 'HOME' } : { kind: 'PLACE', placeRef: v });
+export const endpointValue = (e: Endpoint) => (e.kind === 'PLACE' ? e.placeRef : e.kind);
+export const toEndpoint = (v: string): Endpoint => (v === 'HOME' ? { kind: 'HOME' } : v === 'CURRENT' ? { kind: 'CURRENT' } : { kind: 'PLACE', placeRef: v });
 
 /**
- * One end of the trip — 출발 장소 or 귀가 시 도착 장소. 집 and the saved places (설정 › 회사, 즐겨찾기 1–3) come first;
+ * One end of the trip — 출발 장소 or 귀가 시 도착 장소. The start lists 현재 위치 first (M59): the car's position when it
+ * leaves, and what a trip starts from until a place is chosen. 집 and the saved places (설정 › 회사, 즐겨찾기 1–3) follow;
  * a saved place already in the trip answers to its place; then the trip's other places. A slot not set yet is listed
  * but disabled. The pencil beside the select opens 설정, where those places are kept.
  */
@@ -41,6 +42,7 @@ export function EndpointField({
   const [presets] = useState(() => PRESET_SLOTS.filter((s) => s !== 'home').map((slot) => ({ slot, place: presetPlace(slot) })));
   const seen = new Set<string>(['HOME']);
   const savedPlaces = [
+    ...(which === 'origin' ? [{ value: 'CURRENT', label: t('common.currentLocation'), description: t('editor.startPlace.currentHint') }] : []),
     { value: 'HOME', label: t('common.home'), description: home ? home.address : t('editor.startPlace.homeUnset') },
     ...presets.flatMap(({ slot, place }) => {
       if (!place) return [{ value: `preset:${slot}`, label: presetLabel(slot), description: t('settings.home.unset'), disabled: true }];
@@ -56,9 +58,12 @@ export function EndpointField({
     ...(tripPlaces.length ? [{ type: 'section' as const, title: t('editor.startPlace.tripPlaces'), options: tripPlaces }] : []),
   ];
   const current = plan[which];
-  const address = current.kind === 'HOME' ? (home ? home.address : t('editor.startPlace.homeUnset')) : plan.places.find((p) => p.placeRef === current.placeRef)?.address || undefined;
+  const address =
+    current.kind === 'HOME' ? (home ? home.address : t('editor.startPlace.homeUnset'))
+    : current.kind === 'CURRENT' ? t('editor.startPlace.currentHint')
+    : plan.places.find((p) => p.placeRef === current.placeRef)?.address || undefined;
   const pick = (v: string) => {
-    if (v === 'HOME') return onChange(setEndpoint(plan, which, { kind: 'HOME' }));
+    if (v === 'HOME' || v === 'CURRENT') return onChange(setEndpoint(plan, which, toEndpoint(v)));
     const preset = v.startsWith('preset:') ? presets.find((x) => `preset:${x.slot}` === v)?.place : undefined;
     onChange(preset ? endpointFromPreset(plan, which, preset) : setEndpoint(plan, which, toEndpoint(v)));
   };

@@ -91,10 +91,18 @@ export const FirstDay = z.discriminatedUnion('basis', [
   z.strictObject({ basis: z.literal('ARRIVE_FIRST_STOP'), arriveTime: TimeStr, prepMinutes: z.int().min(0).max(240) }),
 ]);
 
-export const Endpoint = z.discriminatedUnion('kind', [
-  z.strictObject({ kind: z.literal('HOME') }),
-  z.strictObject({ kind: z.literal('PLACE'), placeRef: Ref }),
-]);
+const HomeEnd = z.strictObject({ kind: z.literal('HOME') });
+const PlaceEnd = z.strictObject({ kind: z.literal('PLACE'), placeRef: Ref });
+
+/**
+ * Where the first day starts (M59): 집, a place of the trip (a saved 회사 · 즐겨찾기 joins the trip as a place), or
+ * CURRENT — wherever the car is when it leaves. CURRENT carries no coordinates: the car's navigation supplies them on
+ * 「여기서 출발」. It is what a trip starts from when no place was chosen. Later days start from the lodging of the night before.
+ */
+export const Endpoint = z.discriminatedUnion('kind', [HomeEnd, PlaceEnd, z.strictObject({ kind: z.literal('CURRENT') })]);
+
+/** Where the last day ends: 집 or a place of the trip. The current location is a place to start from, not one to return to. */
+export const FinalDestination = z.discriminatedUnion('kind', [HomeEnd, PlaceEnd]);
 
 export const Home = z.strictObject({ address: z.string().min(1).max(TRANSFER_LIMITS.addressMax), latE7: LatE7, lonE7: LonE7 });
 
@@ -120,7 +128,7 @@ export const Trip = z.strictObject({
   endDate: DateStr,
   firstDay: FirstDay,
   origin: Endpoint,
-  finalDestination: Endpoint,
+  finalDestination: FinalDestination,
   home: Home.nullable(),
   places: z.array(Place).max(TRANSFER_LIMITS.maxPlaces),
   visits: z.array(Visit).max(TRANSFER_LIMITS.maxVisits),
@@ -143,6 +151,7 @@ export type Day = z.infer<typeof Day>;
 export type Leg = z.infer<typeof Leg>;
 export type FirstDay = z.infer<typeof FirstDay>;
 export type Endpoint = z.infer<typeof Endpoint>;
+export type FinalDestination = z.infer<typeof FinalDestination>;
 export type Home = z.infer<typeof Home>;
 export type OpeningHours = z.infer<typeof OpeningHours>;
 

@@ -32,7 +32,8 @@ function knownPoints(plan: Trip, dayIndex: number, home: Home | null): (Point | 
     return p && p.latE7 !== null && p.lonE7 !== null ? { latE7: p.latE7, lonE7: p.lonE7 } : null;
   };
   const homePoint: Point | null = home ? { latE7: home.latE7, lonE7: home.lonE7 } : null;
-  const start = dayIndex === 1 ? (plan.origin.kind === 'PLACE' ? at(plan.origin.placeRef) : homePoint) : at(plan.days[dayIndex - 2].lodgingPlaceRef);
+  // Day 1 from 현재 위치 has no point here: the car's navigation times that first leg when it leaves.
+  const start = dayIndex === 1 ? (plan.origin.kind === 'PLACE' ? at(plan.origin.placeRef) : plan.origin.kind === 'HOME' ? homePoint : null) : at(plan.days[dayIndex - 2].lodgingPlaceRef);
   const end = dayIndex === plan.days.length ? (plan.finalDestination.kind === 'PLACE' ? at(plan.finalDestination.placeRef) : homePoint) : at(day.lodgingPlaceRef);
   const stops = day.visitOrder.map((id) => at(plan.visits.find((v) => v.visitId === id)?.placeRef));
   return [start, ...stops, end];

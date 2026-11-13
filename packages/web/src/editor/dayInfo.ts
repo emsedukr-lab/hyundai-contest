@@ -2,7 +2,9 @@ import type { Endpoint, Trip } from '@tteonaljido/shared';
 import { t } from '../lib/i18n';
 import { placeOf, visitOf } from '../lib/trips';
 
-export const endpointName = (plan: Trip, e: Endpoint) => (e.kind === 'HOME' ? t('common.home') : (placeOf(plan, e.placeRef)?.name ?? t('common.place')));
+/** 집, 현재 위치 (the first day's start when no place was chosen — the car's position when it leaves), or the place's name. */
+export const endpointName = (plan: Trip, e: Endpoint) =>
+  e.kind === 'HOME' ? t('common.home') : e.kind === 'CURRENT' ? t('common.currentLocation') : (placeOf(plan, e.placeRef)?.name ?? t('common.place'));
 
 /**
  * What one day of the timeline runs between: day 1 starts at the trip's origin, later days at the previous night's

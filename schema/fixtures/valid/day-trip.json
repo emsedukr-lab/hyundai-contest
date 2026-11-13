@@ -2,7 +2,7 @@
   "schema": "trip-transfer",
   "schemaVersion": 1,
   "exportedAt": "2026-11-05T09:30:00+09:00",
-  "contentHash": "J_BRi_06LosPFDReDHs8NnXXl11hjN-UM9DjfQ-tDQ0",
+  "contentHash": "qVgmlMJHgb7BxqemH32ODVP0QcbO4i-sF6wwh2OSbrk",
   "trip": {
     "tripId": "0b6f8a52-1d3e-4f6a-8b9c-2d4e6f8a0b1c",
     "revision": 1,
@@ -36,7 +36,40 @@
         },
         "naviPoi": null,
         "hours": {
-          "status": "UNKNOWN"
+          "status": "USER_ENTERED",
+          "weekly": [
+            {
+              "weekday": 1,
+              "open": "07:00",
+              "close": "16:00"
+            },
+            {
+              "weekday": 2,
+              "open": "07:00",
+              "close": "16:00"
+            },
+            {
+              "weekday": 3,
+              "open": "07:00",
+              "close": "16:00"
+            },
+            {
+              "weekday": 5,
+              "open": "07:00",
+              "close": "16:00"
+            },
+            {
+              "weekday": 6,
+              "open": "07:00",
+              "close": "16:00"
+            },
+            {
+              "weekday": 7,
+              "open": "07:00",
+              "close": "16:00"
+            }
+          ],
+          "closedDates": []
         }
       }
     ],

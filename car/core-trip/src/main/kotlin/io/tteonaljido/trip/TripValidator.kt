@@ -30,13 +30,15 @@ object LegKeys {
     const val HOME = "@home"
     const val ORIGIN = "@origin"
 
-    private fun endpoint(e: Endpoint) = when (e) {
+    /** Null for the car's current location: it is no fixed point until "여기서 출발" pins it ([ORIGIN]). */
+    private fun endpoint(e: Endpoint): String? = when (e) {
         is Endpoint.Home -> HOME
         is Endpoint.AtPlace -> e.placeRef
+        is Endpoint.Current -> null
     }
 
     fun dayStart(trip: Trip, overlay: CarOverlay, dayIndex: Int): String? =
-        if (overlay.originFor(dayIndex) != null) ORIGIN
+        if (overlay.originFor(trip, dayIndex) != null) ORIGIN
         else if (dayIndex == 1) endpoint(trip.origin)
         else trip.days[dayIndex - 2].lodgingPlaceRef
 
@@ -65,7 +67,7 @@ object LegKeys {
         val fromRef: String? = if (k == 0) dayStart(trip, overlay, dayIndex) else order[k - 1].takeIf { it in overlay.visited }?.let { id -> trip.visits.first { it.visitId == id }.placeRef }
         val at: Pair<Int, Int>? = when (fromRef) {
             null -> null
-            ORIGIN -> overlay.originFor(dayIndex)?.let { it.latE7 to it.lonE7 }
+            ORIGIN -> overlay.originFor(trip, dayIndex)?.let { it.latE7 to it.lonE7 }
             HOME -> (overlay.home?.let { it.latE7 to it.lonE7 } ?: trip.home?.let { it.latE7 to it.lonE7 })
             else -> overlay.poiBindings[fromRef]?.let { it.latE7 to it.lonE7 } ?: trip.places.first { it.placeRef == fromRef }.let { p -> p.latE7?.let { la -> p.lonE7?.let { lo -> la to lo } } }
         }
@@ -91,7 +93,7 @@ object TripValidator {
     fun leg(trip: Trip, overlay: CarOverlay, dayIndex: Int, k: Int): LegValue? {
         val navi = LegKeys.of(trip, overlay, dayIndex, k)?.let(overlay.legEstimates::get)?.let { LegValue(it.minutes, LegFrom.NAVI) }
         // After "여기서 출발" on this day, the plan's first leg (from the lodging or origin) no longer applies.
-        if (k == 0 && overlay.originFor(dayIndex) != null) return navi
+        if (k == 0 && overlay.originFor(trip, dayIndex) != null) return navi
         return trip.days[dayIndex - 1].legs.getOrNull(k)?.let { LegValue(it.minutes, LegFrom.USER) } ?: navi
     }
 
@@ -226,7 +228,7 @@ object TripValidator {
 
         // Origin and return
         val homeKnown = trip.home != null || overlay.home != null
-        if (trip.origin is Endpoint.Home && overlay.originFor(1) == null && !homeKnown) add(Severity.UNCERTAIN, "ORIGIN_HOME_UNKNOWN", "첫날 출발지(집)를 차량 내비에서 확인해 주세요", 1)
+        if (trip.origin is Endpoint.Home && overlay.originFor(trip, 1) == null && !homeKnown) add(Severity.UNCERTAIN, "ORIGIN_HOME_UNKNOWN", "첫날 출발지(집)를 차량 내비에서 확인해 주세요", 1)
         if (trip.finalDestination is Endpoint.Home && !homeKnown) add(Severity.UNCERTAIN, "RETURN_HOME_UNKNOWN", "마지막 날 귀가지(집)를 차량 내비에서 확인해 주세요", last)
 
         // Navigation scope

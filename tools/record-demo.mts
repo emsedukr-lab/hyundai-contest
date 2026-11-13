@@ -344,8 +344,8 @@ try {
     tap(await waitFor(byText('강릉 3박 4일'), 'open trip'));
     await waitFor(byText('시연 시각'), 'demo clock line');
   });
-  caption('⑯ 여행 당일(시연 시각 11/21 09:00) · 휴대폰에서 짠 동선 그대로 오늘 일정과 다음 목적지가 보여요');
-  await sleep(4500);
+  caption('⑯ 여행 당일(시연 시각 11/21 09:00) · 휴대폰에서 짠 동선 그대로 오늘 일정과 다음 목적지 · 차량 신호로 출발 전 점검과 일정 끝 배터리 예상까지');
+  await sleep(6000);
   sample('여행 상세');
   caption('⑰ [여기서 출발] · 내비가 현재 위치에서 다음 장소까지 예상 시간과 도착 시 배터리를 알려 줘요');
   tap(await waitFor(byTag('departHere'), 'depart here'));

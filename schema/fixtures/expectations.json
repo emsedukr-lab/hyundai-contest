@@ -17,6 +17,9 @@
   "valid/departure-free.json": {
     "valid": true
   },
+  "valid/origin-current.json": {
+    "valid": true
+  },
   "invalid/half-coordinates.json": {
     "valid": false,
     "code": "SCHEMA"
@@ -42,6 +45,10 @@
     "code": "SCHEMA"
   },
   "invalid/bad-timezone.json": {
+    "valid": false,
+    "code": "SCHEMA"
+  },
+  "invalid/return-current.json": {
     "valid": false,
     "code": "SCHEMA"
   },

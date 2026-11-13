@@ -78,7 +78,7 @@ export function emptyPlan(tripId: string = crypto.randomUUID()): Trip {
     startDate: start,
     endDate: addDays(start, 1),
     firstDay: { basis: 'DEPART_ORIGIN', departTime: '09:00' },
-    origin: { kind: 'HOME' },
+    origin: { kind: 'CURRENT' }, // no start chosen yet: wherever the car is when it leaves (M59)
     finalDestination: { kind: 'HOME' },
     home: null,
     places: [],
@@ -176,6 +176,7 @@ export type EndpointSide = 'origin' | 'finalDestination';
  * night's lodging) is dropped with it, so trying 회사 then 즐겨찾기 doesn't leave stray places behind.
  */
 export function setEndpoint(plan: Trip, which: EndpointSide, endpoint: Endpoint): Trip {
+  if (which === 'finalDestination' && endpoint.kind === 'CURRENT') return plan; // 현재 위치 is a place to start from only
   const prev = plan[which];
   const next: Trip = { ...plan, [which]: endpoint };
   if (prev.kind !== 'PLACE' || (endpoint.kind === 'PLACE' && endpoint.placeRef === prev.placeRef)) return next;
@@ -228,7 +229,7 @@ export function removePlace(plan: Trip, placeRef: string): Trip {
     places: next.places.filter((p) => p.placeRef !== placeRef),
     visits: next.visits.filter((v) => v.placeRef !== placeRef),
     days: next.days.map((d) => (d.lodgingPlaceRef === placeRef ? { ...d, lodgingPlaceRef: null } : d)),
-    origin: next.origin.kind === 'PLACE' && next.origin.placeRef === placeRef ? { kind: 'HOME' } : next.origin,
+    origin: next.origin.kind === 'PLACE' && next.origin.placeRef === placeRef ? { kind: 'CURRENT' } : next.origin, // back to the default start
     finalDestination: next.finalDestination.kind === 'PLACE' && next.finalDestination.placeRef === placeRef ? { kind: 'HOME' } : next.finalDestination,
   };
 }
@@ -335,7 +336,8 @@ export const setEndBy = (plan: Trip, dayIndex: number, time: string | null): Tri
 
 /* ---------- travel times follow their pair of places ---------- */
 
-const endpointKey = (e: Endpoint) => (e.kind === 'HOME' ? '@home' : e.placeRef);
+/** Null for 현재 위치: no fixed point, so its leg has no key and is timed by the car. */
+const endpointKey = (e: Endpoint) => (e.kind === 'HOME' ? '@home' : e.kind === 'PLACE' ? e.placeRef : null);
 
 /** "from>to" for each leg of a day (same idea as the car's LegKeys); null where an end is not set. */
 export function legKeys(plan: Trip, dayIndex: number): (string | null)[] {

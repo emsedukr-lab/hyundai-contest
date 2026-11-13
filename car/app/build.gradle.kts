@@ -40,8 +40,8 @@ android {
         applicationId = "io.tteonaljido.car"
         minSdk = 28
         targetSdk = 34
-        versionCode = 5 // Pleos: every review submission needs a new version
-        versionName = "0.5.0"
+        versionCode = 6 // Pleos: every review submission needs a new version
+        versionName = "0.6.0"
     }
     useLibrary("android.car", false)
     buildFeatures {
