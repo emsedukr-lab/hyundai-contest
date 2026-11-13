@@ -312,7 +312,8 @@ class PleosNaviGateway(context: Context) : NaviGateway {
         if (_status.value != NaviStatus.CONNECTED) return RouteOutcome.Unavailable(io.tteonaljido.car.R.string.navi_not_connected)
         val lat = dest.latE7 ?: return RouteOutcome.NoAnswer
         val lon = dest.lonE7 ?: return RouteOutcome.NoAnswer
-        // The nav takes at most two waypoints (FIRST, SECOND); any beyond that are dropped from this one push.
+        // The SDK names two waypoints (FIRST, SECOND) and this push sends two. The emulator's navigation took nine when the
+        // rest went out as SECOND (docs/evidence/navi-waypoints); what a real car's navigation takes is not known.
         val wps = waypoints.filter { it.latE7 != null && it.lonE7 != null }.take(2).mapIndexed { i, w ->
             RequestWaypointInfo(
                 latitude = w.latE7!! / 1e7,

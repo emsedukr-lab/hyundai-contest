@@ -23,6 +23,9 @@ import android.util.Log
  * (no place names, addresses or coordinates) and runs single queries on request. Attached only when BuildConfig.DEBUG; release builds never construct it.
  *   adb shell am start --user 10 -n io.tteonaljido.car/.MainActivity --es probe "trip:37.7955,128.8975"
  *   probe values: trip:<lat,lon> | route:<lat,lon> | location | state | destination | chargers | cancel | tbt | waypoints | via:<lat,lon>|<lat,lon>|<lat,lon>
+ *                 | add:<lat,lon>,<FIRST|SECOND> | remove:<FIRST|SECOND|ALL>
+ * `via:` sends every point it is given (the last is the destination): the third waypoint onwards goes out as SECOND, to
+ * see what the navigation does with more than the two the SDK can name.
  */
 class NaviProbe(private val navi: NaviHelper) {
     private val tag = "TteonaljidoProbe"
@@ -51,6 +54,9 @@ class NaviProbe(private val navi: NaviHelper) {
             log("onRouteStateInfo mode=${routeStateInfo.naviMode} routing=${routeStateInfo.isRouting} option=${routeStateInfo.routeOption} charge=${routeStateInfo.remainDestinationChargingInt} traffic=${routeStateInfo.trafficStatus?.let { t -> "dist=${t.summary.totalCongestionDist} time=${t.summary.totalCongestionTime} avgSpeed=${t.summary.totalCongestionAvrSpeed} segments=${t.congestionItemList.size} first=${t.congestionItemList.take(3).joinToString { c -> "${c.trafficCongestionType}:${c.distance}/${c.trafficCongestionTime}" }} events=${t.trafficEventList.map { e -> e.eventType }}" }}")
         override fun onTBTInfo(tbtInfoList: List<TBTInfo>) = log("onTBTInfo n=${tbtInfoList.size} sum=${tbtInfoList.sumOf { it.distance }} list=${tbtInfoList.joinToString { "${it.type.name.removePrefix("TURN_")}@${it.distance.toInt()}" }}")
         override fun onWayPointInfo(waypointInfoList: List<WaypointInfo>) = log("onWayPointInfo n=${waypointInfoList.size} legs=${waypointInfoList.joinToString { "${it.remainTime}s/${it.remainDistance}m" }}")
+        override fun onWaypointChanged(waypointChangedInfo: ai.pleos.playground.navi.data.WaypointChangedInfo) =
+            log("onWaypointChanged index=${waypointChangedInfo.index} cmd=${waypointChangedInfo.cmdType} duration=${waypointChangedInfo.routeStartInfo.duration} distance=${waypointChangedInfo.routeStartInfo.distance}")
+        override fun onRoutingCompleted() = log("onRoutingCompleted")
         override fun onTripInfo(tripInfo: TripInfo) =
             log("onTripInfo distance=${tripInfo.distance} eta=${tripInfo.eta} socAtDest=${tripInfo.estimatedSocAtDest} energy=${tripInfo.energyConsumption} points=${tripInfo.summary.routePoints.size}")
         override fun onError(errorCode: NaviErrorCode) = log("onError $errorCode")
@@ -80,7 +86,7 @@ class NaviProbe(private val navi: NaviHelper) {
                     navi.requestRouteWithWaypoints(
                         ai.pleos.playground.navi.data.RouteWithWaypointsRequest(
                             ai.pleos.playground.navi.data.RouteInfo(latitude = dLat, longitude = dLon, poiName = "probe-dest", poiId = "", address = "", poiSubId = "0", poiProvider = ""),
-                            pts.dropLast(1).take(2).mapIndexed { i, (lat, lon) ->
+                            pts.dropLast(1).mapIndexed { i, (lat, lon) ->
                                 ai.pleos.playground.navi.data.RequestWaypointInfo(
                                     latitude = lat, longitude = lon, poiName = "probe-wp${i + 1}",
                                     waypointIndex = if (i == 0) ai.pleos.playground.navi.constants.WaypointIndex.FIRST else ai.pleos.playground.navi.constants.WaypointIndex.SECOND,
@@ -90,6 +96,16 @@ class NaviProbe(private val navi: NaviHelper) {
                         ),
                     )
                 }
+                cmd.startsWith("add:") -> {
+                    val (lat, lon, index) = cmd.removePrefix("add:").split(',').map { it.trim() }
+                    navi.addWaypoint(
+                        ai.pleos.playground.navi.data.RequestWaypointInfo(
+                            latitude = lat.toDouble(), longitude = lon.toDouble(), poiName = "probe-add",
+                            waypointIndex = ai.pleos.playground.navi.constants.WaypointIndex.valueOf(index), poiId = "", address = "", poiSubId = "0", poiProvider = "",
+                        ),
+                    )
+                }
+                cmd.startsWith("remove:") -> navi.removeWaypoint(ai.pleos.playground.navi.constants.WaypointIndex.valueOf(cmd.removePrefix("remove:").trim()))
                 cmd == "tbt" -> navi.getTBTInfo()
                 cmd == "waypoints" -> navi.getWaypointInfo()
                 else -> log("unknown probe")

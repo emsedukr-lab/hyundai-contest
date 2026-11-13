@@ -78,6 +78,10 @@ android {
         }
     }
     buildTypes {
+        debug {
+            // -Ptteonaljido.debugIdSuffix=.probe installs the debug build (NaviProbe) next to the signed release, whose trips stay untouched.
+            (findProperty("tteonaljido.debugIdSuffix") as String?)?.let { applicationIdSuffix = it }
+        }
         release {
             isMinifyEnabled = false
             if (rootProject.file("../.secrets/signing.properties").exists()) signingConfig = signingConfigs.getByName("contest")
