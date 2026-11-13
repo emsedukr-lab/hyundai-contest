@@ -104,13 +104,22 @@ export function recommend(plan: Trip, home: Home | null, opts: RecommendOptions 
   const lodging = Object.fromEntries(
     Object.entries(opts.notes ?? {}).flatMap(([ref, n]) => (n.checkIn || n.checkOut ? [[ref, { ...(n.checkIn ? { checkIn: minutes(n.checkIn) } : {}), ...(n.checkOut ? { checkOut: minutes(n.checkOut) } : {}) }]] : [])),
   );
+  // Estimates are brought in line with this trip's measured legs (their median ratio), so that a pair nobody has
+  // measured is not preferred — or avoided — just because the estimate runs fast or slow in this region.
+  const ratios = [...known].flatMap(([key, minutes]) => {
+    const [a, b] = key.split('>');
+    const m = dist(pt(a), pt(b));
+    return isFinite(m) && m > 300 && minutes > 0 ? [minutes / estimateDriveMinutes(m)] : [];
+  }).sort((x, y) => x - y);
+  const scale = ratios.length >= 3 ? Math.min(2, Math.max(0.7, ratios[Math.floor(ratios.length / 2)])) : 1;
   const result = optimizeTrip({
     trip: plan,
     drive: (a, b) => {
-      const measured = known.get(`${a}>${b}`);
+      // A measured time for this pair, else the one measured the other way round, else the estimate.
+      const measured = known.get(`${a}>${b}`) ?? known.get(`${b}>${a}`);
       if (measured !== undefined) return measured;
       const m = dist(pt(a), pt(b));
-      return isFinite(m) ? estimateDriveMinutes(m) : null;
+      return isFinite(m) ? Math.max(3, Math.round(estimateDriveMinutes(m) * scale)) : null;
     },
     lodging,
     pool: (opts.pool ?? []).filter((f) => f.latE7 !== null && !plan.places.some((p) => p.name === f.name && p.latE7 === f.latE7)).map((f) => ({ key: `fav:${f.id}`, name: f.name, category: f.category, hours: f.hours })),

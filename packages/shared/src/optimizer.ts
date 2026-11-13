@@ -77,13 +77,15 @@ export interface OptimizerInput {
   config?: Partial<OptimizerConfig>;
 }
 
+/** Times are null after a leg nobody can time (until a fixed time sets the clock again), as on the timetable the apps show. */
 export interface PlannedStop {
   visitId: string;
   /** At the door, parking done. */
-  arrive: number;
-  start: number;
-  end: number;
-  driveMinutes: number;
+  arrive: number | null;
+  start: number | null;
+  end: number | null;
+  /** null where the drive to this stop is not known. */
+  driveMinutes: number | null;
   parkingMinutes: number;
   waitMinutes: number;
 }
@@ -144,8 +146,18 @@ const CAFE_OVER = 400;
 const CAFE_AFTER = { lunch: 60, other: 25 };
 /** Past a day's end: by the minute — steeply past a target the traveller set, gently past the assumed 21:00. */
 const LATE_END = { set: 80, assumed: 6 };
-/** A stop the traveller already put on a day stays there unless moving it is clearly worth it. */
-const OTHER_DAY = 20;
+/**
+ * A stop the traveller already put on a day stays there unless moving it is clearly worth it (about fifty minutes of
+ * driving): a recommendation reorders a planned trip, and moves a place to another day only for a real reason.
+ */
+const OTHER_DAY = 150;
+/**
+ * A meal whose time is unknown (a day that starts from an address nobody has): neither rewarded nor punished like a
+ * timed one, but not free either — otherwise every badly timed restaurant would flee to the day nothing is known about.
+ */
+const MEAL_UNTIMED = 100;
+/** Moving a stop from its own day to where its time would be unknown is not a recommendation anyone can check. */
+const INTO_THE_UNKNOWN = 5_000;
 /** A different arrangement has to be this much cheaper than the plan as it stands (about five minutes of driving). */
 const MIN_GAIN = 15;
 const FALLBACK_DRIVE = 20;
@@ -255,27 +267,38 @@ export function optimizeTrip(input: OptimizerInput): Optimized {
   const startKeys = trip.days.map((_, i) => (i === 0 ? endKey(trip.origin) : trip.days[i - 1].lodgingPlaceRef));
   const endKeys = trip.days.map((d, i) => (i === nDays - 1 ? endKey(trip.finalDestination) : d.lodgingPlaceRef));
 
-  const driveCache = new Map<string, number>();
-  const drive = (a: string | null, b: string | null): number => {
-    if (!a || !b || a === b) return 0;
-    const k = `${a}>${b}`;
-    let m = driveCache.get(k);
-    if (m === undefined) {
-      m = input.drive(a, b) ?? FALLBACK_DRIVE;
-      driveCache.set(k, m);
-    }
-    return m;
-  };
+  const legCache = new Map<string, number | null>();
+  /** Driving minutes for fitting a place into a gap (an unknown drive counts as the fallback). */
+  const drive = (a: string | null, b: string | null): number => leg(a, b).minutes;
   const park = (a: string | null, b: string | null) => (!a || !b || a === b ? 0 : cfg.parkingMinutes);
 
   const departOf = (i: number): number => {
     const d = trip.days[i];
     if (i > 0) return d.departTime ? minutes(d.departTime) : cfg.defaultDepart;
     const f = trip.firstDay;
-    return f.basis === 'DEPART_ORIGIN' ? (f.departTime ? minutes(f.departTime) : cfg.defaultDepart) : -1; // -1: timed by the first stop's arrival
+    return f.basis === 'DEPART_ORIGIN' && f.departTime ? minutes(f.departTime) : cfg.defaultDepart;
+  };
+
+  /** A leg as the search may count on it: `known` is false where nobody has a driving time for it (no address, no coordinates). */
+  const leg = (a: string | null, b: string | null): { minutes: number; known: boolean } => {
+    if (!a || !b) return { minutes: 0, known: false };
+    if (a === b) return { minutes: 0, known: true };
+    const k = `${a}>${b}`;
+    let m = legCache.get(k);
+    if (m === undefined) {
+      m = input.drive(a, b);
+      legCache.set(k, m);
+    }
+    // An unknown drive still costs something, so that not knowing is never the cheap way out.
+    return m === null ? { minutes: FALLBACK_DRIVE, known: false } : { minutes: m, known: true };
   };
 
   /* ---------- one day's timetable and what it costs ---------- */
+  /**
+   * Times follow the same rule as the timetable the apps show: after a leg nobody can time, the clock is unknown until
+   * a fixed time sets it again, and nothing that depends on the clock (meal times, opening hours, waiting) is judged
+   * for a stop whose time is unknown. A trip that starts "from home" with no address is not arranged around a guess.
+   */
   function evalDay(i: number, route: string[]): DayEval {
     const day = trip.days[i];
     let cost = 0;
@@ -288,63 +311,70 @@ export function optimizeTrip(input: OptimizerInput): Optimized {
       cost += HARD + extra;
     };
 
+    const from = startKeys[i];
+    // A first day timed by its first stop: the arrival there is the given, the departure follows from the drive.
+    const firstArrival = i === 0 && trip.firstDay.basis === 'ARRIVE_FIRST_STOP' ? minutes(trip.firstDay.arriveTime) : null;
     let depart = departOf(i);
-    if (depart < 0) {
-      // First day timed by its first stop: leave so as to be at the door by the chosen time.
+    if (firstArrival !== null) {
       const first = route[0] ? node(route[0]).key : endKeys[i];
-      depart = minutes((trip.firstDay as { arriveTime: string }).arriveTime) - drive(startKeys[i], first) - park(startKeys[i], first);
+      depart = firstArrival - leg(from, first).minutes - park(from, first);
     }
     // Leaving a lodging for another one: the room has to be given up by its check-out time.
-    const from = startKeys[i];
     const leaving = i > 0 && from && from !== endKeys[i] ? input.lodging?.[from]?.checkOut : undefined;
     if (leaving !== undefined && depart > leaving) notes.push({ dayIndex: day.dayIndex, kind: 'CHECKOUT_BEFORE_DEPARTURE', minutes: depart - leaving });
 
-    let clock = depart; // this engine's clock: parking and waiting included
-    let shown = depart; // the clock of the timetable the apps show: neither
+    let clock: number | null = depart; // this engine's clock: parking and waiting included
+    let shown: number | null = depart; // the clock of the timetable the apps show: neither
     let prev: string | null = from;
     let prevId: string | null = null;
     let cafes = 0;
+    let untimedMeals = 0;
     const meals = { breakfast: 0, lunch: 0, dinner: 0 };
     let prevLunchMeal = false;
     let prevWasMeal = false;
 
-    for (const id of route) {
+    route.forEach((id, k) => {
       const n = node(id);
-      const d = drive(prev, n.key);
+      const l = leg(prev, n.key);
       const p = park(prev, n.key);
-      const arrive = clock + d + p;
-      const shownArrive = shown + d;
+      let arrive: number | null = clock !== null && l.known ? clock + l.minutes + p : null;
+      let shownArrive: number | null = shown !== null && l.known ? shown + l.minutes : null;
+      if (k === 0 && firstArrival !== null) arrive = shownArrive = firstArrival;
       const hours = n.hours[i];
-      let start = arrive;
+      let start: number | null = arrive;
       let wait = 0;
-      let shownStart = shownArrive;
+      let shownStart: number | null = shownArrive;
 
       if (hours !== 'any' && hours.length === 0) broke(); // closed that day
       if (n.fixed !== null) {
         const latest = n.fixed - cfg.reservationLeadMinutes;
-        if (arrive > latest) broke((arrive - latest) * 5_000);
-        else wait = latest - arrive;
-        start = Math.max(arrive, n.fixed);
-        shownStart = Math.max(shownArrive, n.fixed);
-        if (hours !== 'any' && hours.length > 0 && !hours.some(([o, c]) => start >= o && start + n.stay <= c)) broke();
-      } else if (hours !== 'any' && hours.length > 0) {
+        if (arrive !== null) {
+          if (arrive > latest) broke((arrive - latest) * 5_000);
+          else wait = latest - arrive;
+        }
+        const at = (start = arrive === null ? n.fixed : Math.max(arrive, n.fixed));
+        shownStart = shownArrive === null ? n.fixed : Math.max(shownArrive, n.fixed);
+        if (hours !== 'any' && hours.length > 0 && !hours.some(([o, c]) => at >= o && at + n.stay <= c)) broke();
+      } else if (arrive !== null && hours !== 'any' && hours.length > 0) {
         // The first opening span the whole stay fits into, waiting for it to begin if need be.
-        const span = hours.find(([o, c]) => Math.max(arrive, o) + n.stay <= c);
-        if (!span) broke(Math.max(0, arrive + n.stay - hours[hours.length - 1][1]) * 1_000);
+        const at = arrive;
+        const span = hours.find(([o, c]) => Math.max(at, o) + n.stay <= c);
+        if (!span) broke(Math.max(0, at + n.stay - hours[hours.length - 1][1]) * 1_000);
         else {
-          start = Math.max(arrive, span[0]);
-          wait = start - arrive;
+          start = Math.max(at, span[0]);
+          wait = start - at;
           // The shown timetable does not wait: an arrival before opening would read as a conflict there.
-          if (shownStart < span[0] || shownStart + n.stay > span[1]) cost += SHOWN_CONFLICT;
+          if (shownStart !== null && (shownStart < span[0] || shownStart + n.stay > span[1])) cost += SHOWN_CONFLICT;
         }
       }
-      const end = start + n.stay;
-      if (n.fixed === null && n.desired !== null) cost += Math.abs(start - n.desired) * 2;
+      const end = start === null ? null : start + n.stay;
+      if (n.fixed === null && n.desired !== null && start !== null) cost += Math.abs(start - n.desired) * 2;
 
       let isLunchMeal = false;
-      if (n.category === 'FOOD') {
+      if (n.category === 'FOOD' && start !== null) {
         // Which meal this is: the meal time it falls in, or — off every meal time — the one it is nearest to.
-        const off = (w: readonly [number, number]) => (start < w[0] ? w[0] - start : start > w[1] ? start - w[1] : 0);
+        const at = start;
+        const off = (w: readonly [number, number]) => (at < w[0] ? w[0] - at : at > w[1] ? at - w[1] : 0);
         const slot = (['breakfast', 'lunch', 'dinner'] as const).reduce((a, b) => (off(MEALS[b]) < off(MEALS[a]) ? b : a));
         // One of each a day: two restaurants an hour apart are two lunches, whatever the clock says.
         if (meals[slot] > 0) cost += MEAL_TWICE;
@@ -352,38 +382,43 @@ export function optimizeTrip(input: OptimizerInput): Optimized {
         isLunchMeal = slot === 'lunch';
         if (off(MEALS[slot]) > 0 && n.fixed === null) cost += Math.min(MEAL_OFF.most, MEAL_OFF.base + off(MEALS[slot]) * MEAL_OFF.perMinute);
       }
+      // Untimed meals: each further one on the day costs more, as a second lunch would.
+      if (n.category === 'FOOD' && start === null) cost += MEAL_UNTIMED * ++untimedMeals;
+      if (start === null && n.homeDay !== null && n.homeDay !== i) cost += INTO_THE_UNKNOWN;
       if (n.category === 'CAFE') {
         cafes += 1;
         if (cafes > cfg.maxCafesPerDay) cost += CAFE_OVER;
         if (prevWasMeal) cost -= prevLunchMeal ? CAFE_AFTER.lunch : CAFE_AFTER.other;
       }
       if (n.homeDay !== null && n.homeDay !== i) cost += OTHER_DAY;
-      if (wait >= cfg.gapMinutes) gaps.push({ dayIndex: day.dayIndex, afterVisitId: prevId, beforeVisitId: id, from: arrive, to: start, minutes: wait });
+      if (arrive !== null && start !== null && wait >= cfg.gapMinutes) gaps.push({ dayIndex: day.dayIndex, afterVisitId: prevId, beforeVisitId: id, from: arrive, to: start, minutes: wait });
 
-      cost += (d + p) * DRIVE + wait * WAIT + Math.max(0, wait - 60) * LONG_WAIT;
-      stops.push({ visitId: id, arrive, start, end, driveMinutes: d, parkingMinutes: p, waitMinutes: wait });
+      cost += (l.minutes + p) * DRIVE + wait * WAIT + Math.max(0, wait - 60) * LONG_WAIT;
+      stops.push({ visitId: id, arrive, start, end, driveMinutes: l.known ? l.minutes : null, parkingMinutes: p, waitMinutes: wait });
       clock = end;
-      shown = shownStart + n.stay;
+      shown = shownStart === null ? null : shownStart + n.stay;
       prev = n.key;
       prevId = id;
       prevWasMeal = n.category === 'FOOD';
       prevLunchMeal = isLunchMeal;
-    }
+    });
 
     const to = endKeys[i];
     let arriveEnd: number | null = null;
     if (to) {
-      const d = drive(prev, to);
-      arriveEnd = clock + d + park(prev, to);
-      cost += d * DRIVE;
-      // A new lodging takes guests from its check-in time: arriving earlier is time spent waiting for the room.
-      const checkIn = i < nDays - 1 && to !== from ? input.lodging?.[to]?.checkIn : undefined;
-      if (checkIn !== undefined && arriveEnd < checkIn) {
-        cost += (checkIn - arriveEnd) * 2.5;
-        notes.push({ dayIndex: day.dayIndex, kind: 'ARRIVES_BEFORE_CHECKIN', minutes: checkIn - arriveEnd });
+      const l = leg(prev, to);
+      cost += l.minutes * DRIVE;
+      arriveEnd = clock !== null && l.known ? clock + l.minutes + park(prev, to) : null;
+      if (arriveEnd !== null) {
+        // A new lodging takes guests from its check-in time: arriving earlier is time spent waiting for the room.
+        const checkIn = i < nDays - 1 && to !== from ? input.lodging?.[to]?.checkIn : undefined;
+        if (checkIn !== undefined && arriveEnd < checkIn) {
+          cost += (checkIn - arriveEnd) * 2.5;
+          notes.push({ dayIndex: day.dayIndex, kind: 'ARRIVES_BEFORE_CHECKIN', minutes: checkIn - arriveEnd });
+        }
+        const endBy = day.endBy ? minutes(day.endBy) : cfg.defaultEndBy;
+        if (arriveEnd > endBy) cost += (arriveEnd - endBy) * (day.endBy ? LATE_END.set : LATE_END.assumed);
       }
-      const endBy = day.endBy ? minutes(day.endBy) : cfg.defaultEndBy;
-      if (arriveEnd > endBy) cost += (arriveEnd - endBy) * (day.endBy ? LATE_END.set : LATE_END.assumed);
     }
     return { cost, hard, plan: { dayIndex: day.dayIndex, depart, stops, arriveEnd }, gaps, notes };
   }

@@ -151,6 +151,12 @@ describe('recommend (M64): what the engine is told and what it reports back', ()
     expect(estimateDriveMinutes(150_000)).toBe(162); // about 200 km of road at highway speed
   });
 
+  it('leaves the first day of the sample where it is when home has no address (its times are unknown, not guessed)', () => {
+    const out = recommendRoute(sampleTrip(), null);
+    expect(order(out, 1)).toEqual(order(sampleTrip(), 1));
+    expect(out.days.every((d) => d.visitOrder.length > 0)).toBe(true);
+  });
+
   it('uses a measured driving time over the estimate', () => {
     // Two sights and a booked lunch; by the straight line the lunch is 20 minutes from the lodging's side of town.
     const t = trip({

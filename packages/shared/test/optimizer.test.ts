@@ -181,6 +181,39 @@ describe('optimizeTrip: placing what is not on a day yet', () => {
   });
 });
 
+describe('optimizeTrip: a leg nobody can time', () => {
+  // The trip starts from a home with no address: nothing is known about the drive to the first stop.
+  const noHome: OptimizerInput['drive'] = (a, b) => (a === KEY_HOME || b === KEY_HOME ? null : drive(a, b));
+
+  it('does not judge times it does not know, and leaves the day in place', () => {
+    // Two restaurants and a cafe "in the morning" by a guessed clock would be scattered over other days. Unknown is unknown.
+    const t = trip({
+      places: [P('f1', 'FOOD', 30), P('f2', 'FOOD', 33), P('c', 'CAFE', 36), P('L', 'LODGING', 40), P('s', 'SIGHT', 45), P('L2', 'LODGING', 50)],
+      visits: [V('v1', 'f1'), V('v2', 'f2'), V('vc', 'c'), V('vs', 's')],
+      days: [D(1, ['v1', 'v2', 'vc'], 'L'), D(2, ['vs'], 'L2'), D(3, [], null)],
+    });
+    const out = optimizeTrip({ trip: t, drive: noHome, config: { iterations: 4_000 } });
+    expect(out.order[1]).toEqual(['v1', 'v2', 'vc']);
+    expect(out.changed).toBe(false);
+    expect(out.days[0].stops.map((s) => [s.arrive, s.start, s.driveMinutes])).toEqual([[null, null, null], [null, null, 3], [null, null, 3]]);
+    expect(out.days[0].arriveEnd).toBeNull();
+    // Day 2 starts from a lodging: its times are known again.
+    expect(out.days[1].stops[0]).toMatchObject({ arrive: m('09:15'), driveMinutes: 5 });
+  });
+
+  it('knows the time again from a fixed time on', () => {
+    const t = trip({
+      places: [P('a', 'SIGHT', 30), P('r', 'FOOD', 35), P('b', 'SIGHT', 40), P('L', 'LODGING', 45)],
+      visits: [V('va', 'a'), V('vr', 'r', { fixed: { time: '13:00', kind: 'RESERVATION' } }), V('vb', 'b')],
+      days: [D(1, ['va', 'vr', 'vb'], 'L'), D(2, [], null)],
+    });
+    const stops = optimizeTrip({ trip: t, drive: noHome, config: { iterations: 0 } }).days[0].stops;
+    expect(stops[0]).toMatchObject({ visitId: 'va', arrive: null, start: null });
+    expect(stops[1]).toMatchObject({ visitId: 'vr', arrive: null, start: m('13:00'), end: m('14:00') });
+    expect(stops[2]).toMatchObject({ visitId: 'vb', arrive: m('14:15') }); // 5 minutes of road, 10 of parking
+  });
+});
+
 describe('optimizeTrip: lodging and gaps', () => {
   it('notes an arrival before check-in and a departure after check-out when the lodging changes', () => {
     const t = trip({
