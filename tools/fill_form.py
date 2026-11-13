@@ -40,8 +40,10 @@ CIRCLED = re.compile(r"^(\*\*)?([①-⑳])\s*")
 MAX_EMU = (9866 - 220 - 40) * 635
 TABLE_W = 9640  # inside the answer cell: 9866 − 2 × 110 margin
 
-NAVY = "16324F"
-GREY = "5B6574"
+NAVY = "191F28"  # Toss grey-900 (design/TOSS.md text-primary)
+BLUE = "1065CC"  # Toss accent-text
+BAR = "3182F6"  # Toss blue-500
+GREY = "4E5968"  # Toss grey-700 (text-secondary)
 BODY = 20  # half-points (10pt)
 SMALL = 18  # tables
 LINE = 'w:line="288" w:lineRule="auto"'
@@ -118,7 +120,7 @@ def rpr(size: int = BODY, bold: bool = False, color: str | None = None, code: bo
         parts.append(f'<w:color w:val="{color}"/>')
     parts.append(f'<w:sz w:val="{size}"/><w:szCs w:val="{size}"/>')
     if code:
-        parts.append('<w:shd w:val="clear" w:color="auto" w:fill="EEF1F5"/>')
+        parts.append('<w:shd w:val="clear" w:color="auto" w:fill="F2F4F6"/>')
     return f"<w:rPr>{''.join(parts)}</w:rPr>"
 
 
@@ -134,7 +136,7 @@ def inline(text: str, size: int = BODY, bold: bool = False, color: str | None = 
         if piece.startswith("**") and piece.endswith("**") and len(piece) > 4:
             out.append(run(piece[2:-2], size=size, bold=True, color=color or NAVY))
         elif piece.startswith("`") and piece.endswith("`") and len(piece) > 2:
-            out.append(run(piece[1:-1], size=max(size - 2, 16), color="1F3A5F", code=True))
+            out.append(run(piece[1:-1], size=max(size - 2, 16), color=BLUE, code=True))
         else:
             out.append(run(piece, size=size, bold=bold, color=color))
     return "".join(out)
@@ -167,13 +169,13 @@ def bullet_xml(level: int, text: str) -> str:
 
 
 def quote_xml(text: str) -> str:
-    border = f'<w:pBdr><w:left w:val="single" w:sz="18" w:space="8" w:color="{NAVY}"/></w:pBdr>'
-    shade = '<w:shd w:val="clear" w:color="auto" w:fill="F1F4F8"/>'
+    border = f'<w:pBdr><w:left w:val="single" w:sz="18" w:space="8" w:color="{BAR}"/></w:pBdr>'
+    shade = '<w:shd w:val="clear" w:color="auto" w:fill="F2F4F6"/>'
     return para(inline(text), before=40, after=140, extra=border + shade, ind='<w:ind w:left="160" w:right="60"/>')
 
 
 def caption_xml(kind: str, n: int, text: str, before: int, after: int, keep: bool) -> str:
-    content = run(f"{kind} {n}. ", size=17, bold=True, color=NAVY) + run(text, size=17, color=GREY)
+    content = run(f"{kind} {n}. ", size=17, bold=True, color=BLUE) + run(text, size=17, color=GREY)
     return para(content, before=before, after=after, head="<w:keepNext/>" if keep else "",
                 line='w:line="260" w:lineRule="exact"', jc='<w:jc w:val="center"/>')
 
@@ -193,7 +195,7 @@ def widths(rows: list[list[str]], cols: list[int] | None) -> list[int]:
 
 def table_xml(rows: list[list[str]], cols: list[int] | None) -> str:
     w = widths(rows, cols)
-    edge = 'w:val="single" w:sz="4" w:space="0" w:color="C8D0DA"'
+    edge = 'w:val="single" w:sz="4" w:space="0" w:color="E5E8EB"'
     borders = "".join(f"<w:{s} {edge}/>" for s in ("top", "left", "bottom", "right", "insideH", "insideV"))
     tblpr = (
         f'<w:tblPr><w:tblW w:w="{TABLE_W}" w:type="dxa"/><w:jc w:val="center"/><w:tblBorders>{borders}</w:tblBorders>'
@@ -207,7 +209,7 @@ def table_xml(rows: list[list[str]], cols: list[int] | None) -> str:
         header = r == 0
         tcs = []
         for c, text in enumerate(row):
-            shade = '<w:shd w:val="clear" w:color="auto" w:fill="E8EDF4"/>' if header else ""
+            shade = '<w:shd w:val="clear" w:color="auto" w:fill="F2F4F6"/>' if header else ""
             content = inline(text, size=SMALL, bold=header or c == 0, color=NAVY if header or c == 0 else None)
             # Keep-with-next on every row but the last keeps a short table on one page.
             p = para(content, after=0, line='w:line="250" w:lineRule="auto"', head="<w:keepNext/>" if r < len(rows) - 1 else "")

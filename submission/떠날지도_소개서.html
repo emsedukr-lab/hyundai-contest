@@ -6,14 +6,16 @@
 <style>
   @page { size: A4; margin: 0; }
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  @font-face { font-family: "Pretendard Variable"; font-weight: 45 920; font-display: block; src: url("figures/src/fonts/PretendardVariable.woff2") format("woff2-variations"); }
   :root {
-    --ink: #17202e; --muted: #5a6472; --line: #dfe3ea;
-    --accent: #2563eb; --accent-soft: #eaf0fe; --bg-soft: #f7f8fa;
-    --ok: #0f9d58; --wait: #d98500;
+    /* Toss tokens (design/TOSS.md) */
+    --ink: #191f28; --muted: #4e5968; --line: #e5e8eb;
+    --accent: #3182f6; --accent-soft: #e8f3ff; --bg-soft: #f2f4f6;
+    --ok: #007738; --wait: #ff8800;
   }
   html { width: 210mm; }
   body {
-    font-family: "Apple SD Gothic Neo", "Pretendard", "Malgun Gothic", "Noto Sans KR", sans-serif;
+    font-family: "Pretendard Variable", "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
     color: var(--ink); background: #fff;
     line-height: 1.42; -webkit-font-smoothing: antialiased;
   }
@@ -236,12 +238,12 @@
   <div class="cshots">
     <div><img src="img/car-qr.png" alt="차량 QR 화면"><div class="cap"><b>① 일회용 QR</b> · 단계 1/4, 5분·1회, QR에는 여행·개인정보 없음</div></div>
     <div><img src="img/car-review.png" alt="받은 여행 재검증 결과"><div class="cap"><b>② 다시 확인한 결과</b> · 충돌 0 · 확인 필요 4, 계획은 그대로 · 차에서 한 번 더 승인</div></div>
-    <div><img src="img/car-faster.png" alt="내비 기준 더 빠른 순서 제안"><div class="cap"><b>③ 내비 기준 더 빠른 순서</b> · 13구간을 내비로 잰 뒤 1일차 '운전 22분 단축' 제안</div></div>
+    <div><img src="img/car-faster.png" alt="내비 기준 더 빠른 순서 제안"><div class="cap"><b>③ 내비 기준 더 빠른 순서</b> · 13구간을 내비로 잰 뒤 1일차 '운전 11분 단축' 제안</div></div>
     <div><img src="img/car-measured.png" alt="바꾼 순서와 내비가 잰 구간"><div class="cap"><b>④ 내비가 잰 하루</b> · '↓ 6분 · 3km · 내비', 운전 2시간 41분 · 218km, 휴대폰 계획은 그대로</div></div>
     <div><img src="img/car-timekeeper.png" alt="시간 지킴이와 출발 전 점검"><div class="cap"><b>⑤ 시간 지킴이</b> · '13:00 예약까지 여유 135분', 장소마다 지금 도착과 계획 비교, 출발 전 점검</div></div>
     <div><img src="img/car-driving.png" alt="주행 중 단순화 화면"><div class="cap"><b>⑥ 주행 중 화면</b> · 다음 목적지·도착 예상·여유만, 버튼 없음</div></div>
   </div>
-  <p class="note" style="margin-top:2mm;">2026-11-14 Pleos Connect Emulator에서 서명 release 0.6.0으로 찍은 화면입니다(앱 영역만 잘라 냄). ③④는 1일차 순서를 일부러 바꿔 보낸 여행을 에뮬레이터 내비가 실제로 잰 값, ⑤⑥의 시연 시각과 주행은 에뮬레이터 전용 표시입니다. 화면은 Pleos Connect 공식 디자인 명세의 컴포넌트와 토큰만으로 만들었고, 색은 상태 점과 '꼭' 핀에만 씁니다.</p>
+  <p class="note" style="margin-top:2mm;">2026-11-14 Pleos Connect Emulator에서 서명 release 0.7.0으로 찍은 화면입니다(앱 영역만 잘라 냄). ③④는 에뮬레이터 내비가 실제로 잰 값(단축 시간은 잴 때의 교통에 따라 달라짐), ⑤⑥의 시연 시각과 주행은 에뮬레이터 전용 표시입니다. 화면은 토스 시각 언어(파랑 강조는 화면당 하나)에 Pleos 운전 중 기준(글자 20sp·터치 64dp)을 지켜 만들었습니다.</p>
 
   <footer>
     <span>떠날지도 · 현대자동차그룹 차량용 앱 공모전 출품작</span>
@@ -301,8 +303,8 @@
 
   <div class="sec">기술 구조</div>
   <div class="arch">
-    <div class="acard"><h3>차량 앱</h3><p>Kotlin · Jetpack Compose (Android Automotive). Pleos Connect 공식 디자인 명세, NaviHelper 3.0.5(경유지 경로로 구간 측정·순서 최적화), Vehicle SDK 2.3.2(조회 전용). 암호화 로컬 저장, 주·야간. 권한은 INTERNET·NAVI_*·측정 중 FOREGROUND_SERVICE와 읽기 전용 CAR_*만.</p></div>
-    <div class="acard"><h3>모바일 웹</h3><p>React 19 · Vite, Pleos 디자인 토큰. 설치 없이 QR로 열리고 여행은 기기 안에만 저장. 여행 전체 최적화 엔진(공용 TypeScript, 의존성 없음), 카카오 장소 검색·길찾기·지도, 지도앱 공유 수신(PWA). 한국어·영어.</p></div>
+    <div class="acard"><h3>차량 앱</h3><p>Kotlin · Jetpack Compose (Android Automotive). 토스 시각 언어 + Pleos 운전 중 기준(20sp·64dp), NaviHelper 3.0.5(경유지 경로로 구간 측정·순서 최적화), Vehicle SDK 2.3.2(조회 전용). 암호화 로컬 저장, 주·야간. 권한은 INTERNET·NAVI_*·측정 중 FOREGROUND_SERVICE와 읽기 전용 CAR_*만.</p></div>
+    <div class="acard"><h3>모바일 웹</h3><p>React 19 · Vite · Astryx, 토스 시각 언어(Pretendard). 설치 없이 QR로 열리고 여행은 기기 안에만 저장. 여행 전체 최적화 엔진(공용 TypeScript, 의존성 없음), 카카오 장소 검색·길찾기·지도, 지도앱 공유 수신(PWA). 한국어·영어.</p></div>
     <div class="acard"><h3>중계 서버</h3><p>Cloudflare Worker + Durable Object. 세션 하나를 원자적으로(5분·1회) 처리. P-256 ECDH · HKDF · AES-256-GCM 종단간 암호화. 카카오 키는 서버에만 두고 좌표만 전달(저장·기록 없음).</p></div>
   </div>
 
@@ -364,6 +366,7 @@
       <tr><td class="m">M59-M61</td><td>출발지 규칙(첫날 현재 위치·집·회사·즐겨찾기, 둘째 날부터 전날 숙소) · 영업시간 · 첫날 첫 구간 계산(휴대폰: 출발지 기준, 차량: 현재 위치 기준 자동) (APK 0.6.0)</td><td><span class="st done">완료</span></td><td>시험 497개·실제 연동</td></tr>
       <tr><td class="m">M63</td><td>현대차 내비가 시간·거리·순서의 기준: 경유지 경로로 전 구간 측정 · 날짜별 순서 최적화(차량에서만 순서 변경, 되돌리기) · 오늘 경로에 남은 장소 모두 전송</td><td><span class="st done">완료</span></td><td>시험 512개·에뮬레이터 실제 내비</td></tr>
       <tr><td class="m">M64</td><td>여행 전체 동선 최적화 엔진: 날짜 배정과 순서를 함께 탐색(예약 10분 전·영업시간·식사 시간·식사 뒤 카페·입퇴실), 휴대폰 경로 추천에 연결 · 늦게 출발하기(퇴실 시간 안에서) · 화면 다듬기</td><td><span class="st done">완료</span></td><td>시험 548개·배포 화면</td></tr>
+      <tr><td class="m">M65</td><td>디자인 체계를 토스 시각 언어로(파랑 강조 하나·흰 카드·옅은 태그·Pretendard, Astryx 0.7.15) — 배치·흐름·문구는 그대로, 차량은 Pleos 치수·글자·주행 규칙 유지 (APK 0.7.0)</td><td><span class="st done">완료</span></td><td>시험 548개·주야간 대비·실제 연동</td></tr>
       <tr><td class="m">M6</td><td>문서 6종·README·배포·서명 APK·기획서·소개서 (11/14 갱신)</td><td><span class="st done">완료</span></td><td>—</td></tr>
       <tr><td class="m">M7</td><td>실제 폰 QR 인식·실차 검증·성능·PT 리허설</td><td><span class="st plan">예정</span></td><td>11/16 – 12/2</td></tr>
     </tbody>

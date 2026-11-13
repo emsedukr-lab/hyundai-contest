@@ -3,10 +3,17 @@ import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 export { THREE };
 
+// Canvas labels draw with Pretendard, so the face must be loaded before any label is made.
+try {
+  const face = new FontFace('Pretendard Variable', `url(${new URL('./fonts/PretendardVariable.woff2', import.meta.url)})`, { weight: '45 920' });
+  document.fonts.add(await face.load());
+} catch (e) { console.log('font load failed', e); }
+
 export const C = {
-  ink: '#1C2430', muted: '#5B6574', line: '#D9DDE3', bg: '#F5F6F8', white: '#FFFFFF',
-  navy: '#16324F', graphite: '#3A3F47', blue: '#2F6FDE', teal: '#12A37F', amber: '#E08A00', rose: '#D2495F',
-  land: '#ECEDEF', sea: '#DCE7F3', must: '#E5484D',
+  // Toss tokens (design/TOSS.md); day colours stay distinct hues so the four days read apart.
+  ink: '#191F28', muted: '#4E5968', line: '#E5E8EB', bg: '#F2F4F6', white: '#FFFFFF',
+  navy: '#191F28', graphite: '#333D4B', blue: '#3182F6', teal: '#00A661', amber: '#FF8800', rose: '#F04452',
+  land: '#ECEEF1', sea: '#DCEBFF', must: '#3182F6',
 };
 export const DAY = [C.blue, C.teal, C.amber, C.rose];
 
@@ -64,7 +71,7 @@ export function label(text, { h = 0.28, color = C.ink, bg = C.white, border = C.
   const lines = [{ t: text, s: size, w: weight, c: color }, ...(sub ? [{ t: sub, s: Math.round(size * 0.72), w: 500, c: subColor }] : [])];
   const cv = document.createElement('canvas');
   const ctx = cv.getContext('2d');
-  const font = (l) => `${l.w} ${l.s}px "Apple SD Gothic Neo", "Pretendard", sans-serif`;
+  const font = (l) => `${l.w} ${l.s}px "Pretendard Variable", "Apple SD Gothic Neo", sans-serif`;
   let tw = 0;
   for (const l of lines) { ctx.font = font(l); tw = Math.max(tw, ctx.measureText(l.t).width); }
   const lh = lines.reduce((a, l) => a + l.s * 1.28, 0);

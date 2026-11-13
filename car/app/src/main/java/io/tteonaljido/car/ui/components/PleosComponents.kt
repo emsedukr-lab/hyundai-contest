@@ -169,7 +169,11 @@ fun Icon(@DrawableRes icon: Int, size: Dp, tint: Color, modifier: Modifier = Mod
  * several. BASIC is the secondary button (faint grey face, ink label); a lone button is BASIC. DESTRUCTIVE is the red
  * face TOSS.md §5 keeps for the confirm step of a deletion only.
  */
-enum class ButtonType { BASIC, FILLED, DESTRUCTIVE }
+/**
+ * FILLED is the screen's one blue fill (design/TOSS.md); WEAK is a suggestion card's own action on a screen that already
+ * has it — `accent-weak` face, `accent-text` label (5.0:1 day, 5.7:1 night).
+ */
+enum class ButtonType { BASIC, FILLED, WEAK, DESTRUCTIVE }
 enum class ButtonSize { LARGE, MEDIUM, SMALL }
 
 /**
@@ -202,11 +206,12 @@ fun PleosButton(
     val bg = when (type) {
         ButtonType.FILLED -> colorResource(if (pressed) R.color.tn_accent_pressed else R.color.tn_accent)
         ButtonType.DESTRUCTIVE -> colorResource(R.color.tn_negative)
+        ButtonType.WEAK -> colorResource(if (pressed) R.color.tn_fill_weak_pressed else R.color.tn_accent_weak)
         ButtonType.BASIC -> weakFace(pressed)
     }
     // The red face has no pressed role of its own: the press overlay steps it like a pressed photo.
     val press = if (type == ButtonType.DESTRUCTIVE && pressed) colorResource(R.color.tn_press_overlay) else Color.Transparent
-    val fg = colorResource(if (type == ButtonType.BASIC) R.color.tn_text_primary else R.color.tn_on_accent)
+    val fg = colorResource(when (type) { ButtonType.BASIC -> R.color.tn_text_primary; ButtonType.WEAK -> R.color.tn_accent_text; else -> R.color.tn_on_accent })
     val style = when (size) { ButtonSize.LARGE -> Pleos.type.titleSmall; ButtonSize.MEDIUM -> Pleos.type.bodyLargeStrong; ButtonSize.SMALL -> Pleos.type.bodySmallStrong }
     Box(
         modifier

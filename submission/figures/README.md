@@ -31,3 +31,9 @@ GPT Image로 만든 실사풍 장면입니다(ChatGPT 구독, Codex CLI 브리�
 - `ph-pain-planning` — 2절 불편 ①: 자정 가까이 지도의 핀을 보며 날짜·순서를 정하지 못하는 부부
 
 다시 만들기: `node ~/.claude/skills/gpt-image/scripts/gpt_image.mjs batch --manifest <photos.json 복사본> --concurrency 1` → 결과 PNG를 가로 1600px, JPEG 품질 86으로 줄여 `ph-*.jpg`로 저장(양식 용량 때문에 JPEG). 브리지 실행마다 처음 시작한 작업은 이미지 없이 끝나는 일이 반복됐습니다(일곱 번 연속). 꼭 필요한 이미지는 같은 문안을 두 작업으로 연달아 넣으면 두 번째가 만들어집니다. 생성 원본 폴더 `generated-images/`는 커밋하지 않습니다.
+
+## 제품 컷 (`fig00-product.png`, M65)
+
+[stageshow](https://github.com/benjitaylor/skills) 방식으로 만든 제품 화면 연출 이미지입니다. 차 화면(Pleos Connect 앱 창)이 주인공이고 휴대폰이 오른쪽 가장자리에 걸칩니다. 실제 글자는 여행 이름·1일차·장소 3곳·내비 측정 구간·더 빠른 순서 결과만 쓰고 나머지는 자리 막대입니다. 장소·시각·구간 값은 샘플 여행 1일차의 실제 측정값(fig06, docs/evidence/m63)이고 '22분 줄어요'는 fig02의 측정값입니다. 원본은 `src/stageshow/`(stageshow 저장소의 `examples/`에 넣고 `npm run dev` → `node scripts/film.mjs "<preview>/?capture=tteonaljido" --still`), 색은 design/TOSS.md 토큰.
+
+M65부터 모든 그림의 색·글꼴은 토스 토큰(`src/fig.css`, `src/lib3d.js`)과 Pretendard(`src/fonts/`, OFL)입니다.
