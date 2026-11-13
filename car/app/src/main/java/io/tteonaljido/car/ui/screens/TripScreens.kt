@@ -40,6 +40,7 @@ import io.tteonaljido.car.safety.DriveState
 import io.tteonaljido.car.safety.parked
 import io.tteonaljido.car.ui.components.ButtonSize
 import io.tteonaljido.car.ui.components.ButtonType
+import io.tteonaljido.car.ui.components.MustTag
 import io.tteonaljido.car.ui.components.Dot
 import io.tteonaljido.car.ui.components.Icon
 import io.tteonaljido.car.ui.components.ListRow
@@ -370,7 +371,7 @@ private fun DrivingTripView(t: LocalTrip, day: Int, live: LiveView?, naviLive: N
     PleosCard(padding = Space.x48, gap = Space.x20) {
         PleosText(stringResource(R.string.next_destination_day, day), Pleos.type.bodyMedium, secondary, maxLines = 1)
         PleosText(label, Pleos.type.headline, maxLines = 1)
-        if (mustKeep) Tag(stringResource(R.string.drive_must), Tone.NEUTRAL, large = true)
+        if (mustKeep) MustTag(stringResource(R.string.drive_must), large = true)
         remainMetres?.let { PleosText(stringResource(R.string.drive_remain, String.format(Locale.ROOT, "%.1f", it / 1000.0)), Pleos.type.titleMedium) }
         live?.let { v -> liveStatus(t, v)?.let { LiveLines(it, large = true) } }
         // Still text only: congestion on the route, and a break when one is due (no buttons while driving).

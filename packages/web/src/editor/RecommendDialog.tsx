@@ -120,7 +120,7 @@ export function RecommendPreview({ display, diff }: { display: Trip; diff: Recom
                         <Text type="supporting">{`${k + 1}. ${p?.name ?? id}`}</Text>
                         {ch?.newlyAssigned && <Tag tone="accent">{t('recommend.newBadge')}</Tag>}
                         {ch?.moved && ch.fromDay !== null && ch.fromDay !== d.dayIndex && <Tag>{t('recommend.movedFrom', { from: ch.fromDay })}</Tag>}
-                        {v.importance === 'MUST' && <Tag tone="ink">{t('common.must')}</Tag>}
+                        {v.importance === 'MUST' && <Tag tone="must">{t('common.must')}</Tag>}
                         {v.fixed && <Tag tone="accent">{t('common.fixedAt', { time: v.fixed.time })}</Tag>}
                       </HStack>
                       <Text type="supporting" color="secondary">

@@ -40,6 +40,7 @@ import io.tteonaljido.car.LiveView
 import io.tteonaljido.car.R
 import io.tteonaljido.car.ui.components.Dot
 import io.tteonaljido.car.ui.components.Icon
+import io.tteonaljido.car.ui.components.MustTag
 import io.tteonaljido.car.ui.components.PleosCard
 import io.tteonaljido.car.ui.components.PleosText
 import io.tteonaljido.car.ui.components.Radius
@@ -157,7 +158,7 @@ fun DayTimeline(t: LocalTrip, day: Int, live: LiveView?) {
                                 colorResource(if (done) R.color.pleos_text_dark_secondary else R.color.pleos_text_dark_primary),
                                 Modifier.weight(1f, fill = false), maxLines = 1,
                             )
-                            if (v.importance == Importance.MUST) Tag(stringResource(R.string.tl_must))
+                            if (v.importance == Importance.MUST) MustTag(stringResource(R.string.tl_must))
                         }
                         status?.let { (text, tone) -> Tag(text, tone) }
                     }

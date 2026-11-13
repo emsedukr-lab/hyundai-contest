@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 떠날지도 전용 색: '꼭' 배지(빼거나 옮길 수 없는 장소)만 연한 코랄 바탕 + 코랄 글자 + 📌 -->
+<resources>
+    <color name="tn_must_face">#1FFF6A4D</color>
+    <color name="tn_must_text">#B02A12</color>
+</resources>

@@ -454,6 +454,27 @@ fun Tag(text: String, tone: Tone = Tone.NEUTRAL, modifier: Modifier = Modifier, 
     }
 }
 
+/**
+ * 꼭 — a place that can't be dropped or moved. The one tag off the neutral face: light coral with coral text and a 📌
+ * in front, so it reads as a constraint of the plan, not one more status. Same sizes as [Tag].
+ */
+@Composable
+fun MustTag(text: String, modifier: Modifier = Modifier, large: Boolean = false) {
+    val ink = colorResource(R.color.tn_must_text)
+    Row(
+        modifier
+            .heightIn(min = if (large) dimensionResource(R.dimen.pleos_buttons_basic_small_height) else Space.x40)
+            .clip(RoundedCornerShape(if (large) Radius.r16 else Radius.r12))
+            .background(colorResource(R.color.tn_must_face))
+            .padding(horizontal = if (large) Space.x20 else Space.x12, vertical = if (large) Space.x12 else Space.x4),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(if (large) Space.x8 else Space.x4),
+    ) {
+        PleosText("📌", if (large) Pleos.type.bodyMedium else Pleos.type.label, ink, maxLines = 1)
+        PleosText(text, if (large) Pleos.type.bodyMedium else Pleos.type.label, ink, maxLines = 1)
+    }
+}
+
 /** One line with its state dot in front; the meaning is always in the words. */
 @Composable
 fun StatusLine(text: String, tone: Tone = Tone.NEUTRAL, style: TextStyle = Pleos.type.bodyMedium) {

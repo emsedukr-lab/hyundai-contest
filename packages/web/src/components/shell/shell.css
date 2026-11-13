@@ -677,6 +677,17 @@ div:has(> .astryx-switch) {
   background: var(--pleos-informative-negative);
 }
 
+.tn-tag.is-must {
+  gap: 3px;
+  padding: 0 7px 0 5px;
+  background: light-dark(#ff6a4d1f, #ff6a4d33);
+  color: light-dark(#b02a12, #ff9a85);
+}
+.tn-tag-pin {
+  font-size: 11px;
+  line-height: 1;
+}
+
 /* The saved version (v3) as quiet meta text. */
 .tn-rev {
   font-size: 14px;
