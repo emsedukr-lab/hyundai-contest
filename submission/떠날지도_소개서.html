@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<title>떠날지도 소개서 · 진행 현황</title>
+<title>떠날지도 소개서</title>
 <style>
   @page { size: A4; margin: 0; }
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -107,6 +107,8 @@
   .cshots img { width: 100%; display: block; border-radius: 2mm; border: 0.3mm solid var(--line); }
   .cshots .cap { font-size: 8.4pt; color: var(--muted); margin-top: 1.2mm; }
   .cshots .cap b { color: var(--ink); }
+  table.flowt td:first-child { font-weight: 700; color: var(--ink); width: 34mm; }
+  table.flowt td { color: var(--muted); }
 </style>
 </head>
 <body>
@@ -118,44 +120,44 @@
       <h1>떠날지도 — 차량용 여행 도우미</h1>
       <span class="pill">소개서 · 진행 현황</span>
     </div>
-    <div class="tagline">가고 싶은 곳만 담으면 날짜별 동선은 자동으로 — 그 여행을 차에 타서 QR 한 번으로 옮기면 현대차 내비가 순서대로 안내합니다.</div>
-    <div class="intro">장소를 날짜와 순서로 자동 배치하고 카카오 실제 운전 시간으로 채웁니다. 앱 설치도, 계정 가입도 없이 여행 하나를 한 번만 안전하게 옮기고, 차가 운전 맥락에서 다시 검사한 뒤, 차의 내비가 안내합니다.</div>
+    <div class="tagline">가고 싶은 곳만 담으면 날짜별 동선은 자동으로 — QR 한 번으로 차에 옮기면 현대차 내비가 시간·거리를 다시 재고 순서대로 안내합니다.</div>
+    <div class="intro">휴대폰은 예약·영업시간·식사 시간을 따져 여행 전체의 날짜와 순서를 정하고, 차에서는 현대차 내비가 실제 시간·거리를 재서 순서를 다시 확인합니다. 앱 설치도 계정 가입도 없이 여행 하나를 한 번만 안전하게 옮깁니다.</div>
   </header>
 
   <div class="sec">기획 배경 — 왜 필요한가</div>
   <p class="body">가고 싶은 장소를 고르는 일은 어렵지 않습니다. 시간이 가장 많이 드는 일은 <b>고른 장소를 날짜별로 나누고 효율적인 순서로 동선을 구체화하는 과정</b>입니다. 이 일을 건너뛰면 동선이 비효율적으로 짜여 <b>여행 시간의 대부분을 이동에 쓰게 됩니다</b>. 떠날지도는 이 동선을 자동으로 짜는 데서 출발했습니다.</p>
   <p class="body">여러 날 여행은 예약 시각·숙소·귀가가 서로 얽혀 <b>한 곳이 늦으면 뒤 일정이 함께 무너집니다</b>. 그런데 여행 계획 앱은 장소를 직선으로 잇고 이동시간을 어림하게 두어 <b>예약에 맞추려면 언제 떠나야 하는지</b> 알려 주지 못하고, 내비게이션은 '지금 목적지'만 알고 '여행 전체'는 모릅니다.</p>
-  <p class="body">동선을 다 짜도 <b>차에 타면 내비에 목적지를 하나씩 다시 검색</b>해야 하고, 기존의 화면 미러링·계정 연동 방식은 렌터카·공용 차량에서 쓰기 어렵고 <b>집 주소 같은 개인정보가 차에 남을 걱정</b>이 있습니다. 떠날지도는 짠 동선을 계정 없이 차로 옮겨 내비가 그대로 안내하게 합니다.</p>
+  <p class="body">동선을 다 짜도 <b>차에 타면 내비에 목적지를 하나씩 다시 검색</b>해야 하고, 기존의 화면 미러링·계정 연동 방식은 렌터카·공용 차량에서 쓰기 어렵고 <b>집 주소 같은 개인정보가 차에 남을 걱정</b>이 있습니다. 떠날지도는 짠 동선을 계정 없이 차로 옮기고, 차에서는 <b>현대차 내비가 시간과 순서를 다시 재서</b> 그대로 안내하게 합니다.</p>
 
   <div class="sec">핵심 기능</div>
   <div class="features">
     <div class="feat"><div class="n">1</div><div>
       <div class="t">날짜별 동선 자동 구성</div>
-      <div class="d">장소만 담으면 [경로 추천]이 <b>날짜에 나누고 이동이 짧은 순서</b>로 정한 뒤 <b>카카오 실제 운전 시간·거리</b>를 채웁니다. 일차 지도도 실제 도로로 그립니다.</div>
+      <div class="d">장소만 담으면 [경로 추천]이 <b>여행 전체의 날짜와 순서를 함께</b> 정합니다. 예약은 주차 시간을 더해 10분 전 도착, 영업시간·식사 시간·식사 뒤 카페까지 따집니다.</div>
     </div></div>
     <div class="feat"><div class="n">2</div><div>
-      <div class="t">예약 15분 전 · 더 빠른 순서</div>
-      <div class="d">예약 앞에 <b>'12:35 출발 · 1시간 30분 여유'</b>처럼 직전 장소에서 떠날 시각을 붙입니다. 운전이 10분 이상 줄면 <b>더 빠른 순서</b>를 제안합니다.</div>
+      <div class="t">예약 여유 · 늦게 출발하기</div>
+      <div class="d">예약 앞에 <b>'12:35 출발 · 1시간 30분 여유'</b>를 붙이고, 1시간 넘게 남으면 숙소 퇴실 시간 안에서 <b>'오전 11:00에 출발해도 돼요'</b>를 제안합니다.</div>
     </div></div>
     <div class="feat"><div class="n">3</div><div>
-      <div class="t">일회용 QR 불러오기</div>
-      <div class="d">주차 중 차 화면에 QR을 띄웁니다(5분·1회). 휴대폰으로 스캔한 뒤 양쪽의 <b>6자리 확인 코드</b>를 맞추고, 보낼 여행을 골라 양쪽에서 승인합니다.</div>
+      <div class="t">일회용 QR · 종단간 암호화</div>
+      <div class="d">주차 중 차 화면의 QR(5분·1회)을 찍고 <b>6자리 확인 코드</b>를 맞춥니다. 중계 서버도 내용을 <b>볼 수 없고</b> 전송 뒤 지웁니다. 집 주소는 동의할 때만.</div>
     </div></div>
     <div class="feat"><div class="n">4</div><div>
-      <div class="t">종단간 암호화</div>
-      <div class="d">중계 서버도 여행 내용을 <b>볼 수 없고</b>, 전송이 끝나면 즉시 지웁니다. 계정·영구 연결이 없고, 집 주소는 <b>동의할 때만</b> 함께 보냅니다.</div>
-    </div></div>
-    <div class="feat"><div class="n">5</div><div>
       <div class="t">차량 재검증</div>
       <div class="d">고정 일정 지각·빠진 이동시간·숙소 연결·귀가·영업시간을 다시 확인합니다. '충돌·확인 필요'로 <b>표시만 하고 계획은 바꾸지 않습니다</b>.</div>
     </div></div>
+    <div class="feat"><div class="n">5</div><div>
+      <div class="t">현대차 내비로 전 구간 측정</div>
+      <div class="d">내비에 경유지 경로를 걸어 <b>차가 있지 않은 구간까지</b> 시간·거리를 잽니다. 잰 값이 휴대폰 예상값을 대신합니다(샘플 13구간 약 30초).</div>
+    </div></div>
     <div class="feat"><div class="n">6</div><div>
-      <div class="t">현대차 내비 연동</div>
-      <div class="d">버튼 한 번으로 다음 장소·숙소·귀가지를, 또는 <b>다음 3곳을 한 번에</b> 내비에 보냅니다. 내비 '집' 즐겨찾기로 집 주소 없이 귀가합니다.</div>
+      <div class="t">내비 기준 순서 최적화 · 안내</div>
+      <div class="d">그 날의 모든 구간을 내비로 재서 <b>운전이 10분 이상 짧은 순서</b>를 제안합니다(차에서만 바꾸고 되돌리기). 다음 장소 하나, 또는 오늘 남은 장소를 모두 내비로 보냅니다.</div>
     </div></div>
     <div class="feat"><div class="n">7</div><div>
       <div class="t">여행 중 시간 지킴이</div>
-      <div class="d">내비 남은 시간으로 하루를 다시 계산해 <b>"예약까지 여유 66분"</b>처럼 알리고, 늦으면 선택 일정을 건너뛰거나 미루자고 제안합니다. 도착하면 자동 체크.</div>
+      <div class="d">내비 남은 시간으로 하루를 다시 계산해 <b>"13:00 예약까지 여유 135분"</b>처럼 알리고, 늦으면 선택 일정을 건너뛰거나 미루자고 제안합니다. 도착하면 자동 체크.</div>
     </div></div>
     <div class="feat"><div class="n">8</div><div>
       <div class="t">주행 중 단순화 화면</div>
@@ -167,12 +169,12 @@
   <div class="cards2">
     <div class="card"><h3>개인정보는 최소한</h3><p>계정이 없습니다. 여행은 '한 번만' 옮기고 전달이 끝나면 서버에서 즉시 삭제됩니다. 카카오에는 좌표만 보내고 저장·기록하지 않습니다.</p></div>
     <div class="card"><h3>계획은 사람이 정함</h3><p>차와 휴대폰은 검사하고 제안할 뿐, 계획을 몰래 고치지 않습니다. 순서 바꾸기·건너뛰기는 누를 때만, 되돌릴 수 있게 반영됩니다.</p></div>
-    <div class="card"><h3>차량이기에 가능한 경험</h3><p>차량 화면 승인, 내비 실시간 정보·차량 신호와 일정의 결합, 운전 맥락 검사 — 휴대폰 앱만으로는 할 수 없는 경험입니다.</p></div>
+    <div class="card"><h3>차량이기에 가능한 경험</h3><p>현대차 내비로 재는 실제 시간·거리와 순서, 차량 화면 승인, 차량 신호와 일정의 결합 — 휴대폰 앱만으로는 할 수 없는 경험입니다.</p></div>
   </div>
 
   <footer>
     <span>떠날지도 · 현대자동차그룹 차량용 앱 공모전 출품작</span>
-    <span>1 / 5 · 소개</span>
+    <span>1 / 6 · 소개</span>
   </footer>
 </section>
 
@@ -180,18 +182,18 @@
 <section class="page">
   <div class="sec">휴대폰 — 실제 도로 기준으로 여행 짜기</div>
   <div class="shots">
-    <div class="shot"><img src="img/phone-setup.png" alt="새 여행 4단계 안내 1단계"><div class="cap"><b>4단계 새 여행 안내</b>여행 정보 → 장소 담기 → 예약·꼭 갈 곳 → 경로 추천</div></div>
-    <div class="shot"><img src="img/phone-day2.png" alt="2일차 일정과 예약 앞 출발 시각"><div class="cap"><b>예약 15분 전 도착</b>13:00 예약 앞에 '12:35 출발 · 1시간 30분 여유', 운전 시간은 굵게</div></div>
-    <div class="shot"><img src="img/phone-faster.png" alt="더 빠른 순서 제안 카드"><div class="cap"><b>더 빠른 순서</b>카카오 실제 시간으로 확인해 운전이 10분 이상 줄 때만 제안(화면은 20분), [바꾸기]는 되돌리기 가능</div></div>
+    <div class="shot"><img src="img/phone-step3.png" alt="새 여행 3단계 예약과 꼭 갈 곳"><div class="cap"><b>예약 · 꼭 갈 곳</b>예약 시각과 꼭 갈 곳(핀)을 정하면 장소 종류(관광·식사·카페)와 함께 추천에 쓰입니다</div></div>
+    <div class="shot"><img src="img/phone-recommend.png" alt="경로 추천 결과"><div class="cap"><b>경로 추천</b>여행 전체를 한 번에 배치 — 13:00 예약은 그대로, 꼭 갈 곳은 빠짐없이, 하루가 한 목록</div></div>
+    <div class="shot"><img src="img/phone-later.png" alt="늦게 출발하기 제안 카드"><div class="cap"><b>늦게 출발하기</b>예약 전 1시간 30분 여유 → 퇴실 11:00 안에서 출발을 늦추는 대안, [오전 11:00 출발]</div></div>
     <div class="shot"><img src="img/phone-map.png" alt="일차 지도에 그려진 실제 도로 경로"><div class="cap"><b>실제 도로 경로</b>정류지 사이를 직선이 아니라 길찾기가 실제로 가는 도로로 그립니다</div></div>
   </div>
-  <p class="note" style="margin-top:2.5mm;">배포 서버에서 카카오 실제 데이터로 찍은 화면입니다(샘플 '강릉 3박 4일', 3일차는 순서를 일부러 바꿔 둠). 화면은 Pleos 디자인 언어(회색 바탕·흰 컨테이너·그래파이트 버튼·Asta Sans)를 따릅니다.</p>
+  <p class="note" style="margin-top:2.5mm;">2026-11-14 배포 서버에서 카카오 실제 데이터로 찍은 화면입니다(①② 새 여행 1박 2일, ③④ 샘플 '강릉 3박 4일'). 휴대폰의 이동시간은 일정을 짤 때 쓰는 카카오 예상값이고, 차에서는 현대차 내비가 다시 잽니다.</p>
 
   <div class="sec">작동 방식 — 여섯 단계</div>
   <div class="flow">
     <div class="fstep"><div class="fn">1</div><div>
       <div class="ft">휴대폰에서 여행을 짜요</div>
-      <div class="fd">장소를 담고 예약 시각·숙소를 정하면 <b>카카오 실제 운전 시간</b>으로 하루 시각이 계산됩니다. 여행은 <b>휴대폰 안에만</b> 저장됩니다.</div>
+      <div class="fd">장소를 담고 예약·숙소를 정하면 [경로 추천]이 <b>날짜와 순서</b>를 정하고 카카오 길찾기로 예상 시간을 채웁니다. 여행은 <b>휴대폰 안에만</b> 저장됩니다.</div>
     </div></div>
     <div class="fstep"><div class="fn">2</div><div>
       <div class="ft">차 화면에 QR이 떠요</div>
@@ -210,45 +212,40 @@
       <div class="fd">예약 지각·빠진 이동시간·문 여는 시간을 다시 점검합니다. <b>사람이 한 번 더 승인</b>해야 들어오고 계획은 그대로입니다.</div>
     </div></div>
     <div class="fstep"><div class="fn">6</div><div>
-      <div class="ft">내비가 하루를 챙겨요</div>
-      <div class="fd">버튼 한 번으로 다음 장소를 안내합니다. 남은 시간으로 여유를 알리고, 늦으면 건너뛰기·미루기를 제안하며, 도착하면 자동 체크됩니다.</div>
+      <div class="ft">내비가 재고 안내해요</div>
+      <div class="fd">현대차 내비가 <b>구간 시간·거리를 다시 재고</b> 더 빠른 순서를 찾습니다. 버튼 한 번으로 안내하고, 남은 시간으로 여유를 알리며, 도착하면 자동 체크됩니다.</div>
     </div></div>
   </div>
 
   <div class="sec">신뢰의 근거</div>
   <div class="cards2">
     <div class="card"><h3>교차 검증</h3><p>휴대폰(TS)과 차량(Kotlin)이 같은 일정 데이터를 읽고 <b>같은 판정</b>을 내는지 fixture로 자동 비교합니다. 어느 한쪽만 바뀌면 시험이 실패합니다.</p></div>
-    <div class="card"><h3>안전 우선</h3><p>주행 규제(CarUxRestrictions) 코드 경로를 구현해 주행 중 조작을 막습니다. 내비·차량 신호 조회는 경로를 바꾸지 않는 <b>읽기 전용</b> API만 사용.</p></div>
-    <div class="card"><h3>최소 권한</h3><p>차량 <b>제어 권한을 선언하지 않습니다</b>. 차량 신호는 조회 전용(에너지·주행·안전·문·좌석)만 쓰고, 원시 신호값은 저장하지 않습니다.</p></div>
+    <div class="card"><h3>안전 우선</h3><p>주행 규제(CarUxRestrictions)로 주행 중 조작을 막습니다. 내비에 경로를 거는 동작(안내·측정)은 <b>주차 중 사용자가 누르고 확인할 때만</b> 하고, 측정 경로는 끝나면 지웁니다.</p></div>
+    <div class="card"><h3>최소 권한</h3><p>차량 <b>제어 권한을 선언하지 않습니다</b>. 차량 신호는 조회 전용(에너지·주행·안전·문·좌석)만 쓰고 원시 값은 저장하지 않습니다. 장소 좌표는 차 안에서 내비로만 갑니다.</p></div>
   </div>
 
   <footer>
     <span>떠날지도 · 현대자동차그룹 차량용 앱 공모전 출품작</span>
-    <span>2 / 5 · 휴대폰 화면 · 작동 방식 · 신뢰의 근거</span>
+    <span>2 / 6 · 휴대폰 화면 · 작동 방식 · 신뢰의 근거</span>
   </footer>
 </section>
 
-<!-- ============ PAGE 3 — 차량 화면 + 구조 ============ -->
+<!-- ============ PAGE 3 — 차량 화면 ============ -->
 <section class="page">
-  <div class="sec">차량 — 불러오고, 확인하고, 안내받기</div>
+  <div class="sec">차량 — 불러오고, 내비로 재고, 안내받기</div>
   <div class="cshots">
-    <div><img src="img/car-qr.png" alt="차량 QR 화면"><div class="cap"><b>일회용 QR</b> · 단계 1/4, 5분·1회, QR에는 여행·개인정보 없음</div></div>
-    <div><img src="img/car-review.png" alt="받은 여행 재검증 결과"><div class="cap"><b>다시 확인한 결과</b> · 충돌 0 · 확인 필요 5, 계획은 그대로 · 차에서 한 번 더 승인</div></div>
-    <div><img src="img/car-timekeeper.png" alt="왼쪽 하루 동선과 오른쪽 다음 목적지"><div class="cap"><b>하루 동선 + 다음 목적지</b> · 휴대폰과 같은 동선, 다음 고정 일정까지 '13:00 예약까지 여유 135분'(늦으면 건너뛰기 제안), 출발 전 점검</div></div>
-    <div><img src="img/car-driving.png" alt="주행 중 단순화 화면"><div class="cap"><b>주행 중 화면</b> · 다음 목적지·남은 거리·상태만, 버튼 없음</div></div>
+    <div><img src="img/car-qr.png" alt="차량 QR 화면"><div class="cap"><b>① 일회용 QR</b> · 단계 1/4, 5분·1회, QR에는 여행·개인정보 없음</div></div>
+    <div><img src="img/car-review.png" alt="받은 여행 재검증 결과"><div class="cap"><b>② 다시 확인한 결과</b> · 충돌 0 · 확인 필요 4, 계획은 그대로 · 차에서 한 번 더 승인</div></div>
+    <div><img src="img/car-faster.png" alt="내비 기준 더 빠른 순서 제안"><div class="cap"><b>③ 내비 기준 더 빠른 순서</b> · 13구간을 내비로 잰 뒤 1일차 '운전 22분 단축' 제안</div></div>
+    <div><img src="img/car-measured.png" alt="바꾼 순서와 내비가 잰 구간"><div class="cap"><b>④ 내비가 잰 하루</b> · '↓ 6분 · 3km · 내비', 운전 2시간 41분 · 218km, 휴대폰 계획은 그대로</div></div>
+    <div><img src="img/car-timekeeper.png" alt="시간 지킴이와 출발 전 점검"><div class="cap"><b>⑤ 시간 지킴이</b> · '13:00 예약까지 여유 135분', 장소마다 지금 도착과 계획 비교, 출발 전 점검</div></div>
+    <div><img src="img/car-driving.png" alt="주행 중 단순화 화면"><div class="cap"><b>⑥ 주행 중 화면</b> · 다음 목적지·도착 예상·여유만, 버튼 없음</div></div>
   </div>
-  <p class="note" style="margin-top:2mm;">Pleos Connect Emulator 2.1.0에서 0.5.0 빌드로 찍은 화면입니다(앱 영역만 잘라 냄). 화면은 Pleos Connect 공식 디자인 명세(design/DESIGN.md)의 컴포넌트 — 머리말·세그먼트 컨트롤·기본/채움 버튼·스위치·시스템 팝업 — 와 토큰만으로 만들었고, 색은 상태 점에만 씁니다. 시연 시각은 에뮬레이터 전용 표시입니다.</p>
-
-  <div class="sec">기술 구조</div>
-  <div class="arch">
-    <div class="acard"><h3>차량 앱</h3><p>Kotlin · Jetpack Compose (Android Automotive). Pleos Connect 2.1.5 공식 디자인 명세의 컴포넌트·토큰, NaviHelper 3.0.5, Vehicle SDK 2.3.2(조회 전용). 암호화 로컬 저장, 주·야간 지원. 권한은 INTERNET·NAVI_*와 읽기 전용 CAR_ENERGY·DRIVE·SAFETY·DOORS·SEATS만.</p></div>
-    <div class="acard"><h3>모바일 웹</h3><p>React 19 · Vite, Pleos 디자인 토큰. 설치 없이 QR로 열리고 여행은 기기 안에만 저장. 카카오 장소 검색·길찾기·지도. 지도앱 공유 수신(PWA)·드래그 편집. 한국어·영어.</p></div>
-    <div class="acard"><h3>중계 서버</h3><p>Cloudflare Worker + Durable Object. 세션 하나를 원자적으로(5분·1회) 처리. P-256 ECDH · HKDF · AES-256-GCM 종단간 암호화. 카카오 키는 서버에만 두고 좌표만 전달(저장·기록 없음).</p></div>
-  </div>
+  <p class="note" style="margin-top:2mm;">2026-11-14 Pleos Connect Emulator에서 서명 release 0.6.0으로 찍은 화면입니다(앱 영역만 잘라 냄). ③④는 1일차 순서를 일부러 바꿔 보낸 여행을 에뮬레이터 내비가 실제로 잰 값, ⑤⑥의 시연 시각과 주행은 에뮬레이터 전용 표시입니다. 화면은 Pleos Connect 공식 디자인 명세의 컴포넌트와 토큰만으로 만들었고, 색은 상태 점과 '꼭' 핀에만 씁니다.</p>
 
   <footer>
     <span>떠날지도 · 현대자동차그룹 차량용 앱 공모전 출품작</span>
-    <span>3 / 5 · 차량 화면과 구조</span>
+    <span>3 / 6 · 차량 화면</span>
   </footer>
 </section>
 
@@ -261,31 +258,88 @@
     </div>
   </header>
 
+  <div class="sub">차에서 — 현대차 내비가 기준</div>
+  <div class="xgrid">
+    <div class="xcard"><h4>경유지 경로로 전 구간 측정 <span class="tag">NaviHelper</span></h4><p>내비의 예상 조회는 차가 있는 곳에서만 잽니다. 그래서 <b>경유지 경로를 걸고 경유지별 남은 시간·거리의 차이</b>로 떨어진 구간을 잽니다(경로당 경유지 9곳). 확인 후에만 걸고, 끝나면 경로를 지웁니다.</p></div>
+    <div class="xcard"><h4>내비 기준 순서 최적화</h4><p>그 날 출발·장소·도착 사이 <b>모든 구간을 재고 모든 순서를 비교</b>합니다. 운전이 10분 이상 줄고 예약·영업시간을 해치지 않을 때만 제안하고, 차에서만 바꾸며 되돌릴 수 있습니다.</p></div>
+    <div class="xcard"><h4>1일차 첫 구간 자동 계산</h4><p>출발지가 '현재 위치'이거나 집 주소가 없어도, 주차 중 여행을 열면 <b>내비가 차 위치에서 첫 구간을 잽니다</b>. 버튼 없이 1일차 시각이 채워집니다.</p></div>
+    <div class="xcard"><h4>오늘 경로 전송</h4><p>오늘 남은 장소를 <b>최대 10곳까지 한 번에</b> 경유지로 보내고, 경유지별 남은 시간으로 다음 장소 도착 예정을 계산합니다. 주차 중 명시적 탭에서만 동작합니다.</p></div>
+  </div>
+
   <div class="sub">여행 중 — 운전 맥락에서 조정</div>
   <div class="xgrid">
-    <div class="xcard"><h4>건너뛰기 · 미루기</h4><p>늦을 것 같으면 선택 일정을 건너뛰거나 <b>오늘 나중으로 / 다른 날로</b> 미룹니다. 모두 차량 오버레이에만 기록돼 <b>계획은 바뀌지 않고</b> 되돌릴 수 있습니다.</p></div>
-    <div class="xcard"><h4>실제 주차 시간 추정 <span class="tag">향후 계획</span></h4><p>지금은 주차 시간을 계산에 넣지 않습니다. 앞으로 <b>내비 안내 종료 뒤 시동 종료·안전벨트 해제·문 잠금</b>이 모두 이뤄진 시각을 실제 도착으로 보고, 장소 종류별 주차 시간을 추정해 내비 도착 예상에 반영합니다.</p></div>
+    <div class="xcard"><h4>건너뛰기 · 미루기</h4><p>늦을 것 같으면 선택 일정을 건너뛰거나 <b>오늘 나중으로 / 다른 날로</b> 미룹니다. 차량 쪽에만 기록돼 <b>계획은 바뀌지 않고</b> 되돌릴 수 있습니다.</p></div>
+    <div class="xcard"><h4>출발 전 점검 · 쉬어 가기 <span class="tag">차량 신호</span></h4><p>문·트렁크·충전 포트·안전벨트·기어를 <b>오늘 일정과 함께</b> 보고, 연속 운전이 길어지면 경로 위 휴게소와 다음 예약까지의 여유를 함께 따져 쉬어 가기를 권합니다.</p></div>
     <div class="xcard"><h4>EV·연료 충전/주유 추천 <span class="tag">차량 신호</span></h4><p>EV는 숙소까지 되면 <b>야간 완속</b>, 아니면 <b>다음 정류장 급속</b>(주행가능거리 vs 남은 거리). 내연기관은 잔량 20~30%에 주유 권장 — 유가·충전소는 순정 내비가 표시합니다.</p></div>
-    <div class="xcard"><h4>내비 묶음 전송</h4><p>다음 목적지 하나가 아니라 <b>그날 경로를 한 번에</b> 내비로 보냅니다(최대 3스톱). 주차 중 명시적 탭에서만 동작합니다.</p></div>
+    <div class="xcard"><h4>실제 주차 시간 추정 <span class="tag">향후 계획</span></h4><p>화면 시각표는 아직 주차 시간을 넣지 않습니다. 앞으로 <b>내비 안내 종료 뒤 시동 종료·안전벨트 해제·문 잠금</b> 시각을 실제 도착으로 보고, 장소 종류별 주차 시간을 추정해 반영합니다.</p></div>
   </div>
 
   <div class="sub">계획 세우기 — 더 쉽게, 함께</div>
   <div class="xgrid">
+    <div class="xcard"><h4>여행 전체 최적화 엔진</h4><p>적응형 대규모 근방 탐색 + 담금질(ALNS-SA). <b>이동마다 주차 10분, 예약 10분 전 도착</b>, 영업시간·쉬는 시간, 식사 시간대, 카페 하루 2곳·점심 뒤 우선, 숙소 입실·퇴실을 함께 따집니다. 같은 입력엔 같은 결과.</p></div>
+    <div class="xcard"><h4>늦게 출발하기</h4><p>예약 전에 1시간 넘게 남으면 기다리는 대신 <b>출발을 늦추는 대안</b>을 보여 줍니다. 숙소를 떠나는 날은 퇴실 시간까지(미입력이면 통상 11:00이라고 밝힘).</p></div>
     <div class="xcard"><h4>지도앱 장소 공유 수집</h4><p>네이버·카카오·구글 지도의 <b>'공유'로 떠날지도에 보내면</b> 그 장소가 여행에 들어갑니다(설치형 웹 공유 타깃). 링크만 와도 서버가 장소명을 읽어 카카오 검색으로 위치를 찾습니다.</p></div>
-    <div class="xcard"><h4>경로 추천 · 실제 도로 지도</h4><p>고정 일정은 그대로 두고 장소를 일차에 나누고 <b>숙소 쪽으로 순서를 추천</b>(미리보기 후 승인)한 뒤, 카카오 길찾기로 구간 시간·거리와 <b>도로 경로</b>를 채웁니다.</p></div>
-    <div class="xcard"><h4>더 빠른 순서 · 드래그 편집</h4><p>직선거리로 후보를 고른 뒤 <b>카카오 실제 시간으로 확인</b>해 운전이 10분 이상 줄고 예약에 늦지 않을 때만 제안합니다. 순서는 <b>끌어서</b>도 바꿉니다.</p></div>
     <div class="xcard"><h4>친구에게 공유</h4><p>여행을 <b>암호화 파일</b>로 친구에게 보냅니다. 중계 서버를 거치지 않고(링크 없음), <b>집 주소는 빼고</b> 6자리 패스코드로 엽니다.</p></div>
   </div>
 
-  <p class="note" style="margin-top:5mm;">모든 조정·추천은 <b>'제안·표시'</b>이며, 사용자가 누를 때만 반영되고 되돌릴 수 있습니다. 예약 15분 전 도착 기준은 휴대폰 화면에서 쓰며, 차량 시간 지킴이는 자체 기준(여유 10분)을 씁니다. 차량 신호(에너지)는 <b>조회 전용 권한</b>으로 읽어 추천에만 쓰고 저장·전송하지 않습니다.</p>
+  <p class="note" style="margin-top:4mm;">모든 조정·추천은 <b>'제안·표시'</b>이며, 사용자가 누를 때만 반영되고 되돌릴 수 있습니다. 기준 시간은 쓰임마다 다릅니다 — 휴대폰 일정의 출발 태그는 예약 15분 전 도착, 경로 추천은 주차 10분을 더해 10분 전 도착, 차량 시간 지킴이는 여유 10분. 차량 신호는 <b>조회 전용 권한</b>으로 읽어 추천에만 쓰고 저장·전송하지 않습니다.</p>
 
   <footer>
     <span>떠날지도 · 현대자동차그룹 차량용 앱 공모전 출품작</span>
-    <span>4 / 5 · 확장 기능</span>
+    <span>4 / 6 · 확장 기능</span>
   </footer>
 </section>
 
-<!-- ============ PAGE 5 — 진행 현황 ============ -->
+<!-- ============ PAGE 5 — 기술 구조 · 데이터 흐름 · 검증 ============ -->
+<section class="page">
+  <header style="border-bottom-width:2px; margin-bottom:5mm;">
+    <div class="brandrow">
+      <h1 style="font-size:19pt;">기술 구조 · 검증</h1>
+      <span class="pill">휴대폰 · 중계 서버 · 차량</span>
+    </div>
+  </header>
+
+  <div class="sec">기술 구조</div>
+  <div class="arch">
+    <div class="acard"><h3>차량 앱</h3><p>Kotlin · Jetpack Compose (Android Automotive). Pleos Connect 공식 디자인 명세, NaviHelper 3.0.5(경유지 경로로 구간 측정·순서 최적화), Vehicle SDK 2.3.2(조회 전용). 암호화 로컬 저장, 주·야간. 권한은 INTERNET·NAVI_*·측정 중 FOREGROUND_SERVICE와 읽기 전용 CAR_*만.</p></div>
+    <div class="acard"><h3>모바일 웹</h3><p>React 19 · Vite, Pleos 디자인 토큰. 설치 없이 QR로 열리고 여행은 기기 안에만 저장. 여행 전체 최적화 엔진(공용 TypeScript, 의존성 없음), 카카오 장소 검색·길찾기·지도, 지도앱 공유 수신(PWA). 한국어·영어.</p></div>
+    <div class="acard"><h3>중계 서버</h3><p>Cloudflare Worker + Durable Object. 세션 하나를 원자적으로(5분·1회) 처리. P-256 ECDH · HKDF · AES-256-GCM 종단간 암호화. 카카오 키는 서버에만 두고 좌표만 전달(저장·기록 없음).</p></div>
+  </div>
+
+  <div class="sec">데이터 흐름 — 무엇이 어디로 가는가</div>
+  <table class="flowt">
+    <thead><tr><th>무엇</th><th>어디로</th><th>어떻게</th></tr></thead>
+    <tbody>
+      <tr><td>장소 검색어</td><td>휴대폰 → 중계 서버 → 카카오 장소 검색</td><td>검색에만 쓰고 저장·기록하지 않음</td></tr>
+      <tr><td>구간의 출발·도착 좌표</td><td>휴대폰 → 중계 서버 → 카카오모빌리티 길찾기</td><td>예상 시간·거리·도로 경로만 받음. 현재 위치는 약 100m 단위로 줄여 계산에만 쓰고 저장하지 않음</td></tr>
+      <tr><td>여행 하나</td><td>휴대폰 → 중계 서버 → 차량</td><td>종단간 암호화로 서버는 내용을 볼 수 없고 전달 뒤 삭제. 집 주소는 동의할 때만 포함</td></tr>
+      <tr><td>장소 좌표</td><td>차량 → 현대차 내비(차 안)</td><td>안내와 구간 측정에만 씀. 서버로 보내지 않고 잰 값은 그 여행과 함께 차에만 저장</td></tr>
+      <tr><td>차량 신호</td><td>차량 안</td><td>조회 전용 권한으로 읽어 점검·추천에만 씀. 원시 값은 저장·전송하지 않음</td></tr>
+    </tbody>
+  </table>
+
+  <div class="sec">검증 수치</div>
+  <div class="metrics">
+    <div class="metric"><div class="mv">548개</div><div class="ml">단위·통합 시험 통과<br>(차량 212 + 웹·서버·공용 336)</div></div>
+    <div class="metric"><div class="mv">61 MB</div><div class="ml">최대 메모리(PSS)<br>기준 400 MB 이하</div></div>
+    <div class="metric"><div class="mv">84 ms</div><div class="ml">화면 전환 최대 프레임<br>기준 응답 250 ms</div></div>
+    <div class="metric"><div class="mv">2.2 – 2.6초</div><div class="ml">콜드 스타트<br>(컴파일 후 0.4 – 0.5초)</div></div>
+  </div>
+  <p class="note" style="margin-top:2mm;">배포: <b>https://tteonaljido.tteonaljido-worker.workers.dev</b> (모바일 웹 + API, 개인정보 안내 <b>/privacy</b>). 서명된 release APK 준비 완료. 성능은 에뮬레이터 측정값이며 실차는 미검증.</p>
+
+  <div class="sec">실제 동작 vs 시연</div>
+  <ul class="tight">
+<li><b>실제 동작:</b> QR·세션·종단간 암호화·차량 재검증·내비 경로 안내·묶음 전송·<b>내비 경유지 경로로 구간 측정과 순서 최적화</b>, 카카오 장소 검색·예상 시간·도로 경로. 배포 서버 + 서명 APK로 전체 흐름 E2E 통과.</li>
+    <li><b>실차 범위:</b> 실제 폰 카메라 스캔, 주행 규제·차량 신호(EV/연료)는 에뮬레이터가 주입 불가 → 데모로 화면 시연, 실차/userdebug에서 실검증.</li>
+        </ul>
+
+  <footer>
+    <span>떠날지도 · 현대자동차그룹 차량용 앱 공모전 출품작</span>
+    <span>5 / 6 · 기술 구조 · 검증</span>
+  </footer>
+</section>
+
+<!-- ============ PAGE 6 — 진행 현황 ============ -->
 <section class="page">
   <header style="border-bottom-width:2px; margin-bottom:5mm;">
     <div class="brandrow">
@@ -309,43 +363,23 @@
       <tr><td class="m">M58</td><td>디자인을 Pleos Connect 공식 디자인 명세로 전면 교체 (APK 0.5.0)</td><td><span class="st done">완료</span></td><td>차량 E2E·실제 연동, 주·야간</td></tr>
       <tr><td class="m">M59-M61</td><td>출발지 규칙(첫날 현재 위치·집·회사·즐겨찾기, 둘째 날부터 전날 숙소) · 영업시간 · 첫날 첫 구간 계산(휴대폰: 출발지 기준, 차량: 현재 위치 기준 자동) (APK 0.6.0)</td><td><span class="st done">완료</span></td><td>시험 497개·실제 연동</td></tr>
       <tr><td class="m">M63</td><td>현대차 내비가 시간·거리·순서의 기준: 경유지 경로로 전 구간 측정 · 날짜별 순서 최적화(차량에서만 순서 변경, 되돌리기) · 오늘 경로에 남은 장소 모두 전송</td><td><span class="st done">완료</span></td><td>시험 512개·에뮬레이터 실제 내비</td></tr>
-      <tr><td class="m">M64</td><td>여행 전체 동선 최적화 엔진: 날짜 배정과 순서를 함께 탐색(예약 10분 전·영업시간·식사 시간·식사 뒤 카페·입퇴실), 휴대폰 경로 추천에 연결</td><td><span class="st done">완료</span></td><td>시험 537개·배포 화면</td></tr>
-      <tr><td class="m">M6</td><td>문서 6종·README·배포·서명 APK·기획서·소개서 (11/13 갱신)</td><td><span class="st done">완료</span></td><td>—</td></tr>
+      <tr><td class="m">M64</td><td>여행 전체 동선 최적화 엔진: 날짜 배정과 순서를 함께 탐색(예약 10분 전·영업시간·식사 시간·식사 뒤 카페·입퇴실), 휴대폰 경로 추천에 연결 · 늦게 출발하기(퇴실 시간 안에서) · 화면 다듬기</td><td><span class="st done">완료</span></td><td>시험 548개·배포 화면</td></tr>
+      <tr><td class="m">M6</td><td>문서 6종·README·배포·서명 APK·기획서·소개서 (11/14 갱신)</td><td><span class="st done">완료</span></td><td>—</td></tr>
       <tr><td class="m">M7</td><td>실제 폰 QR 인식·실차 검증·성능·PT 리허설</td><td><span class="st plan">예정</span></td><td>11/16 – 12/2</td></tr>
     </tbody>
   </table>
 
-  <div class="sec">검증 수치</div>
-  <div class="metrics">
-    <div class="metric"><div class="mv">537개</div><div class="ml">단위·통합 시험 통과<br>(차량 208 + 웹·서버·공용 329)</div></div>
-    <div class="metric"><div class="mv">61 MB</div><div class="ml">최대 메모리(PSS)<br>기준 400 MB 이하</div></div>
-    <div class="metric"><div class="mv">84 ms</div><div class="ml">화면 전환 최대 프레임<br>기준 응답 250 ms</div></div>
-    <div class="metric"><div class="mv">2.2 – 2.6초</div><div class="ml">콜드 스타트<br>(컴파일 후 0.4 – 0.5초)</div></div>
-  </div>
-  <p class="note" style="margin-top:2mm;">배포: <b>https://tteonaljido.tteonaljido-worker.workers.dev</b> (모바일 웹 + API, 개인정보 안내 <b>/privacy</b>). 서명된 release APK 준비 완료. 성능은 에뮬레이터 측정값이며 실차는 미검증.</p>
-
-  <div class="split">
-    <div>
-      <div class="sec">실제 동작 vs 시연</div>
-      <ul class="tight">
-        <li><b>실제 동작:</b> QR·세션·종단간 암호화·차량 재검증·내비 경로 안내·묶음 전송, 카카오 장소 검색·운전 시간·도로 경로. 배포 서버 + 서명 APK로 전체 흐름 E2E 통과.</li>
-        <li><b>실차 범위:</b> 실제 폰 카메라 스캔, 주행 규제·차량 신호(EV/연료)는 에뮬레이터가 주입 불가 → 데모로 화면 시연, 실차/userdebug에서 실검증.</li>
-      </ul>
-    </div>
-    <div>
-      <div class="sec">남은 일</div>
-      <ul class="tight">
-        <li>실제 폰(iPhone·Android)으로 QR 스캔 → 전체 흐름 시험</li>
-        <li>시연 영상·숏폼 다시 녹화(11/10 영상은 디자인 교체 전 화면)</li>
-        <li>팀명 확정 → APK 이름 변경, 접수양식 01·03·04 직접 작성</li>
-        <li>실차에서 차량 신호(에너지)·주행 규제 실검증</li>
-      </ul>
-    </div>
-  </div>
+  <div class="sec">남은 일</div>
+  <ul class="tight">
+<li>실제 폰(iPhone·Android)으로 QR 스캔 → 전체 흐름 시험</li>
+    <li>시연 영상·숏폼 다시 녹화(11/10 영상은 디자인 교체 전 화면)</li>
+    <li>팀명 확정 → APK 이름 변경, 접수양식 01·03·04 직접 작성</li>
+    <li>실차에서 차량 신호·주행 규제, 내비가 받는 경유지 수·측정용 포그라운드 서비스 실검증</li>
+        </ul>
 
   <footer>
     <span>떠날지도 · 현대자동차그룹 차량용 앱 공모전 출품작</span>
-    <span>5 / 5 · 진행 현황</span>
+    <span>6 / 6 · 진행 현황</span>
   </footer>
 </section>
 

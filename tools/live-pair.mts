@@ -6,6 +6,7 @@
  *   LIVE_ORIGIN=CURRENT … sends the same trip starting from the car's current location (no start place chosen).
  *   LIVE_START=2026-11-13 … sends it moved to start on that day.
  *   LIVE_DAY1=v3,v1,v2 … sends it with day 1 in that order and its legs untimed (M63: a day the car's navigation can reorder).
+ *   LIVE_DEMO=1 … pairs into the emulator's demo store (설정 → 시연 모드), for the demo clock and driving switch.
  * Needs: the emulator running with apk/떠날지도_release.apk installed fresh (empty trip list).
  */
 import { execFileSync } from 'node:child_process';
@@ -92,6 +93,13 @@ try {
   /* ---------- 0. both apps open ---------- */
   sh(`am force-stop ${PKG}`);
   sh(`am start --user ${USER} -n ${PKG}/.MainActivity`);
+  if (process.env.LIVE_DEMO) {
+    // LIVE_DEMO=1: pair into the emulator's demo store (설정 → 시연 모드), so the demo clock and driving switch can be used on the trip.
+    tap(await waitFor((ns) => ns.find((n) => n.text === '설정'), 'settings button'));
+    tap(await waitFor(byText('시연 모드'), 'demo mode switch'));
+    await sleep(800);
+    sh('input keyevent 4');
+  }
   await waitFor(byText('저장된 여행이 없어요'), 'empty trip list');
   carShot('01');
   const phone = await ctx.newPage();
