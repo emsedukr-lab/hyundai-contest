@@ -499,6 +499,13 @@
 .astryx-button[data-variant='secondary'] {
   color: var(--tn-text-primary);
 }
+/* A suggestion card's own action (더 빠른 순서 · 늦게 출발) sits on a screen whose bottom CTA owns the one blue fill
+   (design/TOSS.md: one filled primary per screen), so it is the weak primary: accent-weak face, accent-text label. */
+.tl-faster-actions .astryx-button[data-variant='primary'] {
+  background-color: var(--tn-accent-weak);
+  color: var(--tn-accent-text);
+  --color-overlay-pressed: var(--tn-fill-weak-pressed);
+}
 .astryx-button[data-variant='ghost'] {
   color: var(--tn-accent-text);
 }
