@@ -502,7 +502,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
     { label: t('tl.recalc'), onClick: () => void refreshAll() },
     ...(tripId ? [{ label: t('trip.duplicate'), onClick: () => void duplicate() }] : []),
     { label: t('share.button'), onClick: () => setSharing(true) },
-    ...(tripId ? [{ type: 'divider' as const }, { label: t('editor.delete'), variant: 'destructive' as const, onClick: () => setConfirmDelete(true) }] : []),
+    ...(tripId ? [{ type: 'divider' as const }, { label: t('editor.delete'), onClick: () => setConfirmDelete(true) }] : []),
   ];
 
   // Top bar (M53): only the dates and n박 n일. The name lives in the 여행 정보 card; tapping the dates still goes to it.
@@ -766,7 +766,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
         title={t('editor.delete.title')}
         description={t('editor.delete.description')}
         actionLabel={t('editor.delete.action')}
-        actionVariant="destructive"
+        actionVariant="primary" // the filled main button, as in the car's popup: deleting is an action, not an error state (M58)
         onAction={async () => {
           deleting.current = true; // deleting: nothing may save the trip back on the way out (a re-render resets `dirty`)
           await trips.remove(doc.tripId);

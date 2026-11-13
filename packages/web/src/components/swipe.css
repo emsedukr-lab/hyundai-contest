@@ -1,4 +1,7 @@
-/* Swipe to remove (M36, shared M52): the card slides left over a red action that it reveals. */
+/*
+ * Swipe to remove (M36, shared M52): the card slides left over the action it reveals. The action is the filled
+ * graphite face of a main button (button/filled), not a hue — removing is an action, not an error state (M58).
+ */
 .tl-swipe {
   position: relative;
   margin: 6px 0;
@@ -7,11 +10,11 @@
 }
 .tl-swipe-back {
   position: absolute;
-  inset: 0 0 0 24px; /* clear of the card's left corners, so no red hairline shows around them */
+  inset: 0 0 0 24px; /* clear of the card's left corners, so no hairline of the action shows around them */
   display: none;
   justify-content: flex-end;
   align-items: stretch;
-  background: var(--color-error);
+  background: var(--color-accent);
   border-radius: var(--radius-container);
 }
 .tl-swipe.is-open .tl-swipe-back {
@@ -21,14 +24,14 @@
   width: 88px;
   border: 0;
   background: transparent;
-  color: var(--color-on-error);
+  color: var(--color-on-accent);
   font: inherit;
   font-size: 16px;
   font-weight: 700;
   cursor: pointer;
 }
 .tl-swipe-action:focus-visible {
-  outline: 2px solid var(--color-on-error);
+  outline: 2px solid var(--color-on-accent);
   outline-offset: -4px;
 }
 .tl-swipe-card {

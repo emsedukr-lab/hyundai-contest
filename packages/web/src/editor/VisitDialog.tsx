@@ -144,7 +144,7 @@ export function VisitDialog({
         <Button label={t('common.cancel')} variant="secondary" size="lg" onClick={() => setConfirmDelete(false)} />
         <Button
           label={t('visit.delete')}
-          variant="destructive"
+          variant="primary"
           size="lg"
           width="100%"
           onClick={() => {
@@ -156,7 +156,7 @@ export function VisitDialog({
     </div>
   ) : (
     <div className="vd-foot-row">
-      {/* A quiet first step: red only on the confirm, so the rare delete doesn't shout on every place. */}
+      {/* A quiet first step: the filled button only on the confirm, so the rare delete doesn't shout on every place. */}
       <Button label={t('visit.delete')} variant="secondary" size="lg" onClick={() => setConfirmDelete(true)} />
       <Button label={t('common.close')} variant="primary" size="lg" width="100%" onClick={onClose} />
     </div>

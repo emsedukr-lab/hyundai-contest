@@ -143,7 +143,9 @@
   margin: 0;
   font-size: 14px;
   line-height: 20px;
-  color: var(--color-text-error);
+  /* a caution, not an error: ink and weight, no hue */
+  color: var(--color-text-primary);
+  font-weight: 700;
 }
 .vd-foot-row {
   display: flex;

@@ -5,7 +5,7 @@ import './swipe.css';
 const OPEN_AT = -88;
 
 /**
- * A card that slides left to reveal a red action (빼기 / 삭제) behind it (M36; shared with the trip list, M52). Past 45% of its width (or a quick fling) it is removed on
+ * A card that slides left to reveal a filled action (빼기 / 삭제) behind it (M36; shared with the trip list, M52). Past 45% of its width (or a quick fling) it is removed on
  * release; a shorter swipe rests open so 빼기 can be tapped, and tapping the card or Esc closes it again. Only a sideways
  * gesture counts — vertical scrolling passes through (touch-action: pan-y) — and the drag handle is left to dnd-kit.
  * The tap that ends a swipe never opens the card's details.
@@ -21,9 +21,9 @@ export function SwipeToRemove({
 }: {
   /** Extra classes on the outer wrapper (spacing in its list). */
   className?: string;
-  /** Classes of the sliding card (its surface, so it covers the red action until swiped). */
+  /** Classes of the sliding card (its surface, so it covers the action until swiped). */
   cardClassName: string;
-  /** The word on the red action: 빼기 in the day timeline, 삭제 in the trip list. */
+  /** The word on the action: 빼기 in the day timeline, 삭제 in the trip list. */
   actionText: string;
   actionLabel: string;
   /** A part of the card that keeps its own pointer gestures (the timeline's drag handle). */
