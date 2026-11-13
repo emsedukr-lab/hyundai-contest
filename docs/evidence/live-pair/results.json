@@ -1,5 +1,5 @@
 {
-  "at": "2026-11-13T05:04:40.018Z",
+  "at": "2026-11-13T05:56:52.384Z",
   "base": "https://tteonaljido.tteonaljido-worker.workers.dev",
   "serial": "emulator-5580",
   "results": [
@@ -9,7 +9,7 @@
     },
     {
       "ok": true,
-      "what": "car shows a one-time QR for the deployed server (https://tteonaljido.tteonaljido-worker.workers.dev/c#v1.BB2c…)"
+      "what": "car shows a one-time QR for the deployed server (https://tteonaljido.tteonaljido-worker.workers.dev/c#v1.42iU…)"
     },
     {
       "ok": true,
@@ -17,7 +17,7 @@
     },
     {
       "ok": true,
-      "what": "phone and car show the same confirm code (353 720)"
+      "what": "phone and car show the same confirm code (278 059)"
     },
     {
       "ok": true,
@@ -45,7 +45,7 @@
     },
     {
       "ok": true,
-      "what": "car shows a one-time QR for the deployed server (https://tteonaljido.tteonaljido-worker.workers.dev/c#v1.LUsc…)"
+      "what": "car shows a one-time QR for the deployed server (https://tteonaljido.tteonaljido-worker.workers.dev/c#v1.3E4P…)"
     },
     {
       "ok": true,

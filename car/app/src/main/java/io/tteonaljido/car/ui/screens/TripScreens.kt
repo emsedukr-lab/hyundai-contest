@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -207,6 +208,10 @@ fun TripDetailScreen(vm: TripsViewModel, localId: String, drive: DriveState, dem
     val energy by vm.energy.collectAsState()
     val vehicle by vm.vehicle.collectAsState()
     val session by vm.drive.collectAsState()
+    // M60: a first leg nobody could time (the trip starts "where the car is") is asked from the navigation while parked.
+    val naviStatus by vm.naviStatus.collectAsState()
+    val resumed by vm.resumed.collectAsState()
+    LaunchedEffect(localId, drive.parked, naviStatus, resumed) { if (drive.parked) vm.measureFirstLeg(localId) }
     val t = trips.firstOrNull { it.localId == localId } ?: return onBack()
     var day by remember(localId) { mutableIntStateOf(vm.todayIndex(t) ?: 1) }
     var confirmDelete by remember { mutableStateOf(false) }

@@ -180,6 +180,47 @@ class LiveProjectionTest {
         assertEquals(LegValue(165, LegFrom.NAVI), TripValidator.leg(current, pinned, 1, 0))
     }
 
+    @Test fun aFirstLegThePlanCouldNotTimeIsTheCarsToMeasure() {
+        // M60: the phone cannot time a first leg from "where the car is" or from a home it has no address for.
+        val current = sample.copy(origin = Endpoint.Current)
+        assertTrue(DayStart.untimed(current, CarOverlay()))
+        assertTrue(DayStart.untimed(sample, CarOverlay()))                                  // from home, no time in the plan
+        assertTrue(DayStart.untimed(sample, CarOverlay(home = here)))                       // knowing where home is does not time the leg
+        val timed = withDay(sample, 1) { d -> d.copy(legs = listOf(Leg(150, Leg.LegSource.USER_ESTIMATE)) + d.legs.drop(1)) }
+        assertFalse(DayStart.untimed(timed, CarOverlay()))                                  // the phone timed it: nothing to do
+        assertFalse(DayStart.untimed(current, CarOverlay(visited = setOf("v1"))))           // the first day is under way
+    }
+
+    @Test fun theCarKnowsWhenItStandsAtThePlansOwnStart() {
+        assertNull(DayStart.planStart(sample, CarOverlay()))                                // home, and nobody said where
+        assertNull(DayStart.planStart(sample.copy(origin = Endpoint.Current), CarOverlay(home = here)))
+        assertEquals(here.latE7 to here.lonE7, DayStart.planStart(sample, CarOverlay(home = here)))
+        assertTrue(DayStart.atPlanStart(sample, CarOverlay(home = here), here.latE7 + 500, here.lonE7))      // ~5 m off
+        assertFalse(DayStart.atPlanStart(sample, CarOverlay(home = here), here.latE7 + 50_000, here.lonE7))  // ~550 m off
+        assertFalse(DayStart.atPlanStart(sample, CarOverlay(), here.latE7, here.lonE7))
+        val fromHotel = sample.copy(origin = Endpoint.AtPlace("skybay"))
+        assertEquals(378_040_000 to 1_289_080_000, DayStart.planStart(fromHotel, CarOverlay()))
+    }
+
+    @Test fun aStartPinnedToTheCarIsMeasuredAgainWhenTheCarMovedOrTheEstimateIsOld() {
+        val current = sample.copy(origin = Endpoint.Current)
+        val now = 1_000_000_000L
+        assertTrue(DayStart.needsMeasure(current, CarOverlay(), here.latE7, here.lonE7, now))            // never pinned
+        val pinned = CarOverlay(originOverrides = mapOf(1 to here), originPinnedAuto = true)
+        assertTrue(DayStart.needsMeasure(current, pinned, here.latE7, here.lonE7, now))                  // pinned, no estimate yet
+        val measured = pinned.copy(legEstimates = mapOf("@origin>cheolttuk" to LegEstimate(152, 202_500, now)))
+        assertFalse(DayStart.needsMeasure(current, measured, here.latE7, here.lonE7, now + 60_000))
+        assertTrue(DayStart.needsMeasure(current, measured, here.latE7 + 50_000, here.lonE7, now + 60_000)) // ~550 m away
+        assertTrue(DayStart.needsMeasure(current, measured, here.latE7, here.lonE7, now + DayStart.FRESH_MS + 1))
+        // once measured the first leg is the navigation's, and the day's times can be worked out
+        assertEquals(LegValue(152, LegFrom.NAVI), TripValidator.leg(current, measured, 1, 0))
+        assertFalse(TripValidator.validate(current, measured).issues.any { it.code == "LEG_UNKNOWN" && it.dayIndex == 1 })
+        // at home the leg is the plan's own ("집 > 첫 장소"), no pin needed
+        val atHome = CarOverlay(home = here, legEstimates = mapOf("@home>cheolttuk" to LegEstimate(150, 200_000, now)))
+        assertTrue(DayStart.estimateFresh(sample, atHome, now + 60_000))
+        assertEquals(LegValue(150, LegFrom.NAVI), TripValidator.leg(sample, atHome, 1, 0))
+    }
+
     /* ---------- next destination, arrival, update ---------- */
 
     @Test fun nextDestinationSkipsSkippedStops() {

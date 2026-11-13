@@ -39,6 +39,46 @@ fun Trip.zoneOrUtc(): java.time.ZoneId = runCatching { java.time.ZoneId.of(timez
  */
 object DayStart {
     fun canDepartHere(trip: Trip, dayIndex: Int): Boolean = dayIndex == 1 || trip.days.getOrNull(dayIndex - 2)?.lodgingPlaceRef == null
+
+    /** How long an estimate from the car's position stands before the first leg is asked again. */
+    const val FRESH_MS = 30 * 60_000L
+
+    /**
+     * True while the trip's very first leg still has to be timed by the car (M60): the plan carries no time for it and
+     * no stop of the first day is done yet. The phone cannot time a leg that starts "where the car is", nor one from a
+     * home it has no address for — and the car's navigation can only time a leg from the car's own position. So the
+     * car measures it from where it stands instead of leaving the first day unknown.
+     */
+    fun untimed(trip: Trip, overlay: CarOverlay): Boolean {
+        val first = trip.days.firstOrNull() ?: return false
+        return first.legs.firstOrNull() == null && first.visitOrder.none { it in overlay.visited }
+    }
+
+    /** Coordinates of the plan's own start, where the car knows them: home (from the phone or the navigation) or a place. */
+    fun planStart(trip: Trip, overlay: CarOverlay): Pair<Int, Int>? = when (val o = trip.origin) {
+        is Endpoint.Current -> null
+        is Endpoint.Home -> overlay.home?.let { it.latE7 to it.lonE7 } ?: trip.home?.let { it.latE7 to it.lonE7 }
+        is Endpoint.AtPlace -> overlay.poiBindings[o.placeRef]?.let { it.latE7 to it.lonE7 }
+            ?: trip.places.firstOrNull { it.placeRef == o.placeRef }?.let { p -> p.latE7?.let { la -> p.lonE7?.let { lo -> la to lo } } }
+    }
+
+    /** True when the car stands at the plan's own start (within [PlaceMatch.SAME_METRES]): the leg from there can be asked as it is. */
+    fun atPlanStart(trip: Trip, overlay: CarOverlay, hereLatE7: Int, hereLonE7: Int): Boolean =
+        planStart(trip, overlay)?.let { metres(it.first, it.second, hereLatE7, hereLonE7) <= PlaceMatch.SAME_METRES } ?: false
+
+    /** The first leg has an estimate from the navigation that is still recent. */
+    fun estimateFresh(trip: Trip, overlay: CarOverlay, now: Long): Boolean =
+        LegKeys.of(trip, overlay, 1, 0)?.let(overlay.legEstimates::get)?.let { now - it.at <= FRESH_MS } ?: false
+
+    /**
+     * Whether a start pinned to the car has to be measured (again) from where the car now stands: never pinned, the car
+     * has moved away from the pin (beyond [PlaceMatch.SAME_METRES]), or the first leg has no recent estimate.
+     */
+    fun needsMeasure(trip: Trip, overlay: CarOverlay, hereLatE7: Int, hereLonE7: Int, now: Long): Boolean {
+        val pinned = overlay.originFor(trip, 1) ?: return true
+        if (metres(pinned.latE7, pinned.lonE7, hereLatE7, hereLonE7) > PlaceMatch.SAME_METRES) return true
+        return !estimateFresh(trip, overlay, now)
+    }
 }
 
 /**
@@ -73,6 +113,8 @@ data class CarOverlay(
     val originOverride: NaviBinding? = null,
     /** "여기서 출발" per day (dayIndex → where the day now starts from). Any day, not just the first. */
     val originOverrides: Map<Int, NaviBinding> = emptyMap(),
+    /** The first day's start was pinned by the car itself ([DayStart.untimed]), not by a tap on "여기서 출발": it follows the car until the day starts. */
+    val originPinnedAuto: Boolean = false,
     val poiBindings: Map<String, NaviBinding> = emptyMap(),
     val visited: Set<String> = emptySet(),
     /** When and how each visit was marked done (visitId → stamp). */

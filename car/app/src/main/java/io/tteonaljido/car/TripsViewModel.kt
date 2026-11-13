@@ -6,6 +6,7 @@ import io.tteonaljido.car.guide.ArrivalNote
 import io.tteonaljido.car.guide.GuidanceTracker
 import io.tteonaljido.car.navi.NaviGateway
 import io.tteonaljido.car.navi.NaviLive
+import io.tteonaljido.car.navi.NaviStatus
 import io.tteonaljido.car.navi.RouteOutcome
 import io.tteonaljido.car.navi.RouteTarget
 import io.tteonaljido.car.storage.TripRepository
@@ -27,6 +28,7 @@ import io.tteonaljido.trip.LocalTrip
 import io.tteonaljido.trip.Match
 import io.tteonaljido.trip.NaviBinding
 import io.tteonaljido.trip.NextDestination
+import io.tteonaljido.trip.TripValidator
 import io.tteonaljido.trip.NextStep
 import io.tteonaljido.trip.Place
 import io.tteonaljido.trip.PlaceMatch
@@ -42,6 +44,7 @@ import io.tteonaljido.trip.VisitHow
 import io.tteonaljido.trip.VisitStamp
 import io.tteonaljido.trip.metres
 import io.tteonaljido.trip.zoneOrUtc
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -128,6 +131,13 @@ class TripsViewModel(
     private val _vehicle = MutableStateFlow<VehicleSnapshot?>(null)
     val vehicle: StateFlow<VehicleSnapshot?> = _vehicle
     val drive: StateFlow<DriveSession> = driveSession
+    val naviStatus: StateFlow<NaviStatus> = navi.status
+    private val _resumed = MutableStateFlow(0)
+    /** Counts returns to the foreground, so a screen can look again at what may have changed while the app was away. */
+    val resumed: StateFlow<Int> = _resumed
+    /** Trips whose automatic first-leg measurement the driver undid: left alone for the rest of this session. */
+    private val autoOff = mutableSetOf<String>()
+    private var autoJob: Job? = null
 
     private data class Pending(val localId: String, val placeRef: String?, val target: RouteTarget, val kind: Kind, val previous: NaviBinding? = null, val dayIndex: Int = 0, val visitId: String? = null)
     private enum class Kind { ROUTE, SEARCH, HOME }
@@ -448,6 +458,7 @@ class TripsViewModel(
 
     fun onResume() {
         _now.value = nowMs()
+        _resumed.value += 1
         navi.refreshLive()
         // Back in front (e.g. after getting in the car): read the vehicle again right away, not at the next poll.
         snapshotReader?.let { r -> if (!seededVehicle) viewModelScope.launch { refreshVehicle(r) } }
@@ -489,6 +500,7 @@ class TripsViewModel(
         edit(p.localId) { it.copy(overlay = it.overlay.copy(home = g.home)) }
         pending = null
         _guide.value = Guide.Done(Msg(R.string.guide_home_linked, g.home.address.ifBlank { g.home.name }.ifBlank { bookmarkLabel }))
+        measureFirstLeg(p.localId) // standing at home? then the first leg is asked from home, and a pin of ours goes
     }
 
     /**
@@ -508,7 +520,7 @@ class TripsViewModel(
             // keeps starting from the lodging of the night before; there this only asks for the estimate from here.
             val fresh = DayStart.canDepartHere(t0.plan, day) && t0.plan.days[day - 1].visitOrder.none { it in t0.overlay.visited }
             val origin = NaviBinding("", "", "", here.latE7, here.lonE7, here.address, here.address)
-            val t = if (fresh) update(localId) { it.copy(overlay = it.overlay.copy(originOverrides = it.overlay.originOverrides + (day to origin))) } ?: t0 else t0
+            val t = if (fresh) update(localId) { it.copy(overlay = it.overlay.copy(originOverrides = it.overlay.originOverrides + (day to origin), originPinnedAuto = if (day == 1) false else it.overlay.originPinnedAuto)) } ?: t0 else t0
             val step = NextDestination.of(t.plan, t.overlay, day)
             val target = targetOf(t, step)?.first
             if (target?.latE7 == null) {
@@ -541,11 +553,62 @@ class TripsViewModel(
             it.copy(overlay = it.overlay.copy(
                 originOverrides = it.overlay.originOverrides - day,
                 originOverride = if (day == 1) null else it.overlay.originOverride,
+                originPinnedAuto = if (day == 1) false else it.overlay.originPinnedAuto,
                 legEstimates = if (key != null) it.overlay.legEstimates - key else it.overlay.legEstimates,
             ))
         }
         _here.value = _here.value - localId
+        if (day == 1) autoOff += localId // the driver put the start back: do not pin it again behind their back
         reload()
         _guide.value = Guide.Done(Msg(R.string.here_reset))
+    }
+
+    /**
+     * The first day's first leg, without a tap (M60). The phone cannot time a leg that starts "where the car is", nor
+     * one from a home it has no address for, so the leg arrives empty and the whole first day reads as unknown. While
+     * parked, before the trip or on its first day, the car asks the navigation where it is and how long the first stop
+     * takes from there (`requestTrip`: a query, any route is untouched) and keeps that as the leg's time.
+     * Standing at the plan's own start (home, a place) the leg stays the plan's. Anywhere else — or when the plan names
+     * no place — the day's start is pinned to the car, as "여기서 출발" would, and follows it until the day begins: it is
+     * asked again when the car has moved or the estimate is old ([DayStart]). A start the driver set by hand is left alone.
+     */
+    fun measureFirstLeg(localId: String) {
+        val t0 = trip(localId) ?: return
+        if (localId in autoOff || autoJob?.isActive == true) return
+        if (today(t0).isAfter(LocalDate.parse(t0.plan.startDate))) return // the first day is behind us
+        if (!DayStart.untimed(t0.plan, t0.overlay)) return
+        if (t0.overlay.originFor(t0.plan, 1) != null && !t0.overlay.originPinnedAuto) return
+        autoJob = viewModelScope.launch {
+            val here = navi.currentLocation() ?: return@launch
+            var t = trip(localId) ?: return@launch
+            if (!DayStart.untimed(t.plan, t.overlay)) return@launch
+            if (DayStart.atPlanStart(t.plan, t.overlay, here.latE7, here.lonE7)) {
+                // At the plan's own start: a pin of ours goes, and the leg is asked as the plan has it.
+                if (t.overlay.originPinnedAuto) {
+                    val pinnedKey = LegKeys.of(t.plan, t.overlay, 1, 0)
+                    t = update(localId) {
+                        val o = it.overlay
+                        it.copy(overlay = o.copy(originOverrides = o.originOverrides - 1, originOverride = null, originPinnedAuto = false, legEstimates = if (pinnedKey != null) o.legEstimates - pinnedKey else o.legEstimates))
+                    } ?: return@launch
+                }
+                if (DayStart.estimateFresh(t.plan, t.overlay, nowMs())) return@launch run { reload() }
+            } else {
+                if (!DayStart.needsMeasure(t.plan, t.overlay, here.latE7, here.lonE7, nowMs())) return@launch
+                val origin = NaviBinding("", "", "", here.latE7, here.lonE7, here.address, here.address)
+                t = update(localId) { it.copy(overlay = it.overlay.copy(originOverrides = it.overlay.originOverrides + (1 to origin), originPinnedAuto = true)) } ?: return@launch
+            }
+            // Kept only when the car stands at the leg's start — which is where it now is, either way.
+            val key = LegKeys.startingAt(t.plan, t.overlay, 1, here.latE7, here.lonE7)
+            val step = NextDestination.of(t.plan, t.overlay, 1)
+            val target = targetOf(t, step)?.first
+            if (key != null && target?.latE7 != null) {
+                navi.estimate(target)?.let { est ->
+                    val now = nowMs()
+                    update(localId) { it.copy(overlay = it.overlay.copy(legEstimates = it.overlay.legEstimates + (key to LegEstimate(est.minutes, est.metres, now)))) }
+                    if (todayIndex(t) == 1) _here.value = _here.value + (localId to HereEstimate(target.name, stepKey(1, step), est.minutes, est.metres, est.socAtDest, now))
+                }
+            }
+            reload()
+        }
     }
 }
