@@ -101,7 +101,7 @@ adb shell am start --user 10 -n io.tteonaljido.car/.MainActivity   # 사용자 �
 ```sh
 npm test                    # shared 111 · worker 53 · web 165 (TypeScript 329)
 npm run typecheck
-(cd car && ./gradlew test)  # Kotlin 208 (car 모듈)
+(cd car && ./gradlew test)  # Kotlin 212 (car 모듈)
 npm run smoke               # 서버 흐름 (기본 http://localhost:8787, 다른 주소는 `npm run smoke -- <URL>`)
 npm run e2e                 # Chrome 휴대폰 + 가짜 차량 (같은 방식으로 주소 지정, 화면은 docs/evidence/m3/에 덮어씀)
 npm run e2e:car             # 에뮬레이터 차량 앱(dev debug) + Chrome 휴대폰 (기본 emulator-5580)
@@ -113,7 +113,7 @@ npx tsx tools/compose-demo.mts               # 녹화 → media/demo/떠날지�
 npx tsx tools/compose-shorts.mts             # 녹화 → media/demo/떠날지도_숏폼.mp4 (세로)
 ```
 
-2026-11-14(M64) 기준 TypeScript 329개와 Kotlin 208개가 모두 통과하고, 모바일 E2E(`npm run e2e`, 15항목)와 차량 에뮬레이터 E2E(`tools/e2e-car.mts`, 16항목)도 통과합니다. 같은 날 서명 release APK 0.6.0과 배포 서버·모바일 웹의 실제 연동(`tools/live-pair.mts`, 15항목)을 다시 확인했습니다([다음 목적지 안내]로 Pleos 내비가 경로 안내를 시작하는 것까지 0.6.0으로 확인) — 화면은 `docs/evidence/live-pair/overview.png`(2026-11-13 0.6.0으로 다시 저장). 출발지 규칙과 영업시간 화면은 `docs/evidence/m59`에, 내비 측정·순서 최적화 화면은 `docs/evidence/m63`에 있습니다. 전송 스키마를 바꾸면 `npm run schema`로 JSON Schema·fixture를 다시 만들고 TS·Kotlin 시험을 모두 돌립니다.
+2026-11-14(M64) 기준 TypeScript 329개와 Kotlin 212개가 모두 통과하고, 모바일 E2E(`npm run e2e`, 15항목)와 차량 에뮬레이터 E2E(`tools/e2e-car.mts`, 16항목)도 통과합니다. 같은 날 서명 release APK 0.6.0과 배포 서버·모바일 웹의 실제 연동(`tools/live-pair.mts`, 15항목)을 다시 확인했습니다([다음 목적지 안내]로 Pleos 내비가 경로 안내를 시작하는 것까지 0.6.0으로 확인) — 화면은 `docs/evidence/live-pair/overview.png`(2026-11-13 0.6.0으로 다시 저장). 출발지 규칙과 영업시간 화면은 `docs/evidence/m59`에, 내비 측정·순서 최적화 화면은 `docs/evidence/m63`에 있습니다. 전송 스키마를 바꾸면 `npm run schema`로 JSON Schema·fixture를 다시 만들고 TS·Kotlin 시험을 모두 돌립니다.
 
 ## 배포
 
