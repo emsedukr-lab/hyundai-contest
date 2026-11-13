@@ -46,19 +46,23 @@ export function PlaceMemoField({ placeRef }: { placeRef: string }) {
   return <MemoInput placeRef={placeRef} placeholder={t('tl.memo')} />;
 }
 
+/** Where the picker opens while no time is chosen yet: check-in in the afternoon, check-out in the morning (the usual 15:00 and 11:00). */
+export const CHECK_IN_SUGGEST = '15:00';
+export const CHECK_OUT_SUGGEST = '11:00';
+
 /** Lodging extras: check-in and check-out times (optional) and a memo such as the room number. */
 export function LodgingNoteFields({ placeRef }: { placeRef: string }) {
   const { notes, setNote } = useNotes();
   const note = notes[placeRef] ?? {};
-  const time = (key: 'checkIn' | 'checkOut', placeholder: string, short: string) => (
+  const time = (key: 'checkIn' | 'checkOut', placeholder: string, short: string, suggest: string) => (
     <FieldPrefix prefix={note[key] ? short : null}>
-      <TimeSelect label={placeholder} placeholder={placeholder} clearable value={note[key] ?? null} onChange={(v) => setNote(placeRef, { [key]: v })} />
+      <TimeSelect label={placeholder} placeholder={placeholder} clearable value={note[key] ?? null} suggest={suggest} onChange={(v) => setNote(placeRef, { [key]: v })} />
     </FieldPrefix>
   );
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      {time('checkIn', t('tl.checkIn'), t('tl.checkInShort'))}
-      {time('checkOut', t('tl.checkOut'), t('tl.checkOutShort'))}
+      {time('checkIn', t('tl.checkIn'), t('tl.checkInShort'), CHECK_IN_SUGGEST)}
+      {time('checkOut', t('tl.checkOut'), t('tl.checkOutShort'), CHECK_OUT_SUGGEST)}
       <MemoInput placeRef={placeRef} placeholder={t('tl.lodgingMemo')} />
     </div>
   );
