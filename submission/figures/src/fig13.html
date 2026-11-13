@@ -1,0 +1,41 @@
+<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;background:#fff}#frame{display:inline-block;line-height:0}</style><script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script></head><body><div id="frame"></div><script type="module">
+import { THREE, C, setup, shadowFloor, rbox, label, car, mat, done } from './lib3d.js';
+const { scene, render } = setup({ w: 1600, h: 720, cam: [0, 5.6, 11.5], target: [0, 1.0, 0], fov: 28 });
+shadowFloor(scene, 0, 60, 0.10);
+const steps = [
+  { x: -4.0, h: 0.35, color: '#FFFFFF', title: '지금 · 개인 여행자', sub: '자차 1~4일 여행 · 계정 없이 한 번 옮김' },
+  { x: 0.0, h: 0.8, color: '#FFFFFF', title: '다음 · 렌터카·카셰어링', sub: 'Fleet API 출고 전 준비 점검(구현) · 반납 시 삭제' },
+  { x: 4.0, h: 1.25, color: '#FFFFFF', title: '확장 · 예약·충전·다국어', sub: '예약 시각 자동 고정 · 충전소·주차장 · 외국인 여행자' },
+];
+steps.forEach((s, i) => {
+  const p = rbox(3.4, s.h, 2.4, 0.14, s.color);
+  p.position.set(s.x, s.h / 2, 0);
+  scene.add(p);
+  const n = label(String(i + 1), { h: 0.34, size: 64, weight: 700, color: '#fff', bg: [C.blue, C.teal, C.amber][i], border: null, pad: 0.45, radius: 1 });
+  n.position.set(s.x - 1.35, s.h + 0.35, 0.9);
+  scene.add(n);
+  const t = label(s.title, { sub: s.sub, h: 0.74, size: 54 });
+  t.position.set(s.x, s.h + 2.15, 0);
+  scene.add(t);
+});
+// 1: one car and its phone
+const c1 = car('#FFFFFF', { s: 0.9 }); c1.position.set(-4.2, 0.35, 0.1); c1.rotation.y = 0.5; scene.add(c1);
+const ph = rbox(0.22, 0.44, 0.04, 0.04, '#23262B'); ph.position.set(-3.1, 0.6, 0.3); ph.rotation.y = -0.3; scene.add(ph);
+// 2: a row of fleet cars
+[-0.9, 0, 0.9].forEach((x, i) => { const c = car(['#FFFFFF', '#E6E9EE', '#FFFFFF'][i], { s: 0.62 }); c.position.set(x, 0.8, 0.25 - i * 0.15); c.rotation.y = 0.5; scene.add(c); });
+// 3: a lodging block, a charger, a parking marker
+const hotel = rbox(0.75, 0.85, 0.6, 0.06, '#FFFFFF'); hotel.position.set(3.3, 1.25 + 0.42, -0.35); scene.add(hotel);
+for (let r = 0; r < 3; r++) for (let k = 0; k < 2; k++) { const w = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.12, 0.01), mat('#C9D7F2')); w.position.set(3.15 + k * 0.3, 1.25 + 0.22 + r * 0.24, -0.04); scene.add(w); }
+const charger = rbox(0.28, 0.62, 0.22, 0.05, C.teal); charger.position.set(4.35, 1.25 + 0.31, 0.1); scene.add(charger);
+const scr = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.12, 0.01), mat('#FFFFFF')); scr.position.set(4.35, 1.25 + 0.45, 0.215); scene.add(scr);
+const pmark = rbox(0.5, 0.06, 0.5, 0.05, C.blue); pmark.position.set(5.0, 1.25 + 0.03, 0.35); scene.add(pmark);
+const pl = label('P', { h: 0.26, size: 60, weight: 700, color: '#fff', bg: null, border: null }); pl.position.set(5.0, 1.42, 0.35); scene.add(pl);
+// the path up the steps
+const pts = [[-4, 0.4, 1.0], [-2.3, 0.4, 1.0], [-1.7, 0.85, 1.0], [1.7, 0.85, 1.0], [2.3, 1.3, 1.0], [5.6, 1.3, 1.0]].map((p) => new THREE.Vector3(...p));
+const curve = new THREE.CatmullRomCurve3(pts, false, 'catmullrom', 0.1);
+const path = new THREE.Mesh(new THREE.TubeGeometry(curve, 120, 0.03, 10), mat(C.graphite));
+scene.add(path);
+const tip = new THREE.Mesh(new THREE.ConeGeometry(0.09, 0.22, 18), mat(C.graphite));
+tip.position.set(5.7, 1.3, 1.0); tip.rotation.z = -Math.PI / 2; scene.add(tip);
+done(render);
+</script></body></html>
