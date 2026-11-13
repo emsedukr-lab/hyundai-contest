@@ -216,6 +216,27 @@ def table_xml(rows: list[list[str]], cols: list[int] | None) -> str:
     return f"<w:tbl>{tblpr}{grid}{''.join(trs)}</w:tbl>"
 
 
+def unsplittable(content: str) -> str:
+    """Wraps a caption and table in a borderless one-row table whose row may not break across pages.
+
+    Inside the answer cell Word ignores keep-with-next and repeated header rows of a nested table, so a table
+    could be cut at a page end with its second half headerless. A nested row marked cantSplit is honoured: when
+    the wrapped table does not fit in what is left of the page, the whole wrapper moves to the next page.
+    """
+    none = "".join(f'<w:{s} w:val="nil"/>' for s in ("top", "left", "bottom", "right", "insideH", "insideV"))
+    zero = "".join(f'<w:{s} w:w="0" w:type="dxa"/>' for s in ("top", "left", "bottom", "right"))
+    tblpr = (
+        f'<w:tblPr><w:tblW w:w="{TABLE_W}" w:type="dxa"/><w:jc w:val="center"/><w:tblBorders>{none}</w:tblBorders>'
+        f'<w:tblLayout w:type="fixed"/><w:tblCellMar>{zero}</w:tblCellMar>'
+        '<w:tblLook w:val="0000" w:firstRow="0" w:lastRow="0" w:firstColumn="0" w:lastColumn="0" w:noHBand="1" w:noVBand="1"/></w:tblPr>'
+    )
+    end = para("", after=0, line='w:line="40" w:lineRule="exact"')
+    return (
+        f'<w:tbl>{tblpr}<w:tblGrid><w:gridCol w:w="{TABLE_W}"/></w:tblGrid><w:tr><w:trPr><w:cantSplit/></w:trPr>'
+        f'<w:tc><w:tcPr><w:tcW w:w="{TABLE_W}" w:type="dxa"/></w:tcPr>{content}{end}</w:tc></w:tr></w:tbl>'
+    )
+
+
 def image_size(path: Path) -> tuple[int, int]:
     data = path.read_bytes()
     if data[:8] == b"\x89PNG\r\n\x1a\n":
@@ -275,10 +296,12 @@ def render(bs: list[tuple], count: Counter, media: list[tuple[str, Path]]) -> st
             out.append(quote_xml(b[1]))
         elif kind == "table":
             _, rows, cols, caption = b
+            inner = ""
             if caption:
                 count.table += 1
-                out.append(caption_xml("표", count.table, caption, before=120, after=60, keep=True))
-            out.append(table_xml(rows, cols))
+                inner += caption_xml("표", count.table, caption, before=60, after=60, keep=True)
+            inner += table_xml(rows, cols)
+            out.append(unsplittable(inner))
             # A paragraph after the table keeps a following table or figure apart from it.
             out.append(para("", after=60, line='w:line="160" w:lineRule="exact"'))
         elif kind == "figure":
