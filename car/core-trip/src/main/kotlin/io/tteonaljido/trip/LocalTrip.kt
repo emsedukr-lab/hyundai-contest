@@ -34,7 +34,8 @@ fun Trip.zoneOrUtc(): java.time.ZoneId = runCatching { java.time.ZoneId.of(timez
  * Where a day starts (M59). The first day starts from the trip's origin — a saved place (집, 회사, 즐겨찾기), a place of
  * the trip, or the car's current location — and every later day from the lodging of the night before. "여기서 출발" can
  * re-set the start to where the car stands only where the plan leaves it open to that: on the first day, or on a later
- * day whose previous night has no lodging.
+ * day whose previous night has no lodging. On any other day it still asks the navigation for the time from here, and
+ * the day keeps its start.
  */
 object DayStart {
     fun canDepartHere(trip: Trip, dayIndex: Int): Boolean = dayIndex == 1 || trip.days.getOrNull(dayIndex - 2)?.lodgingPlaceRef == null

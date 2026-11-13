@@ -493,20 +493,20 @@ class TripsViewModel(
 
     /**
      * "여기서 출발" (parked, on a tap): asks the navigation where the car is and how long the next leg takes from here
-     * (`requestTrip`, a query that leaves any route untouched). On day 1 before the first stop the trip now starts here.
+     * (`requestTrip`, a query that leaves any route untouched). On day 1 before the first stop the trip now starts here;
+     * a later day still starts from the lodging of the night before ([DayStart]).
      * The estimate is saved as that leg's time only when the car stands at the leg's start (within 150 m); otherwise it
      * is shown and used for today's times without being stored.
      */
     fun departHere(localId: String, day: Int) {
         val t0 = trip(localId) ?: return
-        // A later day starts from the lodging of the night before; only the first day (or a day after a night with no
-        // lodging) can start from where the car stands (M59).
-        if (!DayStart.canDepartHere(t0.plan, day)) return
         viewModelScope.launch {
             _guide.value = Guide.Working(Msg(R.string.here_checking))
             val here = navi.currentLocation() ?: return@launch run { _guide.value = Guide.Failed(Msg(R.string.here_no_location), false) }
-            // Re-setting the day's start point only makes sense before any of that day's stops are done.
-            val fresh = t0.plan.days[day - 1].visitOrder.none { it in t0.overlay.visited }
+            // Re-setting the day's start point only makes sense before any of that day's stops are done — and only where
+            // the plan leaves the start open (M59): the first day, or a day after a night with no lodging. A later day
+            // keeps starting from the lodging of the night before; there this only asks for the estimate from here.
+            val fresh = DayStart.canDepartHere(t0.plan, day) && t0.plan.days[day - 1].visitOrder.none { it in t0.overlay.visited }
             val origin = NaviBinding("", "", "", here.latE7, here.lonE7, here.address, here.address)
             val t = if (fresh) update(localId) { it.copy(overlay = it.overlay.copy(originOverrides = it.overlay.originOverrides + (day to origin))) } ?: t0 else t0
             val step = NextDestination.of(t.plan, t.overlay, day)

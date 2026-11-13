@@ -7,7 +7,7 @@
 - 차량 앱: Kotlin · Jetpack Compose · Pleos Connect 2.1.5 디자인 토큰 · NaviHelper 3.0.5
 - 모바일 웹: React 19 · Astryx 컴포넌트 + Pleos 모바일 테마 · 이 브라우저에만 저장 (계정 없음)
 - 중계 서버: Cloudflare Worker + Durable Object · 종단간 암호화 (서버는 내용을 볼 수 없음) · 카카오 장소 검색·길찾기 중계 (저장·로그 없음)
-- 배포: **https://tteonaljido.tteonaljido-worker.workers.dev** (모바일 웹 + API, 개인정보 안내 `/privacy`). 현재 M58 (2026-11-12, 차량 앱과 휴대폰 웹의 디자인을 Pleos Connect 공식 디자인 명세 `design/DESIGN.md`로 전면 교체, 서명 APK 0.5.0)
+- 배포: **https://tteonaljido.tteonaljido-worker.workers.dev** (모바일 웹 + API, 개인정보 안내 `/privacy`). 현재 M59 (2026-11-13, 출발지 규칙 — 1일차는 현재 위치(기본)·집·회사·즐겨찾기, 2일차부터는 전날 숙소 — 와 샘플 여행의 네이버 지도 영업시간 반영, 서명 APK 0.6.0). 디자인은 M58(2026-11-12)에 Pleos Connect 공식 디자인 명세 `design/DESIGN.md`로 전면 교체
 - 시연 영상: [`media/demo/떠날지도_시연.mp4`](media/demo/떠날지도_시연.mp4) (3분 42초, 2026-11-10 M55 재녹화) — 새 여행의 동선 자동 구성부터 차량 불러오기·내비 안내까지, release APK 0.3.0(Pleos 에뮬레이터)와 휴대폰 브라우저를 배포 서버로 연결한 실제 화면 녹화
 - 세로 숏폼: [`media/demo/떠날지도_숏폼.mp4`](media/demo/떠날지도_숏폼.mp4) (56초, 1080×1920) — 같은 녹화에서 편집, 게시 문구는 `submission/숏폼_게시문구.md`
 - 시연 영상(2026-11-10)과 숏폼(2026-11-05)은 디자인 교체(M58, 2026-11-12) 전 화면입니다. 기능과 흐름은 같고, 지금 화면은 `docs/evidence/m58`·`docs/evidence/live-pair`(차량 ↔ 휴대폰 실제 연동)와 소개서에 있습니다. 영상은 다시 녹화할 예정입니다.
@@ -20,6 +20,8 @@
 - 새 여행 4단계 안내: 여행 정보 → 장소 담기 → 예약·꼭 갈 곳 → 경로 추천(날짜 나누기·방문 순서·카카오 이동시간) → [이 일정으로 시작].
 - 편집기: 일차 칩 바, 하루 요약(운전 시간·거리·숙소 도착), 2줄 일정 카드, 끌어서 순서 바꾸기, 밀어서 빼기, 장소 상세 바텀 시트(도착 시각 자유·희망·고정/예약, 머무는 시간 프리셋).
 - 시각은 오전/오후 30분 칩에서 고릅니다. 출발 시각은 모든 날 선택 사항입니다. 숙소는 '미정'과 '이어서 묵기' 칩이 있습니다.
+- 출발 장소: 1일차는 현재 위치(기본)·집·회사·즐겨찾기 1~3·여행의 장소 중에서 고르고, 2일차부터는 전날 숙소에서 출발합니다. '현재 위치'는 좌표를 보내지 않고, 차량 내비가 출발할 때 위치로 첫 이동시간을 계산합니다.
+- 영업시간: 요일별 시간·정기 휴무·쉬는 시간을 넣을 수 있고, 방문 시각이 영업시간 밖이거나 휴무일이면 휴대폰과 차량이 알려 줍니다. 샘플 '강릉 3박 4일'에는 네이버 지도(2026-11-13)에서 확인한 9곳의 영업시간이 들어 있습니다.
 - 이동시간·거리는 카카오모빌리티 길찾기로만 채우고, 당겨서 새로고침하면 지금 교통으로 다시 계산합니다.
 - 일차 지도는 실제 도로 경로로 그립니다. 예약·고정 시각 앞에는 15분 여유를 둔 'HH:MM 출발'을 표시하고(휴대폰 화면만), 운전이 10분 이상 줄어드는 순서는 '더 빠른 순서' 카드로 제안합니다.
 - 지도 앱 공유로 장소 담기, 친구에게 암호화 파일로 여행 공유(서버 미경유), 백업 내보내기·가져오기, 한국어·영어.
@@ -28,7 +30,7 @@
 
 - QR 불러오기: 일회용 QR → 6자리 확인 코드 → 재검증 요약 → 결정표(새 여행·업데이트·사본·불러오지 않기).
 - 다음 목적지 안내(NaviHelper), 오늘 경로 묶음 전송(최대 3스톱), 이름만 있는 장소는 내비 검색으로 확인.
-- 시간 지킴이(내비 남은 시간으로 여유·빠듯·늦음), 건너뛰기·미루기 제안, 자동 도착, '여기서 출발'(내비 예상·도착 시 배터리), EV·연료 권장.
+- 시간 지킴이(내비 남은 시간으로 여유·빠듯·늦음), 건너뛰기·미루기 제안, 자동 도착, '여기서 출발'(내비 예상·도착 시 배터리. 1일차는 출발지를 현재 위치로 바꾸고, 2일차부터는 전날 숙소 출발을 그대로 둠), EV·연료 권장.
 - 차량 신호 조합(M57, 모두 조회 전용): 출발 전 점검(주행가능거리 × 오늘 남은 거리, 탑승 × 안전벨트, 문·트렁크, 충전 포트 등), 일정 끝 배터리 예상, 2시간 연속 운전 시 쉬어 가기 권고(휴게소 거리·일정 여유와 함께), 오늘 경로를 보낸 뒤 경유지마다 도착 표시·다음 장소 기준 도착 예정, 가는 길 정체. 무엇을 써서 무엇을 만들었는지는 [docs/research/04_Pleos_SDK_API_활용.md](docs/research/04_Pleos_SDK_API_활용.md).
 - 주행 중에는 QR·승인 화면을 숨기고 다음 목적지 카드 하나만 보여 줍니다.
 
@@ -52,7 +54,7 @@
 
 | 파일 | 상태 |
 |---|---|
-| `apk/떠날지도_release.apk` | 서명된 release (prod, 서버 `https://tteonaljido.tteonaljido-worker.workers.dev`). 버전 0.5.0(5), 2026-11-12 M58 디자인 전면 교체(`design/DESIGN.md`) 후 재빌드(서명 v2+v3). 권한은 조회 전용뿐: 내비 3종과 `CAR_ENERGY`·`CAR_DRIVE`·`CAR_SAFETY`·`CAR_DOORS`·`CAR_SEATS`(제어·비공개 권한 없음). 로터리 미지원 선언·적응형 아이콘 포함. 제출 시 `팀명_떠날지도_release.apk`로 이름 변경. 해시는 `apk/SHA256SUMS.txt` |
+| `apk/떠날지도_release.apk` | 서명된 release (prod, 서버 `https://tteonaljido.tteonaljido-worker.workers.dev`). 버전 0.6.0(6), 2026-11-13 M59 출발지 규칙 반영 후 재빌드(서명 v2+v3). 그 전 0.5.0: M58 디자인 전면 교체(`design/DESIGN.md`). 권한은 조회 전용뿐: 내비 3종과 `CAR_ENERGY`·`CAR_DRIVE`·`CAR_SAFETY`·`CAR_DOORS`·`CAR_SEATS`(제어·비공개 권한 없음). 로터리 미지원 선언·적응형 아이콘 포함. 제출 시 `팀명_떠날지도_release.apk`로 이름 변경. 해시는 `apk/SHA256SUMS.txt` |
 | `car/app/build/outputs/apk/dev/debug/app-dev-debug.apk` | 로컬 개발용 (`./gradlew :app:assembleDevDebug`) |
 
 ## 실행 방법
@@ -91,9 +93,9 @@ adb shell am start --user 10 -n io.tteonaljido.car/.MainActivity   # 사용자 �
 ## 시험
 
 ```sh
-npm test                    # shared 93 · worker 50 · web 147 (TypeScript 290)
+npm test                    # shared 95 · worker 50 · web 155 (TypeScript 300)
 npm run typecheck
-(cd car && ./gradlew test)  # Kotlin 188 (car 모듈)
+(cd car && ./gradlew test)  # Kotlin 190 (car 모듈)
 npm run smoke               # 서버 흐름 (기본 http://localhost:8787, 다른 주소는 `npm run smoke -- <URL>`)
 npm run e2e                 # Chrome 휴대폰 + 가짜 차량 (같은 방식으로 주소 지정, 화면은 docs/evidence/m3/에 덮어씀)
 npm run e2e:car             # 에뮬레이터 차량 앱(dev debug) + Chrome 휴대폰 (기본 emulator-5580)
@@ -105,7 +107,7 @@ npx tsx tools/compose-demo.mts               # 녹화 → media/demo/떠날지�
 npx tsx tools/compose-shorts.mts             # 녹화 → media/demo/떠날지도_숏폼.mp4 (세로)
 ```
 
-2026-11-12(M57) 기준 TypeScript 290개와 Kotlin 188개가 모두 통과하고, 모바일 E2E(`npm run e2e`)와 차량 에뮬레이터 E2E(`tools/e2e-car.mts`, 16항목)도 통과합니다. 같은 날 디자인을 `design/DESIGN.md` 기준으로 전면 교체(M58)한 서명 release APK 0.5.0과 배포 서버·모바일 웹의 실제 연동(`tools/live-pair.mts`, 15항목)을 다시 확인했습니다([다음 목적지 안내]로 Pleos 내비가 경로 안내를 시작하는 것까지 0.5.0으로 확인) — 화면은 `docs/evidence/live-pair/overview.png`(2026-11-12 0.5.0·새 디자인으로 다시 저장). 전송 스키마를 바꾸면 `npm run schema`로 JSON Schema·fixture를 다시 만들고 TS·Kotlin 시험을 모두 돌립니다.
+2026-11-13(M59) 기준 TypeScript 300개와 Kotlin 190개가 모두 통과하고, 모바일 E2E(`npm run e2e`, 15항목)도 통과합니다. 같은 날 서명 release APK 0.6.0과 배포 서버·모바일 웹의 실제 연동(`tools/live-pair.mts`, 15항목)을 다시 확인했습니다([다음 목적지 안내]로 Pleos 내비가 경로 안내를 시작하는 것까지 0.6.0으로 확인) — 화면은 `docs/evidence/live-pair/overview.png`(2026-11-13 0.6.0으로 다시 저장). 출발지 규칙과 영업시간 화면은 `docs/evidence/m59`에 있습니다. 차량 에뮬레이터 E2E(`tools/e2e-car.mts`, 16항목)는 M58(2026-11-12)에 통과한 것이 마지막입니다. 전송 스키마를 바꾸면 `npm run schema`로 JSON Schema·fixture를 다시 만들고 TS·Kotlin 시험을 모두 돌립니다.
 
 ## 배포
 

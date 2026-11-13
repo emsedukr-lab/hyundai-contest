@@ -4,6 +4,7 @@
  * own screen, the car is driven only by taps on its UI. Screenshots of both screens at every step go to OUT.
  *   npx tsx tools/live-pair.mts [emulator-serial] [out-dir]
  *   LIVE_ORIGIN=CURRENT … sends the same trip starting from the car's current location (no start place chosen).
+ *   LIVE_START=2026-11-13 … sends it moved to start on that day.
  * Needs: the emulator running with apk/떠날지도_release.apk installed fresh (empty trip list).
  */
 import { execFileSync } from 'node:child_process';
@@ -101,17 +102,25 @@ try {
   await phone.goto(`${BASE}/?sample=1`, { waitUntil: 'networkidle' });
   await phone.getByText('강릉 3박 4일').first().waitFor();
   // LIVE_ORIGIN=CURRENT: the same trip with no start place chosen (M59) — the first day starts from where the car is.
-  if (process.env.LIVE_ORIGIN === 'CURRENT') {
-    await phone.evaluate(async () => {
+  // LIVE_START=YYYY-MM-DD: the same trip moved to start on that day (so day 1 can be "today" on the car).
+  if (process.env.LIVE_ORIGIN === 'CURRENT' || process.env.LIVE_START) {
+    await phone.evaluate(async ({ current, start }) => {
       const db = await new Promise<IDBDatabase>((r) => { const q = indexedDB.open('tteonaljido'); q.onsuccess = () => r(q.result); });
       const tx = db.transaction('trips', 'readwrite');
       const st = tx.objectStore('trips');
       const all = await new Promise<any[]>((r) => { const q = st.getAll(); q.onsuccess = () => r(q.result); }); // eslint-disable-line @typescript-eslint/no-explicit-any
       const d = all.find((x) => x.plan.name === '강릉 3박 4일');
-      d.plan.origin = { kind: 'CURRENT' };
+      if (current) d.plan.origin = { kind: 'CURRENT' };
+      if (start) {
+        // no helper function in here: the bundler's name helper does not exist inside the page
+        const t0 = Date.parse(`${start}T00:00:00Z`);
+        for (let i = 0; i < d.plan.days.length; i++) d.plan.days[i].date = new Date(t0 + i * 86_400_000).toISOString().slice(0, 10);
+        d.plan.startDate = d.plan.days[0].date;
+        d.plan.endDate = d.plan.days[d.plan.days.length - 1].date;
+      }
       st.put(d);
       await new Promise((r) => (tx.oncomplete = r));
-    });
+    }, { current: process.env.LIVE_ORIGIN === 'CURRENT', start: process.env.LIVE_START ?? null });
     await phone.reload({ waitUntil: 'networkidle' });
     await phone.getByText('강릉 3박 4일').first().waitFor();
   }

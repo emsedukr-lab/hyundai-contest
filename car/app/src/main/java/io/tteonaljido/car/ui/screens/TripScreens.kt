@@ -63,7 +63,6 @@ import io.tteonaljido.car.ui.theme.Pleos
 import io.tteonaljido.trip.Basis
 import io.tteonaljido.trip.DeadlineKind
 import io.tteonaljido.trip.DriveMode
-import io.tteonaljido.trip.DayStart
 import io.tteonaljido.trip.Endpoint
 import io.tteonaljido.trip.FluidLevel
 import io.tteonaljido.trip.LocalTrip
@@ -452,8 +451,9 @@ private fun NextPanel(vm: TripsViewModel, t: LocalTrip, day: Int, live: LiveView
         FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.x12), verticalArrangement = Arrangement.spacedBy(Space.x12)) {
             if (canBundle) PleosButton(stringResource(R.string.guide_today), { vm.guideToday(t.localId, day) }, type = ButtonType.BASIC, tag = "guideToday")
             (step.target as? Target.Stop)?.let { s -> PleosButton(stringResource(R.string.mark_arrived), { vm.markVisited(t.localId, s.visitId) }, type = ButtonType.BASIC, enabled = isToday, tag = "visited") }
-            // The first day can start from where the car stands; a later day starts from the lodging of the night before (M59).
-            if (DayStart.canDepartHere(t.plan, day)) PleosButton(stringResource(R.string.depart_here), { vm.departHere(t.localId, day) }, type = ButtonType.BASIC, enabled = isToday, tag = "departHere")
+            // On the first day this also moves the day's start to where the car stands; on a later day the start stays the
+            // lodging of the night before and this only asks the navigation for the time from here (M59).
+            PleosButton(stringResource(R.string.depart_here), { vm.departHere(t.localId, day) }, type = ButtonType.BASIC, enabled = isToday, tag = "departHere")
             if (t.overlay.originFor(t.plan, day) != null) PleosButton(stringResource(R.string.undo_depart), { vm.undoDepartHere(t.localId, day) }, type = ButtonType.BASIC, tag = "undoDepart")
         }
         if (skip != null || defer != null || energy != null || rest != null || arrival?.visitId != null || skippedToday.isNotEmpty() || deferredToday.isNotEmpty() || deferredAway.isNotEmpty() || lowSoc) {
