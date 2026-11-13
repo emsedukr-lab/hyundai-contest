@@ -678,14 +678,15 @@ div:has(> .astryx-switch) {
 }
 
 .tn-tag.is-must {
-  gap: 3px;
-  padding: 0 7px 0 5px;
-  background: light-dark(#ff6a4d1f, #ff6a4d33);
-  color: light-dark(#b02a12, #ff9a85);
+  justify-content: center;
+  width: 22px;
+  padding: 0;
+  background: color-mix(in srgb, var(--pleos-informative-negative) 12%, transparent);
+  color: var(--pleos-informative-negative);
 }
-.tn-tag-pin {
-  font-size: 11px;
-  line-height: 1;
+.tn-tag.is-must svg {
+  width: 16px;
+  height: 16px;
 }
 
 /* The saved version (v3) as quiet meta text. */

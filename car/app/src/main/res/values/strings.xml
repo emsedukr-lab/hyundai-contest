@@ -281,7 +281,7 @@
     <string name="tl_depart_at">%1$s 출발</string>
     <string name="tl_depart_free">출발 시각 자유</string>
     <string name="tl_arrive_at">%1$s 도착</string>
-    <string name="tl_must">꼭</string>
+    <string name="tl_must">꼭 가야 할 곳</string>
     <string name="tl_range">%1$s ~ %2$s</string>
     <string name="tl_leg">↓ %1$s</string>
     <string name="tl_leg_navi">↓ %1$s · 내비</string>

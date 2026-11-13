@@ -455,23 +455,23 @@ fun Tag(text: String, tone: Tone = Tone.NEUTRAL, modifier: Modifier = Modifier, 
 }
 
 /**
- * 꼭 — a place that can't be dropped or moved. The one tag off the neutral face: light coral with coral text and a 📌
- * in front, so it reads as a constraint of the plan, not one more status. Same sizes as [Tag].
+ * 꼭 — a place that can't be dropped or moved. No words: the Pleos outline pin (24 grid, round 1.6 stroke, like the
+ * lock) in informative/negative on a faint face of the same color, the one tag off the neutral face. `label` is read
+ * out by TalkBack. Same heights as [Tag].
  */
 @Composable
-fun MustTag(text: String, modifier: Modifier = Modifier, large: Boolean = false) {
-    val ink = colorResource(R.color.tn_must_text)
-    Row(
+fun MustTag(label: String, modifier: Modifier = Modifier, large: Boolean = false) {
+    val hue = colorResource(R.color.pleos_informative_negative)
+    val side = if (large) dimensionResource(R.dimen.pleos_buttons_basic_small_height) else Space.x40
+    Box(
         modifier
-            .heightIn(min = if (large) dimensionResource(R.dimen.pleos_buttons_basic_small_height) else Space.x40)
+            .size(side)
             .clip(RoundedCornerShape(if (large) Radius.r16 else Radius.r12))
-            .background(colorResource(R.color.tn_must_face))
-            .padding(horizontal = if (large) Space.x20 else Space.x12, vertical = if (large) Space.x12 else Space.x4),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(if (large) Space.x8 else Space.x4),
+            .background(hue.copy(alpha = 0.12f))
+            .semantics { contentDescription = label },
+        contentAlignment = Alignment.Center,
     ) {
-        PleosText("📌", if (large) Pleos.type.bodyMedium else Pleos.type.label, ink, maxLines = 1)
-        PleosText(text, if (large) Pleos.type.bodyMedium else Pleos.type.label, ink, maxLines = 1)
+        Icon(R.drawable.ic_pin, if (large) Space.x40 else Space.x32, hue)
     }
 }
 

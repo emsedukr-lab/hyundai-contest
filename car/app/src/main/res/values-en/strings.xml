@@ -281,7 +281,7 @@
     <string name="tl_depart_at">Leave %1$s</string>
     <string name="tl_depart_free">Any time</string>
     <string name="tl_arrive_at">Arrive %1$s</string>
-    <string name="tl_must">Must</string>
+    <string name="tl_must">Must-visit</string>
     <string name="tl_range">%1$s – %2$s</string>
     <string name="tl_leg">↓ %1$s</string>
     <string name="tl_leg_navi">↓ %1$s · navigation</string>

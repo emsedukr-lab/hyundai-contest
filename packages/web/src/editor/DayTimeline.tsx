@@ -282,7 +282,7 @@ function StopCard({
           {/* M51 — line 1: the name on one line (ellipsis) and only 꼭 beside it. */}
           <span className="tl-name-row">
             <span className="tl-name">{p.name}</span>
-            {v.importance === 'MUST' && <Tag tone="must">{t('common.must')}</Tag>}
+            {v.importance === 'MUST' && <Tag tone="must">{t('common.mustAria')}</Tag>}
           </span>
           <span className="tl-line2">
             {lock && (

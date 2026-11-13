@@ -177,6 +177,8 @@ export const FlagIcon = () => <Outline d="M5.5 20.5V4.5m0 0h11l-2.5 4 2.5 4h-11"
 export const BedIcon = () => <Outline d="M3.5 18.5v-11m0 7h17v4m0-4V12a2.5 2.5 0 0 0-2.5-2.5h-7.5v5M6.8 11.2a1.6 1.6 0 1 0 0-.01" />;
 /** Search (a magnifier). */
 export const SearchIcon = () => <Outline d="M10.5 17a6.5 6.5 0 1 0 0-13 6.5 6.5 0 0 0 0 13Zm4.75-1.75L20 20" />;
+/** Push pin — 꼭: a stop that can't be dropped or moved. */
+export const PushPinIcon = () => <Outline d="M8.5 3.5h7M10 3.5v5.2l-3 3.8h10l-3-3.8V3.5M12 12.5v8" />;
 /** Check — a finished step. */
 export const CheckIcon = () => <Outline d="m5 12.5 4.5 4.5L19 7.5" />;
 /** Lock — a stop whose time (or date) stays put (M51). */

@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { PushPinIcon } from './icons';
 
 export type TagTone = 'neutral' | 'ink' | 'accent' | 'warn' | 'ok' | 'must';
 
@@ -8,14 +9,18 @@ export type TagTone = 'neutral' | 'ink' | 'accent' | 'warn' | 'ok' | 'must';
  * (shell.css): `accent` informative/positive for a piece of information (만드는 중 · 2/4), `ok` informative/active
  * for a finished step, `warn` an ink dot for something to fix (the design system has no warning hue), and no dot for
  * `ink` (a firm choice) and `neutral` (the rest, one step quieter). The words always carry the meaning.
- * `must` is the one exception — 꼭 (a place that can't be dropped or moved): a light coral face, coral text and a 📌
- * in front, so the lock reads as a constraint of the plan rather than one more status.
+ * `must` is the one exception — 꼭 (a place that can't be dropped or moved): no words, only the Pleos outline pin
+ * (24 grid, round 1.6 stroke, like the lock) in informative/negative on a faint face of the same color, so it reads
+ * as a constraint of the plan rather than one more status. The children become its accessible name.
  */
 export function Tag({ tone = 'neutral', children }: { tone?: TagTone; children: ReactNode }) {
-  return (
-    <span className={`tn-tag is-${tone}`}>
-      {tone === 'must' && <span className="tn-tag-pin" aria-hidden="true">📌</span>}
-      {children}
-    </span>
-  );
+  if (tone === 'must') {
+    const label = typeof children === 'string' ? children : undefined;
+    return (
+      <span className="tn-tag is-must" role="img" aria-label={label} title={label}>
+        <PushPinIcon />
+      </span>
+    );
+  }
+  return <span className={`tn-tag is-${tone}`}>{children}</span>;
 }
