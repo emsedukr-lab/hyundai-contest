@@ -12,6 +12,7 @@ import { endpointName } from '../editor/dayInfo';
 import { DayTabs } from '../editor/DayTabs';
 import { DayTimeline } from '../editor/DayTimeline';
 import { FasterOrderCard } from '../editor/FasterOrderCard';
+import { LaterStartCard } from '../editor/LaterStartCard';
 import { NotesContext } from '../editor/NotesContext';
 import { RecommendDialog } from '../editor/RecommendDialog';
 import { ShareDialog } from '../editor/ShareDialog';
@@ -29,6 +30,7 @@ import { t } from '../lib/i18n';
 import { getHere, locate, locateIfAllowed, onHere } from '../lib/here';
 import { navigate } from '../lib/router';
 import { applyFaster, daySig, dismiss, findFaster, isDismissed, type FasterOrder } from '../lib/fasterOrder';
+import { laterSig, laterStart, withDeparture } from '../lib/laterStart';
 import { cleanNotes, setNote, type TripNotes } from '../lib/notes';
 import { allRuns, applyRun, cleanLegMeters, daySummary, emptyRuns, fetchRun, kmLabel, runSignature } from '../lib/routeTimes';
 import { defaultHome } from '../lib/settings';
@@ -99,6 +101,8 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
   const [dirty, setDirty] = useState(false);
   /** Phone-only memos and lodging check-in/out, by place (saved with the trip, never sent to the car). */
   const [notes, setNotes] = useState<TripNotes>({});
+  // Closing a 늦게 출발하기 card is remembered outside React (like 더 빠른 순서); this only makes the screen look again.
+  const [, setLaterClosed] = useState(0);
   /** Phone-only recommended-route length per leg key (metres), from Kakao; shown as "· 7.3km" on the travel pills. */
   const [legMeters, setLegMeters] = useState<Record<string, number>>({});
   /** Phone-only: nights marked 미정 (no lodging needed yet, so no warning). */
@@ -719,6 +723,22 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
                   onDismiss={() => {
                     dismiss(doc.tripId, s.sig);
                     dropFaster(d.dayIndex);
+                  }}
+                />
+              );
+            })()}
+            {(() => {
+              // 늦게 출발하기: an hour or more to spare before the day's first fixed time, within the lodging's check-out.
+              const s = laterStart(plan, d.dayIndex, notes);
+              if (!s || isDismissed(doc.tripId, laterSig(s))) return null;
+              return (
+                <LaterStartCard
+                  s={s}
+                  name={placeOf(plan, visitOf(plan, s.visitId)?.placeRef ?? '')?.name ?? ''}
+                  onApply={() => edit(withDeparture(plan, d.dayIndex, s.to))}
+                  onDismiss={() => {
+                    dismiss(doc.tripId, laterSig(s));
+                    setLaterClosed((n) => n + 1);
                   }}
                 />
               );

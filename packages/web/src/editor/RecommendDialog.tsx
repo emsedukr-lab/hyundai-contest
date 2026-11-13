@@ -12,6 +12,7 @@ import { placeOf, relinkLegs, visitOf, type LegBook } from '../lib/trips';
 import { favorites } from '../lib/db';
 import type { FavoritePlace } from '../lib/favorites';
 import { dateLabel, minutesLabel, timeLabel } from '../lib/format';
+import { laterStart } from '../lib/laterStart';
 import { missingLodgingDays, recommend, summarizeRecommendation, type RecommendInsights, type RecommendationDiff } from '../lib/recommend';
 import { useNotes } from './NotesContext';
 
@@ -111,7 +112,13 @@ export function RecommendDialog({
  */
 export function RecommendPreview({ display, diff, insights, showNew = true }: { display: Trip; diff: RecommendationDiff; insights?: RecommendInsights; showNew?: boolean }) {
   const clock = (m: number) => (m < 0 ? t('days.prevDay') : hhmm(m));
+  const { notes: tripNotes } = useNotes();
   const notes = [
+    // Another way to use a long wait before a booking: leave later (the day view offers it as a card once this is applied).
+    ...display.days.flatMap((d) => {
+      const s = laterStart(display, d.dayIndex, tripNotes);
+      return s ? [{ key: `later-${d.dayIndex}`, text: t('recommend.later', { day: d.dayIndex, time: timeLabel(s.to), name: placeOf(display, visitOf(display, s.visitId)?.placeRef ?? '')?.name ?? '', fixed: timeLabel(s.fixedTime) }) }] : [];
+    }),
     ...(insights?.gaps ?? []).map((g) => ({
       key: `gap-${g.dayIndex}-${g.beforeVisitId}`,
       text: t('recommend.gap', { day: g.dayIndex, name: g.beforeName, duration: minutesLabel(g.minutes) }) + (g.suggestion ? ` · ${t('recommend.gap.suggest', { name: g.suggestion.name })}` : ''),

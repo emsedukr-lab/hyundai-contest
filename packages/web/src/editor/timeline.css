@@ -1143,6 +1143,11 @@
   line-height: 20px;
   color: var(--color-text-secondary);
 }
+/* A reason that runs longer than one line (늦게 출발하기) wraps instead of being cut. */
+.tl-faster-order.is-wrap {
+  overflow: visible;
+  white-space: normal;
+}
 .tl-faster-actions {
   display: flex;
   justify-content: flex-end;
