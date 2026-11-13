@@ -8,6 +8,7 @@ interface KakaoDoc {
   id: string;
   place_name: string;
   category_group_code: string;
+  category_name: string;
   address_name: string;
   road_address_name: string;
   x: string;
@@ -15,6 +16,19 @@ interface KakaoDoc {
 }
 
 const CATEGORY: Record<string, string> = { FD6: 'FOOD', CE7: 'CAFE', AD5: 'LODGING', AT4: 'SIGHT', CT1: 'SIGHT' };
+/** Leaves of "음식점 > 간식" that are a dessert stop (카페·디저트); the rest of 간식 — 떡,한과 and the like — is a shop. */
+const DESSERT = ['제과', '베이커리', '아이스크림', '도넛', '초콜릿', '와플', '빙수'];
+
+/**
+ * A place's kind from Kakao's group code and its category path ("음식점 > 간식 > 떡,한과"). Kakao files everything
+ * that sells food under 음식점 (FD6), but its 간식 branch is not somewhere to have a meal: a hangwa or rice-cake shop
+ * is a shop (OTHER), a bakery or an ice-cream place a dessert stop (CAFE). Only the rest of 음식점 is a meal (FOOD).
+ */
+export function categoryOf(group: string, path: string): string {
+  const parts = path.split('>').map((p) => p.trim());
+  if (group === 'FD6' && parts[1] === '간식') return DESSERT.some((word) => (parts[2] ?? '').includes(word)) ? 'CAFE' : 'OTHER';
+  return CATEGORY[group] ?? 'OTHER';
+}
 
 const str = (v: unknown) => (typeof v === 'string' ? v : '');
 
@@ -46,7 +60,7 @@ export async function searchPlaces(body: Record<string, unknown>, key: string | 
         address: (str(d.road_address_name) || str(d.address_name)).slice(0, 120),
         latE7: Math.round(Number(d.y) * 1e7),
         lonE7: Math.round(Number(d.x) * 1e7),
-        category: CATEGORY[str(d.category_group_code)] ?? 'OTHER',
+        category: categoryOf(str(d.category_group_code), str(d.category_name)),
       }));
     return json({ provider: 'KAKAO', results });
   } catch {

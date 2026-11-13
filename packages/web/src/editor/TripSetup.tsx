@@ -5,7 +5,7 @@ import { Selector } from '@astryxdesign/core/Selector';
 import { Spinner } from '@astryxdesign/core/Spinner';
 import { Switch } from '@astryxdesign/core/Switch';
 import type { Home, Trip } from '@tteonaljido/shared';
-import { CheckIcon, StarIcon } from '../components/shell/icons';
+import { CheckIcon, PushPinIcon } from '../components/shell/icons';
 import { shortDate } from '../lib/format';
 import { t } from '../lib/i18n';
 import { recommendRoute, summarizeRecommendation } from '../lib/recommend';
@@ -27,7 +27,7 @@ const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 /**
  * A new trip, step by step (M43): ① 여행 정보 (name, dates, start/home, every night's lodging or 미정) → ② 장소 담기
- * → ③ 예약·꼭 갈 곳 (booked places get their day and time, must-sees a ★) → ④ 경로 추천, which shows its work —
+ * → ③ 예약·꼭 갈 곳 (booked places get their day and time, must-sees a pin) → ④ 경로 추천, which shows its work —
  * locations, days and order, Kakao travel times — and then the proposed days. Only after 이 일정으로 시작 does the
  * editor show the day-by-day itinerary. Every step is saved as it goes, so leaving and coming back resumes here.
  */
@@ -139,14 +139,15 @@ export function TripSetup({
                       <span className="tl-name">{p?.name}</span>
                       <span className="tl-meta">{p ? CATEGORY_LABEL[p.category] : ''}</span>
                     </div>
+                    {/* The same outline pin that marks a must-see in the day plan: off it is a quiet control, on it takes the pin's color. */}
                     <button
                       type="button"
-                      className={`tl-chip${must ? ' is-on' : ''}`}
+                      className={`tl-pin${must ? ' is-on' : ''}`}
                       aria-pressed={must}
                       aria-label={t('setup.mustAria', { name: p?.name ?? '' })}
+                      title={t('common.mustAria')}
                       onClick={() => onChange(updateVisit(plan, v.visitId, { importance: must ? 'NORMAL' : 'MUST' }))}>
-                      <StarIcon filled={must} />
-                      {t('common.must')}
+                      <PushPinIcon />
                     </button>
                   </div>
                   <Switch label={t('setup.reserved')} value={booked} onChange={(on) => (on ? reserve(day, v.fixed?.time ?? suggestVisitTime(plan, v.visitId, day)) : onChange(setReservation(plan, v.visitId, null, null)))} />

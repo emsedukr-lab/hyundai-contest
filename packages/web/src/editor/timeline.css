@@ -719,9 +719,6 @@
   flex-direction: column;
   gap: 2px;
 }
-.tl-setup-row .tl-chip {
-  flex: none;
-}
 .tl-setup-reserve {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -770,15 +767,36 @@
   pointer-events: none;
 }
 
-/* M44 unslop: the ★ and ✓ text glyphs became the app's line icons. */
-.tl-setup-row .tl-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
+/*
+ * 꼭 갈 곳 in step 3: a 44px toggle that is only the outline pin (the mark a must-see carries in the day plan, Tag
+ * tone must) — no star, no word. Off: a quiet control face with a secondary pin. On: the pin's own color
+ * (informative/negative) on a faint face of it, as the tag shows it.
+ */
+.tl-pin {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  background: var(--pleos-dim-dark-primary);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: background-color 120ms cubic-bezier(0.22, 1, 0.36, 1), color 120ms cubic-bezier(0.22, 1, 0.36, 1);
 }
-.tl-setup-row .tl-chip svg {
-  width: 16px;
-  height: 16px;
+.tl-pin svg {
+  width: 22px;
+  height: 22px;
+}
+.tl-pin.is-on {
+  background: color-mix(in srgb, var(--pleos-informative-negative) 12%, transparent);
+  color: var(--pleos-informative-negative);
+}
+.tl-pin:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
 }
 .tl-setup-progress-mark svg {
   width: 20px;
