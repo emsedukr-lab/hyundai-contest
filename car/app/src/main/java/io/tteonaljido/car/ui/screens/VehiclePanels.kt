@@ -49,7 +49,7 @@ private fun checkText(i: CheckItem): String = when (i.code) {
 /** 출발 전 점검: one tag that says it all, then at most three things to look at (the rest is counted). Parked only. */
 @Composable
 fun DepartureCard(report: DepartureReport) {
-    val secondary = colorResource(R.color.pleos_text_dark_secondary)
+    val secondary = colorResource(R.color.tn_text_secondary)
     PleosCard(gap = Space.x16) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.x16)) {
             PleosText(stringResource(R.string.departure_title), Pleos.type.titleSmall, maxLines = 1)

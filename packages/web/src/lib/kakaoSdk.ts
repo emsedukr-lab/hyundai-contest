@@ -34,9 +34,10 @@ export function loadKakao(key: string): Promise<any> {
 export const escapeHtml = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
 
 /**
- * A numbered map pin for a Kakao CustomOverlay: ink with a light ring and Shadow Level1, from the Pleos static tokens
- * (shell.css) — the same in both themes, because Kakao's tiles are always light. `title` is set as a DOM property,
- * never parsed as HTML.
+ * A numbered map pin for a Kakao CustomOverlay: the route's number circle (design/TOSS.md §5 지도) — accent with a
+ * white number and a white ring, shadow-1 — from the role tokens in shell.css. Kakao's tiles are always light, so the
+ * pin resolves the roles in their light values (color-scheme: light) in both themes. `title` is set as a DOM
+ * property, never parsed as HTML.
  */
 export function numberPin(n: number, title: string, clickable = false): HTMLDivElement {
   const el = document.createElement('div');
@@ -44,9 +45,9 @@ export function numberPin(n: number, title: string, clickable = false): HTMLDivE
   el.title = title;
   el.setAttribute(
     'style',
-    'display:flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:999px;' +
-      'background:var(--pleos-static-dark-100);color:var(--pleos-static-light-100);font-weight:700;font-size:12px;line-height:1;' +
-      `border:2px solid var(--pleos-static-light-100);box-shadow:var(--pleos-shadow-level1)${clickable ? ';cursor:pointer' : ''}`,
+    'color-scheme:light;display:flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:999px;' +
+      'background:var(--tn-accent);color:var(--tn-on-accent);font-weight:700;font-size:12px;line-height:1;font-variant-numeric:tabular-nums;' +
+      `border:2px solid var(--tn-surface);box-shadow:var(--tn-shadow-1)${clickable ? ';cursor:pointer' : ''}`,
   );
   return el;
 }

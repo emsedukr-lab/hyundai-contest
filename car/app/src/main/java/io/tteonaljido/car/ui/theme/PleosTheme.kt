@@ -19,13 +19,18 @@ import io.tteonaljido.car.R
 
 /**
  * Pleos typography read from the generated TextAppearance.Pleos.* styles (design/android-res), so sizes and
- * line heights come from the official 2.1.5 assets instead of being re-typed here. Colors and dimensions are
- * used directly as @color/pleos_* and @dimen/pleos_* resources; night mode switches them automatically.
+ * line heights come from the official 2.1.5 assets instead of being re-typed here. The typeface is Pretendard
+ * Variable (OFL, design/TOSS.md §3). Colors are the @color/tn_* roles of design/TOSS.md and dimensions the
+ * @dimen/pleos_* tokens; night mode switches the colors automatically.
  */
 @OptIn(androidx.compose.ui.text.ExperimentalTextApi::class)
-private fun weight(w: Int) = Font(R.font.asta_sans, FontWeight(w), variationSettings = FontVariation.Settings(FontVariation.weight(w)))
+private fun weight(w: Int) = Font(R.font.pretendard_variable, FontWeight(w), variationSettings = FontVariation.Settings(FontVariation.weight(w)))
 
-val AstaSans = FontFamily(weight(400), weight(500), weight(700), weight(800))
+/** Pretendard Variable at the four weights design/TOSS.md uses (400 · 500 · 600 · 700). */
+val Pretendard = FontFamily(weight(400), weight(500), weight(600), weight(700))
+
+/** TOSS.md §3 tops out at 700: Pleos Extra_Strong (800) is drawn at the heaviest weight the ladder has. */
+private const val MAX_WEIGHT = 700
 
 /**
  * The styles the screens use, by their design-file names (design/DESIGN.md Typography):
@@ -72,7 +77,11 @@ private fun read(context: Context, @StyleRes style: Int): TextStyle {
         val size = a.getDimension(order.indexOf(android.R.attr.textSize), 28f * density) / density
         val w = a.getInt(order.indexOf(android.R.attr.textFontWeight), 400)
         val lh = a.getDimension(order.indexOf(R.attr.lineHeight), 0f) / density
-        return TextStyle(fontFamily = AstaSans, fontWeight = FontWeight(w), fontSize = size.sp, lineHeight = if (lh > 0) lh.sp else (size * 1.3f).sp)
+        // Tabular figures: times, distances and durations line up and don't jitter as they change (TOSS.md §1).
+        return TextStyle(
+            fontFamily = Pretendard, fontWeight = FontWeight(minOf(w, MAX_WEIGHT)), fontSize = size.sp,
+            lineHeight = if (lh > 0) lh.sp else (size * 1.3f).sp, fontFeatureSettings = "tnum",
+        )
     } finally {
         a.recycle()
     }

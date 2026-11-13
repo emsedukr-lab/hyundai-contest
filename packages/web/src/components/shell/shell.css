@@ -1,66 +1,110 @@
 /*
- * App shell — Pleos mobile. The same rules as the Pleos Connect car app (design/DESIGN.md), at phone scale
- * (car dp × 0.6): background/primary canvas, surface/basic containers with a 1px divider/secondary outline and no
- * shadow, graphite primary actions, Regular/Bold Asta Sans only. Phone first: 360–412pt wide, centred at 480 on
- * anything wider.
+ * App shell — the Toss visual language (design/TOSS.md, 2026-11-14): grey canvas, white surfaces with no border or
+ * shadow, one Toss blue for the main action, selection, focus, switches on and progress, Pretendard Variable. Only the
+ * design system changed; layout, flows, copy and features are as before. Phone first: 360–412pt wide, centred at 480
+ * on anything wider.
  *
- * Color: tokens only. Chromatic color is a state mark (a dot, an icon, a switch that is on), never decoration —
- * emphasis is weight and ink. There is no warning hue: a caution is an ink dot and bold ink text.
- * Shapes (8·12·16·20·24·32·48 × 0.6): 5 · 7 · 10 small controls · 12 · 14 medium controls and fields · 19 containers
- * and large buttons · 29 sheets and popups · 999 pills.
- * Depth: the three Pleos shadows below and nothing else. Pressed = the face one step darker (dim/dark/secondary).
+ * Color: role tokens only (the --tn-* block below and the Astryx theme, src/tossTheme.ts). Semantic color only when it
+ * means something — red error · late · conflict · destructive, green spare · done, orange 'check this' as a dot or an
+ * icon only (its words stay ink). No decoration in color.
+ * Shapes (TOSS.md §4 phone): 4 · 8 small controls · 12 fields and button M · 14 button L · 16 button XL · 20 cards,
+ * sheets and dialogs · 24 large sections · 999 chips and pills. Heights: button S 32 · L 48 · XL 56, field 48, chip 34,
+ * touch targets 44 and up.
+ * Depth: shadows only on what floats (sheets, menus, toasts, the selected segment, a switch knob). Pressed = one step
+ * darker (fill-weak-pressed, accent-pressed); disabled = the whole control at 30%.
  *
- * Type ladder (Pleos Title / Body / Label × 0.6, weights 400 and 700 only, tracking 0, nothing under 12px):
- *   Title L 24/32 · Title M 22/28 · Title S 20/26 · Body L 18/26 · Body M 17/24 · Body S 16/24 · Label M 14/20 · Label S 12/16
- * Gutter 20 for every block (containers, buttons, fields); containers pad 16 inside, radius 19.
+ * Type ramp (TOSS.md §3, px size/line/weight): h2 24/31/700 · h3 22/29/700 · h4 20/27/700 · title-1 18/26/600 ·
+ * title-2 17/25/600 · body-1 17/26/400 (input values, so iOS does not zoom) · body-2 15/23/400 (default body) ·
+ * body-3 13/20/400 · label-l 17/21/700 · label-m 15/19/600 · label-s 13/16/600 · caption 12/17/500 (the smallest).
+ * Times, distances and durations use tabular figures. Gutter 20 for every block; containers pad 16 inside, radius 20.
  */
 
 /*
- * Pleos Connect tokens the phone uses beyond the Astryx theme variables (src/pleosTheme.ts), defined once. Values are
- * the front matter of design/DESIGN.md (`colors` / `colors-dark`); elevation is the three Shadow/Light levels × 0.6.
- * Every other rule in the app's CSS goes through these or the theme's --color-* / --radius-* / --shadow-* variables.
+ * The color roles of design/TOSS.md §2, named as there, light / dark — defined once. Every other rule in the app's CSS
+ * goes through these or the theme's --color-* / --radius-* / --shadow-* variables. Shadows are TOSS.md §4.
  */
 :root {
-  /* informative: on · done / link · info / error · shortfall */
-  --pleos-informative-active: light-dark(#02c265, #00e074);
-  --pleos-informative-positive: light-dark(#0064ff, #0082ff);
-  --pleos-informative-negative: light-dark(#fe3d16, #ff4c28);
-  /* dim/dark: a quiet face (5%) and the pressed overlay (10%) — the same values as button/basic enabled · pressed */
-  --pleos-dim-dark-primary: light-dark(#1314170d, #ffffff0d);
-  --pleos-dim-dark-secondary: light-dark(#1314171a, #ffffff1a);
-  /* divider: popup outline 5%, container outline and hairlines 10%, control outlines and the route rail 20% */
-  --pleos-divider-primary: light-dark(#1314170d, #ffffff0d);
-  --pleos-divider-secondary: light-dark(#1314171a, #ffffff1a);
-  --pleos-divider-tertiary: light-dark(#13141733, #ffffff33);
-  /* surface/low: an inset inside a container (the route drawing, a chosen lodging) */
-  --pleos-surface-low: light-dark(#f7f8fa, #131417);
-  /* controls */
-  --pleos-switch-off: light-dark(#1314174d, #ffffff1a);
-  --pleos-switch-disabled: light-dark(#1314171a, #ffffff1a);
-  --pleos-switch-knob-on: light-dark(#ffffff, #ffffff);
-  --pleos-switch-knob-off: light-dark(#ffffff, #a4a8ae);
-  --pleos-switch-knob-disabled: light-dark(#ffffff, #ffffff33);
-  --pleos-button-switch-enabled: light-dark(#ffffff, #ffffff33);
-  --pleos-button-filled-pressed: light-dark(#313236, #c7c9ce);
-  --pleos-controller-tab-background: light-dark(#1314170d, #ffffff0d);
-  --pleos-field-focused: light-dark(#313236, #edeef2);
-  /* static: the same in both themes — on the camera view and on the map's own (always light) tiles */
-  --pleos-static-dark-100: #131417;
-  --pleos-static-dark-300: #131417a3;
-  --pleos-static-dark-400: #13141752;
-  --pleos-static-light-100: #ffffff;
-  --pleos-static-light-200: #ffffffd6;
-  --pleos-static-light-400: #ffffff52;
-  /* Shadow/Light Level1 (switch knob, selected segment, dropdown, the + button) · Level2 (a toggle that is on, sheets) · Level3 */
-  --pleos-shadow-level1: 0 4px 14px #00000014;
-  --pleos-shadow-level2: 0 5px 19px #00000029, 0 1px 1px #00000014;
-  --pleos-shadow-level3: 0 12px 24px #0000003d, 0 1px 2px #00000033;
+  /* faces */
+  --tn-canvas: light-dark(#f2f4f6, #17171c);
+  --tn-surface: light-dark(#ffffff, #202027);
+  --tn-surface-float: light-dark(#ffffff, #2c2c35);
+  --tn-fill-weak: light-dark(#f2f4f6, #2c2c35);
+  --tn-fill-weak-on-canvas: light-dark(#e5e8eb, #2c2c35);
+  --tn-fill-weak-pressed: light-dark(#e5e8eb, #3c3c47);
+  --tn-hairline: light-dark(#e5e8eb, #3c3c47);
+  /* text */
+  --tn-text-primary: light-dark(#191f28, #ffffff);
+  --tn-text-secondary: light-dark(#4e5968, #c3c3c6);
+  --tn-text-tertiary: light-dark(#6b7684, #9e9ea4);
+  --tn-text-disabled: light-dark(#b0b8c1, #62626d);
+  /* accent: Toss blue */
+  --tn-accent: light-dark(#3182f6, #3485fa);
+  --tn-accent-pressed: light-dark(#1b64da, #2272eb);
+  --tn-on-accent: light-dark(#ffffff, #ffffff);
+  --tn-accent-text: light-dark(#1065cc, #6aa8ff);
+  --tn-accent-weak: light-dark(#e8f3ff, #202c4d);
+  /* semantic */
+  --tn-positive: light-dark(#007738, #3cc57a);
+  --tn-positive-weak: light-dark(#e6f4ea, #16302a);
+  --tn-negative: light-dark(#f04452, #f04251);
+  --tn-negative-text: light-dark(#d22030, #ff6b76);
+  --tn-negative-weak: light-dark(#ffeeee, #3a1f24);
+  --tn-warning: light-dark(#ff8800, #ffa552);
+  --tn-warning-weak: light-dark(#fff3e0, #3a2a1a);
+  /* controls and layers */
+  --tn-switch-off: light-dark(#d1d6db, #4d4d59);
+  --tn-toast: light-dark(#191f28, #3c3c47);
+  --tn-overlay: #0000008f; /* black 56% */
+  --tn-press-overlay: light-dark(#00000042, #ffffff1f); /* black 26% / white 12% */
+  /* elevation: shadow-1 (selected segment, switch knob) · shadow-2 (menus, the + button) · shadow-3 (dialogs) · toast · sheet */
+  --tn-shadow-1: 0 1px 2px #0e142a0a, 0 1px 1px #0e142a0a;
+  --tn-shadow-2: 0 4px 12px #0e142a0f, 0 1px 2px #0e142a0a;
+  --tn-shadow-3: 0 12px 32px #0e142a1a, 0 2px 6px #0e142a0f;
+  --tn-shadow-toast: 0 8px 24px #0e142a29;
+  --tn-shadow-sheet: 0 -2px 12px #0e142a0f;
+  /* motion: 120 press · 200 toggle · 320 sheet */
+  --tn-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+/*
+ * The weak fill follows its ground (TOSS.md: fill-weak is for white faces, fill-weak-on-canvas for the canvas). It is
+ * the theme's --color-neutral — the secondary button's face — and every weak face in the app reads it: fields at rest,
+ * segment tracks, neutral tags, step numbers, steppers. On the canvas it is fill-weak-on-canvas; inside a white
+ * container or a floating layer it is fill-weak.
+ */
+.tn-screen {
+  --color-neutral: var(--tn-fill-weak-on-canvas);
+}
+:is(.tn-panel, .tn-card, .tn-cards, .tn-next, .astryx-card, .astryx-banner, .tl-card, .tl-infocard, .tl-faster, .rc-list),
+.astryx-bottom-sheet,
+.astryx-dialog,
+.astryx-popover {
+  --color-neutral: var(--tn-fill-weak);
+}
+/*
+ * Floating layers (sheets, dialogs, menus) sit on surface-float. In the dark theme that face is the same value as
+ * fill-weak, so a weak fill inside it (a secondary button, a field at rest, a segment track, a neutral tag) would
+ * vanish: there it takes the next step of the same ramp, fill-weak-pressed. Cards and surfaces inside take the layer's
+ * own face — the layer is the container — and keep a hairline so a grouped list still reads as one block.
+ */
+.astryx-bottom-sheet,
+.astryx-dialog,
+.astryx-popover {
+  --color-background-surface: var(--color-background-popover);
+  --color-background-card: var(--color-background-popover);
+}
+/* The root Theme mirrors its mode onto <html data-theme>. */
+:root[data-theme='dark'] :is(.astryx-bottom-sheet, .astryx-dialog, .astryx-popover) {
+  --tn-fill-weak: var(--tn-fill-weak-pressed);
+  --color-neutral: var(--tn-fill-weak-pressed);
+  --color-background-muted: var(--tn-fill-weak-pressed);
+  --color-overlay-hover: var(--tn-fill-weak-pressed);
 }
 
 .tn-screen {
   min-height: 100dvh;
-  background: var(--color-background-body);
-  color: var(--color-text-primary);
+  background: var(--tn-canvas);
+  color: var(--tn-text-primary);
 }
 /* Korean wraps between words everywhere; a long unbroken token (an address, a URL) still wraps without widening. */
 .tn-screen,
@@ -74,7 +118,7 @@
   margin: 0 auto;
 }
 
-/* Top bar (Pleos page navigation): 56pt, sticky on the canvas. Tab roots carry the Title L page title. */
+/* Top bar: 56pt, sticky, the same face as the canvas and no divider; left-aligned title (tab roots: h2 24). */
 .tn-topbar {
   position: sticky;
   top: 0;
@@ -84,7 +128,7 @@
   gap: 4px;
   min-height: 56px;
   padding: env(safe-area-inset-top) 8px 0 20px;
-  background: var(--color-background-body);
+  background: var(--tn-canvas);
 }
 .tn-topbar.has-back {
   padding-left: 4px;
@@ -95,7 +139,7 @@
   margin: 0;
   font-size: 18px;
   line-height: 26px;
-  font-weight: 700;
+  font-weight: 600;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -105,7 +149,8 @@
 }
 .tn-topbar.is-large h1 {
   font-size: 24px;
-  line-height: 32px;
+  line-height: 31px;
+  font-weight: 700;
 }
 .tn-actions {
   display: flex;
@@ -113,7 +158,7 @@
   gap: 4px;
 }
 
-/* 44pt icon button (Pleos icon button, rounded small). */
+/* 44pt icon button: no face at rest, the pressed step under a finger. */
 .tn-iconbtn {
   width: 44px;
   height: 44px;
@@ -122,40 +167,40 @@
   align-items: center;
   justify-content: center;
   border: 0;
-  border-radius: 10px;
+  border-radius: 12px;
   background: transparent;
   color: var(--color-icon-primary);
   cursor: pointer;
-  transition: background-color 120ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: background-color 120ms var(--tn-ease);
 }
 .tn-iconbtn:active {
-  background: var(--pleos-dim-dark-secondary);
+  background: var(--tn-fill-weak-pressed);
 }
 
-/* A labelled action in the top bar (여행: 새 여행) — Pleos basic button, small. */
+/* A labelled action in the top bar (여행: 새 여행) — a secondary button M (40, radius 12) on the canvas. */
 .tn-headbtn {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  height: 36px;
-  padding: 0 12px 0 8px;
+  height: 40px;
+  padding: 0 14px 0 10px;
   border: 0;
-  border-radius: 10px;
-  background: var(--pleos-dim-dark-primary);
-  color: var(--color-text-primary);
+  border-radius: 12px;
+  background: var(--tn-fill-weak-on-canvas);
+  color: var(--tn-text-primary);
   font: inherit;
-  font-size: 14px;
-  line-height: 20px;
-  font-weight: 700;
+  font-size: 15px;
+  line-height: 19px;
+  font-weight: 600;
   cursor: pointer;
-  transition: background-color 120ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: background-color 120ms var(--tn-ease);
 }
 .tn-headbtn svg {
   width: 20px;
   height: 20px;
 }
 .tn-headbtn:active {
-  background: var(--pleos-dim-dark-secondary);
+  background: var(--tn-fill-weak-pressed);
 }
 
 /* Room under the content for the tab bar / the bottom CTA. */
@@ -169,7 +214,7 @@
   padding-bottom: calc(32px + env(safe-area-inset-bottom));
 }
 
-/* Tab bar (Pleos GNB at phone scale): full width, flat, a hairline on top. Active = filled icon + bold primary label. */
+/* Tab bar: surface, a hairline on top. Active = filled icon + primary text, the rest outlined + tertiary. */
 .tn-tabbar {
   position: fixed;
   left: 0;
@@ -177,8 +222,8 @@
   bottom: 0;
   z-index: 10;
   padding-bottom: env(safe-area-inset-bottom);
-  background: var(--color-background-surface);
-  border-top: 1px solid var(--pleos-divider-secondary);
+  background: var(--tn-surface);
+  border-top: 1px solid var(--tn-hairline);
 }
 .tn-tabbar ul {
   max-width: 480px;
@@ -198,9 +243,9 @@
   gap: 2px;
   text-decoration: none;
   font-size: 12px;
-  line-height: 16px;
-  font-weight: 400;
-  color: var(--color-text-secondary);
+  line-height: 17px;
+  font-weight: 500;
+  color: var(--tn-text-tertiary);
   -webkit-tap-highlight-color: transparent;
 }
 .tn-tab svg {
@@ -208,14 +253,16 @@
   height: 24px;
 }
 .tn-tab[aria-current='page'] {
-  color: var(--color-text-primary);
-  font-weight: 700;
+  color: var(--tn-text-primary);
 }
 .tn-tab:active svg {
   transform: scale(0.94);
 }
 
-/* Bottom CTA: fixed above the safe area with a protective fade into the canvas (one tone, not a hue gradient). */
+/*
+ * Bottom CTA: an XL 56 main button, 20 from each side, fixed above the safe area. Above it, a 24px protective fade from
+ * the canvas to transparent (the one gradient the system allows); below that line the canvas is solid.
+ */
 .tn-cta {
   position: fixed;
   left: 0;
@@ -223,7 +270,7 @@
   bottom: 0;
   z-index: 6;
   padding: 24px 20px calc(16px + env(safe-area-inset-bottom));
-  background: linear-gradient(to top, var(--color-background-body) 70%, transparent);
+  background: linear-gradient(to top, var(--tn-canvas) calc(100% - 24px), transparent);
   pointer-events: none;
 }
 .tn-cta-inner {
@@ -240,11 +287,11 @@
   flex: 0 1 auto;
 }
 .tn-cta .astryx-button {
-  --_button-radius: var(--radius-container); /* Pleos large button: 32 × 0.6 */
+  --_button-radius: 16px; /* button XL */
   min-height: 56px;
 }
 
-/* Section header above a container. */
+/* Section header above a container (title-2). */
 .tn-section {
   display: flex;
   align-items: center;
@@ -256,22 +303,22 @@
 .tn-section h2 {
   margin: 0;
   font-size: 17px;
-  line-height: 24px;
-  font-weight: 700;
+  line-height: 25px;
+  font-weight: 600;
 }
 
 /*
- * Grouped list (Pleos list in one container): a section's menus share one container (surface/basic, a 1px
- * divider/secondary outline, no shadow), rows split by a hairline that starts at the text column. `ul.tn-cards` keeps
- * its name so every screen moves over at once.
+ * Grouped list: a section's menus share one white container on the canvas (no border, no shadow — the 1px edge is
+ * transparent so the geometry stays put), rows split by a hairline that starts at the text column. `ul.tn-cards`
+ * keeps its name so every screen moves over at once.
  */
 .tn-cards {
   margin: 0 20px;
   padding: 0;
   list-style: none;
-  border: 1px solid var(--pleos-divider-secondary);
+  border: 1px solid transparent;
   border-radius: var(--radius-container);
-  background: var(--color-background-card);
+  background: var(--tn-surface);
   overflow: hidden;
 }
 .tn-cards > li {
@@ -284,13 +331,13 @@
   top: 0;
   left: 16px;
   right: 0;
-  border-top: 1px solid var(--pleos-divider-secondary);
+  border-top: 1px solid var(--tn-hairline);
 }
 .tn-cards:has(.tn-lead) > li + li::before {
   left: 52px;
 }
 
-/* List row: 64 tall, 12×16 padding, the whole row is the hit area. */
+/* List row: 64 tall, 12×16 padding, the whole row is the hit area; pressed = fill-weak-pressed. */
 .tn-row {
   display: flex;
   align-items: center;
@@ -307,10 +354,10 @@
   text-decoration: none;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  transition: background-color 120ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: background-color 120ms var(--tn-ease);
 }
 .tn-row:active {
-  background: var(--pleos-dim-dark-secondary);
+  background: var(--tn-fill-weak-pressed);
 }
 .tn-row-text {
   flex: 1 1 auto;
@@ -322,57 +369,69 @@
 }
 .tn-row-title {
   font-size: 17px;
-  line-height: 24px;
-  font-weight: 400;
+  line-height: 25px;
+  font-weight: 500;
 }
 .tn-row-sub {
-  font-size: 14px;
+  font-size: 13px;
   line-height: 20px;
-  color: var(--color-text-secondary);
+  color: var(--tn-text-tertiary);
 }
 .tn-row-end {
   flex: none;
   display: flex;
   align-items: center;
   gap: 4px;
-  color: var(--color-icon-secondary);
+  color: var(--tn-text-tertiary);
 }
+/* The chevron at the end of a row: text-disabled. */
 .tn-row-end svg {
   width: 20px;
   height: 20px;
+  color: var(--tn-text-disabled);
 }
-/* Leading icon: a 24 glyph in the secondary ink, no tile. */
+/* Leading icon: a 24 line glyph in the secondary ink, no tile. */
 .tn-lead {
   flex: none;
   width: 24px;
   height: 24px;
   display: grid;
   place-items: center;
-  color: var(--color-icon-secondary);
+  color: var(--tn-text-secondary);
 }
 .tn-lead svg {
   width: 24px;
   height: 24px;
 }
 
-/* A container for content that is not a list (a form, the steps, a hint). */
+/* A container for content that is not a list (a form, the steps, a hint): white on the canvas, no border. */
+.tn-panel,
+.tn-card {
+  border: 1px solid transparent;
+  border-radius: var(--radius-container);
+  background: var(--color-background-card);
+}
 .tn-panel {
   margin: 0 20px;
   padding: 16px;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  border: 1px solid var(--pleos-divider-secondary);
-  border-radius: var(--radius-container);
-  background: var(--color-background-card);
 }
-/* Quiet text right under a container (a footnote to it). */
+.tn-card {
+  overflow: hidden;
+}
+/* Inside a floating layer the layer is the container: a grouped block keeps a hairline instead. */
+:is(.astryx-bottom-sheet, .astryx-dialog) :is(.tn-panel, .tn-card, .astryx-card[data-variant='default']) {
+  border-color: var(--tn-hairline);
+}
+/* Quiet text right under a container (a footnote to it) — on the canvas, so secondary. */
 .tn-note {
   margin: 8px 0 0;
   padding: 0 20px;
-  font-size: 14px;
+  font-size: 13px;
   line-height: 20px;
-  color: var(--color-text-secondary);
+  color: var(--tn-text-secondary);
 }
 
 /* Page text block under the title. */
@@ -384,9 +443,9 @@
 }
 .tn-intro p {
   margin: 0;
-  font-size: 16px;
-  line-height: 24px;
-  color: var(--color-text-secondary);
+  font-size: 15px;
+  line-height: 23px;
+  color: var(--tn-text-secondary);
 }
 .tn-pad {
   padding-left: 20px;
@@ -397,135 +456,230 @@
 .tn-iconbtn:focus-visible,
 .tn-headbtn:focus-visible,
 .tn-row:focus-visible {
-  outline: 2px solid var(--color-accent);
+  outline: 2px solid var(--tn-accent);
   outline-offset: -2px;
 }
 
-/* ---- Astryx components on Pleos (unlayered, so they win over the component layer) ---- */
+/* ---- Astryx components in the Toss language (unlayered, so they win over the component layer) ---- */
+
+/* Cards: white on the canvas, no border, no shadow (the 1px edge stays, transparent, so the padding does not move). */
+.astryx-card[data-variant='default'] {
+  border-color: transparent;
+  box-shadow: none;
+}
 
 /*
- * `ivi_basic_button`. Basic (Astryx secondary) sits on button/basic/enabled — the theme's --color-neutral — and a press
- * lays dim/dark/secondary over the face (the theme's --color-overlay-pressed). Radius by size: Small 10, Medium 14
- * (the theme's --radius-element), Large 19.
+ * Buttons. Primary = accent fill + white bold text, pressed accent-pressed. Secondary = fill-weak + primary text
+ * (fill-weak-on-canvas when it sits right on the canvas), pressed fill-weak-pressed. Ghost = no face, accent-text.
+ * Destructive (only at a confirm step) = negative fill + white text. Disabled = the whole button at 30%.
+ * Sizes: S 32 (radius 8, label-s 13/600) · L 48 (radius 14, label-l 17/700) · XL 56 (radius 16, label-l). Astryx
+ * paints hover and press as an image over the face (the theme's overlay tokens); each variant sets its own.
  */
 .astryx-button {
+  font-size: 17px;
+  line-height: 21px;
   font-weight: 700;
+  --_button-radius: 14px;
 }
 .astryx-button[data-size='sm'] {
-  --_button-radius: var(--radius-inner);
+  --_button-radius: 8px;
+  font-size: 13px;
+  line-height: 16px;
+  font-weight: 600;
 }
 .astryx-button[data-size='lg'] {
-  --_button-radius: var(--radius-container);
+  --_button-radius: 16px;
+}
+.astryx-button[data-variant='primary'] {
+  background-color: var(--tn-accent);
+  color: var(--tn-on-accent);
+  --color-overlay-hover: transparent;
+  --color-overlay-pressed: var(--tn-accent-pressed);
+}
+.astryx-button[data-variant='secondary'] {
+  color: var(--tn-text-primary);
+}
+.astryx-button[data-variant='ghost'] {
+  color: var(--tn-accent-text);
+}
+/* An icon-only ghost button (close, clear, edit — the ones Astryx names with aria-label) is an icon: text-secondary. */
+.astryx-button[data-variant='ghost'][aria-label] {
+  color: var(--tn-text-secondary);
+}
+.astryx-button[data-variant='destructive'] {
+  background-color: var(--tn-negative);
+  color: var(--tn-on-accent);
+  --color-overlay-hover: transparent;
+  --color-overlay-pressed: var(--tn-press-overlay);
+}
+/* Disabled keeps its face and goes to 30% as a whole. */
+.astryx-button[aria-disabled='true'],
+.astryx-button:disabled {
+  opacity: 0.3;
+}
+.astryx-button[data-variant='primary']:is([aria-disabled='true'], :disabled) {
+  background-color: var(--tn-accent);
+  color: var(--tn-on-accent);
+}
+.astryx-button[data-variant='secondary']:is([aria-disabled='true'], :disabled) {
+  background-color: var(--color-neutral);
+  color: var(--tn-text-primary);
+}
+.astryx-button[data-variant='ghost']:is([aria-disabled='true'], :disabled) {
+  color: var(--tn-accent-text);
 }
 
 /*
- * `ivi_switch` Medium × 0.6: a 48 × 29 rounded-rect track (radius 10) with a 19 square knob (radius 5) 5px inside it.
- * On = switch/on (informative/active), off = switch/off; the knob carries Shadow Level1. The box around the track
- * has no class of its own, so it is reached through its child.
+ * Switch: a 44 × 26 pill track — off switch-off, on accent — with a white 22 knob 2px inside it carrying shadow-1.
+ * Disabled = the whole switch at 30%. The box around the track has no class of its own, so it is reached through its
+ * child.
  */
 div:has(> .astryx-switch) {
-  width: 48px;
-  height: 29px;
+  width: 44px;
+  height: 26px;
 }
 .astryx-switch {
   flex: none;
-  width: 48px;
-  height: 29px;
-  padding: 5px;
-  border-radius: 10px;
-  background-color: var(--pleos-switch-off);
+  width: 44px;
+  height: 26px;
+  padding: 2px;
+  border-radius: 9999px;
+  background-color: var(--tn-switch-off);
 }
 .astryx-switch[data-checked='checked'] {
-  background-color: var(--pleos-informative-active);
+  background-color: var(--tn-accent);
 }
 .astryx-switch[data-disabled='disabled'] {
-  background-color: var(--pleos-switch-disabled);
-  opacity: 1;
+  opacity: 0.3;
 }
 .astryx-switch-thumb {
-  width: 19px;
-  height: 19px;
-  border-radius: 5px;
-  background-color: var(--pleos-switch-knob-off);
-  box-shadow: var(--pleos-shadow-level1);
+  width: 22px;
+  height: 22px;
+  border-radius: 9999px;
+  background-color: var(--tn-on-accent);
+  box-shadow: var(--tn-shadow-1);
 }
 .astryx-switch-thumb[data-checked='checked'] {
-  background-color: var(--pleos-switch-knob-on);
-  transform: translateX(19px); /* 48 − 5 − 5 − 19 */
+  background-color: var(--tn-on-accent);
+  transform: translateX(18px); /* 44 − 2 − 2 − 22 */
 }
-.astryx-switch[data-disabled='disabled'] .astryx-switch-thumb {
-  background-color: var(--pleos-switch-knob-disabled);
-}
-/* Under a finger Astryx rests the knob by insets and moves it itself: keep its model, with the Pleos inset. */
+/* Under a finger Astryx rests the knob by insets and moves it itself: keep its model, with the 2px inset. */
 @media (pointer: coarse) {
   .astryx-switch-thumb {
-    inset-inline-start: 5px;
+    inset-inline-start: 2px;
   }
   .astryx-switch-thumb[data-checked='checked'] {
     inset-inline-start: auto;
-    inset-inline-end: 5px;
+    inset-inline-end: 2px;
     transform: none;
   }
 }
 
 /*
- * `ivi_segmented_control/solid` Medium × 0.6: a 48 bar on controller/tab_background (radius 14, 5px inside), 38
- * segments; the selected one on button/switch/enabled with Shadow Level1 (the theme's --shadow-low) and bold primary
- * text, the others secondary.
+ * Segmented control: a fill-weak track (radius 12, 4px inside), the selected segment on the surface with shadow-1 and
+ * primary text at 600, the others secondary. On the canvas the track takes fill-weak-on-canvas.
  */
 .astryx-segmented-control {
-  --_segmented-control-padding: 5px;
-  background-color: var(--pleos-controller-tab-background);
+  --_segmented-control-padding: 4px;
+  border-radius: var(--radius-element);
+  background-color: var(--color-neutral);
+}
+.astryx-segmented-control-item {
+  border-radius: var(--radius-inner);
+  font-size: 15px;
+  line-height: 19px;
+  color: var(--tn-text-secondary);
 }
 .astryx-segmented-control-item[data-size='sm'] {
-  height: calc(var(--size-element-sm) - 10px);
+  height: calc(var(--size-element-sm) - 8px);
 }
 .astryx-segmented-control-item[data-size='md'] {
-  height: calc(var(--size-element-md) - 10px);
+  height: calc(var(--size-element-md) - 8px);
 }
 .astryx-segmented-control-item[data-size='lg'] {
-  height: calc(var(--size-element-lg) - 10px);
+  height: calc(var(--size-element-lg) - 8px);
 }
 .astryx-segmented-control-item[data-selected='selected'] {
-  background-color: var(--pleos-button-switch-enabled);
+  background-color: var(--color-background-surface);
+  box-shadow: var(--tn-shadow-1);
+  color: var(--tn-text-primary);
+  font-weight: 600;
 }
 
 /*
- * Sheets and popups (`ivi_system_popup`): background/popup, radius 29 (48 × 0.6), a 1px divider/primary outline.
- * Everything inside that asks for the surface color gets the popup face, so the dark theme has one face, not two.
+ * Fields (text, text area, selector, date, number): fill-weak at rest with no visible border, 48 tall, radius 12;
+ * focused = the surface with a 1.5px accent border; an error = a 1.5px negative border (its helper line is
+ * negative-text). Values are body-1 17 so iOS does not zoom.
  */
+:is(.astryx-text-input, .astryx-text-area, .astryx-selector[data-variant='input'], .astryx-date-input, .astryx-number-input, .astryx-date-range-input) {
+  border-color: transparent;
+  border-radius: var(--radius-element);
+  background-color: var(--color-neutral);
+  box-shadow: none;
+}
+:is(.astryx-text-input, .astryx-text-area, .astryx-selector[data-variant='input'], .astryx-date-input, .astryx-number-input, .astryx-date-range-input):focus-within,
+.astryx-selector[data-variant='input'][aria-expanded='true'] {
+  border-color: var(--tn-accent);
+  background-color: var(--color-background-surface);
+  box-shadow: inset 0 0 0 0.5px var(--tn-accent);
+}
+:is(.astryx-text-input, .astryx-text-area, .astryx-selector, .astryx-date-input, .astryx-number-input, .astryx-date-range-input):is([aria-invalid='true'], :has([aria-invalid='true'])) {
+  border-color: var(--tn-negative);
+  box-shadow: inset 0 0 0 0.5px var(--tn-negative);
+}
+:is(.astryx-text-input, .astryx-date-input, .astryx-number-input, .astryx-date-range-input) input,
+.astryx-text-area-control,
+.astryx-selector[data-variant='input'] {
+  font-size: 17px;
+}
+:is(.astryx-text-input, .astryx-date-input, .astryx-number-input) input::placeholder,
+.astryx-text-area-control::placeholder {
+  color: var(--tn-text-secondary);
+  opacity: 1;
+}
+
+/* Sheets and dialogs: surface-float, no border, radius 20; the sheet's shadow / shadow-3; the 56% overlay behind. */
 .astryx-bottom-sheet {
-  --color-background-surface: var(--color-background-popover);
-  border: 1px solid var(--pleos-divider-primary);
-  border-bottom: 0;
-  border-start-start-radius: var(--radius-page);
-  border-start-end-radius: var(--radius-page);
+  border: 0;
+  border-start-start-radius: var(--radius-container);
+  border-start-end-radius: var(--radius-container);
+  box-shadow: var(--tn-shadow-sheet);
 }
 .astryx-dialog {
-  --color-background-surface: var(--color-background-popover);
-  --_dialog-radius: var(--radius-page);
+  --_dialog-radius: var(--radius-container);
+  border: 0;
+  box-shadow: var(--tn-shadow-3);
+}
+/* Menus and pickers float: surface-float with shadow-2. */
+.astryx-popover {
+  box-shadow: var(--tn-shadow-2);
 }
 
 /*
- * Banners are quiet containers: the container face and outline, ink text (the theme's --color-on-*-muted), and the
- * status in the icon alone — informative/positive · active · negative, and ink for a caution.
+ * Banners are quiet boxes: white on the canvas, fill-weak inside a white container or layer (the 1px edge stays,
+ * transparent). Ink text (the theme's --color-on-*-muted); the status is the icon alone — accent · positive ·
+ * negative · warning.
  */
 .astryx-banner {
-  border: 1px solid var(--pleos-divider-secondary);
-  background-color: var(--color-background-card);
-  color: var(--color-text-primary);
+  border: 1px solid transparent;
+  background-color: var(--tn-surface);
+  color: var(--tn-text-primary);
+}
+:is(.astryx-bottom-sheet, .astryx-dialog, .astryx-card, .tn-card, .tn-panel) .astryx-banner {
+  background-color: var(--tn-fill-weak);
+  --color-neutral: var(--tn-surface);
 }
 .astryx-banner-icon[data-status='info'] {
-  color: var(--pleos-informative-positive);
+  color: var(--tn-accent);
 }
 .astryx-banner-icon[data-status='success'] {
-  color: var(--pleos-informative-active);
+  color: var(--tn-positive);
 }
 .astryx-banner-icon[data-status='error'] {
-  color: var(--pleos-informative-negative);
+  color: var(--tn-negative);
 }
 .astryx-banner-icon[data-status='warning'] {
-  color: var(--color-icon-primary);
+  color: var(--tn-warning);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -537,14 +691,18 @@ div:has(> .astryx-switch) {
   }
 }
 
-/* Camera scanner (연결 tab): full screen, camera behind, a square guide, the title and close on top, status below. */
-/* Always on the dark camera view, whatever the theme: static/* colors only (DESIGN.md: over an overlay, use static). */
+/*
+ * Camera scanner (연결 tab): full screen, camera behind, a square guide, the title and close on top, status below.
+ * Always on the dark camera view whatever the theme, so the whole screen resolves the roles in their dark values
+ * (color-scheme: dark): text-primary is white, press-overlay a white 12% face, overlay the 56% dim.
+ */
 .tn-scan {
+  color-scheme: dark;
   position: fixed;
   inset: 0;
   z-index: 100;
-  background: var(--pleos-static-dark-100);
-  color: var(--pleos-static-light-100);
+  background: var(--tn-canvas);
+  color: var(--tn-text-primary);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -564,17 +722,18 @@ div:has(> .astryx-switch) {
   align-items: center;
   gap: 12px;
   padding: calc(12px + env(safe-area-inset-top)) 16px 12px 24px;
-  background: linear-gradient(var(--pleos-static-dark-300), transparent);
+  background: linear-gradient(var(--tn-overlay), transparent);
 }
 .tn-scan-bottom {
   flex-direction: column;
   padding: 24px 24px calc(28px + env(safe-area-inset-bottom));
-  background: linear-gradient(transparent, var(--pleos-static-dark-300));
+  background: linear-gradient(transparent, var(--tn-overlay));
 }
 .tn-scan-title {
   flex: 1 1 auto;
   font-size: 17px;
-  font-weight: 700;
+  line-height: 25px;
+  font-weight: 600;
 }
 .tn-scan-close {
   width: 44px;
@@ -583,12 +742,12 @@ div:has(> .astryx-switch) {
   place-items: center;
   border: 0;
   border-radius: 9999px;
-  background: var(--pleos-static-light-400);
-  color: var(--pleos-static-light-100);
+  background: var(--tn-press-overlay);
+  color: var(--tn-text-primary);
   cursor: pointer;
 }
 .tn-scan-close:focus-visible {
-  outline: 2px solid var(--pleos-static-light-100);
+  outline: 2px solid var(--tn-text-primary);
   outline-offset: 2px;
 }
 .tn-scan-frame {
@@ -599,90 +758,100 @@ div:has(> .astryx-switch) {
   width: min(68vw, 300px);
   aspect-ratio: 1;
   transform: translate(-50%, -50%);
-  border: 3px solid var(--pleos-static-light-200);
+  border: 3px solid var(--tn-text-primary);
   border-radius: var(--radius-container);
   /* not elevation: a spread with no blur dims everything outside the guide square */
-  box-shadow: 0 0 0 100vmax var(--pleos-static-dark-400);
+  box-shadow: 0 0 0 100vmax var(--tn-overlay);
 }
 .tn-scan-msg {
   margin: 0;
-  color: var(--pleos-static-light-100); /* the app's text colour is dark; this screen is always on the camera */
+  color: var(--tn-text-primary);
   text-align: center;
   font-size: 15px;
-  line-height: 1.5;
+  line-height: 23px;
   word-break: keep-all;
 }
 .tn-scan-msg.is-warn {
-  font-weight: 700; /* a hint to act on: weight, not a hue */
+  font-weight: 600; /* a hint to act on: weight, not a hue */
 }
+/* The screen's one action (다시 시도): a main button L. */
 .tn-scan-retry {
   min-height: 48px;
   padding: 0 24px;
   border: 0;
   border-radius: 14px;
-  background: var(--pleos-static-light-100);
-  color: var(--pleos-static-dark-100);
+  background: var(--tn-accent);
+  color: var(--tn-on-accent);
   font: inherit;
-  font-size: 16px;
+  font-size: 17px;
+  line-height: 21px;
   font-weight: 700;
   cursor: pointer;
 }
+.tn-scan-retry:active {
+  background: var(--tn-accent-pressed);
+}
 .tn-scan-retry:focus-visible {
-  outline: 2px solid var(--pleos-static-light-100);
+  outline: 2px solid var(--tn-text-primary);
   outline-offset: 3px;
 }
 
 /*
- * Quiet status tag (components/shell/Tag.tsx), the car's Tag at phone scale: 22 tall, radius 7, Label S bold in ink on
- * dim/dark/primary — the same face for every tone. The tone is a 6px dot in front: informative/active (ok),
- * informative/positive (accent), informative/negative (error), ink for a caution (warn — the system has no warning
- * hue). `ink` and `neutral` carry no dot; `neutral` reads one step quieter.
+ * Status tag (components/shell/Tag.tsx): 22 tall, radius 8, caption 12 on a washed tint with text of the same hue, no
+ * dot — info accent-weak / accent-text, done ok positive-weak / positive, late or conflict negative-weak /
+ * negative-text, neutral fill-weak / text-secondary, a firm choice (ink) fill-weak / text-primary. The one dot is
+ * 'check this' (warn): an orange warning dot before ink text on warning-weak. The words always carry the meaning.
  */
 .tn-tag {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
   height: 22px;
-  padding: 0 7px;
-  border-radius: 7px;
+  padding: 0 8px;
+  border-radius: 8px;
   font-size: 12px;
-  line-height: 16px;
-  font-weight: 700;
+  line-height: 17px;
+  font-weight: 500;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
-  background: var(--pleos-dim-dark-primary);
-  color: var(--color-text-primary);
+  background: var(--color-neutral);
+  color: var(--tn-text-primary);
 }
 .tn-tag.is-neutral {
-  color: var(--color-text-secondary);
+  color: var(--tn-text-secondary);
 }
-.tn-tag.is-accent::before,
-.tn-tag.is-warn::before,
-.tn-tag.is-ok::before,
-.tn-tag.is-error::before {
+.tn-tag.is-accent {
+  background: var(--tn-accent-weak);
+  color: var(--tn-accent-text);
+}
+.tn-tag.is-ok {
+  background: var(--tn-positive-weak);
+  color: var(--tn-positive);
+}
+.tn-tag.is-error {
+  background: var(--tn-negative-weak);
+  color: var(--tn-negative-text);
+}
+.tn-tag.is-warn {
+  background: var(--tn-warning-weak);
+  color: var(--tn-text-primary);
+}
+.tn-tag.is-warn::before {
   content: '';
   flex: none;
   width: 6px;
   height: 6px;
   border-radius: 9999px;
-  background: var(--color-text-primary);
-}
-.tn-tag.is-accent::before {
-  background: var(--pleos-informative-positive);
-}
-.tn-tag.is-ok::before {
-  background: var(--pleos-informative-active);
-}
-.tn-tag.is-error::before {
-  background: var(--pleos-informative-negative);
+  background: var(--tn-warning);
 }
 
+/* 꼭 (a must-see): the outline pin alone, as an information tag — accent-text on accent-weak. Its label is its name. */
 .tn-tag.is-must {
   justify-content: center;
   width: 22px;
   padding: 0;
-  background: color-mix(in srgb, var(--pleos-informative-negative) 12%, transparent);
-  color: var(--pleos-informative-negative);
+  background: var(--tn-accent-weak);
+  color: var(--tn-accent-text);
 }
 .tn-tag.is-must svg {
   width: 16px;
@@ -691,25 +860,25 @@ div:has(> .astryx-switch) {
 
 /* The saved version (v3) as quiet meta text. */
 .tn-rev {
-  font-size: 14px;
+  font-size: 13px;
   line-height: 20px;
   font-weight: 400;
   font-variant-numeric: tabular-nums;
-  color: var(--color-text-secondary);
+  color: var(--tn-text-tertiary);
   white-space: nowrap;
 }
 
-/* A caution mark before a line that needs fixing: an ink dot (regulation colors are not for this; there is no warning hue). */
+/* A 'check this' mark before a line that needs fixing: the orange warning dot (its words stay ink). */
 .tn-warn-dot {
   display: inline-block;
   flex: none;
   width: 8px;
   height: 8px;
   border-radius: 9999px;
-  background: var(--color-text-primary);
+  background: var(--tn-warning);
 }
 
-/* How-to steps (연결): numbered stops on the dashed route line — the editor's signature, not buttons. */
+/* How-to steps (연결): numbered stops on the dashed hairline rail — the timeline's look, not buttons. */
 .tn-steps {
   margin: 0;
   padding: 0;
@@ -731,26 +900,26 @@ div:has(> .astryx-switch) {
   left: 13px;
   top: 32px;
   bottom: 4px;
-  border-left: 2px dashed var(--pleos-divider-tertiary);
+  border-left: 2px dashed var(--tn-hairline);
 }
 .tn-step-no {
   width: 28px;
   height: 28px;
   border-radius: 9999px;
-  border: 2px solid var(--color-text-primary);
   box-sizing: border-box;
   display: grid;
   place-items: center;
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 600;
   line-height: 1;
   font-variant-numeric: tabular-nums;
-  background: var(--color-background-card);
+  background: var(--color-neutral);
+  color: var(--tn-text-primary);
 }
 .tn-step-text {
   padding-top: 2px;
-  font-size: 16px;
-  line-height: 24px;
+  font-size: 15px;
+  line-height: 23px;
 }
 
 /* 여행 tab notes (install hint, sample notice): stacked, collapse when empty. */

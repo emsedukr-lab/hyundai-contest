@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 떠날지도 colour roles, night theme: design/TOSS.md §2 (dark column). Same names as values/tn_colors.xml. -->
+<resources>
+    <!-- Surfaces -->
+    <color name="tn_canvas">#FF17171C</color>
+    <color name="tn_surface">#FF202027</color>
+    <color name="tn_surface_float">#FF2C2C35</color>
+    <color name="tn_fill_weak">#FF2C2C35</color>
+    <color name="tn_fill_weak_on_canvas">#FF2C2C35</color>
+    <color name="tn_fill_weak_pressed">#FF3C3C47</color>
+    <color name="tn_hairline">#FF3C3C47</color>
+
+    <!-- Text -->
+    <color name="tn_text_primary">#FFFFFFFF</color>
+    <color name="tn_text_secondary">#FFC3C3C6</color>
+    <color name="tn_text_tertiary">#FF9E9EA4</color>
+    <color name="tn_text_disabled">#FF62626D</color>
+
+    <!-- Accent -->
+    <color name="tn_accent">#FF3485FA</color>
+    <color name="tn_accent_pressed">#FF2272EB</color>
+    <color name="tn_on_accent">#FFFFFFFF</color>
+    <color name="tn_accent_text">#FF6AA8FF</color>
+    <color name="tn_accent_weak">#FF202C4D</color>
+
+    <!-- Semantic -->
+    <color name="tn_positive">#FF3CC57A</color>
+    <color name="tn_positive_weak">#FF16302A</color>
+    <color name="tn_negative">#FFF04251</color>
+    <color name="tn_negative_text">#FFFF6B76</color>
+    <color name="tn_negative_weak">#FF3A1F24</color>
+    <color name="tn_warning">#FFFFA552</color>
+    <color name="tn_warning_weak">#FF3A2A1A</color>
+
+    <!-- Controls and layers -->
+    <color name="tn_switch_off">#FF4D4D59</color>
+    <color name="tn_toast">#FF3C3C47</color>
+    <color name="tn_overlay">#8F000000</color>
+    <color name="tn_press_overlay">#1FFFFFFF</color>          <!-- white 12% -->
+
+    <!-- QR: the same at night (24-7) -->
+    <color name="tn_qr_background">#FFFFFFFF</color>
+    <color name="tn_qr_module">#FF000000</color>
+
+    <!-- Car-only derived roles (see values/tn_colors.xml) -->
+    <color name="tn_fill_weak_on_canvas_pressed">#FF3C3C47</color>
+    <color name="tn_fill_weak_on_float">#FF3C3C47</color>
+    <color name="tn_fill_weak_on_float_pressed">#FF4D4D59</color>
+    <color name="tn_switch_knob">#FFFFFFFF</color>
+    <color name="tn_shadow_1">#140E142A</color>
+    <color name="tn_shadow_3">#290E142A</color>
+</resources>

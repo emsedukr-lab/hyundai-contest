@@ -1,6 +1,6 @@
 /*
- * Snackbar with 되돌리기 (M36 editor, shared M52), above the bottom action or the tab bar — `ivi_toast_popup` × 0.6:
- * basic/600 face with basic/00 text (the theme's accent pair, which flips in the dark theme), radius 10, no shadow.
+ * Snackbar with 되돌리기 (M36 editor, shared M52), above the bottom action or the tab bar — the toast of
+ * design/TOSS.md: the toast face with white text (both themes), radius 14, the toast shadow; 되돌리기 white and bold.
  */
 .tl-snack {
   position: fixed;
@@ -14,11 +14,12 @@
   align-items: center;
   gap: 2px;
   padding: 4px 4px 4px 16px;
-  border-radius: 10px;
-  background: var(--color-accent);
-  color: var(--color-on-accent);
-  font-size: 14px;
-  line-height: 20px;
+  border-radius: 14px;
+  background: var(--tn-toast);
+  color: var(--tn-on-accent);
+  box-shadow: var(--tn-shadow-toast);
+  font-size: 15px;
+  line-height: 23px;
 }
 .tl-snack-text {
   flex: 1 1 auto;
@@ -33,7 +34,7 @@
   flex: none;
   min-height: 44px;
   border: 0;
-  border-radius: 7px;
+  border-radius: 8px;
   background: transparent;
   color: inherit;
   font: inherit;
@@ -42,8 +43,6 @@
 .tl-snack-action {
   padding: 0 10px;
   font-weight: 700;
-  text-decoration: underline;
-  text-underline-offset: 3px;
 }
 .tl-snack-close {
   width: 44px;
@@ -54,8 +53,11 @@
   width: 20px;
   height: 20px;
 }
+.tl-snack button:active {
+  background: var(--tn-press-overlay);
+}
 .tl-snack button:focus-visible {
-  outline: 2px solid var(--color-on-accent);
+  outline: 2px solid var(--tn-on-accent);
   outline-offset: -3px;
 }
 .tl-snack.is-tab {

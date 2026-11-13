@@ -7,7 +7,11 @@ plugins {
     id("org.jetbrains.kotlin.plugin.serialization")
 }
 
-/** Copies the official Pleos tokens and font from /design so that folder stays the single source. */
+/**
+ * Copies the official Pleos tokens and the app font from /design so that folder stays the single source. The generated
+ * TextAppearance.Pleos.* styles name the Pleos font; the copy points them at the app font (design/TOSS.md §3: Pretendard),
+ * so the token files themselves stay untouched.
+ */
 abstract class SyncPleosRes : DefaultTask() {
     @get:InputDirectory abstract val designRes: DirectoryProperty
     @get:InputFile abstract val font: RegularFileProperty
@@ -16,8 +20,11 @@ abstract class SyncPleosRes : DefaultTask() {
 
     @TaskAction
     fun run() {
+        val fontRes = "@font/" + font.get().asFile.nameWithoutExtension
         fs.sync {
-            from(designRes)
+            from(designRes) {
+                filesMatching("**/pleos_type.xml") { filter { line -> line.replace(Regex("@font/[a-z0-9_]+"), fontRes) } }
+            }
             from(font) { into("font") }
             into(outputDir)
         }
@@ -26,7 +33,7 @@ abstract class SyncPleosRes : DefaultTask() {
 
 val syncPleosRes = tasks.register<SyncPleosRes>("syncPleosRes") {
     designRes.set(rootProject.layout.projectDirectory.dir("../design/android-res"))
-    font.set(rootProject.layout.projectDirectory.file("../design/fonts/asta_sans.ttf"))
+    font.set(rootProject.layout.projectDirectory.file("../design/fonts/pretendard_variable.ttf"))
     outputDir.set(layout.buildDirectory.dir("generated/pleosRes"))
 }
 
@@ -40,8 +47,8 @@ android {
         applicationId = "io.tteonaljido.car"
         minSdk = 28
         targetSdk = 34
-        versionCode = 6 // Pleos: every review submission needs a new version
-        versionName = "0.6.0"
+        versionCode = 7 // Pleos: every review submission needs a new version
+        versionName = "0.7.0"
     }
     useLibrary("android.car", false)
     buildFeatures {

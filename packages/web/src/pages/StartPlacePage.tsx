@@ -46,9 +46,9 @@ export function StartPlacePage({ slot }: { slot: PresetSlot }) {
               <span className="tn-lead" style={{ background: 'var(--color-background-surface)' }}>
                 <PresetIcon slot={slot} />
               </span>
-              <span style={{ flex: '1 1 auto', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2, fontSize: 16, lineHeight: '24px' }}>
-                {!isHome && <strong style={{ fontWeight: 700 }}>{place.name}</strong>}
-                <span style={isHome ? undefined : { fontSize: 14, lineHeight: '20px', color: 'var(--color-text-secondary)' }}>{place.address}</span>
+              <span style={{ flex: '1 1 auto', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2, fontSize: 15, lineHeight: '23px' }}>
+                {!isHome && <strong style={{ fontWeight: 600 }}>{place.name}</strong>}
+                <span style={isHome ? undefined : { fontSize: 13, lineHeight: '20px', color: 'var(--tn-text-tertiary)' }}>{place.address}</span>
               </span>
               <span style={{ flex: 'none' }}>
                 <Button label={t('editor.home.remove')} variant="ghost" size="sm" onClick={clear} />

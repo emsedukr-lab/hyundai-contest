@@ -63,7 +63,10 @@ export function NextTrip({ doc, sent, overlaps = 0 }: { doc: TripDoc; sent?: Sen
   );
 }
 
-/** The whole-trip route: other days as a quiet dashed line with dots, the day ahead solid ink with numbered stops. */
+/**
+ * The whole-trip route (design/TOSS.md §5 지도): other days as a quiet text-disabled dashed line with dots, the day
+ * ahead an accent line on a white casing with accent number circles.
+ */
 function RouteDrawing({ sketch, focusDay, name }: { sketch: TripSketch; focusDay: number | null; name: string }) {
   const line = (d: TripSketch['days'][number]) => [...(d.from ? [d.from] : []), ...d.points].map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
   const quiet = sketch.days.filter((d) => d.dayIndex !== focusDay);
@@ -76,6 +79,7 @@ function RouteDrawing({ sketch, focusDay, name }: { sketch: TripSketch; focusDay
       {quiet.flatMap((d) => d.points.map((p, i) => <circle key={`q${d.dayIndex}-${i}`} className={p.kind === 'lodging' ? 'tn-next-lodging' : 'tn-next-dot'} cx={p.x} cy={p.y} r={p.kind === 'lodging' ? 3.5 : 3} />))}
       {focus && (
         <>
+          <polyline className="tn-next-casing" points={line(focus)} />
           <polyline className="tn-next-focus" points={line(focus)} />
           {focus.points.map((p, i) =>
             p.kind === 'lodging' ? (

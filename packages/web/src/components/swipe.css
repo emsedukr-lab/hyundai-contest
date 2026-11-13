@@ -1,6 +1,6 @@
 /*
- * Swipe to remove (M36, shared M52): the card slides left over the action it reveals. The action is the filled
- * graphite face of a main button (button/filled), not a hue — removing is an action, not an error state (M58).
+ * Swipe to remove (M36, shared M52): the card slides left over the action it reveals. The revealed face is the
+ * destructive fill of design/TOSS.md §5 — negative with white text — the same as a destructive confirm.
  */
 .tl-swipe {
   position: relative;
@@ -14,7 +14,7 @@
   display: none;
   justify-content: flex-end;
   align-items: stretch;
-  background: var(--color-accent);
+  background: var(--tn-negative);
   border-radius: var(--radius-container);
 }
 .tl-swipe.is-open .tl-swipe-back {
@@ -24,20 +24,21 @@
   width: 88px;
   border: 0;
   background: transparent;
-  color: var(--color-on-accent);
+  color: var(--tn-on-accent);
   font: inherit;
-  font-size: 16px;
-  font-weight: 700;
+  font-size: 15px;
+  line-height: 19px;
+  font-weight: 600;
   cursor: pointer;
 }
 .tl-swipe-action:focus-visible {
-  outline: 2px solid var(--color-on-accent);
+  outline: 2px solid var(--tn-on-accent);
   outline-offset: -4px;
 }
 .tl-swipe-card {
   margin: 0;
   touch-action: pan-y;
-  transition: transform 160ms ease-out;
+  transition: transform 200ms var(--tn-ease);
 }
 @media (prefers-reduced-motion: reduce) {
   .tl-swipe-card {
@@ -62,7 +63,7 @@
   border-radius: 0;
 }
 .tn-row-swipe-card {
-  background: var(--color-background-card);
+  background: var(--tn-surface);
 }
 .tl-swipe-card a {
   -webkit-user-drag: none;

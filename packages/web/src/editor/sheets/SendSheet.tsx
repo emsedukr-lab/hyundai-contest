@@ -49,7 +49,7 @@ export function SendSheet({ isOpen, onClose, plan, home, dayIndex, mode }: { isO
               <h3 className="tl-sheet-section">{t('tl.sendChecks')}</h3>
               <ul className="tl-steps" style={{ listStyle: 'disc' }}>
                 {checks.map((w) => (
-                  <li key={w.text} className="tl-warn-text" style={{ fontSize: 14 }}>
+                  <li key={w.text} className="tl-warn-text" style={{ fontSize: 13 }}>
                     {w.text}
                   </li>
                 ))}

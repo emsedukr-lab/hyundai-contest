@@ -2,7 +2,6 @@ package io.tteonaljido.car.ui.screens
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -41,12 +40,14 @@ import io.tteonaljido.car.R
 import io.tteonaljido.car.ui.components.Dot
 import io.tteonaljido.car.ui.components.Icon
 import io.tteonaljido.car.ui.components.MustTag
+import io.tteonaljido.car.ui.components.OnSurface
 import io.tteonaljido.car.ui.components.PleosCard
 import io.tteonaljido.car.ui.components.PleosText
 import io.tteonaljido.car.ui.components.Radius
 import io.tteonaljido.car.ui.components.Space
 import io.tteonaljido.car.ui.components.Tag
 import io.tteonaljido.car.ui.components.Tone
+import io.tteonaljido.car.ui.components.weakFace
 import io.tteonaljido.car.ui.theme.Pleos
 import io.tteonaljido.trip.Endpoint
 import io.tteonaljido.trip.Importance
@@ -59,9 +60,10 @@ import io.tteonaljido.trip.zoneOrUtc
 import java.util.Locale
 
 /*
- * One day of the trip in the car (M55), drawn like the phone's editor timeline (M51): a dashed route rail with markers
- * (start dot, numbered stops, bed or flag), slim one-line bars for where the day starts and ends, two-line stop cards
- * (name and 꼭 / time range and stay), and '↓ 15분' between them. Read-only here: the plan is edited on the phone.
+ * One day of the trip in the car (M55), drawn like the phone's editor timeline (M51): a dashed `hairline` route rail
+ * with markers (ink start dot, numbered stops and bed or flag on faint circles), slim one-line bars for where the day
+ * starts and ends, two-line stop cards (name and 꼭 / time range and stay), and '↓ 15분' between them (TOSS.md §5
+ * 타임라인). Read-only here: the plan is edited on the phone.
  */
 
 /** The rail column is an icon button wide (80), its markers 48 — the design system's icon sizes. */
@@ -83,8 +85,8 @@ internal fun durationLabel(min: Int): String = when {
 fun DayHeading(t: LocalTrip, day: Int) {
     val d = t.view.days[day - 1]
     val s = remember(t, day) { TripOverview.daySummary(t.view, t.overlay, day) }
-    val primary = colorResource(R.color.pleos_text_dark_primary)
-    val secondary = colorResource(R.color.pleos_text_dark_secondary)
+    val primary = colorResource(R.color.tn_text_primary)
+    val secondary = colorResource(R.color.tn_text_secondary)
     val km = s.driveMetres
     val drive = when {
         s.driveMinutes <= 0 -> null
@@ -135,7 +137,7 @@ fun DayTimeline(t: LocalTrip, day: Int, live: LiveView?) {
     val endAt = TripValidator.dayEnd(plan, day, t.overlay)
 
     Column(Modifier.fillMaxWidth()) {
-        RailRow(top = false, marker = { Marker(fill = colorResource(R.color.pleos_icon_dark_primary), size = Space.x32) }) {
+        RailRow(top = false, marker = { Marker(fill = colorResource(R.color.tn_text_primary), size = Space.x32) }) {
             Bar(
                 stringResource(R.string.tl_start), startName,
                 startAt?.let { stringResource(R.string.tl_depart_at, TripValidator.hhmm(it)) } ?: stringResource(R.string.tl_depart_free),
@@ -160,7 +162,7 @@ fun DayTimeline(t: LocalTrip, day: Int, live: LiveView?) {
                         Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.x12)) {
                             PleosText(
                                 TripValidator.placeName(plan, v.placeRef), Pleos.type.bodyLargeStrong,
-                                colorResource(if (done) R.color.pleos_text_dark_secondary else R.color.pleos_text_dark_primary),
+                                colorResource(if (done) R.color.tn_text_secondary else R.color.tn_text_primary),
                                 Modifier.weight(1f, fill = false), maxLines = 1,
                             )
                             if (v.importance == Importance.MUST) MustTag(stringResource(R.string.tl_must))
@@ -168,24 +170,24 @@ fun DayTimeline(t: LocalTrip, day: Int, live: LiveView?) {
                         status?.let { (text, tone) -> Tag(text, tone) }
                     }
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.x8)) {
-                        // A fixed time is marked by the lock and the bold time — weight, not color.
-                        val fixedColor = colorResource(R.color.pleos_text_dark_primary)
-                        if (v.fixed != null) Icon(R.drawable.ic_lock, Space.x32, colorResource(R.color.pleos_icon_dark_primary))
+                        // A fixed time is marked by the lock and the bold time in `accent-text` (TOSS.md §5 타임라인).
+                        val fixedColor = colorResource(R.color.tn_accent_text)
+                        if (v.fixed != null) Icon(R.drawable.ic_lock, Space.x32, fixedColor)
                         val start = time?.start
                         val end = time?.end
                         if (start != null) {
                             val range = if (end != null) stringResource(R.string.tl_range, TripValidator.hhmm(start), TripValidator.hhmm(end)) else TripValidator.hhmm(start)
-                            val ink = if (v.fixed != null) fixedColor else colorResource(R.color.pleos_text_dark_primary)
+                            val ink = if (v.fixed != null) fixedColor else colorResource(R.color.tn_text_primary)
                             BasicText(
                                 buildAnnotatedString {
                                     withStyle(SpanStyle(fontWeight = FontWeight.Bold, color = ink)) { append(range) }
                                     append(" · "); append(durationLabel(v.stayMinutes))
                                 },
-                                style = Pleos.type.bodyMedium.copy(fontWeight = FontWeight.Normal, color = colorResource(R.color.pleos_text_dark_secondary)),
+                                style = Pleos.type.bodyMedium.copy(fontWeight = FontWeight.Normal, color = colorResource(R.color.tn_text_secondary)),
                                 maxLines = 1, overflow = TextOverflow.Ellipsis,
                             )
                         } else {
-                            PleosText(stringResource(R.string.time_check) + " · " + durationLabel(v.stayMinutes), Pleos.type.bodyMediumNormal, colorResource(R.color.pleos_text_dark_secondary), maxLines = 1)
+                            PleosText(stringResource(R.string.time_check) + " · " + durationLabel(v.stayMinutes), Pleos.type.bodyMediumNormal, colorResource(R.color.tn_text_secondary), maxLines = 1)
                         }
                     }
                     // Only when the live time differs from the plan: the same number twice is noise.
@@ -216,7 +218,7 @@ private fun clock(ms: Long, zone: java.time.ZoneId) =
 /** A row on the route: the rail column (dashed line + marker) and the content beside it. */
 @Composable
 private fun RailRow(top: Boolean = true, bottom: Boolean = true, marker: (@Composable () -> Unit)?, content: @Composable () -> Unit) {
-    val line = colorResource(R.color.pleos_divider_tertiary)
+    val line = colorResource(R.color.tn_hairline)
     val markerTop = MARKER_TOP
     val markerSize = MARKER
     val dashLength = Space.x8
@@ -241,55 +243,60 @@ private fun RailRow(top: Boolean = true, bottom: Boolean = true, marker: (@Compo
     }
 }
 
+/** The start dot (a solid ink [fill]) or the bed / flag on a faint circle, icon in `text-secondary`. */
 @Composable
 private fun Marker(fill: androidx.compose.ui.graphics.Color? = null, @DrawableRes icon: Int? = null, size: Dp = MARKER) {
-    val ring = colorResource(R.color.pleos_divider_tertiary)
     Box(
         Modifier
             .size(size)
             .clip(CircleShape)
-            .background(fill ?: colorResource(R.color.pleos_surface_basic))
-            .then(if (fill == null) Modifier.border(Space.x4, ring, CircleShape) else Modifier),
+            .background(fill ?: weakFace()),
         contentAlignment = Alignment.Center,
     ) {
-        if (icon != null) Icon(icon, Space.x32, colorResource(R.color.pleos_icon_dark_secondary))
+        if (icon != null) Icon(icon, Space.x32, colorResource(R.color.tn_text_secondary))
     }
 }
 
+/**
+ * A stop's number on a faint circle in `text-primary`; a stop already visited or skipped steps back to `text-secondary`
+ * (TOSS.md keeps `text-tertiary` for white faces, and this circle sits on the canvas).
+ */
 @Composable
 private fun NumberMarker(n: Int, done: Boolean) {
     Box(
         Modifier
             .size(MARKER)
             .clip(CircleShape)
-            .background(colorResource(if (done) R.color.pleos_surface_high else R.color.pleos_surface_basic))
-            .border(Space.x4, colorResource(if (done) R.color.pleos_divider_secondary else R.color.pleos_icon_dark_primary), CircleShape),
+            .background(weakFace()),
         contentAlignment = Alignment.Center,
     ) {
-        PleosText("$n", Pleos.type.label, colorResource(if (done) R.color.pleos_text_dark_tertiary else R.color.pleos_text_dark_primary), maxLines = 1)
+        PleosText("$n", Pleos.type.label, colorResource(if (done) R.color.tn_text_secondary else R.color.tn_text_primary), maxLines = 1)
     }
 }
 
 /** [출발]/[숙소]/[귀가] name … 09:30 출발 — one slim line (phone M51). */
 @Composable
 private fun Bar(tag: String, name: String, time: String?, quietTime: Boolean = false, quietName: Boolean = false) {
-    val secondary = colorResource(R.color.pleos_text_dark_secondary)
+    val secondary = colorResource(R.color.tn_text_secondary)
+    val primary = colorResource(R.color.tn_text_primary)
     val shape = androidx.compose.foundation.shape.RoundedCornerShape(Radius.r24)
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .padding(vertical = Space.x8)
-            .heightIn(min = dimensionResource(R.dimen.pleos_buttons_basic_medium_height))
-            .clip(shape)
-            .background(colorResource(R.color.pleos_surface_basic))
-            .border(dimensionResource(R.dimen.pleos_page_navigation_border_bottom), colorResource(R.color.pleos_divider_secondary), shape)
-            .padding(horizontal = Space.x24, vertical = Space.x16),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(Space.x16),
-    ) {
-        Tag(tag)
-        PleosText(name, if (quietName) Pleos.type.bodyLarge else Pleos.type.bodyLargeStrong, if (quietName) secondary else colorResource(R.color.pleos_text_dark_primary), Modifier.weight(1f), maxLines = 1)
-        time?.let { PleosText(it, if (quietTime) Pleos.type.bodyMediumNormal else Pleos.type.bodyMedium, if (quietTime) secondary else colorResource(R.color.pleos_text_dark_primary), maxLines = 1) }
+    // A white face on the canvas like a card: no border (TOSS.md §5).
+    OnSurface {
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .padding(vertical = Space.x8)
+                .heightIn(min = dimensionResource(R.dimen.pleos_buttons_basic_medium_height))
+                .clip(shape)
+                .background(colorResource(R.color.tn_surface))
+                .padding(horizontal = Space.x24, vertical = Space.x16),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(Space.x16),
+        ) {
+            Tag(tag)
+            PleosText(name, if (quietName) Pleos.type.bodyLarge else Pleos.type.bodyLargeStrong, if (quietName) secondary else primary, Modifier.weight(1f), maxLines = 1)
+            time?.let { PleosText(it, if (quietTime) Pleos.type.bodyMediumNormal else Pleos.type.bodyMedium, if (quietTime) secondary else primary, maxLines = 1) }
+        }
     }
 }
 
@@ -310,7 +317,7 @@ private fun LegRow(t: LocalTrip, day: Int, k: Int) {
                         metres != null && metres > 0 -> stringResource(R.string.tl_leg_navi_km, durationLabel(leg.minutes), kmLabel(metres))
                         else -> stringResource(R.string.tl_leg_navi, durationLabel(leg.minutes))
                     },
-                    Pleos.type.bodySmall, colorResource(R.color.pleos_text_dark_secondary), maxLines = 1,
+                    Pleos.type.bodySmall, colorResource(R.color.tn_text_secondary), maxLines = 1,
                 )
             }
         }

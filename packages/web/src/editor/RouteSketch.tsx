@@ -6,8 +6,9 @@ import { daySketch } from '../lib/routeSketch';
 
 /**
  * 경로 미리보기 (route sketch): a no-map, inline-SVG overview of a day's route from the places' relative coordinates.
- * Honors the strict CSP — no tiles, no external script, no key. Drawn in ink (`currentColor`) on the container face,
- * so it reads in both themes; the numbers are Label S (12px on screen). Stops without coordinates can't be placed and
+ * Honors the strict CSP — no tiles, no external script, no key. The day's route is the accent line with accent number
+ * circles (design/TOSS.md §5 지도), drawn as `currentColor` on the container face so it reads in both themes; the
+ * numbers are white on the accent, 12px on screen. Stops without coordinates can't be placed and
  * are listed below. Advisory only; it never changes the plan.
  */
 export function RouteSketch({ plan, home, dayIndex }: { plan: Trip; home: Home | null; dayIndex: number }) {
@@ -26,13 +27,13 @@ export function RouteSketch({ plan, home, dayIndex }: { plan: Trip; home: Home |
         viewBox={`0 0 ${s.width} ${s.height}`}
         role="img"
         aria-label={t('sketch.aria', { day: dayIndex })}
-        style={{ width: '100%', height: 'auto', maxHeight: 200, color: 'currentColor' }}>
-        <polyline points={line} fill="none" stroke="currentColor" strokeWidth={0.8} strokeOpacity={0.4} strokeLinejoin="round" strokeLinecap="round" />
+        style={{ width: '100%', height: 'auto', maxHeight: 200, color: 'var(--tn-accent)' }}>
+        <polyline points={line} fill="none" stroke="currentColor" strokeWidth={0.8} strokeLinejoin="round" strokeLinecap="round" />
         {s.nodes.map((n, i) => (
           <g key={i}>
             <circle cx={n.x} cy={n.y} r={n.kind === 'stop' ? 5 : 2.6} style={{ fill: n.kind === 'stop' ? 'currentColor' : 'var(--color-background-card)' }} stroke="currentColor" strokeWidth={0.9} />
             {n.n !== null && (
-              <text x={n.x} y={n.y} fontSize={6} fontWeight={700} textAnchor="middle" dominantBaseline="central" style={{ fill: 'var(--color-background-card)' }}>
+              <text x={n.x} y={n.y} fontSize={6} fontWeight={700} textAnchor="middle" dominantBaseline="central" style={{ fill: 'var(--tn-on-accent)' }}>
                 {n.n}
               </text>
             )}

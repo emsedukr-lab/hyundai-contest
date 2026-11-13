@@ -95,7 +95,7 @@ fun TripsScreen(vm: TripsViewModel, drive: DriveState, demoClock: Boolean, onImp
     val trips by vm.trips.collectAsState()
     val unreadable by vm.unreadable.collectAsState()
     val now by vm.now.collectAsState()
-    val secondary = colorResource(R.color.pleos_text_dark_secondary)
+    val secondary = colorResource(R.color.tn_text_secondary)
     Screen(header = {
         PleosHeader(stringResource(R.string.app_name), stringResource(R.string.trips_subtitle)) {
             PleosButton(stringResource(if (drive.parked) R.string.import_button else R.string.parked_only), onImport, enabled = drive.parked, tag = "import")
@@ -150,14 +150,14 @@ private fun NextTripCard(t: LocalTrip, today: java.time.LocalDate, onClick: () -
     val w = remember(t, today) { TripOverview.tripWhen(t.view.startDate, t.view.endDate, today) }
     val report = remember(t, today) { TripValidator.validate(t.view, t.overlay, today) }
     val sketch = remember(t) { TripOverview.sketch(t.view, 300.0, 240.0, 18.0) }
-    val secondary = colorResource(R.color.pleos_text_dark_secondary)
+    val secondary = colorResource(R.color.tn_text_secondary)
     PleosCard(onClick = onClick, padding = Space.x32, gap = Space.x24) {
         BoxWithConstraints(Modifier.fillMaxWidth()) {
             val wide = maxWidth > dimensionResource(R.dimen.pleos_window_apps_portrait_width)
             val head: @Composable () -> Unit = {
                 Column(verticalArrangement = Arrangement.spacedBy(Space.x8)) {
                     // When it leaves: weight carries the emphasis (no accent color), a past trip steps back to secondary.
-                    PleosText(whenLabel(w), Pleos.type.bodyMedium, if (w is TripWhen.Past) secondary else colorResource(R.color.pleos_text_dark_primary), maxLines = 1)
+                    PleosText(whenLabel(w), Pleos.type.bodyMedium, if (w is TripWhen.Past) secondary else colorResource(R.color.tn_text_primary), maxLines = 1)
                     PleosText(tripTitle(t), Pleos.type.titleLarge, maxLines = 2)
                     PleosText(stringResource(R.string.trip_summary, periodLabel(t.view), nightsLabel(t.view), t.view.places.size), Pleos.type.bodyMediumNormal, secondary, maxLines = 2)
                 }
@@ -175,7 +175,7 @@ private fun NextTripCard(t: LocalTrip, today: java.time.LocalDate, onClick: () -
                     }
                     Spacer(Modifier.weight(1f))
                     PleosText(stringResource(R.string.rev, t.meta.revision), Pleos.type.bodySmall, secondary, maxLines = 1)
-                    Icon(R.drawable.ic_chevron, Space.x40, colorResource(R.color.pleos_icon_dark_tertiary))
+                    Icon(R.drawable.ic_chevron, Space.x40, colorResource(R.color.tn_text_disabled))
                 }
             }
             val drawing: @Composable (Modifier) -> Unit = { m ->
@@ -291,7 +291,7 @@ fun TripDetailScreen(vm: TripsViewModel, localId: String, drive: DriveState, dem
     if (confirmDelete && drive.parked) {
         PleosSystemPopup(
             stringResource(R.string.delete_trip_title), stringResource(R.string.delete_trip_body), stringResource(R.string.delete), { confirmDelete = false; vm.delete(localId); onBack() },
-            cancel = stringResource(R.string.cancel), onCancel = { confirmDelete = false },
+            cancel = stringResource(R.string.cancel), onCancel = { confirmDelete = false }, destructive = true,
         )
     }
 }
@@ -308,7 +308,7 @@ private fun DeleteTrip(onClick: () -> Unit) {
  */
 @Composable
 private fun NaviPlanCard(vm: TripsViewModel, t: LocalTrip, day: Int, now: Long) {
-    val secondary = colorResource(R.color.pleos_text_dark_secondary)
+    val secondary = colorResource(R.color.tn_text_secondary)
     val from = vm.todayIndex(t, now) ?: 1
     val cover = remember(t, from) { NaviMeasure.coverage(t.view, t.overlay, from) }
     // Every order of the day is weighed off the main thread; null while that runs.
@@ -357,7 +357,7 @@ private fun NaviPlanCard(vm: TripsViewModel, t: LocalTrip, day: Int, now: Long) 
 /** 확인할 점: the day's conflicts and open questions, each with its severity in words and a colored dot. */
 @Composable
 private fun ToCheck(vm: TripsViewModel, t: LocalTrip, day: Int, report: io.tteonaljido.trip.ValidationReport) {
-    val secondary = colorResource(R.color.pleos_text_dark_secondary)
+    val secondary = colorResource(R.color.tn_text_secondary)
     PleosCard(gap = Space.x16) {
         PleosText(stringResource(R.string.to_check), Pleos.type.titleSmall)
         val shown = (report.forDay(day) + report.issues.filter { it.dayIndex == null && it.code != "PAST_TRIP" }).filter { it.severity != Severity.INFO }.take(5)
@@ -418,7 +418,7 @@ private fun LiveLines(l: LiveLine, large: Boolean) {
 @Composable
 private fun DrivingTripView(t: LocalTrip, day: Int, live: LiveView?, naviLive: NaviLive?, rest: RestAdvice?) {
     val step = remember(t, day) { NextDestination.of(t.view, t.overlay, day) }
-    val secondary = colorResource(R.color.pleos_text_dark_secondary)
+    val secondary = colorResource(R.color.tn_text_secondary)
     val label = when (val tg = step.target) {
         null -> stringResource(R.string.none)
         is Target.Final -> tg.place?.name ?: stringResource(R.string.home)
@@ -455,7 +455,7 @@ private fun NextPanel(vm: TripsViewModel, t: LocalTrip, day: Int, live: LiveView
             t.view.visits.firstOrNull { it.visitId == id }?.placeRef?.let { ref -> t.view.places.firstOrNull { it.placeRef == ref }?.latE7 } != null
         } >= 2
     }
-    val secondary = colorResource(R.color.pleos_text_dark_secondary)
+    val secondary = colorResource(R.color.tn_text_secondary)
     val home = stringResource(R.string.home)
     val label = when (val tg = step.target) {
         null -> stringResource(R.string.none)
@@ -614,7 +614,7 @@ fun SettingsScreen(
 ) {
     var confirm by remember { mutableStateOf(false) }
     var presend by remember { mutableStateOf(false) }
-    val secondary = colorResource(R.color.pleos_text_dark_secondary)
+    val secondary = colorResource(R.color.tn_text_secondary)
     val on = stringResource(R.string.state_on)
     val off = stringResource(R.string.state_off)
     val body = Pleos.type.bodyMediumNormal
@@ -666,7 +666,7 @@ fun SettingsScreen(
     }
     if (confirm) PleosSystemPopup(
         stringResource(R.string.delete_all_title), stringResource(R.string.delete_all_body), stringResource(R.string.delete), { confirm = false; vm.deleteAll() },
-        cancel = stringResource(R.string.cancel), onCancel = { confirm = false },
+        cancel = stringResource(R.string.cancel), onCancel = { confirm = false }, destructive = true,
     )
     if (presend) PleosSystemPopup(
         stringResource(R.string.presend_demo_title), stringResource(R.string.presend_demo_body), stringResource(R.string.confirm), { presend = false },

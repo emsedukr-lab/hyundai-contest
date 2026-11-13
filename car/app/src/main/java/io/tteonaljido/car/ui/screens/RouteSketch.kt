@@ -23,26 +23,28 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import io.tteonaljido.car.R
 import io.tteonaljido.car.ui.components.Radius
-import io.tteonaljido.car.ui.theme.AstaSans
+import io.tteonaljido.car.ui.components.weakFace
+import io.tteonaljido.car.ui.theme.Pretendard
 import io.tteonaljido.car.ui.theme.Pleos
 import io.tteonaljido.trip.SketchDay
 import io.tteonaljido.trip.TripSketch
 
 /**
- * The whole trip's route on the next-trip card (M55, the phone's M45 drawing): other days as a quiet dashed line with
- * dots, the day ahead solid ink with numbered stops, lodgings as rings. No map tiles, nothing leaves the car.
+ * The whole trip's route on the next-trip card (M55, the phone's M45 drawing), TOSS.md §5 지도·동선 스케치: the day ahead
+ * as a solid `accent` line edged in white with numbered stops, the other days as a `text-disabled` dashed line with
+ * dots, lodgings as rings, on a faint inset. No map tiles, nothing leaves the car.
  */
 @Composable
 fun RouteSketch(sketch: TripSketch, focusDay: Int?, description: String, modifier: Modifier = Modifier) {
-    val quiet = colorResource(R.color.pleos_divider_tertiary)
-    val dot = colorResource(R.color.pleos_text_dark_tertiary)
-    // The day ahead is drawn in ink, the others quietly: emphasis by value, not by a hue.
-    val accent = colorResource(R.color.pleos_icon_dark_primary)
-    val card = colorResource(R.color.pleos_surface_basic)
-    val inset = colorResource(R.color.pleos_dim_dark_primary)
+    val quiet = colorResource(R.color.tn_text_disabled)
+    val dot = colorResource(R.color.tn_text_disabled)
+    val accent = colorResource(R.color.tn_accent)
+    val card = colorResource(R.color.tn_surface)
+    val inset = weakFace()
     val minLabelPx = with(androidx.compose.ui.platform.LocalDensity.current) { Pleos.type.labelSmall.fontSize.toPx() }
     val measurer = rememberTextMeasurer()
-    val label = TextStyle(fontFamily = AstaSans, fontWeight = FontWeight.Bold, color = accent)
+    // Numbers are text: `accent-text` keeps them at 4.5:1 on the white circle.
+    val label = TextStyle(fontFamily = Pretendard, fontWeight = FontWeight.Bold, color = colorResource(R.color.tn_accent_text), fontFeatureSettings = "tnum")
     Canvas(
         modifier
             .aspectRatio((sketch.width / sketch.height).toFloat())
@@ -69,6 +71,8 @@ fun RouteSketch(sketch: TripSketch, focusDay: Int?, description: String, modifie
             }
         }
         focus?.let { d ->
+            // The white edge lifts the day ahead off the quiet lines it crosses.
+            drawPath(line(d), card, style = Stroke(4.5f * s, cap = StrokeCap.Round, join = StrokeJoin.Round))
             drawPath(line(d), accent, style = Stroke(2.5f * s, cap = StrokeCap.Round, join = StrokeJoin.Round))
             d.points.forEach { p ->
                 val c = at(p.x, p.y)

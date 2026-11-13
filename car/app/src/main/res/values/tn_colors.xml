@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  떠날지도 colour roles, day theme: design/TOSS.md §2 (Toss visual language), the single source of these values.
+  Night values are in values-night/tn_colors.xml. Code uses only @color/tn_* (no hex in Kotlin).
+  Sizes, radii and type sizes stay Pleos (@dimen/pleos_*, TextAppearance.Pleos.*).
+-->
+<resources>
+    <!-- Surfaces -->
+    <color name="tn_canvas">#FFF2F4F6</color>                 <!-- screen background (grey-100) -->
+    <color name="tn_surface">#FFFFFFFF</color>                <!-- cards, containers -->
+    <color name="tn_surface_float">#FFFFFFFF</color>          <!-- popups -->
+    <color name="tn_fill_weak">#FFF2F4F6</color>              <!-- secondary button, segment track, neutral tag (on a white surface) -->
+    <color name="tn_fill_weak_on_canvas">#FFE5E8EB</color>    <!-- the same faint face placed straight on the canvas -->
+    <color name="tn_fill_weak_pressed">#FFE5E8EB</color>      <!-- secondary button / row pressed -->
+    <color name="tn_hairline">#FFE5E8EB</color>               <!-- dividers, rails, remaining step bars (grey-200) -->
+
+    <!-- Text -->
+    <color name="tn_text_primary">#FF191F28</color>           <!-- grey-900 -->
+    <color name="tn_text_secondary">#FF4E5968</color>         <!-- grey-700 -->
+    <color name="tn_text_tertiary">#FF6B7684</color>          <!-- grey-600: on white surfaces only -->
+    <color name="tn_text_disabled">#FFB0B8C1</color>          <!-- grey-400: chevrons, quiet route lines -->
+
+    <!-- Accent: the one emphasis colour (Toss blue) -->
+    <color name="tn_accent">#FF3182F6</color>                 <!-- blue-500: main button, selection, switch on, progress -->
+    <color name="tn_accent_pressed">#FF1B64DA</color>
+    <color name="tn_on_accent">#FFFFFFFF</color>              <!-- main button label (3.7:1, car labels are 26sp bold or larger) -->
+    <color name="tn_accent_text">#FF1065CC</color>            <!-- blue text: info tags, fixed times -->
+    <color name="tn_accent_weak">#FFE8F3FF</color>            <!-- blue-50: info tag face -->
+
+    <!-- Semantic: only when it means something -->
+    <color name="tn_positive">#FF007738</color>
+    <color name="tn_positive_weak">#FFE6F4EA</color>
+    <color name="tn_negative">#FFF04452</color>               <!-- red-500: error dots and icons -->
+    <color name="tn_negative_text">#FFD22030</color>
+    <color name="tn_negative_weak">#FFFFEEEE</color>
+    <color name="tn_warning">#FFFF8800</color>                <!-- needs-a-look dots only, never text -->
+    <color name="tn_warning_weak">#FFFFF3E0</color>
+
+    <!-- Controls and layers -->
+    <color name="tn_switch_off">#FFD1D6DB</color>             <!-- grey-300 -->
+    <color name="tn_toast">#FF191F28</color>
+    <color name="tn_overlay">#8F000000</color>                <!-- black 56% behind popups -->
+    <color name="tn_press_overlay">#42000000</color>          <!-- black 26% over photos/maps -->
+
+    <!-- QR: white quiet zone, black modules, never inverted at night (spec 24-7) -->
+    <color name="tn_qr_background">#FFFFFFFF</color>
+    <color name="tn_qr_module">#FF000000</color>
+
+    <!--
+      Car-only roles derived from TOSS.md rules (values taken from the same Toss grey ladder):
+      a faint face one step off whatever it sits on (§2 fill-weak-on-canvas), pressed one step darker (§1),
+      the switch knob is white in both themes (§5), shadows are low-alpha navy on Pleos Level1/Level3 offsets (§4).
+    -->
+    <color name="tn_fill_weak_on_canvas_pressed">#FFD1D6DB</color>
+    <color name="tn_fill_weak_on_float">#FFF2F4F6</color>
+    <color name="tn_fill_weak_on_float_pressed">#FFE5E8EB</color>
+    <color name="tn_switch_knob">#FFFFFFFF</color>
+    <color name="tn_shadow_1">#140E142A</color>               <!-- navy 8%: selected segment, switch knob -->
+    <color name="tn_shadow_3">#290E142A</color>               <!-- navy 16%: popups -->
+</resources>

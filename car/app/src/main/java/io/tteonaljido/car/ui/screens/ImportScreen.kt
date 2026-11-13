@@ -49,6 +49,7 @@ import io.tteonaljido.car.ui.components.StepHeader
 import io.tteonaljido.car.ui.components.Tag
 import io.tteonaljido.car.ui.components.Tone
 import io.tteonaljido.car.ui.components.PleosHeader
+import io.tteonaljido.car.ui.components.weakFace
 import io.tteonaljido.car.ui.issueText
 import io.tteonaljido.car.ui.theme.Pleos
 import io.tteonaljido.pairing.CarHandoffMachine
@@ -109,7 +110,7 @@ fun ImportScreen(vm: ImportViewModel, drive: DriveState, onClose: () -> Unit, on
     val review by vm.review.collectAsState()
     val now by vm.now.collectAsState()
     val offline by vm.offline.collectAsState()
-    val secondary = colorResource(R.color.pleos_text_dark_secondary)
+    val secondary = colorResource(R.color.tn_text_secondary)
     val hideable = state is HandoffState.ShowingQr || state is HandoffState.Claimed || state is HandoffState.Review
     // The phone's connect steps (QR → code → approve → done). An ended session keeps the step it stopped at.
     var lastStep by remember { mutableIntStateOf(1) }
@@ -147,7 +148,7 @@ fun ImportScreen(vm: ImportViewModel, drive: DriveState, onClose: () -> Unit, on
                 val side = if (wide) minOf(maxHeight * 0.85f, 600.dp) else minOf(maxWidth * 0.7f, 520.dp)
                 val qr: @Composable () -> Unit = {
                     // QR on a white container like the phone's connect screen (no intrinsic sizing: QrImage subcomposes).
-                    Box(Modifier.clip(RoundedCornerShape(Radius.r24)).background(colorResource(R.color.pleos_static_light_100)).padding(Space.x24)) {
+                    Box(Modifier.clip(RoundedCornerShape(Radius.r24)).background(colorResource(R.color.tn_qr_background)).padding(Space.x24)) {
                         QrImage(s.qrUrl, side, Modifier.size(side))
                     }
                 }
@@ -170,7 +171,7 @@ fun ImportScreen(vm: ImportViewModel, drive: DriveState, onClose: () -> Unit, on
                 Tag(stringResource(R.string.phone_connected), Tone.OK, large = true)
                 // The phone's grey code box: label over the big code.
                 Column(
-                    Modifier.fillMaxWidth().clip(RoundedCornerShape(Radius.r24)).background(colorResource(R.color.pleos_dim_dark_primary)).padding(horizontal = Space.x40, vertical = Space.x32),
+                    Modifier.fillMaxWidth().clip(RoundedCornerShape(Radius.r24)).background(weakFace()).padding(horizontal = Space.x40, vertical = Space.x32),
                     verticalArrangement = Arrangement.spacedBy(Space.x8),
                 ) {
                     PleosText(stringResource(R.string.confirm_code), Pleos.type.bodyMedium, secondary, maxLines = 1)
@@ -223,7 +224,7 @@ fun SeverityLine(severity: Severity, text: String) {
 @Composable
 private fun ReviewCard(r: ReviewData, code: String, vm: ImportViewModel) {
     val t = r.transfer.trip
-    val secondary = colorResource(R.color.pleos_text_dark_secondary)
+    val secondary = colorResource(R.color.tn_text_secondary)
     val body = Pleos.type.bodyMediumNormal
     val fixed = t.visits.count { it.fixed != null }
     val unassigned = t.visits.count { it.unassignedReason != null }

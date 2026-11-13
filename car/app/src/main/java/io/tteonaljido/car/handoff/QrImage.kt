@@ -49,8 +49,8 @@ fun QrImage(text: String, maxSize: Dp, modifier: Modifier = Modifier) {
             return@BoxWithConstraints
         }
         val side = with(density) { (px * matrix.width).toDp() }
-        val white = colorResource(R.color.pleos_static_light_100)
-        val black = colorResource(R.color.pleos_static_dark_100)
+        val white = colorResource(R.color.tn_qr_background)
+        val black = colorResource(R.color.tn_qr_module)
         val description = androidx.compose.ui.res.stringResource(R.string.qr_description)
         Box(Modifier.size(side).background(white).semantics { contentDescription = description }) {
             Canvas(Modifier.size(side)) {

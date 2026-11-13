@@ -1,9 +1,11 @@
 /*
  * The editor's day timeline: start → (travel → stop)… → add → travel → lodging/home, top to bottom.
- * A 32px rail on the left carries the route (dashed between places) and each node's marker; cards sit to its right.
- * Cards are the app's container (surface/basic, a 1px divider/secondary outline, radius 19, no shadow). A problem
- * marks its own card: an error draws the outline in informative/negative, a caution is a bold ink line with an ink dot.
- * Colors come from the theme variables and the --pleos-* tokens in shell.css; pressed = dim/dark/secondary.
+ * A 32px rail on the left carries the route (a hairline dash between places) and each node's marker — number circles
+ * on the weak fill; cards sit to its right. Cards are white surfaces on the canvas (radius 20, no border, no shadow —
+ * the 1px edge stays, transparent, so nothing moves). A problem marks its own card: an error draws a 1.5px negative
+ * edge, a caution is a 600 ink line behind the orange warning dot. A fixed time is the lock and the time in
+ * accent-text. Colors come from the theme variables and the --tn-* roles in shell.css (design/TOSS.md);
+ * pressed = fill-weak-pressed.
  */
 .tl {
   display: flex;
@@ -29,7 +31,7 @@
   top: 0;
   bottom: 0;
   left: 50%;
-  border-left: 2px dashed var(--pleos-divider-tertiary);
+  border-left: 2px dashed var(--tn-hairline);
   transform: translateX(-1px);
 }
 .tl-row.is-first .tl-rail::before {
@@ -48,13 +50,13 @@
   border-radius: 9999px;
   display: grid;
   place-items: center;
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 600;
   line-height: 1;
   font-variant-numeric: tabular-nums;
-  background: var(--color-background-body);
-  color: var(--color-text-primary);
-  border: 2px solid var(--color-text-primary);
+  background: var(--tn-fill-weak-on-canvas);
+  color: var(--tn-text-primary);
+  border: 0;
   box-sizing: border-box;
 }
 .tl-marker svg {
@@ -62,14 +64,13 @@
   height: 16px;
 }
 .tl-marker.is-accent {
-  border-color: var(--color-accent);
-  background: var(--color-accent);
-  color: var(--color-on-accent);
+  background: var(--tn-accent);
+  color: var(--tn-on-accent);
 }
-/* A caution on a stop keeps the ink marker; the words on its card say what to check. */
+/* A caution on a stop: the 'check this' face (warning-weak, ink number); the words on its card say what to check. */
 .tl-marker.is-warn {
-  border-color: var(--color-text-primary);
-  color: var(--color-text-primary);
+  background: var(--tn-warning-weak);
+  color: var(--tn-text-primary);
 }
 
 /* Cards: start, stop, lodging/home. The whole text area is one button; handle and menu sit beside it. */
@@ -81,13 +82,13 @@
   margin: 4px 0;
   border-radius: var(--radius-container);
   background: var(--color-background-card);
-  border: 1px solid var(--pleos-divider-secondary);
+  border: 1px solid transparent;
 }
-/* An error: the outline in informative/negative, 2px (a 1px line inside the border, so nothing shifts). */
+/* An error: a 1.5px negative edge (the 1px border plus a half-pixel line inside it, so nothing shifts). */
 .tl-card.is-error {
-  border-color: var(--color-error);
-  outline: 1px solid var(--color-error);
-  outline-offset: -2px;
+  border-color: var(--tn-negative);
+  outline: 0.5px solid var(--tn-negative);
+  outline-offset: -1.5px;
 }
 .tl-card-main {
   flex: 1 1 auto;
@@ -103,28 +104,28 @@
   text-align: left;
   cursor: pointer;
   border-radius: calc(var(--radius-container) - 1px);
-  transition: background-color 120ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: background-color 120ms var(--tn-ease);
 }
 .tl-card-main:active {
-  background: var(--pleos-dim-dark-secondary);
+  background: var(--tn-fill-weak-pressed);
 }
 .tl-card-main:focus-visible,
 .tl-leg:focus-visible,
 .tl-handle:focus-visible,
 .tl-title:focus-visible {
-  outline: 2px solid var(--color-accent);
+  outline: 2px solid var(--tn-accent);
   outline-offset: 2px;
 }
 .tl-kicker {
-  font-size: 14px;
+  font-size: 13px;
   line-height: 20px;
   font-weight: 400;
-  color: var(--color-text-secondary);
+  color: var(--tn-text-secondary);
 }
 .tl-name {
   font-size: 17px;
-  line-height: 24px;
-  font-weight: 700;
+  line-height: 25px;
+  font-weight: 600;
 }
 .tl-name-row {
   display: flex;
@@ -133,29 +134,30 @@
   gap: 4px 8px;
 }
 .tl-line {
-  font-size: 16px;
-  line-height: 24px;
+  font-size: 15px;
+  line-height: 23px;
   font-variant-numeric: tabular-nums;
 }
+/* Meta on a white card: tertiary. */
 .tl-meta {
-  font-size: 14px;
+  font-size: 13px;
   line-height: 20px;
-  color: var(--color-text-secondary);
+  color: var(--tn-text-tertiary);
   font-variant-numeric: tabular-nums;
 }
 /* A phone-only note on a card (memo, check-in/out): quiet grey under the card's facts. */
 .tl-memo {
-  font-size: 14px;
+  font-size: 13px;
   line-height: 20px;
-  color: var(--color-text-secondary);
+  color: var(--tn-text-secondary);
   white-space: pre-wrap;
 }
-/* A caution: bold ink, and on a card an ink dot in front (the tone mark of the tags). */
+/* A caution ('check this'): ink at 600, and on a card the orange warning dot in front (its words stay ink). */
 .tl-warn-text {
-  font-size: 14px;
+  font-size: 13px;
   line-height: 20px;
-  font-weight: 700;
-  color: var(--color-text-primary);
+  font-weight: 600;
+  color: var(--tn-text-primary);
 }
 .tl-card .tl-warn-text::before {
   content: '';
@@ -164,14 +166,14 @@
   height: 6px;
   margin-right: 6px;
   border-radius: 9999px;
-  background: currentColor;
+  background: var(--tn-warning);
   vertical-align: 2px;
 }
 .tl-error-text {
-  font-size: 14px;
+  font-size: 13px;
   line-height: 20px;
-  font-weight: 700;
-  color: var(--color-text-error);
+  font-weight: 600;
+  color: var(--tn-negative-text);
 }
 .tl-card-end {
   flex: none;
@@ -188,12 +190,12 @@
   border: 0;
   border-radius: 12px;
   background: transparent;
-  color: var(--color-icon-secondary);
+  color: var(--tn-text-disabled);
   cursor: grab;
   touch-action: none;
 }
 
-/* Travel leg: a quiet line beside the dashed rail. A missing time is bold ink with an ink dot, and opens the leg sheet. */
+/* Travel leg: a quiet line beside the dashed rail. A missing time is ink at 600 behind the orange dot; it opens the leg sheet. */
 .tl-legrow {
   min-height: 40px;
   display: flex;
@@ -207,29 +209,29 @@
   margin-left: -8px;
   padding: 4px 8px;
   border: 0;
-  border-radius: 7px;
+  border-radius: 8px;
   background: transparent;
-  color: var(--color-text-secondary);
+  color: var(--tn-text-secondary);
   font: inherit;
-  font-size: 14px;
+  font-size: 13px;
   line-height: 20px;
   font-variant-numeric: tabular-nums;
   cursor: pointer;
-  transition: background-color 120ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: background-color 120ms var(--tn-ease);
 }
 .tl-leg.is-missing {
-  color: var(--color-text-primary);
-  font-weight: 700;
+  color: var(--tn-text-primary);
+  font-weight: 600;
 }
 
-/* "Something on this day needs a look": an ink dot beside the heading. */
+/* "Something on this day needs a look": the orange warning dot beside the heading. */
 .tl-dot {
   display: inline-block;
   flex: none;
   width: 8px;
   height: 8px;
   border-radius: 9999px;
-  background: var(--color-text-primary);
+  background: var(--tn-warning);
 }
 
 /* Editor title (M53): just the dates and n박 n일 on one line; tapping it goes to 여행 정보. No name, no pencil. */
@@ -239,7 +241,7 @@
   padding: 2px 4px;
   margin: 0 -4px;
   border: 0;
-  border-radius: 10px;
+  border-radius: 8px;
   background: transparent;
   color: inherit;
   font: inherit;
@@ -271,12 +273,15 @@
   min-width: 0;
   margin: 0;
   font-size: 20px;
-  line-height: 26px;
+  line-height: 27px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
 
-/* Floating "+" (add a place) above the bottom action, kept inside the 480pt content column on wide screens. */
+/*
+ * Floating "+" (add a place) above the bottom action, kept inside the 480pt content column on wide screens. The screen's
+ * one blue fill is its bottom button, so the + floats as a white circle (surface-float, shadow-2) with an accent glyph.
+ */
 .tl-fab {
   position: fixed;
   z-index: 6;
@@ -288,22 +293,22 @@
   place-items: center;
   border: 0;
   border-radius: 9999px;
-  background: var(--color-accent);
-  color: var(--color-on-accent);
-  box-shadow: var(--pleos-shadow-level1);
+  background: var(--tn-surface-float);
+  color: var(--tn-accent);
+  box-shadow: var(--tn-shadow-2);
   cursor: pointer;
-  transition: background-color 120ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: background-color 120ms var(--tn-ease);
 }
 .tl-fab svg {
   width: 26px;
   height: 26px;
 }
-/* Pressed: the filled face one step darker (button/filled/pressed), the shadow unchanged. */
+/* Pressed: one step darker (fill-weak-pressed), the shadow unchanged. */
 .tl-fab:active {
-  background: var(--pleos-button-filled-pressed);
+  background: var(--tn-fill-weak-pressed);
 }
 .tl-fab:focus-visible {
-  outline: 2px solid var(--color-accent);
+  outline: 2px solid var(--tn-accent);
   outline-offset: 3px;
 }
 .tl-fab-badge {
@@ -315,19 +320,20 @@
   padding: 0 6px;
   box-sizing: border-box;
   border-radius: 9999px;
-  border: 2px solid var(--color-background-body);
-  background: var(--color-background-card);
-  color: var(--color-text-primary);
+  border: 2px solid var(--tn-canvas);
+  background: var(--tn-text-primary);
+  color: var(--tn-surface);
   font-size: 12px;
   line-height: 16px;
-  font-weight: 700;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
   text-align: center;
 }
-/* A place with a fixed time is waiting off the plan: the count turns to solid ink. */
+/* A place with a fixed time is waiting off the plan: 'check this' — the warning-weak face in an orange ring, ink count. */
 .tl-fab-badge.is-warn {
-  background: var(--color-text-primary);
-  color: var(--color-background-card);
+  border-color: var(--tn-warning);
+  background: var(--tn-warning-weak);
+  color: var(--tn-text-primary);
 }
 
 /* Sheets: a header row, a padded body, and a footer that stays reachable while the body scrolls. */
@@ -341,7 +347,7 @@
 .tl-sheet-head h2 {
   margin: 0;
   font-size: 20px;
-  line-height: 26px;
+  line-height: 27px;
   font-weight: 700;
 }
 .tl-sheet-body {
@@ -359,9 +365,9 @@
 }
 .tl-sheet-section {
   margin: 0;
-  font-size: 16px;
-  line-height: 24px;
-  font-weight: 700;
+  font-size: 17px;
+  line-height: 25px;
+  font-weight: 600;
 }
 .tl-steps {
   margin: 0;
@@ -370,8 +376,8 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  font-size: 16px;
-  line-height: 24px;
+  font-size: 15px;
+  line-height: 23px;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -383,28 +389,28 @@
 /* A short in-field prefix for inputs that always hold a value ("체류(분) 60"), so no label sits above them. */
 .tl-infield {
   white-space: nowrap;
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1;
-  color: var(--color-text-secondary);
+  color: var(--tn-text-secondary);
 }
 .tl-fieldicon {
   display: inline-flex;
-  color: var(--color-icon-secondary);
+  color: var(--tn-text-secondary);
 }
 .tl-fieldicon svg {
   width: 18px;
   height: 18px;
 }
-/* A night's lodging once chosen: shaped like the inputs around it, with the night and a clear button. */
+/* A night's lodging once chosen: shaped like the fields around it (fill-weak at rest), with the night and a clear button. */
 .tl-lodging {
   display: flex;
   align-items: center;
   gap: 10px;
   min-height: 44px;
   padding: 2px 4px 2px 14px;
-  border: 1px solid var(--pleos-divider-tertiary);
+  border: 1px solid transparent;
   border-radius: var(--radius-element);
-  background: var(--pleos-surface-low);
+  background: var(--color-neutral);
 }
 .tl-lodging-text {
   flex: 1 1 auto;
@@ -412,8 +418,8 @@
   display: flex;
   align-items: baseline;
   gap: 8px;
-  font-size: 16px;
-  line-height: 24px;
+  font-size: 17px;
+  line-height: 26px;
   overflow: hidden;
 }
 .tl-lodging-text > span:last-child {
@@ -428,7 +434,7 @@
   flex-direction: column;
   gap: 10px;
   padding: 16px 18px 14px;
-  border: 1px solid var(--pleos-divider-secondary);
+  border: 1px solid transparent;
   border-radius: var(--radius-container);
   background: var(--color-background-card);
 }
@@ -439,19 +445,19 @@
   border-bottom: 1.5px solid transparent;
   padding: 2px 0 4px;
   background: transparent;
-  color: var(--color-text-primary);
+  color: var(--tn-text-primary);
   font: inherit;
   font-size: 22px;
-  line-height: 28px;
+  line-height: 29px;
   font-weight: 700;
   outline: none;
 }
 .tl-name-input::placeholder {
-  color: var(--color-text-secondary);
+  color: var(--tn-text-secondary);
   font-weight: 700;
 }
 .tl-name-input:focus-visible {
-  border-bottom-color: var(--color-accent);
+  border-bottom-color: var(--tn-accent);
 }
 .tl-card-body {
   flex: 1 1 auto;
@@ -461,21 +467,22 @@
   gap: 8px;
   padding: 14px 14px 14px 16px;
 }
-/* A quiet text action inside a card ("+ 입실·퇴실 시간, 메모"). */
+/* A quiet text action inside a card ("+ 입실·퇴실 시간, 메모"): the weak button — no face, accent-text, label-s. */
 .tl-textbtn {
   padding: 4px 0;
   border: 0;
   background: transparent;
-  color: var(--color-text-accent);
+  color: var(--tn-accent-text);
   font: inherit;
-  font-size: 14px;
-  font-weight: 700;
+  font-size: 13px;
+  line-height: 16px;
+  font-weight: 600;
   cursor: pointer;
 }
 .tl-textbtn:focus-visible {
-  outline: 2px solid var(--color-accent);
+  outline: 2px solid var(--tn-accent);
   outline-offset: 2px;
-  border-radius: 5px;
+  border-radius: 4px;
 }
 
 /* 여행 정보 collapsed: the summary card is one button; the header carries the 접기/펼치기 toggle. */
@@ -487,10 +494,10 @@
   cursor: pointer;
 }
 .tl-infosummary:active {
-  background-image: linear-gradient(var(--pleos-dim-dark-secondary), var(--pleos-dim-dark-secondary));
+  background-image: linear-gradient(var(--tn-fill-weak-pressed), var(--tn-fill-weak-pressed));
 }
 .tl-infosummary:focus-visible {
-  outline: 2px solid var(--color-accent);
+  outline: 2px solid var(--tn-accent);
   outline-offset: 2px;
 }
 .tl-toggle {
@@ -499,12 +506,12 @@
   align-items: center;
   gap: 2px;
   min-height: 44px;
-  font-size: 14px;
+  font-size: 13px;
 }
 .tl-chev {
   display: inline-flex;
   transform: rotate(90deg);
-  transition: transform 160ms ease;
+  transition: transform 200ms var(--tn-ease);
 }
 .tl-chev.is-open {
   transform: rotate(-90deg);
@@ -526,13 +533,13 @@
   justify-content: center;
   gap: 8px;
   overflow: hidden;
-  font-size: 14px;
+  font-size: 13px;
   line-height: 20px;
-  color: var(--color-text-secondary);
+  color: var(--tn-text-secondary);
 }
 .tl-ptr-arrow {
   display: inline-block;
-  transition: transform 160ms ease-out;
+  transition: transform 200ms var(--tn-ease);
 }
 .tl-ptr-arrow.is-ready {
   transform: rotate(180deg);
@@ -545,37 +552,37 @@
   align-items: center;
   gap: 4px;
   min-height: 44px;
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--color-text-accent);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--tn-accent-text);
   text-decoration: none;
 }
 .tl-extlink:focus-visible {
-  outline: 2px solid var(--color-accent);
+  outline: 2px solid var(--tn-accent);
   outline-offset: 2px;
-  border-radius: 5px;
+  border-radius: 4px;
 }
 
 /* 되돌리기 snackbar: floats above the bottom bar (the + button moves up while it shows). */
 .tl-fab {
   transition:
-    bottom 160ms ease-out,
-    background-color 120ms cubic-bezier(0.22, 1, 0.36, 1);
+    bottom 200ms var(--tn-ease),
+    background-color 120ms var(--tn-ease);
 }
 .tl-fab.is-raised {
   bottom: calc(96px + 68px + env(safe-area-inset-bottom));
 }
 
 /*
- * The place sheet's quiet confirmation under the search ("'경포호'을(를) 저장 목록에 담았어요"): bold ink behind an
- * informative/active dot (done); empty keeps its slot.
+ * The place sheet's quiet confirmation under the search ("'경포호'을(를) 저장 목록에 담았어요"): ink at 600 behind a
+ * positive dot (done); empty keeps its slot.
  */
 .tl-added-line {
   min-height: 20px;
-  font-size: 14px;
+  font-size: 13px;
   line-height: 20px;
-  font-weight: 700;
-  color: var(--color-text-primary);
+  font-weight: 600;
+  color: var(--tn-text-primary);
 }
 .tl-added-line:not(:empty)::before {
   content: '';
@@ -584,58 +591,60 @@
   height: 6px;
   margin-right: 6px;
   border-radius: 9999px;
-  background: var(--pleos-informative-active);
+  background: var(--tn-positive);
   vertical-align: 2px;
 }
 
 /*
- * A night without lodging (M41) — a field error: the card's outline in informative/negative (2px, no tint), the bed
- * marker in the same color, and the helper line under the field. A night marked 미정 drops all of it.
+ * A night without lodging (M41) — a field error: a 1.5px negative edge on the card (no tint), the bed marker on
+ * negative-weak in negative, and the helper line under the field in negative-text. A night marked 미정 drops all of it.
  */
 .tl-card.is-required {
-  border-color: var(--color-error);
-  outline: 1px solid var(--color-error);
-  outline-offset: -2px;
+  border-color: var(--tn-negative);
+  outline: 0.5px solid var(--tn-negative);
+  outline-offset: -1.5px;
 }
 .tl-marker.is-required {
-  border-color: var(--color-error);
-  color: var(--color-error);
+  background: var(--tn-negative-weak);
+  color: var(--tn-negative);
 }
 .tl-required-text {
-  font-size: 14px;
+  font-size: 13px;
   line-height: 20px;
-  color: var(--color-text-error);
+  color: var(--tn-negative-text);
 }
 /*
- * Chips are `ivi_toggle_button` Small × 0.6 (radius 10): off on button/basic/enabled, on = button/switch/enabled
- * with Shadow Level2 and bold primary text — the raised face of a selected segment, not a dark fill.
+ * Chips (design/TOSS.md §5): a 34 pill, at rest the surface with a 1px hairline; selected = a text-primary fill with
+ * the surface's color for its text (Toss chip active).
  */
 .tl-chip {
-  height: 32px;
-  padding: 0 12px;
-  border: 0;
-  border-radius: 10px;
-  background: var(--pleos-dim-dark-primary);
-  color: var(--color-text-primary);
+  height: 34px;
+  box-sizing: border-box;
+  padding: 0 14px;
+  border: 1px solid var(--tn-hairline);
+  border-radius: 9999px;
+  background: var(--color-background-surface);
+  color: var(--tn-text-primary);
   font: inherit;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 400;
   line-height: 32px;
   white-space: nowrap;
   cursor: pointer;
-  transition: background-color 120ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: background-color 120ms var(--tn-ease);
 }
 .tl-chip.is-on {
-  background: var(--pleos-button-switch-enabled);
-  box-shadow: var(--pleos-shadow-level2);
-  font-weight: 700;
+  border-color: var(--tn-text-primary);
+  background: var(--tn-text-primary);
+  color: var(--tn-surface);
+  font-weight: 600;
 }
 .tl-chip:focus-visible {
-  outline: 2px solid var(--color-accent);
+  outline: 2px solid var(--tn-accent);
   outline-offset: 2px;
 }
 
-/* Night lodging (M43): the search and the 미정 chip on one line; the chip sits centred on the 48px search bar. */
+/* Night lodging (M43): the search and the 미정 chip on one line; the 34 chip sits centred on the 48px search bar. */
 .tl-lodging-line {
   display: flex;
   align-items: flex-start;
@@ -647,22 +656,23 @@
 }
 .tl-chip.tl-lodging-tbd {
   flex: none;
-  margin-top: 8px;
+  margin-top: 7px;
   white-space: nowrap;
 }
-/* The read-only travel time in its sheet (M43): the minutes as the main fact. */
+/* The read-only travel time in its sheet (M43): the minutes as the main fact (h4, tabular). */
 .tl-leg-value {
   font-size: 20px;
-  line-height: 28px;
+  line-height: 27px;
   font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 .tl-leg-value.is-empty {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 400;
-  color: var(--color-text-secondary);
+  color: var(--tn-text-secondary);
 }
 
-/* New-trip setup (M43): a step header with four dots, one step at a time, buttons fixed at the bottom. */
+/* New-trip setup (M43): a step header with the four-step progress bar, one step at a time, buttons fixed at the bottom. */
 .tl-setup-head {
   display: flex;
   flex-direction: column;
@@ -673,7 +683,7 @@
 .tl-setup-title {
   margin: 0;
   font-size: 24px;
-  line-height: 32px;
+  line-height: 31px;
   font-weight: 700;
 }
 .tl-setup-dots {
@@ -685,10 +695,10 @@
   width: 28px;
   height: 4px;
   border-radius: 9999px;
-  background: var(--pleos-divider-secondary);
+  background: var(--tn-hairline);
 }
 .tl-setup-dot.is-on {
-  background: var(--color-accent);
+  background: var(--tn-accent);
 }
 .tl-setup-body {
   display: flex;
@@ -697,9 +707,9 @@
 }
 .tl-setup-hint {
   margin: 0;
-  font-size: 14px;
+  font-size: 13px;
   line-height: 20px;
-  color: var(--color-text-secondary);
+  color: var(--tn-text-secondary);
 }
 .tl-setup-list {
   display: flex;
@@ -732,8 +742,8 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  font-size: 16px;
-  line-height: 24px;
+  font-size: 15px;
+  line-height: 23px;
 }
 .tl-setup-progress li {
   display: flex;
@@ -741,18 +751,18 @@
   gap: 10px;
 }
 .tl-setup-progress li.is-wait {
-  color: var(--color-text-secondary);
+  color: var(--tn-text-secondary);
 }
 .tl-setup-progress li.is-done {
-  font-weight: 700;
+  font-weight: 600;
 }
 .tl-setup-progress-mark {
   width: 24px;
   height: 24px;
   display: grid;
   place-items: center;
-  color: var(--color-accent);
-  font-weight: 700;
+  color: var(--tn-accent);
+  font-weight: 600;
 }
 .tl-setup-skip {
   align-self: flex-start;
@@ -760,17 +770,17 @@
 .tl-setup-need {
   max-width: 448px;
   margin: 8px auto 0;
-  font-size: 14px;
+  font-size: 13px;
   line-height: 20px;
-  color: var(--color-text-error);
+  color: var(--tn-negative-text);
   text-align: center;
   pointer-events: none;
 }
 
 /*
  * 꼭 갈 곳 in step 3: a 44px toggle that is only the outline pin (the mark a must-see carries in the day plan, Tag
- * tone must) — no star, no word. Off: a quiet control face with a secondary pin. On: the pin's own color
- * (informative/negative) on a faint face of it, as the tag shows it.
+ * tone must) — no star, no word. Off: the weak fill with a secondary pin. On: as the tag shows it — accent-text on
+ * accent-weak.
  */
 .tl-pin {
   flex: none;
@@ -781,21 +791,24 @@
   padding: 0;
   border: 0;
   border-radius: 12px;
-  background: var(--pleos-dim-dark-primary);
-  color: var(--color-text-secondary);
+  background: var(--color-neutral);
+  color: var(--tn-text-secondary);
   cursor: pointer;
-  transition: background-color 120ms cubic-bezier(0.22, 1, 0.36, 1), color 120ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: background-color 120ms var(--tn-ease), color 120ms var(--tn-ease);
 }
 .tl-pin svg {
   width: 22px;
   height: 22px;
 }
+.tl-pin:active {
+  background: var(--tn-fill-weak-pressed);
+}
 .tl-pin.is-on {
-  background: color-mix(in srgb, var(--pleos-informative-negative) 12%, transparent);
-  color: var(--pleos-informative-negative);
+  background: var(--tn-accent-weak);
+  color: var(--tn-accent-text);
 }
 .tl-pin:focus-visible {
-  outline: 2px solid var(--color-accent);
+  outline: 2px solid var(--tn-accent);
   outline-offset: 2px;
 }
 .tl-setup-progress-mark svg {
@@ -804,26 +817,27 @@
 }
 
 /*
- * The day tab bar — `ivi_segmented_control/solid` Medium × 0.6, like the car app's day tabs — sticks under the top
- * bar; sections land just below it when a tab is tapped. One 48 bar on controller/tab_background (radius 14, 5px
- * inside) holding 38 segments (radius 10): the selected one on button/switch/enabled with Shadow Level1 and bold
- * primary text, the others bare with secondary text. Segments share the bar's width and, on a long trip, scroll
- * sideways inside it. The stuck block stays 56 tall (48 + 7 + the hairline), which the editor's scroll code counts on.
+ * The day tab bar — the segmented control of design/TOSS.md §5, like the car app's day tabs — sticks under the top
+ * bar; sections land just below it when a tab is tapped. One 48 track on the canvas (fill-weak-on-canvas, radius 12,
+ * 4px inside) holding 40 segments (radius 8): the selected one on the surface with shadow-1 and primary text at 600,
+ * the others bare with secondary text. Segments share the bar's width and, on a long trip, scroll sideways inside it.
+ * The stuck block stays 56 tall (48 + 7 + a transparent 1px edge — no divider under it, like the top bar), which the
+ * editor's scroll code counts on.
  */
 .tl-daytabs {
   position: sticky;
   top: calc(56px + env(safe-area-inset-top));
   z-index: 4;
-  background: var(--color-background-body);
-  border-bottom: 1px solid var(--pleos-divider-secondary);
+  background: var(--tn-canvas);
+  border-bottom: 1px solid transparent;
 }
 .tl-daytabs-row {
   display: flex;
   overflow-x: auto;
   margin: 0 20px 7px;
-  padding: 5px;
-  border-radius: 14px;
-  background: var(--pleos-controller-tab-background);
+  padding: 4px;
+  border-radius: var(--radius-element);
+  background: var(--tn-fill-weak-on-canvas);
   scrollbar-width: none;
 }
 .tl-daytabs-row::-webkit-scrollbar {
@@ -831,31 +845,31 @@
 }
 .tl-daytab {
   flex: 1 0 auto;
-  height: 38px;
+  height: 40px;
   padding: 0 11px;
   border: 0;
-  border-radius: 10px;
+  border-radius: var(--radius-inner);
   background: transparent;
-  color: var(--color-text-secondary);
+  color: var(--tn-text-secondary);
   font: inherit;
-  font-size: 14px;
-  line-height: 20px;
+  font-size: 15px;
+  line-height: 19px;
   font-weight: 400;
   white-space: nowrap;
   cursor: pointer;
-  transition: background-color 120ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: background-color 120ms var(--tn-ease);
 }
 .tl-daytab:active {
-  background: var(--pleos-dim-dark-secondary);
+  background: var(--tn-fill-weak-pressed);
 }
 .tl-daytab[aria-current='true'] {
-  background: var(--pleos-button-switch-enabled);
-  box-shadow: var(--pleos-shadow-level1);
-  color: var(--color-text-primary);
-  font-weight: 700;
+  background: var(--tn-surface);
+  box-shadow: var(--tn-shadow-1);
+  color: var(--tn-text-primary);
+  font-weight: 600;
 }
 .tl-daytab:focus-visible {
-  outline: 2px solid var(--color-accent);
+  outline: 2px solid var(--tn-accent);
   outline-offset: 2px;
 }
 .tl-section {
@@ -870,17 +884,17 @@
 }
 .tl-sechead-sum {
   margin: 0;
-  font-size: 14px;
+  font-size: 13px;
   line-height: 20px;
-  color: var(--color-text-secondary);
+  color: var(--tn-text-secondary);
   font-variant-numeric: tabular-nums;
 }
 .tl-sechead-sum:empty {
   display: none;
 }
 .tl-leg:active,
-.tl-chip:active {
-  background: var(--pleos-dim-dark-secondary);
+.tl-chip:not(.is-on):active {
+  background: var(--tn-fill-weak-pressed);
 }
 @media (prefers-reduced-motion: reduce) {
   .tl-leg,
@@ -899,9 +913,9 @@
   gap: 8px;
 }
 .tl-lodging-suggest-label {
-  font-size: 14px;
+  font-size: 13px;
   line-height: 20px;
-  color: var(--color-text-secondary);
+  color: var(--tn-text-secondary);
 }
 .tl-chip.tl-lodging-chip {
   display: inline-flex;
@@ -915,14 +929,17 @@
   flex: none;
   width: 16px;
   height: 16px;
-  color: var(--color-icon-secondary);
+  color: var(--tn-text-secondary);
+}
+.tl-chip.is-on.tl-lodging-chip svg {
+  color: inherit;
 }
 
 /*
  * M51 compact day timeline (scoped to .tl-day so the 여행 정보 rail keeps its own layout).
  * Stops: 2 fixed lines (~70px) — name + 꼭 | lock · start ~ end · stay · desired · memo, both lines nowrap + ellipsis.
  * Start/lodging/home: a 1-line slim bar (~50px) — [tag] name … time. Legs: 28px rows, '↓ 11분 · 7.3km', with the time
- * to leave for a fixed start as a tag beside it (ink dot = time to spare, informative/negative dot = too late).
+ * to leave for a fixed start as a tag beside it (warning tag = time to spare, negative tag = too late).
  * Card gaps 4 → 2, leg rows 40 → 28 (about 30% less).
  */
 .tl-day .tl-card,
@@ -951,9 +968,9 @@
   align-items: center;
   gap: 4px;
   min-width: 0;
-  font-size: 14px;
+  font-size: 13px;
   line-height: 20px;
-  color: var(--color-text-secondary);
+  color: var(--tn-text-secondary);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
@@ -963,24 +980,28 @@
   place-items: center;
   width: 16px;
   height: 16px;
-  color: var(--color-icon-secondary);
+  color: var(--tn-text-secondary);
 }
 .tl-lock svg {
   width: 16px;
   height: 16px;
 }
-/* A fixed (reserved) time: the lock in primary ink beside the bold time — weight and ink, not a hue. */
+/* A fixed (reserved) time: the lock and the time in accent-text, the time bold (design/TOSS.md §5 타임라인). */
 .tl-lock.is-fixed {
-  color: var(--color-icon-primary);
+  color: var(--tn-accent-text);
 }
 .tl-range {
   flex: none;
+  font-weight: 600;
+  color: var(--tn-text-primary);
+}
+.tl-range.is-fixed {
   font-weight: 700;
-  color: var(--color-text-primary);
+  color: var(--tn-accent-text);
 }
 .tl-range.is-unknown {
   font-weight: 400;
-  color: var(--color-text-secondary);
+  color: var(--tn-text-secondary);
 }
 .tl-rest {
   min-width: 0;
@@ -1009,28 +1030,28 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 16px;
-  line-height: 24px;
-  font-weight: 700;
+  font-size: 15px;
+  line-height: 23px;
+  font-weight: 600;
 }
 .tl-bar-name.is-quiet {
   font-weight: 400;
-  color: var(--color-text-secondary);
+  color: var(--tn-text-secondary);
 }
 .tl-bar-name.tl-required-text {
-  font-size: 16px;
-  line-height: 24px;
+  font-size: 15px;
+  line-height: 23px;
 }
 .tl-bar-time {
   flex: none;
-  font-size: 14px;
+  font-size: 13px;
   line-height: 20px;
-  font-weight: 700;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
 .tl-bar-time.is-quiet {
   font-weight: 400;
-  color: var(--color-text-secondary);
+  color: var(--tn-text-secondary);
 }
 
 /* Rail markers line up with the first line of each card; the route line meets the bars at their middle. */
@@ -1060,7 +1081,7 @@
 
 /*
  * M53 여행 정보, collapsed: one two-line card under the chip bar (no heading row — the chip names the section).
- * Line 1 the trip name (+ an ink dot when a night has no lodging) and the chevron; line 2 route · lodging · version.
+ * Line 1 the trip name (+ the orange dot when a night has no lodging) and the chevron; line 2 route · lodging · version.
  */
 .tl-info:not(.is-open) #trip-info-body {
   padding-top: 12px;
@@ -1084,54 +1105,54 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: 17px;
-  line-height: 24px;
-  font-weight: 700;
+  line-height: 25px;
+  font-weight: 600;
 }
 .tl-infosum-top .tl-chev {
   margin-left: auto;
-  color: var(--color-icon-secondary);
+  color: var(--tn-text-disabled);
 }
 .tl-infosum-meta {
   display: block;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 14px;
+  font-size: 13px;
   line-height: 20px;
-  color: var(--color-text-secondary);
+  color: var(--tn-text-tertiary);
   font-variant-numeric: tabular-nums;
 }
 .tl-infosum-meta > span + span::before {
   content: '·';
   margin: 0 6px;
-  color: var(--color-text-secondary);
+  color: var(--tn-text-tertiary);
 }
 .tl-infosum-meta .tl-required-text {
   font-size: inherit;
 }
 
-/* M54: the day's driving time leads its summary line in bold. */
+/* M54: the day's driving time leads its summary line at 600. */
 .tl-sum-drive {
-  font-weight: 700;
-  color: var(--color-text-primary);
+  font-weight: 600;
+  color: var(--tn-text-primary);
 }
 
-/* M54 더 빠른 순서: one quiet container under the day heading — what it saves, the new order, then 닫기 / 바꾸기. */
+/* M54 더 빠른 순서: one white container under the day heading — what it saves, the new order, then 닫기 / 바꾸기. */
 .tl-faster {
   display: flex;
   flex-direction: column;
   gap: 2px;
   margin: 0 0 8px;
   padding: 14px 16px 12px 18px;
-  border: 1px solid var(--pleos-divider-secondary);
+  border: 1px solid transparent;
   border-radius: var(--radius-container);
   background: var(--color-background-card);
 }
 .tl-faster-title {
   margin: 0;
-  font-size: 16px;
-  line-height: 22px;
-  font-weight: 700;
+  font-size: 17px;
+  line-height: 25px;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
 .tl-faster-order {
@@ -1139,9 +1160,9 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 14px;
+  font-size: 13px;
   line-height: 20px;
-  color: var(--color-text-secondary);
+  color: var(--tn-text-secondary);
 }
 /* A reason that runs longer than one line (늦게 출발하기) wraps instead of being cut. */
 .tl-faster-order.is-wrap {

@@ -1,7 +1,8 @@
 /*
  * The recommended days (RecommendPreview): one list per day. A day is a title with its count of untimed stops, then
- * its stops as rows on hairlines inside one card surface — the same surface and divider the day plan uses — so the
- * list reads as one block and the days as separate ones (8 inside a day, 16 between days).
+ * its stops as rows on hairlines inside one white surface — the day plan's card, borderless on the canvas (새 여행 ④);
+ * inside the dialog, whose face is already white, the block keeps a hairline edge — so the list reads as one block
+ * and the days as separate ones (8 inside a day, 16 between days).
  */
 .rc-day {
   display: flex;
@@ -22,7 +23,7 @@
 }
 .rc-empty {
   margin: 0;
-  font-size: 14px;
+  font-size: 13px;
   line-height: 20px;
   color: var(--color-text-secondary);
 }
@@ -32,7 +33,10 @@
   list-style: none;
   border-radius: var(--radius-container);
   background: var(--color-background-card);
-  border: 1px solid var(--pleos-divider-secondary);
+  border: 1px solid transparent;
+}
+.astryx-dialog .rc-list {
+  border-color: var(--tn-hairline);
 }
 /* A row: number, name and its tags on one line that may wrap; the time, when known, ends the row. */
 .rc-row {
@@ -44,7 +48,7 @@
   padding: 8px 16px;
 }
 .rc-row + .rc-row {
-  border-top: 1px solid var(--pleos-divider-secondary);
+  border-top: 1px solid var(--tn-hairline);
 }
 .rc-n {
   flex: none;
@@ -57,7 +61,7 @@
 .rc-name {
   min-width: 0;
   font-size: 15px;
-  line-height: 20px;
+  line-height: 23px;
   color: var(--color-text-primary);
 }
 .rc-tags {

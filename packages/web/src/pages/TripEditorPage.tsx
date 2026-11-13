@@ -818,7 +818,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
         title={t('editor.delete.title')}
         description={t('editor.delete.description')}
         actionLabel={t('editor.delete.action')}
-        actionVariant="primary" // the filled main button, as in the car's popup: deleting is an action, not an error state (M58)
+        actionVariant="destructive" // the confirm step of a destructive action: the negative fill (design/TOSS.md §5)
         onAction={async () => {
           deleting.current = true; // deleting: nothing may save the trip back on the way out (a re-render resets `dirty`)
           await trips.remove(doc.tripId);
