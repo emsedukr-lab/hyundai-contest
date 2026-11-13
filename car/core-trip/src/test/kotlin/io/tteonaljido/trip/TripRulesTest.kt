@@ -21,7 +21,10 @@ class TripRulesTest {
         val issues = TripValidator.validate(sample).issues
         assertTrue(issues.none { it.code == "LATE_FOR_FIXED" })
         assertTrue(issues.any { it.code == "LEG_UNKNOWN" && it.dayIndex == 1 })
-        assertTrue(issues.any { it.code == "HOURS_UNKNOWN" })
+        // every stop has hours, or none of its own (경포호 · 안목해변 커피거리 are simply places): nothing left to confirm
+        assertTrue(issues.none { it.code == "HOURS_UNKNOWN" })
+        val unknown = sample.copy(places = sample.places.map { if (it.placeRef == "mandong") it.copy(hours = OpeningHours.Unknown) else it })
+        assertTrue(TripValidator.validate(unknown).issues.any { it.code == "HOURS_UNKNOWN" })
         assertTrue(issues.any { it.code == "ORIGIN_HOME_UNKNOWN" })
         assertTrue(issues.any { it.code == "UNASSIGNED" })
     }

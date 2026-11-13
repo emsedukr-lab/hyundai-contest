@@ -357,6 +357,19 @@
                     "properties": {
                       "status": {
                         "type": "string",
+                        "const": "ALWAYS_OPEN"
+                      }
+                    },
+                    "required": [
+                      "status"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "status": {
+                        "type": "string",
                         "const": "USER_ENTERED"
                       },
                       "weekly": {

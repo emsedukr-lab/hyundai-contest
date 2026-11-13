@@ -262,14 +262,21 @@ export function VisitDialog({
         <Group title={t('tl.memo')}>{place.category === 'LODGING' ? <LodgingNoteFields placeRef={place.placeRef} /> : <PlaceMemoField placeRef={place.placeRef} />}</Group>
 
         <Group title={t('visit.hoursTitle')}>
-          <Switch
-            label={t('visit.hours')}
-            labelPosition="start"
-            labelSpacing="spread"
-            value={hours.status === 'USER_ENTERED'}
-            onChange={(on) => (on ? setDaily('09:00', '21:00') : setPlace({ hours: { status: 'UNKNOWN' } }))}
-          />
-          {!daily && <p className="vd-hint">{t('visit.hours.detail')}</p>}
+          {/* 모름 · 따로 없음 (a lake, a beach, a street: nothing to check) · 직접 입력 */}
+          <SegmentedControl
+            label={t('visit.hoursTitle')}
+            value={hours.status}
+            onChange={(v) => {
+              if (v === hours.status) return;
+              if (v === 'USER_ENTERED') setDaily('09:00', '21:00');
+              else setPlace({ hours: { status: v === 'ALWAYS_OPEN' ? 'ALWAYS_OPEN' : 'UNKNOWN' } });
+            }}>
+            <SegmentedControlItem value="UNKNOWN" label={t('visit.hours.unknown')} />
+            <SegmentedControlItem value="ALWAYS_OPEN" label={t('visit.hours.none')} />
+            <SegmentedControlItem value="USER_ENTERED" label={t('visit.hours.enter')} />
+          </SegmentedControl>
+          {hours.status === 'UNKNOWN' && <p className="vd-hint">{t('visit.hours.detail')}</p>}
+          {hours.status === 'ALWAYS_OPEN' && <p className="vd-hint">{t('visit.hours.noneDetail')}</p>}
           {daily && grouped && (
             <>
               <ul className="vd-hours">

@@ -37,6 +37,8 @@ export const NaviPoi = z.strictObject({
 
 export const OpeningHours = z.discriminatedUnion('status', [
   z.strictObject({ status: z.literal('UNKNOWN') }),
+  // A place with no opening hours of its own — a lake, a beach, a street (M59). Nothing to check before a visit.
+  z.strictObject({ status: z.literal('ALWAYS_OPEN') }),
   z.strictObject({
     status: z.literal('USER_ENTERED'),
     weekly: z.array(z.strictObject({ weekday: z.int().min(1).max(7), open: TimeStr, close: TimeStr })).max(21),

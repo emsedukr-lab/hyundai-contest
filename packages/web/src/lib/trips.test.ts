@@ -177,7 +177,11 @@ describe('timetable on the phone', () => {
   });
 
   it('unknown opening hours leave lodging out, as the car does', () => {
-    expect(planWarnings(sampleTrip(), home).map((x) => x.text)).toContain('영업정보 미확인 2곳'); // 경포호 · 안목해변 커피거리 list no hours
+    // the sample has hours for every stop, or none of its own (경포호 · 안목해변 커피거리 are simply places)
+    expect(planWarnings(sampleTrip(), home).some((x) => x.text.includes('영업정보 미확인'))).toBe(false);
+    const t = sampleTrip();
+    const unknown = { ...t, places: t.places.map((p) => (p.placeRef === 'mandong' || p.placeRef === 'skybay' ? { ...p, hours: { status: 'UNKNOWN' as const } } : p)) };
+    expect(planWarnings(unknown, home).map((x) => x.text)).toContain('영업정보 미확인 1곳'); // the lodging is left out
   });
 });
 

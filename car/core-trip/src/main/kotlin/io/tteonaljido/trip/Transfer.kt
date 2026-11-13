@@ -103,6 +103,10 @@ sealed interface OpeningHours {
     @Serializable @SerialName("UNKNOWN")
     data object Unknown : OpeningHours
 
+    /** A place with no opening hours of its own — a lake, a beach, a street (M59): nothing to check before a visit. */
+    @Serializable @SerialName("ALWAYS_OPEN")
+    data object AlwaysOpen : OpeningHours
+
     @Serializable @SerialName("USER_ENTERED")
     data class UserEntered(val weekly: List<Weekly>, val closedDates: List<String>) : OpeningHours
 
