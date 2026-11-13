@@ -1,20 +1,18 @@
 import { getHere } from './here';
-import { TRANSFER_LIMITS, type Endpoint, type Home, type Trip, type Visit } from '@tteonaljido/shared';
-import { assign, move, placeOf, unassignedVisits, visitOf } from './trips';
+import { KEY_HERE, KEY_HOME, minutes, optimizeTrip, type Endpoint, type GapSlot, type Home, type LodgingNote, type Trip, type Visit } from '@tteonaljido/shared';
+import type { NewPlace } from '../editor/PlaceSearch';
+import type { TripNotes } from './notes';
+import { assign, move, moveToDay, placeOf, rememberLegs, unassign, visitOf, type LegBook } from './trips';
 
 /**
- * 이동경로 자동 추천 (route recommendation). All pure and deterministic: given a plan (and the home address, which lives
- * beside the plan — `plan.home` is always null here), it assigns still-unassigned places across the days by proximity
- * and orders each day so the route flows from the day's start toward its lodging, keeping fixed-time visits in time
- * order and preferring meal→cafe. It never edits the schema shape; order changes go through the same pure ops
- * (assign/move) the editor uses, so travel-time bookkeeping (LegBook/relinkLegs) keeps working.
+ * 이동경로 자동 추천 (route recommendation). {@link recommend} arranges the whole trip with the shared optimizer (M64);
+ * the straight-line helpers below it (`orderDay`, `shorterDayOrder`) stay for the editor's 더 빠른 순서 card.
+ * Everything here is pure and deterministic, never edits the schema shape, and changes order through the same pure
+ * ops (assign/move) the editor uses, so travel-time bookkeeping (LegBook/relinkLegs) keeps working.
  */
 
-const MAX_PER_DAY = TRANSFER_LIMITS.maxVisitsPerDay;
 /** Reasons we treat as "not placed yet", so the recommender may assign them to a day. User/engine exclusions are left alone. */
 const ASSIGNABLE: ReadonlySet<NonNullable<Visit['unassignedReason']>> = new Set(['NOT_SCHEDULED_YET', 'NO_TIME']);
-/** Metres of detour that one extra stop on a day is "worth" — balances geography against evening out stops per day. */
-const LOAD_PENALTY = 1500;
 const IMP: Record<Visit['importance'], number> = { MUST: 0, NORMAL: 1, OPTIONAL: 2 };
 
 type Pt = { latE7: number | null; lonE7: number | null };
@@ -54,70 +52,102 @@ const startPt = (plan: Trip, home: Home | null, dayIndex: number): Pt | null =>
 const endPt = (plan: Trip, home: Home | null, dayIndex: number): Pt | null =>
   dayIndex === plan.days.length ? endpointPt(plan, home, plan.finalDestination) : placePt(plan, plan.days[dayIndex - 1]?.lodgingPlaceRef ?? null);
 
-/** Centroid of a day's current coord-bearing stops, or null. */
-function centroid(plan: Trip, dayIndex: number): Pt | null {
-  const pts = plan.days[dayIndex - 1].visitOrder.map((id) => visitPt(plan, id)).filter(hasCoord) as { latE7: number; lonE7: number }[];
-  if (!pts.length) return null;
-  const lat = Math.round(pts.reduce((s, p) => s + p.latE7, 0) / pts.length);
-  const lon = Math.round(pts.reduce((s, p) => s + p.lonE7, 0) / pts.length);
-  return { latE7: lat, lonE7: lon };
-}
-/** The point a day "pulls toward" when deciding where a new place belongs: its lodging, else its stops' centre, else its start. */
-const dayAnchor = (plan: Trip, home: Home | null, dayIndex: number): Pt | null => {
-  const e = endPt(plan, home, dayIndex);
-  if (hasCoord(e)) return e;
-  const c = centroid(plan, dayIndex);
-  if (hasCoord(c)) return c;
-  const s = startPt(plan, home, dayIndex);
-  return hasCoord(s) ? s : null;
-};
-
 /** Nights (days 1..n-1) that have no lodging set yet; the last day legitimately ends at the final destination. */
 export function missingLodgingDays(plan: Trip): number[] {
   const last = plan.days.length - 1;
   return plan.days.flatMap((d, i) => (i < last && !d.lodgingPlaceRef ? [d.dayIndex] : []));
 }
 
-/** The recommended plan: assign unassigned places to days, then order every day toward its lodging. Pure; input untouched. */
-export function recommendRoute(plan: Trip, home: Home | null): Trip {
-  // Phase A/B — assign still-unplaced visits to days by proximity, balancing stops per day and respecting the per-day cap.
-  const counts = new Map<number, number>(plan.days.map((d) => [d.dayIndex, d.visitOrder.length]));
-  const anchors = new Map<number, Pt | null>(plan.days.map((d) => [d.dayIndex, dayAnchor(plan, home, d.dayIndex)]));
-  const assignTo = new Map<string, number>();
-  const assignable = unassignedVisits(plan)
-    .filter((v) => v.unassignedReason && ASSIGNABLE.has(v.unassignedReason))
-    .sort((a, b) => IMP[a.importance] - IMP[b.importance] || a.visitId.localeCompare(b.visitId));
-  for (const v of assignable) {
-    const pt = placePt(plan, v.placeRef);
-    let best = -1;
-    let bestCost = Infinity;
-    for (const d of plan.days) {
-      if ((counts.get(d.dayIndex) ?? 0) >= MAX_PER_DAY) continue;
-      const geo = dist(pt, anchors.get(d.dayIndex) ?? null);
-      const cost = (isFinite(geo) ? geo : 0) + LOAD_PENALTY * (counts.get(d.dayIndex) ?? 0);
-      if (cost < bestCost) {
-        bestCost = cost;
-        best = d.dayIndex;
-      }
-    }
-    if (best < 0) continue; // every day is full → leave unassigned (overflow)
-    assignTo.set(v.visitId, best);
-    counts.set(best, (counts.get(best) ?? 0) + 1);
-  }
-
-  // Phase C — for each day, compute the target order over its final visit set (current stops + newly assigned).
-  const targetOrder = new Map<number, string[]>();
-  for (const d of plan.days) {
-    const ids = [...d.visitOrder, ...[...assignTo].filter(([, day]) => day === d.dayIndex).map(([id]) => id)];
-    targetOrder.set(d.dayIndex, orderDay(plan, home, d.dayIndex, ids));
-  }
-
-  // Phase D — realize through the editor's own pure ops so leg bookkeeping stays consistent.
-  let p = plan;
-  for (const [visitId, dayIndex] of assignTo) p = assign(p, visitId, dayIndex);
-  for (const d of plan.days) p = reorderDay(p, d.dayIndex, targetOrder.get(d.dayIndex) ?? []);
-  return p;
+/** Minutes to drive a straight-line distance, where no measured time is known: a road factor, slower in town than between towns. */
+export function estimateDriveMinutes(metres: number): number {
+  const road = metres * 1.35;
+  const perMinute = road > 30_000 ? 1_250 : road > 5_000 ? 670 : 420;
+  return Math.max(3, Math.round(road / perMinute));
 }
+
+export interface RecommendOptions {
+  /** Driving times already measured for a pair of places (the editor's leg book); the plan's own legs are used as well. */
+  book?: LegBook;
+  /** The trip's phone-only notes: a lodging's check-in and check-out times are read from them. */
+  notes?: TripNotes;
+  /** Favorite places outside the trip that may be offered for a gap of two hours or more. */
+  pool?: (NewPlace & { id: string })[];
+  iterations?: number;
+}
+
+export interface RecommendInsights {
+  gaps: (GapSlot & { beforeName: string })[];
+  lodgingNotes: (LodgingNote & { time: string })[];
+  /** Rules that must hold and do not in the best plan found (a booking that cannot be reached, a place closed all trip). */
+  hardViolations: number;
+}
+
+export interface Recommendation {
+  plan: Trip;
+  insights: RecommendInsights;
+}
+
+/**
+ * 경로 추천 (M64): the whole trip arranged at once by the shared optimizer — which day each place goes on, and in what
+ * order — under the planning rules it documents (parking and booking lead times, opening hours, meal times, cafes after
+ * meals, check-in and check-out). Driving times come from what has been measured (the plan's own legs, the leg book)
+ * and, for pairs nobody has measured yet, from the straight-line distance; the caller then asks for real times along
+ * the proposed order, as before. Pure and deterministic; the input is untouched, and the result is realized through
+ * the editor's own operations so the travel-time bookkeeping keeps working.
+ */
+export function recommend(plan: Trip, home: Home | null, opts: RecommendOptions = {}): Recommendation {
+  const known = new Map(opts.book ?? []);
+  rememberLegs(plan, known);
+  const poolPts = new Map((opts.pool ?? []).map((f) => [`fav:${f.id}`, { latE7: f.latE7, lonE7: f.lonE7 }]));
+  const pt = (key: string): Pt | null => (key === KEY_HOME ? (home ? { latE7: home.latE7, lonE7: home.lonE7 } : null) : key === KEY_HERE ? getHere() : (poolPts.get(key) ?? placePt(plan, key)));
+  const movable = plan.visits.filter((v) => placeOf(plan, v.placeRef)?.category !== 'LODGING').length;
+  const lodging = Object.fromEntries(
+    Object.entries(opts.notes ?? {}).flatMap(([ref, n]) => (n.checkIn || n.checkOut ? [[ref, { ...(n.checkIn ? { checkIn: minutes(n.checkIn) } : {}), ...(n.checkOut ? { checkOut: minutes(n.checkOut) } : {}) }]] : [])),
+  );
+  const result = optimizeTrip({
+    trip: plan,
+    drive: (a, b) => {
+      const measured = known.get(`${a}>${b}`);
+      if (measured !== undefined) return measured;
+      const m = dist(pt(a), pt(b));
+      return isFinite(m) ? estimateDriveMinutes(m) : null;
+    },
+    lodging,
+    pool: (opts.pool ?? []).filter((f) => f.latE7 !== null && !plan.places.some((p) => p.name === f.name && p.latE7 === f.latE7)).map((f) => ({ key: `fav:${f.id}`, name: f.name, category: f.category, hours: f.hours })),
+    // Enough steps to settle a trip of this size (measured: the 13-stop sample settles well inside this), capped for big ones.
+    config: { iterations: opts.iterations ?? Math.min(12_000, 2_000 + 800 * movable) },
+  });
+
+  // Realize through the editor's own pure ops so leg bookkeeping stays consistent.
+  let p = plan;
+  for (const d of plan.days) {
+    for (const id of result.order[d.dayIndex] ?? []) {
+      const was = dayOf(plan, id);
+      if (was === null) p = assign(p, id, d.dayIndex);
+      else if (was !== d.dayIndex) p = moveToDay(p, id, d.dayIndex);
+    }
+  }
+  for (const id of result.unassigned) if (dayOf(plan, id) !== null) p = unassign(p, id, 'NO_TIME');
+  for (const d of plan.days) p = reorderDay(p, d.dayIndex, result.order[d.dayIndex] ?? []);
+
+  const nameOf = (visitId: string) => placeOf(plan, visitOf(plan, visitId)?.placeRef ?? '')?.name ?? visitId;
+  const noteTime = (n: LodgingNote): string => {
+    const ref = n.kind === 'CHECKOUT_BEFORE_DEPARTURE' ? plan.days[n.dayIndex - 2]?.lodgingPlaceRef : plan.days[n.dayIndex - 1]?.lodgingPlaceRef;
+    const note = ref ? opts.notes?.[ref] : undefined;
+    return (n.kind === 'CHECKOUT_BEFORE_DEPARTURE' ? note?.checkOut : note?.checkIn) ?? '';
+  };
+  return {
+    plan: p,
+    insights: {
+      gaps: result.gaps.map((g) => ({ ...g, beforeName: nameOf(g.beforeVisitId) })),
+      lodgingNotes: result.lodgingNotes.map((n) => ({ ...n, time: noteTime(n) })),
+      hardViolations: result.hardViolations,
+    },
+  };
+}
+
+/** The recommended plan alone (see {@link recommend}). */
+export const recommendRoute = (plan: Trip, home: Home | null, opts: RecommendOptions = {}): Trip => recommend(plan, home, opts).plan;
 
 /** Orders one day's visitIds: fixed times are hard anchors (by time); free stops are inserted toward the lodging; meal→cafe. */
 export function orderDay(plan: Trip, home: Home | null, dayIndex: number, ids: string[]): string[] {

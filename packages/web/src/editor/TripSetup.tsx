@@ -8,10 +8,11 @@ import type { Home, Trip } from '@tteonaljido/shared';
 import { CheckIcon, PushPinIcon } from '../components/shell/icons';
 import { shortDate } from '../lib/format';
 import { t } from '../lib/i18n';
-import { recommendRoute, summarizeRecommendation } from '../lib/recommend';
+import { favorites } from '../lib/db';
+import { recommend, summarizeRecommendation, type RecommendInsights } from '../lib/recommend';
 import { getHere, locate } from '../lib/here';
 import { allRuns, applyRun, fetchRun } from '../lib/routeTimes';
-import { placeOf, removePlace, setReservation, setupReady, suggestVisitTime, updateVisit, type SetupStep } from '../lib/trips';
+import { placeOf, relinkLegs, rememberLegs, removePlace, setReservation, setupReady, suggestVisitTime, updateVisit, type LegBook, type SetupStep } from '../lib/trips';
 import { useNotes } from './NotesContext';
 import { PlaceCollector } from './sheets/PlaceSheet';
 import type { Notice } from './sheets/PlaceSheet';
@@ -53,10 +54,10 @@ export function TripSetup({
   /** 이 일정으로 시작 (the proposed plan and its Kakao distances), or null for 추천 없이 직접 짤게요. */
   onFinish: (result: { plan: Trip; meters: Record<string, number> } | null) => void;
 }) {
-  const { lodgingTbd } = useNotes();
+  const { lodgingTbd, notes } = useNotes();
   const [phase, setPhase] = useState<'idle' | 'running' | 'preview'>('idle');
   const [stage, setStage] = useState(0);
-  const [result, setResult] = useState<{ plan: Trip; meters: Record<string, number> } | null>(null);
+  const [result, setResult] = useState<{ plan: Trip; meters: Record<string, number>; insights: RecommendInsights } | null>(null);
   const ready = setupReady(plan, lodgingTbd, step);
 
   /** 경로 추천: the real work runs between the progress lines, so what the user watches is what happens. */
@@ -67,21 +68,33 @@ export function TripSetup({
     // it the first leg simply stays for the car to time.
     if (plan.origin.kind === 'CURRENT' && !getHere()) await locate(8_000);
     await wait(500);
-    const proposed = recommendRoute(plan, home);
+    const pool = await favorites.all().catch(() => []);
+    // The whole trip is arranged at once (M64): first on straight-line estimates of the driving times…
+    let found = recommend(plan, home, { notes, pool });
     setStage(2);
     await wait(500);
     setStage(3);
-    let next = proposed;
     const meters: Record<string, number> = {};
-    for (const r of allRuns(next, home)) {
-      const res = await fetchRun(r);
-      if (!res) break; // directions unavailable: the preview simply shows no times there
-      const out = applyRun(next, r, res, { overwrite: true });
-      next = out.plan;
-      Object.assign(meters, out.meters);
-    }
+    const timed = async (from: Trip): Promise<Trip> => {
+      let next = from;
+      for (const r of allRuns(next, home)) {
+        const res = await fetchRun(r);
+        if (!res) break; // directions unavailable: the preview simply shows no times there
+        const out = applyRun(next, r, res, { overwrite: true });
+        next = out.plan;
+        Object.assign(meters, out.meters);
+      }
+      return next;
+    };
+    let next = await timed(found.plan);
+    // …then once more with the real times of that order, in case they change which order is best.
+    const book: LegBook = new Map();
+    rememberLegs(next, book);
+    const again = recommend(next, home, { notes, pool, book });
+    if (again.plan !== next && summarizeRecommendation(next, again.plan).changed) next = await timed(relinkLegs(next, again.plan, book));
+    found = { plan: next, insights: again.insights };
     await wait(300);
-    setResult({ plan: next, meters });
+    setResult({ plan: next, meters, insights: found.insights });
     setPhase('preview');
   };
 
@@ -190,7 +203,7 @@ export function TripSetup({
               })}
             </ol>
           )}
-          {phase === 'preview' && result && <RecommendPreview display={result.plan} diff={summarizeRecommendation(plan, result.plan)} />}
+          {phase === 'preview' && result && <RecommendPreview display={result.plan} diff={summarizeRecommendation(plan, result.plan)} insights={result.insights} />}
           <button type="button" className="tl-textbtn tl-setup-skip" onClick={() => onFinish(null)}>
             {t('setup.skip')}
           </button>

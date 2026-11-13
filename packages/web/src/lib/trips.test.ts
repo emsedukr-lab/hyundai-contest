@@ -521,3 +521,21 @@ describe('compact card times (M51)', () => {
     expect(leaveFor(t, 2, 4, at(t, 2))).toBeNull(); // the leg into the lodging
   });
 });
+
+describe('a stop\'s stay starts at its kind\'s usual length (M64)', () => {
+  const place = (category: 'SIGHT' | 'FOOD' | 'CAFE' | 'OTHER') => ({ name: 'x', address: '', latE7: 375_000_000, lonE7: 1_270_000_000, category, source: { provider: 'MANUAL' as const, externalId: null }, naviPoi: null, hours: { status: 'UNKNOWN' as const } });
+  const stayOf = (category: 'SIGHT' | 'FOOD' | 'CAFE' | 'OTHER') => addPlace(emptyPlan(), place(category)).visits[0].stayMinutes;
+
+  it('a meal an hour, a cafe 45 minutes, a sight an hour and a half', () => {
+    expect([stayOf('FOOD'), stayOf('CAFE'), stayOf('SIGHT'), stayOf('OTHER')]).toEqual([60, 45, 90, 60]);
+    expect(addPlace(emptyPlan(), place('SIGHT'), 30).visits[0].stayMinutes).toBe(30); // a stay given by the caller stands
+  });
+
+  it('follows a change of kind unless the traveller set the stay', () => {
+    const t = addPlace(emptyPlan(), place('SIGHT'));
+    const ref = t.places[0].placeRef;
+    expect(changeCategory(t, ref, 'CAFE').visits[0].stayMinutes).toBe(45);
+    const custom = updateVisit(t, t.visits[0].visitId, { stayMinutes: 120 });
+    expect(changeCategory(custom, ref, 'CAFE').visits[0].stayMinutes).toBe(120);
+  });
+});

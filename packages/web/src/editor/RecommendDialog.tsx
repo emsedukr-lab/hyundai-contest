@@ -4,13 +4,16 @@ import { Card } from '@astryxdesign/core/Card';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { HStack, StackItem, VStack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { hhmm, timeline, type Home, type Trip } from '@tteonaljido/shared';
-import { dateLabel } from '../lib/format';
 import { t } from '../lib/i18n';
 import { Tag } from '../components/shell/Tag';
 import { placeOf, relinkLegs, visitOf, type LegBook } from '../lib/trips';
-import { missingLodgingDays, recommendRoute, summarizeRecommendation, type RecommendationDiff } from '../lib/recommend';
+import { favorites } from '../lib/db';
+import type { FavoritePlace } from '../lib/favorites';
+import { dateLabel, minutesLabel, timeLabel } from '../lib/format';
+import { missingLodgingDays, recommend, summarizeRecommendation, type RecommendInsights, type RecommendationDiff } from '../lib/recommend';
+import { useNotes } from './NotesContext';
 
 /**
  * Previews an auto route recommendation and lets the user apply or cancel (요청: "확인·수정 여지"). If a night has no
@@ -34,7 +37,15 @@ export function RecommendDialog({
 }) {
   const [proceeded, setProceeded] = useState(false);
   const gaps = useMemo(() => missingLodgingDays(plan), [plan]);
-  const proposed = useMemo(() => recommendRoute(plan, home), [plan, home]);
+  const { notes } = useNotes();
+  // Favorite places may be offered for a long gap; they are read when the dialog opens.
+  const [pool, setPool] = useState<FavoritePlace[]>([]);
+  useEffect(() => {
+    if (isOpen) void favorites.all().then(setPool, () => undefined);
+  }, [isOpen]);
+  // The whole trip is arranged at once (M64), which takes a moment: only while the dialog is open, never on every edit behind it.
+  const found = useMemo(() => (isOpen ? recommend(plan, home, { book, notes, pool }) : null), [isOpen, plan, home, book, notes, pool]);
+  const proposed = found?.plan ?? plan;
   // Display copy with travel times re-linked exactly as edit() will, over a throwaway book so the real one is untouched.
   const display = useMemo(() => relinkLegs(plan, proposed, new Map(book)), [plan, proposed, book]);
   const diff = useMemo(() => summarizeRecommendation(plan, display), [plan, display]);
@@ -70,7 +81,7 @@ export function RecommendDialog({
             <Banner status="info" title={t('recommend.noChanges')} />
           )}
 
-          <RecommendPreview display={display} diff={diff} />
+          <RecommendPreview display={display} diff={diff} insights={found?.insights} />
 
           <HStack gap={2}>
             <Button label={t('common.cancel')} variant="secondary" onClick={close} />
@@ -94,10 +105,29 @@ export function RecommendDialog({
 }
 
 /** The proposed days, stop by stop with their times and what changed — shared by this dialog and the new-trip setup (M43). */
-export function RecommendPreview({ display, diff }: { display: Trip; diff: RecommendationDiff }) {
+export function RecommendPreview({ display, diff, insights }: { display: Trip; diff: RecommendationDiff; insights?: RecommendInsights }) {
   const clock = (m: number) => (m < 0 ? t('days.prevDay') : hhmm(m));
   return (
     <VStack gap={3}>
+      <Text type="supporting" color="secondary">
+        {t('recommend.rules')}
+      </Text>
+      {insights && insights.hardViolations > 0 && <Banner status="warning" title={t('recommend.hard', { n: insights.hardViolations })} />}
+      {insights?.gaps.map((g) => (
+        <Banner
+          key={`${g.dayIndex}-${g.beforeVisitId}`}
+          status="info"
+          title={t('recommend.gap', { day: g.dayIndex, name: g.beforeName, duration: minutesLabel(g.minutes) })}
+          description={g.suggestion ? t('recommend.gap.suggest', { name: g.suggestion.name }) : undefined}
+        />
+      ))}
+      {insights?.lodgingNotes.map((n) => (
+        <Banner
+          key={`${n.dayIndex}-${n.kind}`}
+          status="info"
+          title={t(n.kind === 'ARRIVES_BEFORE_CHECKIN' ? 'recommend.checkin' : 'recommend.checkout', { day: n.dayIndex, time: n.time ? timeLabel(n.time) : '', duration: minutesLabel(n.minutes) })}
+        />
+      ))}
       {display.days.map((d) => {
         const times = timeline(display, d.dayIndex);
         return (

@@ -17,7 +17,7 @@ import {
   type Trip,
   type TripTransfer,
   type Visit,
-} from '@tteonaljido/shared';
+ DEFAULT_STAY } from '@tteonaljido/shared';
 import { t } from './i18n';
 import type { TripNotes } from './notes';
 
@@ -136,7 +136,8 @@ export function setPeriod(plan: Trip, start: string, end: string): Trip {
 /** How many more places this trip can take before the transfer limits (100 places, 100 visits) would be broken. */
 export const placeRoom = (plan: Trip) => Math.max(0, Math.min(TRANSFER_LIMITS.maxPlaces - plan.places.length, TRANSFER_LIMITS.maxVisits - plan.visits.length));
 
-export function addPlace(plan: Trip, p: Omit<Place, 'placeRef'>, stayMinutes = 60): Trip {
+/** A new stop's stay is its kind's usual length (a meal an hour, a cafe 45 minutes, a sight an hour and a half) until the traveller sets it. */
+export function addPlace(plan: Trip, p: Omit<Place, 'placeRef'>, stayMinutes: number = DEFAULT_STAY[p.category] || 60): Trip {
   // Past the limits the car would refuse the whole trip at the very end; stop here, where the user can still act.
   if (placeRoom(plan) <= 0) throw new Error(t('trip.placeLimit', { n: TRANSFER_LIMITS.maxPlaces }));
   const placeRef = newRef('p');
@@ -398,15 +399,20 @@ export const updatePlace = (plan: Trip, placeRef: string, patch: Partial<Place>)
 
 /** Changes a place's category and keeps its visit in step: lodging has no visit, every other kind has one. */
 export function changeCategory(plan: Trip, placeRef: string, category: Place['category']): Trip {
+  const before = placeOf(plan, placeRef)?.category;
   let next = updatePlace(plan, placeRef, { category });
   const hasVisit = plan.visits.some((v) => v.placeRef === placeRef);
+  // A stay still at its old kind's usual length follows the new kind; one the traveller set is kept.
+  if (before && before !== 'LODGING' && category !== 'LODGING') {
+    next = { ...next, visits: next.visits.map((v) => (v.placeRef === placeRef && v.stayMinutes === DEFAULT_STAY[before] ? { ...v, stayMinutes: DEFAULT_STAY[category] } : v)) };
+  }
   if (category === 'LODGING' && hasVisit) {
     for (const v of plan.visits.filter((v) => v.placeRef === placeRef)) next = unassign(next, v.visitId);
     next = { ...next, visits: next.visits.filter((v) => v.placeRef !== placeRef) };
   } else if (category !== 'LODGING' && !hasVisit) {
     next = {
       ...next,
-      visits: [...next.visits, { visitId: newRef('v'), placeRef, stayMinutes: 60, prepMinutes: 0, importance: 'NORMAL', desiredTime: null, fixed: null, dateFlexible: true, timeFlexible: true, unassignedReason: 'NOT_SCHEDULED_YET' }],
+      visits: [...next.visits, { visitId: newRef('v'), placeRef, stayMinutes: DEFAULT_STAY[category], prepMinutes: 0, importance: 'NORMAL', desiredTime: null, fixed: null, dateFlexible: true, timeFlexible: true, unassignedReason: 'NOT_SCHEDULED_YET' }],
     };
   }
   return next;

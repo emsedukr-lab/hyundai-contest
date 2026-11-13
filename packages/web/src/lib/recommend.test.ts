@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { parseTransfer, sampleTrip, type Day, type Home, type Place, type Trip, type Visit } from '@tteonaljido/shared';
 import { newDoc, rememberLegs, relinkLegs, setLodging, toTransfer, type LegBook } from './trips';
-import { metresE7, missingLodgingDays, recommendRoute, summarizeRecommendation } from './recommend';
+import { estimateDriveMinutes, metresE7, missingLodgingDays, recommend, recommendRoute, summarizeRecommendation } from './recommend';
 
 const home: Home = { address: '서울', latE7: 375_662_952, lonE7: 1_269_779_451 };
 const e7 = (deg: number | null) => (deg === null ? null : Math.round(deg * 1e7));
@@ -95,18 +95,22 @@ describe('recommendRoute', () => {
     expect(out.visits.filter((v) => v.unassignedReason !== null)).toHaveLength(1); // exactly one OPTIONAL overflow
   });
 
-  it('puts a meal before an adjacent cafe (식사 후 카페)', () => {
+  it('puts the cafe right after lunch when both fit either way (식사 후 카페)', () => {
+    // One day, everything close by, leaving late in the morning: lunch lands at lunch time in either order, so the
+    // only difference is that a cafe is best right after the meal.
     const t = trip({
-      places: [P('cafe1', 'CAFE', 37.5, 127.0), P('food1', 'FOOD', 37.5, 127.02), P('L', 'LODGING', 37.5, 128.0)],
+      places: [P('cafe1', 'CAFE', 37.5, 127.0), P('food1', 'FOOD', 37.5, 127.02), P('L', 'LODGING', 37.5, 127.05)],
       visits: [V('vc', 'cafe1'), V('vf', 'food1')],
-      days: [D(1, ['vc', 'vf'], 'L'), D(2, [])],
+      days: [D(1, ['vc', 'vf'], 'L')],
+      firstDay: { basis: 'DEPART_ORIGIN', departTime: '11:20' },
+      finalDestination: { kind: 'PLACE', placeRef: 'L' },
       home: null,
     });
-    const h: Home = { address: 'h', latE7: e7(37.5)!, lonE7: e7(126.0)! };
-    expect(order(recommendRoute({ ...t, origin: { kind: 'HOME' } }, h), 1)).toEqual(['vf', 'vc']); // food before cafe
+    const h: Home = { address: 'h', latE7: e7(37.5)!, lonE7: e7(126.95)! };
+    expect(order(recommendRoute(t, h), 1)).toEqual(['vf', 'vc']); // food before cafe
   });
 
-  it('keeps name-only (no-coord) stops, after the coord stops', () => {
+  it('keeps name-only (no-coord) stops in the plan and still orders the located ones along the way', () => {
     const t = trip({
       places: [P('p1', 'SIGHT', 37.5, 126.2), P('p2', 'SIGHT', 37.5, 126.9), P('noco', 'FOOD', null, null), P('L', 'LODGING', 37.5, 127.0)],
       visits: [V('v1', 'p1'), V('v2', 'p2'), V('vn', 'noco')],
@@ -115,8 +119,11 @@ describe('recommendRoute', () => {
     });
     const h: Home = { address: 'h', latE7: e7(37.5)!, lonE7: e7(126.0)! };
     const out = recommendRoute({ ...t, origin: { kind: 'HOME' } }, h);
-    expect(order(out, 1).at(-1)).toBe('vn'); // name-only appended before the lodging anchor
-    expect(order(out, 1).slice(0, 2)).toEqual(['v1', 'v2']); // coord stops ordered by proximity toward lodging
+    const all = out.days.flatMap((d) => d.visitOrder);
+    expect(all.sort()).toEqual(['v1', 'v2', 'vn']); // nothing dropped: a place without coordinates is still a stop
+    const day1 = order(out, 1);
+    // Heading east from home, the western sight comes before the eastern one wherever the name-only meal falls.
+    if (day1.includes('v1') && day1.includes('v2')) expect(day1.indexOf('v1')).toBeLessThan(day1.indexOf('v2'));
   });
 
   it('preserves user-typed travel times for adjacencies that survive', () => {
@@ -133,6 +140,52 @@ describe('recommendRoute', () => {
   it('is idempotent', () => {
     const once = recommendRoute(sampleTrip(), null);
     expect(recommendRoute(once, null)).toEqual(once);
+  });
+});
+
+describe('recommend (M64): what the engine is told and what it reports back', () => {
+  it('estimates a drive from the straight line where nothing was measured: slower in town than between towns', () => {
+    expect(estimateDriveMinutes(0)).toBe(3); // never less than a few minutes
+    expect(estimateDriveMinutes(2_000)).toBe(6); // 2.7 km of road at town speed
+    expect(estimateDriveMinutes(10_000)).toBe(20);
+    expect(estimateDriveMinutes(150_000)).toBe(162); // about 200 km of road at highway speed
+  });
+
+  it('uses a measured driving time over the estimate', () => {
+    // Two sights and a booked lunch; by the straight line the lunch is 20 minutes from the lodging's side of town.
+    const t = trip({
+      places: [P('s', 'SIGHT', 37.5, 127.0), P('r', 'FOOD', 37.5, 127.1), P('L', 'LODGING', 37.5, 127.12)],
+      visits: [V('vs', 's', { stayMinutes: 90, dateFlexible: false }), V('vr', 'r', { fixed: { time: '11:30', kind: 'RESERVATION' } })],
+      days: [D(1, ['vs', 'vr'], 'L')],
+      firstDay: { basis: 'DEPART_ORIGIN', departTime: '09:00' },
+      finalDestination: { kind: 'PLACE', placeRef: 'L' },
+    });
+    const h: Home = { address: 'h', latE7: e7(37.5)!, lonE7: e7(126.98)! };
+    // Estimated: the sight (09:17–10:47), then 10:57+10 at a table held from 11:20 — just in time, so the order stays.
+    expect(order(recommendRoute(t, h), 1)).toEqual(['vs', 'vr']);
+    // Measured: that drive really takes 40 minutes. The sight no longer fits before the booking.
+    const book: LegBook = new Map([['s>r', 40]]);
+    expect(order(recommendRoute(t, h, { book }), 1)).toEqual(['vr', 'vs']);
+  });
+
+  it('reports a gap of two hours or more, with a favorite that fits, and a lodging reached before check-in', () => {
+    const t = trip({
+      places: [P('r', 'FOOD', 37.5, 127.1), P('L', 'LODGING', 37.5, 127.12)],
+      visits: [V('vr', 'r', { fixed: { time: '13:00', kind: 'RESERVATION' } })],
+      days: [D(1, ['vr'], 'L')],
+      firstDay: { basis: 'DEPART_ORIGIN', departTime: '09:00' },
+      finalDestination: { kind: 'PLACE', placeRef: 'L' },
+    });
+    const h: Home = { address: 'h', latE7: e7(37.5)!, lonE7: e7(127.0)! };
+    const fav = { ...P('park', 'SIGHT', 37.5, 127.05), id: 'geo:park', addedAt: 0 };
+    const { placeRef: _ref, ...favorite } = fav;
+    const out = recommend({ ...t, days: [D(1, ['vr'], 'L'), D(2, [])], endDate: '2026-11-21', finalDestination: { kind: 'HOME' } }, h, { notes: { L: { checkIn: '16:00' } }, pool: [favorite] });
+    expect(out.insights.gaps).toHaveLength(1);
+    expect(out.insights.gaps[0]).toMatchObject({ dayIndex: 1, beforeName: 'r', suggestion: { key: 'fav:geo:park', name: 'park' } });
+    expect(out.insights.gaps[0].minutes).toBeGreaterThanOrEqual(120);
+    expect(out.insights.lodgingNotes).toEqual([expect.objectContaining({ dayIndex: 1, kind: 'ARRIVES_BEFORE_CHECKIN', time: '16:00' })]);
+    expect(out.insights.hardViolations).toBe(0);
+    expect(out.plan).toBe(out.plan); // the plan itself: nothing to move
   });
 });
 

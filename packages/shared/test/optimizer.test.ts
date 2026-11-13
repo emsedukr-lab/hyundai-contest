@@ -1,0 +1,212 @@
+import { describe, expect, it } from 'vitest';
+import { KEY_HOME, optimizeTrip, type Day, type OptimizerInput, type Place, type Trip, type Visit } from '../src';
+
+/**
+ * Small trips on a line: a place's position is its kilometre, and driving is one minute a kilometre, so every time in
+ * these tests can be checked by hand. Day 1 is Friday 2026-11-20.
+ */
+const km: Record<string, number> = {};
+const P = (ref: string, category: Place['category'], at: number, hours: Place['hours'] = { status: 'UNKNOWN' }): Place => {
+  km[ref] = at;
+  return { placeRef: ref, name: ref, address: ref, latE7: 370_000_000, lonE7: 1_270_000_000 + at, category, source: { provider: 'MANUAL', externalId: null }, naviPoi: null, hours };
+};
+const V = (id: string, ref: string, extra: Partial<Visit> = {}): Visit => ({
+  visitId: id, placeRef: ref, stayMinutes: 60, prepMinutes: 0, importance: 'NORMAL', desiredTime: null, fixed: null, dateFlexible: true, timeFlexible: true, unassignedReason: null, ...extra,
+});
+const D = (dayIndex: number, visitOrder: string[], lodgingPlaceRef: string | null, departTime: string | null = '09:00'): Day => ({
+  dayIndex, date: `2026-11-${19 + dayIndex}`, departTime: dayIndex === 1 ? null : departTime, endBy: null, visitOrder, legs: Array(visitOrder.length + 1).fill(null), lodgingPlaceRef,
+});
+const trip = (opts: Partial<Trip> & { days: Day[]; places: Place[]; visits: Visit[] }): Trip => ({
+  tripId: '6f1c2d4e-8a3b-4c5d-9e7f-0a1b2c3d4e5f', revision: 1, updatedAt: '2026-11-05T09:00:00+09:00', name: 't', timezone: 'Asia/Seoul',
+  startDate: '2026-11-20', endDate: `2026-11-${19 + opts.days.length}`, firstDay: { basis: 'DEPART_ORIGIN', departTime: '09:00' },
+  origin: { kind: 'HOME' }, finalDestination: { kind: 'HOME' }, home: null, ...opts,
+});
+km[KEY_HOME] = 0;
+const drive: OptimizerInput['drive'] = (a, b) => (a in km && b in km ? Math.abs(km[a] - km[b]) : null);
+const run = (t: Trip, extra: Partial<OptimizerInput> = {}) => optimizeTrip({ trip: t, drive, config: { iterations: 4_000 }, ...extra });
+const open = (o: string, c: string, days = [1, 2, 3, 4, 5, 6, 7]): Place['hours'] => ({ status: 'USER_ENTERED', weekly: days.map((weekday) => ({ weekday, open: o, close: c })), closedDates: [] });
+const m = (hhmm: string) => Number(hhmm.slice(0, 2)) * 60 + Number(hhmm.slice(3));
+
+describe('optimizeTrip: the timetable it plans with', () => {
+  it('adds ten minutes of parking to every drive to another place', () => {
+    const t = trip({ places: [P('a', 'SIGHT', 30), P('b', 'SIGHT', 50), P('L', 'LODGING', 60)], visits: [V('va', 'a'), V('vb', 'b')], days: [D(1, ['va', 'vb'], 'L'), D(2, [], null)] });
+    const day = run(t).days[0];
+    expect(day.depart).toBe(m('09:00'));
+    expect(day.stops[0]).toMatchObject({ visitId: 'va', arrive: m('09:40'), start: m('09:40'), end: m('10:40'), driveMinutes: 30, parkingMinutes: 10, waitMinutes: 0 });
+    expect(day.stops[1]).toMatchObject({ visitId: 'vb', arrive: m('11:10') }); // 20 minutes of road + 10 of parking
+    expect(day.arriveEnd).toBe(m('12:30'));
+  });
+
+  it('reaches a booking ten minutes early, waits, and starts on the dot', () => {
+    const t = trip({ places: [P('r', 'FOOD', 30), P('L', 'LODGING', 40)], visits: [V('vr', 'r', { fixed: { time: '13:00', kind: 'RESERVATION' } })], days: [D(1, ['vr'], 'L'), D(2, [], null)] });
+    const out = run(t);
+    // 09:00 + 30 + 10 = 09:40 at the door; the table is held from 12:50, the meal starts 13:00.
+    expect(out.days[0].stops[0]).toMatchObject({ arrive: m('09:40'), start: m('13:00'), end: m('14:00'), waitMinutes: m('12:50') - m('09:40') });
+    expect(out.hardViolations).toBe(0);
+    // More than two hours with nothing to do: reported as a gap that opens the day.
+    expect(out.gaps).toEqual([{ dayIndex: 1, afterVisitId: null, beforeVisitId: 'vr', from: m('09:40'), to: m('13:00'), minutes: 190 }]);
+  });
+
+  it('counts a booking that cannot be reached ten minutes early as broken', () => {
+    // 09:00 + 200 + 10 = 12:30 at the earliest... for a 12:35 booking that is five minutes inside the lead time.
+    const t = trip({ places: [P('r', 'FOOD', 200), P('L', 'LODGING', 210)], visits: [V('vr', 'r', { fixed: { time: '12:35', kind: 'RESERVATION' } })], days: [D(1, ['vr'], 'L'), D(2, [], null)] });
+    expect(run(t).hardViolations).toBe(1);
+  });
+});
+
+describe('optimizeTrip: what it arranges', () => {
+  it('puts the stop that would make a booking late after it', () => {
+    // As planned: the sight first (09:40–11:10 with its 90 minutes), then 12:20 at a table booked for 12:00.
+    const t = trip({
+      places: [P('s', 'SIGHT', 30), P('r', 'FOOD', 90), P('L', 'LODGING', 100)],
+      visits: [V('vs', 's', { stayMinutes: 90, dateFlexible: false }), V('vr', 'r', { fixed: { time: '12:00', kind: 'RESERVATION' } })],
+      days: [D(1, ['vs', 'vr'], 'L'), D(2, [], null)],
+    });
+    const out = run(t);
+    expect(out.order[1]).toEqual(['vr', 'vs']); // the sight's date is the traveller's: it stays on day 1, after the meal
+    expect(out.hardViolations).toBe(0);
+    expect(out.changed).toBe(true);
+    // Free to change day, the sight goes to day 2, which passes it on the way home.
+    const free = run({ ...t, visits: t.visits.map((v) => ({ ...v, dateFlexible: true })) });
+    expect(free.order).toEqual({ 1: ['vr'], 2: ['vs'] });
+  });
+
+  it('moves a place off the day it is closed', () => {
+    // Open on Saturdays only (weekday 6): day 1 is a Friday, day 2 the Saturday.
+    const t = trip({
+      places: [P('x', 'SIGHT', 20, open('09:00', '18:00', [6])), P('L', 'LODGING', 30)],
+      visits: [V('vx', 'x')],
+      days: [D(1, ['vx'], 'L'), D(2, [], null)],
+    });
+    const out = run(t);
+    expect(out.order).toEqual({ 1: [], 2: ['vx'] });
+    expect(out.hardViolations).toBe(0);
+  });
+
+  it('leaves out a place no day can take, and says so for a 꼭 place', () => {
+    const closed = open('09:00', '18:00', [3]); // Wednesdays only: not during this trip
+    const base = { places: [P('x', 'SIGHT', 20, closed), P('L', 'LODGING', 30)], days: [D(1, ['vx'], 'L'), D(2, [], null)] };
+    const normal = run(trip({ ...base, visits: [V('vx', 'x')] }));
+    expect(normal.unassigned).toEqual(['vx']);
+    expect(normal.hardViolations).toBe(0);
+    // A 꼭 place is not dropped quietly: it stays in the plan with its broken rule counted.
+    const must = run(trip({ ...base, visits: [V('vx', 'x', { importance: 'MUST' })] }));
+    expect(must.hardViolations).toBe(1);
+  });
+
+  it('eats at meal times and has the cafe right after lunch', () => {
+    // Everything within a few kilometres, so only the clock decides. As planned the cafe comes first and lunch at 09:25.
+    const t = trip({
+      places: [P('c', 'CAFE', 12), P('f', 'FOOD', 14), P('s1', 'SIGHT', 10), P('s2', 'SIGHT', 16), P('L', 'LODGING', 18)],
+      visits: [V('vc', 'c', { stayMinutes: 45 }), V('vf', 'f'), V('v1', 's1', { stayMinutes: 90 }), V('v2', 's2', { stayMinutes: 90 })],
+      days: [D(1, ['vc', 'vf', 'v1', 'v2'], 'L'), D(2, [], null)],
+    });
+    const out = run(t);
+    const order = out.order[1];
+    expect(order.indexOf('vc')).toBe(order.indexOf('vf') + 1);
+    const lunch = out.days[0].stops.find((s) => s.visitId === 'vf')!;
+    expect(lunch.start).toBeGreaterThanOrEqual(m('11:30'));
+    expect(lunch.start).toBeLessThanOrEqual(m('13:30'));
+  });
+
+  it('does not put three cafes on one day when another day is free', () => {
+    const t = trip({
+      places: [P('c1', 'CAFE', 10), P('c2', 'CAFE', 11), P('c3', 'CAFE', 12), P('L', 'LODGING', 13), P('L2', 'LODGING', 13)],
+      visits: [V('v1', 'c1'), V('v2', 'c2'), V('v3', 'c3')],
+      days: [D(1, ['v1', 'v2', 'v3'], 'L'), D(2, [], 'L2'), D(3, [], null)],
+    });
+    const out = run(t);
+    expect(Math.max(...Object.values(out.order).map((o) => o.length))).toBeLessThanOrEqual(2);
+  });
+
+  it('waits for a place to open rather than calling it closed, but prefers an order that needs no waiting', () => {
+    // The museum opens at 11:00. Going there first means standing at the door from 09:20; the park first fills that time.
+    const t = trip({
+      places: [P('museum', 'SIGHT', 10, open('11:00', '18:00')), P('park', 'SIGHT', 12), P('L', 'LODGING', 14)],
+      visits: [V('vm', 'museum'), V('vp', 'park', { stayMinutes: 90 })],
+      days: [D(1, ['vm', 'vp'], 'L'), D(2, [], null)],
+    });
+    const out = run(t);
+    expect(out.order[1]).toEqual(['vp', 'vm']);
+    expect(out.days[0].stops[1]).toMatchObject({ visitId: 'vm', waitMinutes: 0 });
+    expect(out.hardViolations).toBe(0);
+    // Alone, the museum is simply waited for.
+    const alone = run(trip({ places: [P('museum', 'SIGHT', 10, open('11:00', '18:00')), P('L', 'LODGING', 14)], visits: [V('vm', 'museum')], days: [D(1, ['vm'], 'L'), D(2, [], null)] }));
+    expect(alone.days[0].stops[0]).toMatchObject({ arrive: m('09:20'), start: m('11:00'), waitMinutes: 100 });
+    expect(alone.hardViolations).toBe(0);
+  });
+
+  it('keeps a visit out of a break in the opening hours', () => {
+    const hours: Place['hours'] = { status: 'USER_ENTERED', weekly: [1, 2, 3, 4, 5, 6, 7].flatMap((weekday) => [{ weekday, open: '09:00', close: '10:00' }, { weekday, open: '11:30', close: '20:00' }]), closedDates: [] };
+    const t = trip({ places: [P('f', 'FOOD', 10, hours), P('L', 'LODGING', 12)], visits: [V('vf', 'f')], days: [D(1, ['vf'], 'L'), D(2, [], null)] });
+    const stop = run(t).days[0].stops[0];
+    // At the door 09:20: an hour's meal does not fit before the 10:00 break, so it starts when the kitchen reopens.
+    expect(stop).toMatchObject({ arrive: m('09:20'), start: m('11:30'), waitMinutes: 130 });
+  });
+});
+
+describe('optimizeTrip: placing what is not on a day yet', () => {
+  it('builds the days from a basket, bookings staying where they are', () => {
+    const t = trip({
+      places: [P('a', 'SIGHT', 20), P('b', 'SIGHT', 25), P('r', 'FOOD', 22), P('far', 'SIGHT', 120), P('L', 'LODGING', 30), P('L2', 'LODGING', 125)],
+      visits: [
+        V('va', 'a', { unassignedReason: 'NOT_SCHEDULED_YET' }),
+        V('vb', 'b', { unassignedReason: 'NOT_SCHEDULED_YET' }),
+        V('vfar', 'far', { unassignedReason: 'NOT_SCHEDULED_YET' }),
+        V('vr', 'r', { fixed: { time: '12:30', kind: 'RESERVATION' } }),
+        V('skip', 'a', { unassignedReason: 'USER_EXCLUDED' }),
+      ],
+      days: [D(1, ['vr'], 'L'), D(2, [], 'L2'), D(3, [], null)],
+    });
+    const out = run(t);
+    expect(out.order[1]).toContain('vr');
+    expect(out.unassigned).toEqual([]);
+    expect(Object.values(out.order).flat().sort()).toEqual(['va', 'vb', 'vfar', 'vr']); // the excluded stop is left alone
+    expect(out.order[2]).toEqual(['vfar']); // the far place goes with the day that ends out there
+    expect(out.hardViolations).toBe(0);
+  });
+
+  it('gives the same answer for the same input, and leaves a settled plan as it is', () => {
+    const t = trip({
+      places: [P('a', 'SIGHT', 20), P('b', 'SIGHT', 25), P('c', 'CAFE', 27), P('f', 'FOOD', 23), P('L', 'LODGING', 30)],
+      visits: [V('va', 'a', { unassignedReason: 'NOT_SCHEDULED_YET' }), V('vb', 'b', { unassignedReason: 'NOT_SCHEDULED_YET' }), V('vc', 'c', { unassignedReason: 'NOT_SCHEDULED_YET' }), V('vf', 'f', { unassignedReason: 'NOT_SCHEDULED_YET' })],
+      days: [D(1, [], 'L'), D(2, [], null)],
+    });
+    const once = run(t);
+    expect(run(t)).toEqual(once);
+    const settled: Trip = { ...t, visits: t.visits.map((v) => ({ ...v, unassignedReason: null })), days: t.days.map((d) => ({ ...d, visitOrder: once.order[d.dayIndex], legs: Array(once.order[d.dayIndex].length + 1).fill(null) })) };
+    const again = run(settled);
+    expect(again.changed).toBe(false);
+    expect(again.order).toEqual(once.order);
+  });
+});
+
+describe('optimizeTrip: lodging and gaps', () => {
+  it('notes an arrival before check-in and a departure after check-out when the lodging changes', () => {
+    const t = trip({
+      places: [P('a', 'SIGHT', 20), P('L', 'LODGING', 30), P('L2', 'LODGING', 40)],
+      visits: [V('va', 'a')],
+      days: [D(1, ['va'], 'L'), D(2, [], 'L2', '11:30'), D(3, [], null)],
+    });
+    const out = run(t, { lodging: { L: { checkIn: m('15:00'), checkOut: m('11:00') }, L2: { checkIn: m('15:00') } } });
+    // Day 1 is at the first lodging by 10:50 (09:30–10:30 at the sight, ten minutes of road, ten of parking): hours before its rooms are ready.
+    expect(out.lodgingNotes).toContainEqual({ dayIndex: 1, kind: 'ARRIVES_BEFORE_CHECKIN', minutes: m('15:00') - m('10:50') });
+    // Day 2 leaves at 11:30, half an hour after check-out.
+    expect(out.lodgingNotes).toContainEqual({ dayIndex: 2, kind: 'CHECKOUT_BEFORE_DEPARTURE', minutes: 30 });
+  });
+
+  it('offers a nearby place for a gap of two hours or more, when one fits', () => {
+    const t = trip({ places: [P('r', 'FOOD', 30), P('L', 'LODGING', 40)], visits: [V('vr', 'r', { fixed: { time: '13:00', kind: 'RESERVATION' } })], days: [D(1, ['vr'], 'L'), D(2, [], null)] });
+    km['fav:near'] = 25;
+    km['fav:far'] = 400;
+    const pool = [
+      { key: 'fav:far', name: '먼 곳', category: 'SIGHT' as const, hours: { status: 'UNKNOWN' as const } },
+      { key: 'fav:near', name: '가까운 곳', category: 'CAFE' as const, hours: { status: 'ALWAYS_OPEN' as const } },
+    ];
+    const gap = run(t, { pool }).gaps[0];
+    expect(gap.minutes).toBe(190);
+    expect(gap.suggestion).toEqual({ key: 'fav:near', name: '가까운 곳' });
+    // Nothing in reach: the gap is still reported, without an offer.
+    expect(run(t, { pool: [pool[0]] }).gaps[0].suggestion).toBeUndefined();
+  });
+});
