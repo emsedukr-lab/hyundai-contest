@@ -12,7 +12,7 @@ Each `## N.` section of the source goes into answer box N, written in a small ma
     > 요약                          shaded summary line with a navy bar
     | a | b | + |---|---|          table, header row first; an optional next line
     {cols: 30/70; caption: 설명}    sets column widths (%) and a "표 N." caption above it
-    ![설명](figures/x.png){70%}     figure with a "그림 N." caption (optional narrower width)
+    ![설명](figures/x.png){70%}     figure (PNG or JPEG) with a "그림 N." caption (optional narrower width)
     blank line                      paragraph break; any other line is a paragraph
 
 The template's box is an inline plain-text content control, which cannot hold paragraphs, tables or pictures, so
@@ -196,8 +196,8 @@ def table_xml(rows: list[list[str]], cols: list[int] | None) -> str:
     borders = "".join(f"<w:{s} {edge}/>" for s in ("top", "left", "bottom", "right", "insideH", "insideV"))
     tblpr = (
         f'<w:tblPr><w:tblW w:w="{TABLE_W}" w:type="dxa"/><w:jc w:val="center"/><w:tblBorders>{borders}</w:tblBorders>'
-        '<w:tblLayout w:type="fixed"/><w:tblCellMar><w:top w:w="70" w:type="dxa"/><w:left w:w="110" w:type="dxa"/>'
-        '<w:bottom w:w="70" w:type="dxa"/><w:right w:w="110" w:type="dxa"/></w:tblCellMar>'
+        '<w:tblLayout w:type="fixed"/><w:tblCellMar><w:top w:w="40" w:type="dxa"/><w:left w:w="110" w:type="dxa"/>'
+        '<w:bottom w:w="40" w:type="dxa"/><w:right w:w="110" w:type="dxa"/></w:tblCellMar>'
         '<w:tblLook w:val="04A0" w:firstRow="1" w:lastRow="0" w:firstColumn="1" w:lastColumn="0" w:noHBand="1" w:noVBand="1"/></w:tblPr>'
     )
     grid = "<w:tblGrid>" + "".join(f'<w:gridCol w:w="{x}"/>' for x in w) + "</w:tblGrid>"
@@ -209,22 +209,35 @@ def table_xml(rows: list[list[str]], cols: list[int] | None) -> str:
             shade = '<w:shd w:val="clear" w:color="auto" w:fill="E8EDF4"/>' if header else ""
             content = inline(text, size=SMALL, bold=header or c == 0, color=NAVY if header or c == 0 else None)
             # Keep-with-next on every row but the last keeps a short table on one page.
-            p = para(content, after=0, line='w:line="264" w:lineRule="auto"', head="<w:keepNext/>" if r < len(rows) - 1 else "")
+            p = para(content, after=0, line='w:line="250" w:lineRule="auto"', head="<w:keepNext/>" if r < len(rows) - 1 else "")
             tcs.append(f'<w:tc><w:tcPr><w:tcW w:w="{w[c]}" w:type="dxa"/>{shade}<w:vAlign w:val="center"/></w:tcPr>{p}</w:tc>')
         trpr = "<w:trPr><w:cantSplit/>" + ("<w:tblHeader/>" if header else "") + "</w:trPr>"
         trs.append(f"<w:tr>{trpr}{''.join(tcs)}</w:tr>")
     return f"<w:tbl>{tblpr}{grid}{''.join(trs)}</w:tbl>"
 
 
-def png_size(path: Path) -> tuple[int, int]:
-    head = path.read_bytes()[:24]
-    if head[:8] != b"\x89PNG\r\n\x1a\n":
-        raise SystemExit(f"not a PNG: {path}")
-    return struct.unpack(">II", head[16:24])
+def image_size(path: Path) -> tuple[int, int]:
+    data = path.read_bytes()
+    if data[:8] == b"\x89PNG\r\n\x1a\n":
+        return struct.unpack(">II", data[16:24])
+    if data[:2] == b"\xff\xd8":
+        # Walk the JPEG segments to the first start-of-frame marker, which holds height and width.
+        i = 2
+        while i + 9 < len(data):
+            if data[i] != 0xFF:
+                i += 1
+                continue
+            marker = data[i + 1]
+            length = struct.unpack(">H", data[i + 2 : i + 4])[0]
+            if marker in (0xC0, 0xC1, 0xC2):
+                h, w = struct.unpack(">HH", data[i + 5 : i + 9])
+                return w, h
+            i += 2 + length
+    raise SystemExit(f"not a PNG or JPEG: {path}")
 
 
 def figure_xml(n: int, rid: str, path: Path, caption: str, pct: int = 100) -> str:
-    w, h = png_size(path)
+    w, h = image_size(path)
     cx = MAX_EMU * pct // 100
     cy = round(cx * h / w)
     cap = escape(caption)
@@ -362,8 +375,10 @@ def main():
             rels.write_text(r.replace("</Relationships>", add + "</Relationships>"), encoding="utf-8")
             ct = work / "[Content_Types].xml"
             c = ct.read_text(encoding="utf-8")
-            if 'Extension="png"' not in c:
-                ct.write_text(c.replace("<Default Extension=\"xml\"", '<Default Extension="png" ContentType="image/png"/><Default Extension="xml"', 1), encoding="utf-8")
+            for ext, mime in (("png", "image/png"), ("jpg", "image/jpeg")):
+                if f'Extension="{ext}"' not in c and any(p.suffix == f".{ext}" for _, p in media):
+                    c = c.replace('<Default Extension="xml"', f'<Default Extension="{ext}" ContentType="{mime}"/><Default Extension="xml"', 1)
+            ct.write_text(c, encoding="utf-8")
         dst.unlink(missing_ok=True)
         subprocess.run(["zip", "-XqrD", str(dst.resolve()), "."], cwd=work, check=True)
     print(f"written {dst} ({len(media)} figures)")
