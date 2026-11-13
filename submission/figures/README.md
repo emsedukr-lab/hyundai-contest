@@ -28,6 +28,6 @@ GPT Image로 만든 실사풍 장면입니다(ChatGPT 구독, Codex CLI 브리�
 - `ph-navi` — 3절 차량이기에 가능한 것: 주행 중 차 화면에는 경로·일정 상태만
 - `ph-storyboard` — 4절: 집에서 계획 → QR → 주행 → 제시간 도착 4컷(같은 가족)
 - `ph-fleet` — 6절 확장 ①: 렌터카 영업소의 출고 전 충전 점검
-- 불편 ①(동선 짜기에 밤을 새우는 장면)은 두 가지 문안으로 일곱 번 시도했으나 모두 이미지가 만들어지지 않아 넣지 않았습니다(`pain-planning`, `pain-planning-alt`).
+- `ph-pain-planning` — 2절 불편 ①: 자정 가까이 지도의 핀을 보며 날짜·순서를 정하지 못하는 부부
 
-다시 만들기: `node ~/.claude/skills/gpt-image/scripts/gpt_image.mjs batch --manifest <photos.json 복사본> --concurrency 1` → 결과 PNG를 가로 1600px, JPEG 품질 86으로 줄여 `ph-*.jpg`로 저장(양식 용량 때문에 JPEG). 같은 계정의 다른 Codex 작업과 겹치면 먼저 시작한 작업이 이미지 없이 끝나는 일이 잦았습니다. 생성 원본 폴더 `generated-images/`는 커밋하지 않습니다.
+다시 만들기: `node ~/.claude/skills/gpt-image/scripts/gpt_image.mjs batch --manifest <photos.json 복사본> --concurrency 1` → 결과 PNG를 가로 1600px, JPEG 품질 86으로 줄여 `ph-*.jpg`로 저장(양식 용량 때문에 JPEG). 브리지 실행마다 처음 시작한 작업은 이미지 없이 끝나는 일이 반복됐습니다(일곱 번 연속). 꼭 필요한 이미지는 같은 문안을 두 작업으로 연달아 넣으면 두 번째가 만들어집니다. 생성 원본 폴더 `generated-images/`는 커밋하지 않습니다.

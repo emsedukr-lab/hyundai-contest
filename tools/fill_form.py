@@ -15,9 +15,10 @@ Each `## N.` section of the source goes into answer box N, written in a small ma
     ![설명](figures/x.png){70%}     figure (PNG or JPEG) with a "그림 N." caption (optional narrower width)
     blank line                      paragraph break; any other line is a paragraph
 
-The template's box is an inline plain-text content control, which cannot hold paragraphs, tables or pictures, so
-the box's paragraph is replaced by a block-level rich-text control with the same alias/tag/id. Every answer row
-may then break across pages (the template marks them cantSplit, which a box taller than a page cannot honour).
+The template's box is a one-cell table holding an inline plain-text content control, which cannot hold paragraphs,
+tables or pictures. The box's row is replaced by several rows wrapped in one row-level rich-text control with the
+same alias/tag/id: stretches of text and figures may break across pages, while each table (with its caption and a
+heading right above it) gets a row that may not, so Word moves it to the next page whole instead of cutting it.
 
 Usage: python3 tools/fill_form.py <official.docx> <out.docx>
 """
@@ -37,7 +38,7 @@ TABLE_ATTRS = re.compile(r"^\{(.+)\}\s*$")
 CIRCLED = re.compile(r"^(\*\*)?([①-⑳])\s*")
 # The answer box is 9937 dxa wide with 110 dxa margins on each side; 1 dxa = 635 EMU.
 MAX_EMU = (9866 - 220 - 40) * 635
-TABLE_W = 9680
+TABLE_W = 9640  # inside the answer cell: 9866 − 2 × 110 margin
 
 NAVY = "16324F"
 GREY = "5B6574"
@@ -216,27 +217,6 @@ def table_xml(rows: list[list[str]], cols: list[int] | None) -> str:
     return f"<w:tbl>{tblpr}{grid}{''.join(trs)}</w:tbl>"
 
 
-def unsplittable(content: str) -> str:
-    """Wraps a caption and table in a borderless one-row table whose row may not break across pages.
-
-    Inside the answer cell Word ignores keep-with-next and repeated header rows of a nested table, so a table
-    could be cut at a page end with its second half headerless. A nested row marked cantSplit is honoured: when
-    the wrapped table does not fit in what is left of the page, the whole wrapper moves to the next page.
-    """
-    none = "".join(f'<w:{s} w:val="nil"/>' for s in ("top", "left", "bottom", "right", "insideH", "insideV"))
-    zero = "".join(f'<w:{s} w:w="0" w:type="dxa"/>' for s in ("top", "left", "bottom", "right"))
-    tblpr = (
-        f'<w:tblPr><w:tblW w:w="{TABLE_W}" w:type="dxa"/><w:jc w:val="center"/><w:tblBorders>{none}</w:tblBorders>'
-        f'<w:tblLayout w:type="fixed"/><w:tblCellMar>{zero}</w:tblCellMar>'
-        '<w:tblLook w:val="0000" w:firstRow="0" w:lastRow="0" w:firstColumn="0" w:lastColumn="0" w:noHBand="1" w:noVBand="1"/></w:tblPr>'
-    )
-    end = para("", after=0, line='w:line="40" w:lineRule="exact"')
-    return (
-        f'<w:tbl>{tblpr}<w:tblGrid><w:gridCol w:w="{TABLE_W}"/></w:tblGrid><w:tr><w:trPr><w:cantSplit/></w:trPr>'
-        f'<w:tc><w:tcPr><w:tcW w:w="{TABLE_W}" w:type="dxa"/></w:tcPr>{content}{end}</w:tc></w:tr></w:tbl>'
-    )
-
-
 def image_size(path: Path) -> tuple[int, int]:
     data = path.read_bytes()
     if data[:8] == b"\x89PNG\r\n\x1a\n":
@@ -282,28 +262,40 @@ class Counter:
         self.table = 0
 
 
-def render(bs: list[tuple], count: Counter, media: list[tuple[str, Path]]) -> str:
-    out = []
+def render(bs: list[tuple], count: Counter, media: list[tuple[str, Path]]) -> list[tuple[str, bool]]:
+    """Renders one answer as chunks: (xml, keep_together).
+
+    Each table, with its caption and a heading right above it, is a chunk of its own that must stay on one page;
+    the blocks between tables form chunks that may break anywhere. `fill` turns every chunk into a row of the
+    answer box (see there for why).
+    """
+    chunks: list[tuple[str, bool]] = []
+    run_: list[tuple[str, str]] = []  # (kind, xml) of the current breakable stretch
+
+    def flush():
+        if run_:
+            chunks.append(("".join(x for _, x in run_), False))
+            run_.clear()
+
     for k, b in enumerate(bs):
         kind = b[0]
         if kind == "heading":
-            out.append(heading_xml(b[1], first=k == 0))
+            run_.append((kind, heading_xml(b[1], first=k == 0)))
         elif kind == "para":
-            out.append(para(inline(b[1])))
+            run_.append((kind, para(inline(b[1]))))
         elif kind == "bullet":
-            out.append(bullet_xml(b[1], b[2]))
+            run_.append((kind, bullet_xml(b[1], b[2])))
         elif kind == "quote":
-            out.append(quote_xml(b[1]))
+            run_.append((kind, quote_xml(b[1])))
         elif kind == "table":
             _, rows, cols, caption = b
-            inner = ""
+            head = run_.pop()[1] if run_ and run_[-1][0] == "heading" else ""
+            flush()
+            inner = head
             if caption:
                 count.table += 1
                 inner += caption_xml("표", count.table, caption, before=60, after=60, keep=True)
-            inner += table_xml(rows, cols)
-            out.append(unsplittable(inner))
-            # A paragraph after the table keeps a following table or figure apart from it.
-            out.append(para("", after=60, line='w:line="160" w:lineRule="exact"'))
+            chunks.append((inner + table_xml(rows, cols), True))
         elif kind == "figure":
             _, caption, rel, pct = b
             path = (SOURCE.parent / rel).resolve()
@@ -312,8 +304,39 @@ def render(bs: list[tuple], count: Counter, media: list[tuple[str, Path]]) -> st
             count.figure += 1
             rid = f"rIdFig{count.figure}"
             media.append((rid, path))
-            out.append(figure_xml(count.figure, rid, path, caption, pct))
-    return "".join(out)
+            run_.append((kind, figure_xml(count.figure, rid, path, caption, pct)))
+    flush()
+    return chunks
+
+
+def answer_rows(chunks: list[tuple[str, bool]], sdt_pr: str) -> str:
+    """The answer box's rows, wrapped in one row-level content control that keeps the template's alias/tag/id.
+
+    Word honours "don't split this row" only for rows of the box table itself: inside the cell it ignores
+    keep-with-next, repeated header rows and cantSplit of nested tables, so a table could be cut at a page end
+    with its second half headerless. Giving each table its own cantSplit row moves it to the next page whole
+    when it does not fit. The box has borders on its outer edges only, so the rows still read as one box.
+    """
+    rows = []
+    for i, (xml, keep) in enumerate(chunks):
+        # Keep-with-next on a row's first paragraph makes Word keep the whole row with the next row (and so push
+        # both to a new page). A cantSplit row needs none of it; elsewhere only the opening paragraph loses it.
+        if keep:
+            xml = xml.replace("<w:keepNext/>", "")
+        else:
+            end = xml.find("</w:pPr>")
+            if end != -1:
+                xml = xml[:end].replace("<w:keepNext/>", "") + xml[end:]
+        top = 110 if i == 0 else (80 if keep else 0)
+        bottom = 110 if i == len(chunks) - 1 else (80 if keep else 0)
+        if xml.endswith("</w:tbl>") or not xml:
+            # A cell must end with a paragraph; this one is all but invisible.
+            xml += '<w:p><w:pPr><w:spacing w:before="0" w:after="0" w:line="40" w:lineRule="exact"/><w:rPr><w:sz w:val="4"/></w:rPr></w:pPr></w:p>'
+        trpr = ("<w:cantSplit/>" if keep else "") + '<w:tblCellSpacing w:w="0" w:type="dxa"/>'
+        mar = (f'<w:tcMar><w:top w:w="{top}" w:type="dxa"/><w:left w:w="110" w:type="dxa"/>'
+               f'<w:bottom w:w="{bottom}" w:type="dxa"/><w:right w:w="110" w:type="dxa"/></w:tcMar>')
+        rows.append(f'<w:tr><w:trPr>{trpr}</w:trPr><w:tc><w:tcPr><w:tcW w:w="9866" w:type="dxa"/>{mar}</w:tcPr>{xml}</w:tc></w:tr>')
+    return f"<w:sdt><w:sdtPr>{sdt_pr}</w:sdtPr><w:sdtContent>{''.join(rows)}</w:sdtContent></w:sdt>"
 
 
 # ---------- document ----------
@@ -325,19 +348,18 @@ def fill(xml: str, s: dict[str, list[str]], media: list[tuple[str, Path]]) -> st
     # Render in reading order so figures and tables are numbered as read, then splice from the back.
     count = Counter()
     bodies = [render(blocks(s[str(i)]), count, media) for i in range(1, 9)]
-    for m, body in reversed(list(zip(sdts, bodies))):
+    for m, chunks in reversed(list(zip(sdts, bodies))):
         pr = re.search(r"<w:sdtPr>.*?</w:sdtPr>", m.group(0), re.S).group(0)
         keep = "".join(re.findall(r"<w:(?:alias|tag|id) [^>]*/>", pr))
-        p_start = max(xml.rfind("<w:p ", 0, m.start()), xml.rfind("<w:p>", 0, m.start()))
-        p_end = xml.index("</w:p>", m.end()) + len("</w:p>")
-        if re.search(r"<w:r[ >]", xml[p_start : m.start()]) or "<w:r" in xml[m.end() : p_end]:
-            raise SystemExit("answer box paragraph holds more than the content control")
-        tail = '<w:p><w:pPr><w:spacing w:before="0" w:after="0" w:line="120" w:lineRule="exact"/><w:rPr><w:sz w:val="4"/></w:rPr></w:pPr></w:p>'
-        rich = f"<w:sdt><w:sdtPr>{keep}</w:sdtPr><w:sdtContent>{body}</w:sdtContent></w:sdt>{tail}"
-        xml = xml[:p_start] + rich + xml[p_end:]
-        row_start = xml.rfind("<w:tr ", 0, p_start)
-        trpr_end = xml.index("</w:trPr>", row_start)
-        xml = xml[:row_start] + xml[row_start:trpr_end].replace("<w:cantSplit/>", "") + xml[trpr_end:]
+        # The answer box is a one-row, one-cell table whose only paragraph holds the content control.
+        row_start = xml.rfind("<w:tr ", 0, m.start())
+        row_end = xml.index("</w:tr>", m.end()) + len("</w:tr>")
+        cell = xml[row_start:row_end]
+        if cell.count("<w:p ") + cell.count("<w:p>") != 1 or cell.count("<w:tc>") != 1:
+            raise SystemExit("answer box row is not a single cell with a single paragraph")
+        if xml.count("<w:tr ", xml.rfind("<w:tbl>", 0, row_start), row_end) != 1:
+            raise SystemExit("answer box table has more than one row")
+        xml = xml[:row_start] + answer_rows(chunks, keep) + xml[row_end:]
 
     # "앱명 / 프로젝트명: ____" lines (sections 01, 02 and 04): keep the label, replace the blanks with the name.
     name = escape(next(x.strip() for x in s["앱명"] if x.strip()))

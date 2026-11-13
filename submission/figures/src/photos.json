@@ -4,7 +4,8 @@
     {
       "id": "pain-planning",
       "prompt": "Photorealistic documentary photograph, 16:9 landscape. Late evening at the dining table of a Korean apartment. A tired Korean woman in her late thirties, hair loosely tied back, sits in front of an open laptop and a smartphone; both screens show a map crowded with dozens of colored location pins, rendered slightly out of focus so nothing on them is readable. Spread around her: a folded paper road map of the Korean east coast marked with pen circles and crossed-out arrows, several yellow sticky notes covered in scribbles too small to read, a printed hotel confirmation lying face down, a half-finished glass of barley tea, an eraser and pencil shavings. She presses her temple with one hand and holds a pencil in the other, staring at the laptop, visibly stuck on which day and in what order to visit the places. In the soft-focus background, a plain wall clock without numerals points to almost midnight and a child's crayon drawing of the sea is taped to the refrigerator. Lighting: a warm pendant lamp from above mixed with the cool blue glow of the laptop on her face. Shot on a full-frame camera with a 35mm lens at f/1.8 from eye level across the table, shallow depth of field, natural skin texture with no retouching, true-to-life colors, subtle film grain, candid and unposed. No readable text, letters, numbers, logos or brand marks anywhere; device makers unidentifiable.",
-      "out": "generated-images/ph-pain-planning.png"
+      "out": "generated-images/ph-pain-planning.png",
+      "note": "실패(이미지 없음) — 실행마다 첫 작업이 실패하는 브리지 현상 때문으로 보임"
     },
     {
       "id": "pain-reservation",
@@ -40,7 +41,13 @@
       "id": "pain-planning-alt",
       "prompt": "Photorealistic documentary photograph, 16:9 landscape. A Korean couple in their thirties sit side by side at a wooden dining table in their apartment in the evening, planning a four-day family road trip. The table is covered with a large folded paper road map of the east coast dotted with many small colored sticker dots, a laptop and a smartphone that both show a map full of pins (slightly out of focus so nothing is readable), a notebook with several crossed-out lists, and a scatter of sticky notes. The woman points at two dots far apart on the paper map while the man frowns at the laptop, scrolling; it is clear they have been at it for hours: two empty coffee mugs, a plate of cookie crumbs, a pencil worn short. Warm pendant-lamp light mixed with the cool glow of the screen, 35mm lens at f/2 from across the table, shallow depth of field, natural skin texture, true-to-life colors, subtle film grain, candid and unposed. No readable text, letters, numbers, logos or brand marks anywhere.",
       "out": "generated-images/ph-pain-planning.png",
-      "note": "pain-planning이 계속 실패해 바꿔 본 문안(이것도 실패)"
+      "note": "실패(이미지 없음) — 실행마다 첫 작업이 실패하는 브리지 현상 때문으로 보임"
+    },
+    {
+      "id": "pain-planning-final",
+      "prompt": "Photorealistic documentary photograph, 16:9 landscape. Late at night in a Korean apartment, a couple in their mid-thirties sit side by side at a wooden dining table that has slowly filled up with trip-planning clutter. In front of them: a laptop showing a map crowded with dozens of colored pins and many open tabs, rendered softly out of focus; a smartphone showing another pin-filled map; an unfolded paper road map of the east coast covered with small colored sticker dots and pencil lines that cross back and forth, several of them half erased; a notebook with day-by-day columns crossed out and rewritten; a scatter of yellow sticky notes. The woman rests her chin on her hand and stares at the paper map; the man rubs his eyes under his glasses. Two empty mugs, a plate with only crumbs left, and a plain analog wall clock without numerals in the background, its hands near midnight, show how long they have been at it. Lighting: a single warm pendant lamp over the table and the cool blue glow of the laptop on their faces, the rest of the room falling into darkness. Shot on a full-frame camera, 35mm lens at f/2, eye level from across the table, shallow depth of field, natural skin texture, true-to-life colors, subtle film grain, a quiet candid moment. No readable text, letters, numbers, logos or brand marks anywhere; screens and paper show only shapes, lines and dots.",
+      "out": "generated-images/ph-pain-planning.png",
+      "note": "양식에 쓴 불편 ① 이미지(같은 문안 두 작업 중 두 번째가 성공)"
     }
   ]
 }
