@@ -340,14 +340,17 @@ private fun NaviPlanCard(vm: TripsViewModel, t: LocalTrip, day: Int, now: Long) 
             else -> Unit
         }
         if (carOrder != null) StatusLine(stringResource(R.string.order_car, day), Tone.NEUTRAL)
+        // Two actions at most, by what the card is saying: a faster order to take, a car order to put back, or — with
+        // neither — measuring the trip and looking for this day's fastest order. What measuring does to the navigation
+        // is said by the popup that asks before it starts, not here.
+        val faster = advice as? RouteOptimizer.Outcome.Faster
+        val canOrder = advice.let { it != null && it !is RouteOptimizer.Outcome.NotApplicable }
         FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.x12), verticalArrangement = Arrangement.spacedBy(Space.x12)) {
-            (advice as? RouteOptimizer.Outcome.Faster)?.let { a -> PleosButton(stringResource(R.string.order_apply), { vm.applyOrder(t.localId, day, a.order) }, tag = "applyOrder") }
+            if (faster != null) PleosButton(stringResource(R.string.order_apply), { vm.applyOrder(t.localId, day, faster.order) }, tag = "applyOrder")
             if (cover.total > 0) PleosButton(stringResource(R.string.navi_measure_all), { vm.measureTrip(t.localId) }, type = ButtonType.BASIC, tag = "naviMeasure")
-            val canOrder = advice.let { it != null && (it !is RouteOptimizer.Outcome.NotApplicable) }
-            if (canOrder) PleosButton(stringResource(R.string.navi_optimize_day, day), { vm.measureDay(t.localId, day) }, type = ButtonType.BASIC, tag = "naviOptimize")
-            if (carOrder != null) PleosButton(stringResource(R.string.order_reset_btn), { vm.resetOrder(t.localId, day) }, type = ButtonType.BASIC, tag = "resetOrder")
+            if (faster == null && carOrder != null) PleosButton(stringResource(R.string.order_reset_btn), { vm.resetOrder(t.localId, day) }, type = ButtonType.BASIC, tag = "resetOrder")
+            else if (faster == null && canOrder) PleosButton(stringResource(R.string.navi_optimize_day, day), { vm.measureDay(t.localId, day) }, type = ButtonType.BASIC, tag = "naviOptimize")
         }
-        PleosText(stringResource(R.string.navi_plan_note), Pleos.type.bodySmall, secondary)
     }
 }
 

@@ -28,5 +28,13 @@ fun countdown(ms: Long): String {
     return "%d:%02d".format(Locale.ROOT, s / 60, s % 60)
 }
 
-/** Road distance as the navigation measured it: one decimal under 100 km, whole kilometres above. */
-fun kmLabel(metres: Int): String = if (metres >= 100_000) "%d".format(Locale.ROOT, (metres + 500) / 1000) else "%.1f".format(Locale.ROOT, metres / 1000.0)
+/**
+ * Road distance as the navigation measured it, in one format everywhere: whole kilometres from 100 km, one decimal
+ * below — and no ".0" (the navigation rounds far-away legs to the kilometre, so "3.0km" would claim a precision it
+ * does not have next to "202km").
+ */
+fun kmLabel(metres: Int): String {
+    if (metres >= 100_000) return "%d".format(Locale.ROOT, (metres + 500) / 1000)
+    val tenths = (metres + 50) / 100
+    return if (tenths % 10 == 0) "%d".format(Locale.ROOT, tenths / 10) else "%d.%d".format(Locale.ROOT, tenths / 10, tenths % 10)
+}

@@ -203,7 +203,12 @@ export function TripSetup({
               })}
             </ol>
           )}
-          {phase === 'preview' && result && <RecommendPreview display={result.plan} diff={summarizeRecommendation(plan, result.plan)} insights={result.insights} />}
+          {phase === 'preview' && result && (
+            <>
+              <p className="tl-setup-hint">{t('recommend.rules')}</p>
+              <RecommendPreview display={result.plan} diff={summarizeRecommendation(plan, result.plan)} insights={result.insights} showNew={false} />
+            </>
+          )}
           <button type="button" className="tl-textbtn tl-setup-skip" onClick={() => onFinish(null)}>
             {t('setup.skip')}
           </button>

@@ -1,0 +1,90 @@
+/*
+ * The recommended days (RecommendPreview): one list per day. A day is a title with its count of untimed stops, then
+ * its stops as rows on hairlines inside one card surface — the same surface and divider the day plan uses — so the
+ * list reads as one block and the days as separate ones (8 inside a day, 16 between days).
+ */
+.rc-day {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.rc-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.rc-meta {
+  flex: none;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--color-text-secondary);
+}
+.rc-empty {
+  margin: 0;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--color-text-secondary);
+}
+.rc-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-radius: var(--radius-container);
+  background: var(--color-background-card);
+  border: 1px solid var(--pleos-divider-secondary);
+}
+/* A row: number, name and its tags on one line that may wrap; the time, when known, ends the row. */
+.rc-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  min-height: 44px;
+  padding: 8px 16px;
+}
+.rc-row + .rc-row {
+  border-top: 1px solid var(--pleos-divider-secondary);
+}
+.rc-n {
+  flex: none;
+  width: 16px;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+.rc-name {
+  min-width: 0;
+  font-size: 15px;
+  line-height: 20px;
+  color: var(--color-text-primary);
+}
+.rc-tags {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.rc-tags:empty {
+  display: none;
+}
+.rc-time {
+  margin-left: auto;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+/* What the engine noticed: plain secondary lines, not banners. */
+.rc-notes {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--color-text-secondary);
+}
