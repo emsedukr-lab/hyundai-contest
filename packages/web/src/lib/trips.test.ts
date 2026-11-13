@@ -329,9 +329,9 @@ describe('where a trip starts (M59)', () => {
     expect(await parseTransfer(JSON.stringify(await toTransfer(await newDoc(t, null), false)))).toMatchObject({ ok: true });
   });
 
-  it('the current location has no fixed point, so the first leg has no key and is left to the car', () => {
+  it('until the phone knows where it is, the first leg from the current location is left to the car', () => {
     const t = setOrigin(sampleTrip(), { kind: 'CURRENT' });
-    expect(legKeys(t, 1)[0]).toBeNull();
+    expect(legKeys(t, 1)[0]).toBe('@here>cheolttuk');
     expect(legKeys(t, 2)[0]).toBe('skybay>lake'); // later days start from the lodging of the night before
     expect(emptyRuns(t, home).some((r) => r.dayIndex === 1 && r.fromK === 0)).toBe(false); // not asked even with a home address
   });

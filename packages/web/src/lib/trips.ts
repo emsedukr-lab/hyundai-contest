@@ -336,8 +336,8 @@ export const setEndBy = (plan: Trip, dayIndex: number, time: string | null): Tri
 
 /* ---------- travel times follow their pair of places ---------- */
 
-/** Null for 현재 위치: no fixed point, so its leg has no key and is timed by the car. */
-const endpointKey = (e: Endpoint) => (e.kind === 'HOME' ? '@home' : e.kind === 'PLACE' ? e.placeRef : null);
+/** 현재 위치 is '@here': its leg follows the pair of ends like any other, and is timed when the phone's position is known (lib/here.ts). */
+const endpointKey = (e: Endpoint) => (e.kind === 'HOME' ? '@home' : e.kind === 'PLACE' ? e.placeRef : '@here');
 
 /** "from>to" for each leg of a day (same idea as the car's LegKeys); null where an end is not set. */
 export function legKeys(plan: Trip, dayIndex: number): (string | null)[] {

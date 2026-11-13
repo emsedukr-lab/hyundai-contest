@@ -9,6 +9,7 @@ import { CheckIcon, StarIcon } from '../components/shell/icons';
 import { shortDate } from '../lib/format';
 import { t } from '../lib/i18n';
 import { recommendRoute, summarizeRecommendation } from '../lib/recommend';
+import { getHere, locate } from '../lib/here';
 import { allRuns, applyRun, fetchRun } from '../lib/routeTimes';
 import { placeOf, removePlace, setReservation, setupReady, suggestVisitTime, updateVisit, type SetupStep } from '../lib/trips';
 import { useNotes } from './NotesContext';
@@ -62,6 +63,9 @@ export function TripSetup({
   const run = async () => {
     setPhase('running');
     setStage(1);
+    // A trip that starts from 현재 위치 is timed from where this phone is (M61): asked here, on the user's tap. Without
+    // it the first leg simply stays for the car to time.
+    if (plan.origin.kind === 'CURRENT' && !getHere()) await locate(8_000);
     await wait(500);
     const proposed = recommendRoute(plan, home);
     setStage(2);

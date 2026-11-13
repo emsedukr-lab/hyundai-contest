@@ -187,7 +187,10 @@ class LiveProjectionTest {
         assertTrue(DayStart.untimed(sample, CarOverlay()))                                  // from home, no time in the plan
         assertTrue(DayStart.untimed(sample, CarOverlay(home = here)))                       // knowing where home is does not time the leg
         val timed = withDay(sample, 1) { d -> d.copy(legs = listOf(Leg(150, Leg.LegSource.USER_ESTIMATE)) + d.legs.drop(1)) }
-        assertFalse(DayStart.untimed(timed, CarOverlay()))                                  // the phone timed it: nothing to do
+        assertFalse(DayStart.untimed(timed, CarOverlay()))                                  // the phone timed it from home: nothing to do
+        val timedFromPhone = timed.copy(origin = Endpoint.Current)                          // M61: timed from where the phone was
+        assertTrue(DayStart.untimed(timedFromPhone, CarOverlay()))                          // in the car, "here" is the car: measured again
+        assertEquals(LegValue(150, LegFrom.USER), TripValidator.leg(timedFromPhone, CarOverlay(), 1, 0)) // until then the phone's time stands
         assertFalse(DayStart.untimed(current, CarOverlay(visited = setOf("v1"))))           // the first day is under way
     }
 

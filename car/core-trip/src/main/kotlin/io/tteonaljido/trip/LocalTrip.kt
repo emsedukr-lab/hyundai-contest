@@ -44,14 +44,15 @@ object DayStart {
     const val FRESH_MS = 30 * 60_000L
 
     /**
-     * True while the trip's very first leg still has to be timed by the car (M60): the plan carries no time for it and
-     * no stop of the first day is done yet. The phone cannot time a leg that starts "where the car is", nor one from a
-     * home it has no address for — and the car's navigation can only time a leg from the car's own position. So the
-     * car measures it from where it stands instead of leaving the first day unknown.
+     * True while the trip's very first leg is the car's to time (M60): no stop of the first day is done yet, and either
+     * the plan carries no time for the leg (a home the phone had no address for) or the trip starts "from the current
+     * location". For the latter the phone may have sent a time measured from where the phone was (M61); in the car
+     * the current location is the car's, so it measures again. The navigation can only time a leg from the car's own
+     * position, so that is where the leg is measured from.
      */
     fun untimed(trip: Trip, overlay: CarOverlay): Boolean {
         val first = trip.days.firstOrNull() ?: return false
-        return first.legs.firstOrNull() == null && first.visitOrder.none { it in overlay.visited }
+        return (trip.origin is Endpoint.Current || first.legs.firstOrNull() == null) && first.visitOrder.none { it in overlay.visited }
     }
 
     /** Coordinates of the plan's own start, where the car knows them: home (from the phone or the navigation) or a place. */

@@ -5,6 +5,7 @@ import { VStack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
 import type { Endpoint, Home, Trip } from '@tteonaljido/shared';
 import { PencilIcon } from '../components/shell/icons';
+import { locate } from '../lib/here';
 import { t } from '../lib/i18n';
 import { PRESET_SLOTS, presetLabel, presetPlace } from '../lib/settings';
 import { endpointFromPreset, presetInPlan, setEndpoint, type EndpointSide } from '../lib/trips';
@@ -63,6 +64,7 @@ export function EndpointField({
     : current.kind === 'CURRENT' ? t('editor.startPlace.currentHint')
     : plan.places.find((p) => p.placeRef === current.placeRef)?.address || undefined;
   const pick = (v: string) => {
+    if (v === 'CURRENT') void locate(); // chosen on purpose: the phone's position times the first leg (M61, lib/here.ts)
     if (v === 'HOME' || v === 'CURRENT') return onChange(setEndpoint(plan, which, toEndpoint(v)));
     const preset = v.startsWith('preset:') ? presets.find((x) => `preset:${x.slot}` === v)?.place : undefined;
     onChange(preset ? endpointFromPreset(plan, which, preset) : setEndpoint(plan, which, toEndpoint(v)));

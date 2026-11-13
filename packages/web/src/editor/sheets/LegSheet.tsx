@@ -24,6 +24,7 @@ export function LegSheet({
   routeAt,
   refreshing,
   onRecalc,
+  help,
 }: {
   isOpen: boolean;
   onClose: () => void;
@@ -37,6 +38,8 @@ export function LegSheet({
   routeAt: Date | null;
   refreshing: boolean;
   onRecalc: () => void;
+  /** For a leg that cannot be asked yet: what would make it askable, and the button that does it (M61). */
+  help?: { text: string; action: string; busy?: boolean; onAction: () => void };
 }) {
   const { day } = dayEnds(plan, dayIndex);
   const { from, to } = legEnds(plan, dayIndex, k);
@@ -61,8 +64,9 @@ export function LegSheet({
       {leg ? (
         <span className="tl-leg-value">{`${t('tl.legMinutes', { duration: minutesLabel(leg.minutes) })}${meters ? ` · ${kmLabel(meters)}` : ''}`}</span>
       ) : (
-        <span className="tl-leg-value is-empty">{askable ? t('tl.legPending') : t('tl.legNotAskable')}</span>
+        <span className="tl-leg-value is-empty">{askable ? t('tl.legPending') : help ? help.text : t('tl.legNotAskable')}</span>
       )}
+      {!leg && !askable && help && <Button label={help.action} variant="secondary" size="md" isLoading={help.busy} onClick={help.onAction} />}
       {askable && (
         <Text type="supporting" color="secondary">
           {at ? t('tl.legKakaoAt', { time: at }) : t('tl.legKakao')}

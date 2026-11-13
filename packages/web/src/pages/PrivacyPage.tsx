@@ -13,6 +13,7 @@ const ROWS: Array<[string, string]> = [
   [t('privacy.notSent.label'), t('privacy.notSent.text')],
   [t('privacy.search.label'), t('privacy.search.text')],
   [t('privacy.route.label'), t('privacy.route.text3')],
+  [t('privacy.location.label'), t('privacy.location.text')],
   [t('privacy.ongoing.label'), t('privacy.ongoing.text')],
 ];
 

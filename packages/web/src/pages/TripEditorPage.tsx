@@ -26,6 +26,7 @@ import { VisitDialog } from '../editor/VisitDialog';
 import { TRIPS_CHANGED, trips } from '../lib/db';
 import { minutesLabel, shortDate } from '../lib/format';
 import { t } from '../lib/i18n';
+import { getHere, locate, locateIfAllowed, onHere } from '../lib/here';
 import { navigate } from '../lib/router';
 import { applyFaster, daySig, dismiss, findFaster, isDismissed, type FasterOrder } from '../lib/fasterOrder';
 import { cleanNotes, setNote, type TripNotes } from '../lib/notes';
@@ -92,6 +93,9 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
   const [plan, setPlan] = useState<Trip | null>(null);
   // The one home address, set in 설정 and shared by every trip (route checks, map, recommend, what the car may get).
   const [home] = useState(defaultHome);
+  // The phone's own position, for a trip that starts from 현재 위치 (M61): session-only, see lib/here.ts.
+  const [here, setHereState] = useState(getHere);
+  const [locating, setLocating] = useState(false);
   const [dirty, setDirty] = useState(false);
   /** Phone-only memos and lodging check-in/out, by place (saved with the trip, never sent to the car). */
   const [notes, setNotes] = useState<TripNotes>({});
@@ -337,6 +341,27 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [plan]);
+
+  // A trip that starts from 현재 위치 (M61): its first leg is timed from where this phone is. The position is asked
+  // without a prompt when the browser already allows it; otherwise the first leg's sheet offers [현재 위치로 계산].
+  // When the position arrives, the leg it unlocks is filled like any other empty leg.
+  const startsHere = plan?.origin.kind === 'CURRENT';
+  useEffect(() => onHere(setHereState), []);
+  useEffect(() => {
+    if (startsHere) void locateIfAllowed();
+  }, [startsHere]);
+  useEffect(() => {
+    if (!here || !startsHere) return;
+    const timer = setTimeout(() => void askKakao('auto'), 300);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [here, startsHere]);
+  const locateNow = async () => {
+    setLocating(true);
+    const r = await locate();
+    setLocating(false);
+    if (!r.ok) setNotice({ tone: 'error', text: t(r.reason === 'denied' ? 'tl.locateDenied' : 'tl.locateFailed') });
+  };
 
   // M54: once a day's legs are timed, look for a faster order (straight lines first; Kakao only for a real candidate).
   const checkFaster = async () => {
@@ -748,6 +773,13 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
           routeAt={routeAt}
           refreshing={refreshing}
           onRecalc={() => void refreshAll()}
+          // The trip's first leg, when its start is not a point yet: say what would time it and offer that.
+          help={
+            sheet.day !== 1 || sheet.k !== 0 || askableLegs.has(legKeys(plan, 1)[0] ?? '') ? undefined
+            : plan.origin.kind === 'CURRENT' ? { text: t('tl.legFromHere'), action: t('tl.legLocate'), busy: locating, onAction: () => void locateNow() }
+            : plan.origin.kind === 'HOME' && !home ? { text: t('tl.legNeedsHome'), action: t('tl.legSetHome'), onAction: () => void leave('/settings/place/home') }
+            : undefined
+          }
         />
       )}
       {sheet?.kind === 'end' && <EndSheet isOpen onClose={close} plan={plan} home={home} dayIndex={sheet.day} onChange={edit} onOpenPlace={setOpenPlace} onOpenSettings={() => leave('/settings')} />}
