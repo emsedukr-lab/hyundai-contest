@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { FileInput } from '@astryxdesign/core/FileInput';
@@ -8,16 +8,20 @@ import { DownloadIcon, InfoIcon, PhoneIcon, PresetIcon, ShieldIcon, UploadIcon }
 import { Row, Section } from '../components/shell/rows';
 import { TabScreen } from '../components/shell/Screens';
 import { trips } from '../lib/db';
+import type { MealSlot } from '@tteonaljido/shared';
 import { checkBackupTrip } from '../lib/backup';
 import { saveFile } from '../lib/fileOut';
 import { t } from '../lib/i18n';
+import { MEAL_SLOTS, isDefaultMealTimes, mealLabel, mealRange, mealTimes, mealTimesError, setMealTimes, type MealTimes } from '../lib/meals';
 import { navigate } from '../lib/router';
 import { PRESET_SLOTS, presetLabel, presetPlace } from '../lib/settings';
 import { docFromShare, importShare, isShareFile } from '../lib/share';
 import { nowIso, type TripDoc } from '../lib/trips';
 
+const MealTimeSheet = lazy(() => import('../editor/MealTimeSheet').then((m) => ({ default: m.MealTimeSheet })));
+
 /**
- * 설정 tab: start places for new trips (집, 회사, 즐겨찾기 1–3), trip data (backup out, backup or a friend's share file in) and
+ * 설정 tab: start places for new trips (집, 회사, 즐겨찾기 1–3), meal times for the route recommendation (M67), trip data (backup out, backup or a friend's share file in) and
  * the app (install, privacy, about). The import logic is the one that used to sit on the trips screen, moved as-is.
  */
 export function SettingsPage() {
@@ -29,6 +33,30 @@ export function SettingsPage() {
   const [sharePass, setSharePass] = useState('');
   const install = useInstallPrompt();
   const [presets] = useState(() => PRESET_SLOTS.map((slot) => ({ slot, place: presetPlace(slot) })));
+
+  // 식사 시간 (M67): one meal is edited in a sheet as a draft and kept on 저장, only while it stays in order with the others.
+  const [meals, setMeals] = useState<MealTimes>(mealTimes);
+  const [mealSlot, setMealSlot] = useState<MealSlot>('lunch');
+  const [mealDraft, setMealDraft] = useState<[string, string] | null>(null);
+  const draftTimes: MealTimes = mealDraft ? { ...meals, [mealSlot]: mealDraft } : meals;
+  const mealError = mealDraft ? mealTimesError(draftTimes, mealSlot) : null;
+  const neighbour = MEAL_SLOTS[MEAL_SLOTS.indexOf(mealSlot) + (mealError === 'OVERLAP_BEFORE' ? -1 : 1)];
+  const mealErrorText =
+    mealError === 'ORDER' ? t('settings.meals.error.order')
+    : mealError === 'OVERLAP_BEFORE' ? t('settings.meals.error.before', { other: mealLabel(neighbour), range: mealRange(meals, neighbour), time: meals[neighbour][1] })
+    : mealError === 'OVERLAP_AFTER' ? t('settings.meals.error.after', { other: mealLabel(neighbour), range: mealRange(meals, neighbour), time: meals[neighbour][0] })
+    : null;
+  const saveMeal = () => {
+    if (!mealDraft || mealError) return;
+    setMealTimes(draftTimes);
+    setMeals(mealTimes()); // read back: shows what was actually kept
+    setMealDraft(null);
+  };
+  const resetMeals = () => {
+    setMealTimes(null);
+    setMeals(mealTimes());
+    setMessage(t('settings.meals.resetDone'));
+  };
 
   const reload = async () => setDocs(await trips.all());
   useEffect(() => void reload(), []);
@@ -106,6 +134,49 @@ export function SettingsPage() {
           {t('settings.origins.detail2')}
         </p>
       </Section>
+
+      {/* 식사 시간 (M67): when each meal is eaten — what the route recommendation places restaurants by. Phone only. */}
+      <Section
+        title={t('settings.meals')}
+        action={
+          !isDefaultMealTimes(meals) && (
+            <button type="button" className="tn-textaction" onClick={resetMeals}>
+              {t('settings.meals.reset')}
+            </button>
+          )
+        }>
+        <ul className="tn-cards">
+          {MEAL_SLOTS.map((slot) => (
+            <li key={slot}>
+              <Row
+                title={mealLabel(slot)}
+                end={<span className="tn-row-value">{mealRange(meals, slot)}</span>}
+                chevron
+                onClick={() => {
+                  setMealSlot(slot);
+                  setMealDraft([...meals[slot]]);
+                }}
+              />
+            </li>
+          ))}
+        </ul>
+        <p className="tn-note">{t('settings.meals.detail')}</p>
+      </Section>
+      {/* The sheet and its time pickers are the editor's: loaded when a row is first tapped, not with the tab. */}
+      {mealDraft && (
+        <Suspense fallback={null}>
+          <MealTimeSheet
+            title={t('settings.meals.sheet', { meal: mealLabel(mealSlot) })}
+            fromLabel={t('settings.meals.fromOf', { meal: mealLabel(mealSlot) })}
+            toLabel={t('settings.meals.toOf', { meal: mealLabel(mealSlot) })}
+            value={mealDraft}
+            error={mealErrorText}
+            onChange={setMealDraft}
+            onSave={saveMeal}
+            onClose={() => setMealDraft(null)}
+          />
+        </Suspense>
+      )}
 
       <Section title={t('more.data')}>
         <ul className="tn-cards">

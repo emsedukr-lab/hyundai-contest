@@ -11,6 +11,7 @@ import { favorites } from '../lib/db';
 import type { FavoritePlace } from '../lib/favorites';
 import { missingLodgingDays, recommend, summarizeRecommendation } from '../lib/recommend';
 import { RecommendPreview } from './RecommendPreview';
+import { mealTimes } from '../lib/meals';
 import { useNotes } from './NotesContext';
 
 /**
@@ -42,7 +43,7 @@ export function RecommendDialog({
     if (isOpen) void favorites.all().then(setPool, () => undefined);
   }, [isOpen]);
   // The whole trip is arranged at once (M64), which takes a moment: only while the dialog is open, never on every edit behind it.
-  const found = useMemo(() => (isOpen ? recommend(plan, home, { book, notes, pool }) : null), [isOpen, plan, home, book, notes, pool]);
+  const found = useMemo(() => (isOpen ? recommend(plan, home, { book, notes, pool, mealTimes: mealTimes() }) : null), [isOpen, plan, home, book, notes, pool]);
   const proposed = found?.plan ?? plan;
   // Display copy with travel times re-linked exactly as edit() will, over a throwaway book so the real one is untouched.
   const display = useMemo(() => relinkLegs(plan, proposed, new Map(book)), [plan, proposed, book]);

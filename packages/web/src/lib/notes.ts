@@ -1,6 +1,9 @@
+import { isMealChoice, type MealChoice } from './meals';
+
 /**
  * Notes kept with a trip on this phone only — not part of what the car receives (the transfer schema is unchanged):
- * per place, a memo (a room number, a parking tip) and, for lodging, check-in / check-out times. Stored on the trip
+ * per place, a memo (a room number, a parking tip), for lodging check-in / check-out times, and for a restaurant the
+ * meal it is for (M67: read by the route recommendation). Stored on the trip
  * document in IndexedDB, so they travel with backups but not with a send to the car or a friend's share file.
  */
 export interface PlaceNote {
@@ -9,6 +12,8 @@ export interface PlaceNote {
   checkIn?: string;
   /** "HH:MM" */
   checkOut?: string;
+  /** The meal a restaurant is for; absent = told from the time of day (자동). */
+  meal?: MealChoice;
 }
 /** By placeRef. */
 export type TripNotes = Record<string, PlaceNote>;
@@ -28,6 +33,7 @@ export function cleanNotes(raw: unknown, keep?: Set<string>): TripNotes {
     if (typeof n.memo === 'string' && n.memo.trim()) note.memo = n.memo.slice(0, MEMO_MAX);
     if (typeof n.checkIn === 'string' && TIME.test(n.checkIn)) note.checkIn = n.checkIn;
     if (typeof n.checkOut === 'string' && TIME.test(n.checkOut)) note.checkOut = n.checkOut;
+    if (isMealChoice(n.meal)) note.meal = n.meal;
     if (Object.keys(note).length) out[ref] = note;
   }
   return out;

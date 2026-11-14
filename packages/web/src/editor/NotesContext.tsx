@@ -1,6 +1,7 @@
 import { createContext, useContext, useState } from 'react';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { t } from '../lib/i18n';
+import { MEAL_CHOICES, mealChoiceLabel } from '../lib/meals';
 import { MEMO_MAX, type PlaceNote, type TripNotes } from '../lib/notes';
 import { FieldPrefix } from './FieldPrefix';
 import { TimeSelect } from './TimeSelect';
@@ -44,6 +45,24 @@ function MemoInput({ placeRef, placeholder }: { placeRef: string; placeholder: s
 /** A place's memo (any stop). */
 export function PlaceMemoField({ placeRef }: { placeRef: string }) {
   return <MemoInput placeRef={placeRef} placeholder={t('tl.memo')} />;
+}
+
+/**
+ * 식사 (M67): which meal a restaurant is for — 자동 (told from the time of day; nothing stored) · 아침 · 점심 · 저녁. One
+ * choice as chips; the route recommendation reads it, the car never receives it.
+ */
+export function MealChips({ placeRef, label }: { placeRef: string; label: string }) {
+  const { notes, setNote } = useNotes();
+  const meal = notes[placeRef]?.meal ?? null;
+  return (
+    <div className="tl-meal" role="group" aria-label={label}>
+      {[null, ...MEAL_CHOICES].map((m) => (
+        <button key={m ?? 'auto'} type="button" className={`tl-chip tl-meal-chip${meal === m ? ' is-on' : ''}`} aria-pressed={meal === m} onClick={() => setNote(placeRef, { meal: m })}>
+          {m ? mealChoiceLabel(m) : t('meal.auto')}
+        </button>
+      ))}
+    </div>
+  );
 }
 
 /** Where the picker opens while no time is chosen yet: check-in in the afternoon, check-out in the morning (the usual 15:00 and 11:00). */

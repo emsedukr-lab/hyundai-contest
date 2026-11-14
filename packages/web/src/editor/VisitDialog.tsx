@@ -12,7 +12,8 @@ import { dateLabel, minutesLabel, shortDate } from '../lib/format';
 import { hoursLines, isSimpleHours } from '../lib/hours';
 import { t } from '../lib/i18n';
 import { REASON_LABEL, changeCategory, moveToDay, removePlace, suggestVisitTime, updatePlace, updateVisit } from '../lib/trips';
-import { LodgingNoteFields, PlaceMemoField, useNotes } from './NotesContext';
+import { mealChoiceLabel, mealRange, mealTimes, slotOf } from '../lib/meals';
+import { LodgingNoteFields, MealChips, PlaceMemoField, useNotes } from './NotesContext';
 import { CATEGORY_LABEL, CATEGORY_OPTIONS } from './PlaceSearch';
 import { Sheet } from './Sheet';
 import './visitSheet.css';
@@ -101,7 +102,7 @@ export function VisitDialog({
   const [pickDate, setPickDate] = useState<ISODateString | undefined>(undefined);
   // The last arrival time while the sheet is open, so 고정 → 자유 → 고정 comes back to the same time.
   const [lastTime, setLastTime] = useState<string | null>(null);
-  const { notes } = useNotes();
+  const { notes, setNote } = useNotes();
   useEffect(() => {
     setConfirmDelete(false);
     setPickDate(undefined);
@@ -250,6 +251,18 @@ export function VisitDialog({
               </Row>
             )}
             <p className="vd-hint">{mode === 'fixed' ? t('visit.fixed.detail') : mode === 'desired' ? t('visit.timeMode.desiredHint') : t('visit.timeMode.freeHint')}</p>
+            {/* 식사 (M67): a restaurant's meal, for the route recommendation; the hint names the time it is held to. */}
+            {place.category === 'FOOD' && (
+              <>
+                <div className="vd-row vd-row-meal">
+                  <span className="vd-label">{t('meal.title')}</span>
+                  <div className="vd-control">
+                    <MealChips placeRef={place.placeRef} label={t('meal.title')} />
+                  </div>
+                </div>
+                <p className="vd-hint">{note?.meal ? t('meal.hint', { meal: mealChoiceLabel(note.meal), range: mealRange(mealTimes(), slotOf(note.meal)) }) : t('meal.autoHint')}</p>
+              </>
+            )}
             <div className="vd-switches">
               <Switch label={t('visit.dateFlexible')} labelPosition="start" labelSpacing="spread" value={visit.dateFlexible} onChange={(v) => setVisit({ dateFlexible: v })} />
               {mode !== 'fixed' && <Switch label={t('visit.timeFlexible')} labelPosition="start" labelSpacing="spread" value={visit.timeFlexible} onChange={(v) => setVisit({ timeFlexible: v })} />}
@@ -379,7 +392,12 @@ export function VisitDialog({
 
         <Fold title={t('visit.section.place')} value={CATEGORY_LABEL[place.category]}>
           <Row label={t('common.type')}>
-            <Selector label={t('common.type')} isLabelHidden placement="above" options={CATEGORY_OPTIONS} value={place.category} onChange={(v) => onChange(changeCategory(plan, place.placeRef, v as Place['category']))} />
+            <Selector label={t('common.type')} isLabelHidden placement="above" options={CATEGORY_OPTIONS} value={place.category}
+              onChange={(v) => {
+                onChange(changeCategory(plan, place.placeRef, v as Place['category']));
+                if (v !== 'FOOD' && note?.meal) setNote(place.placeRef, { meal: null }); // a meal belongs to a restaurant only
+              }}
+            />
           </Row>
           {visit && visit.unassignedReason !== null && (
             // On no day yet (담아 둔 곳): why, as the car shows it.

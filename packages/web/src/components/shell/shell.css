@@ -981,3 +981,57 @@ div:has(> .astryx-switch) {
   min-height: 100dvh;
   background: var(--tn-canvas);
 }
+
+/*
+ * 설정 › 식사 시간 (M67). A row's value at its end (tabular, secondary ink), the section's quiet 기본값으로 text button
+ * (44 tall hit area, drawn inside the section header's own height), and the sheet's start – end pair with its message.
+ */
+.tn-row-value {
+  font-size: 15px;
+  line-height: 23px;
+  color: var(--tn-text-secondary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.tn-textaction {
+  flex: none;
+  min-height: 44px;
+  margin: -10px 0;
+  padding: 0 0 0 12px;
+  border: 0;
+  background: transparent;
+  color: var(--tn-accent-text);
+  font: inherit;
+  font-size: 13px;
+  line-height: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.tn-textaction:focus-visible {
+  outline: 2px solid var(--tn-accent);
+  outline-offset: -2px;
+  border-radius: 4px;
+}
+.tn-mealpair {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 4px 8px;
+}
+.tn-mealpair-label {
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--tn-text-secondary);
+}
+.tn-mealpair-dash {
+  color: var(--tn-text-secondary);
+}
+.tn-fielderror {
+  margin: 0;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--tn-negative-text);
+}
+.tn-fielderror:empty {
+  display: none;
+}

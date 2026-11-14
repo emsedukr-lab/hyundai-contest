@@ -145,6 +145,67 @@ describe('optimizeTrip: what it arranges', () => {
   });
 });
 
+describe('optimizeTrip: meals the traveller named, and meal times they moved (M67)', () => {
+  // One day, everything a few kilometres apart, three sights of two and a half hours: the restaurant can open the day
+  // (about 09:25), or follow one sight (about 12:10), two (about 14:50) or all three (about 17:30).
+  const day = (): Trip =>
+    trip({
+      places: [P('f', 'FOOD', 14), P('s1', 'SIGHT', 10), P('s2', 'SIGHT', 16), P('s3', 'SIGHT', 12), P('L', 'LODGING', 18)],
+      visits: [V('vf', 'f', { dateFlexible: false }), ...['s1', 's2', 's3'].map((r, i) => V(`v${i + 1}`, r, { stayMinutes: 150, dateFlexible: false }))],
+      days: [D(1, ['vf', 'v1', 'v2', 'v3'], 'L'), D(2, [], null)],
+    });
+  const startOf = (out: ReturnType<typeof run>, id: string) => out.days.flatMap((d) => d.stops).find((s) => s.visitId === id)!.start!;
+  const dayOf = (out: ReturnType<typeof run>, id: string) => Number(Object.keys(out.order).find((k) => out.order[Number(k)].includes(id)));
+
+  it('puts a restaurant named as dinner at dinner time, where it would otherwise be lunch', () => {
+    const guessed = startOf(run(day()), 'vf');
+    expect(guessed).toBeGreaterThanOrEqual(m('11:30'));
+    expect(guessed).toBeLessThanOrEqual(m('13:30'));
+    const out = run(day(), { meals: { f: 'dinner' } });
+    expect(startOf(out, 'vf')).toBeGreaterThanOrEqual(m('17:30'));
+    expect(startOf(out, 'vf')).toBeLessThanOrEqual(m('19:30'));
+    expect(out.hardViolations).toBe(0);
+    // A choice for a place that is not a restaurant is not read.
+    expect(run(day(), { meals: { s1: 'dinner' } })).toEqual(run(day()));
+  });
+
+  it('follows meal times that were moved', () => {
+    const late = run(day(), { config: { iterations: 4_000, mealWindows: { breakfast: [m('08:00'), m('09:30')], lunch: [m('14:30'), m('15:30')], dinner: [m('19:00'), m('20:30')] } } });
+    expect(startOf(late, 'vf')).toBeGreaterThanOrEqual(m('14:30'));
+    expect(startOf(late, 'vf')).toBeLessThanOrEqual(m('15:30'));
+  });
+
+  it('counts two restaurants named as lunch as two lunches: apart on separate days, dearer on one', () => {
+    const two = (days: Day[]): Trip =>
+      trip({
+        places: [P('f1', 'FOOD', 14), P('f2', 'FOOD', 15), P('s1', 'SIGHT', 10), P('s2', 'SIGHT', 16), P('L', 'LODGING', 18)],
+        visits: [V('vf1', 'f1'), V('vf2', 'f2'), V('v1', 's1', { stayMinutes: 150 }), V('v2', 's2', { stayMinutes: 150 })],
+        days,
+      });
+    const both = run(two([D(1, ['vf1', 'vf2', 'v1'], 'L'), D(2, ['v2'], null)]), { meals: { f1: 'lunch', f2: 'lunch' } });
+    expect(dayOf(both, 'vf1')).not.toBe(dayOf(both, 'vf2'));
+    for (const id of ['vf1', 'vf2']) {
+      expect(startOf(both, id)).toBeGreaterThanOrEqual(m('11:30'));
+      expect(startOf(both, id)).toBeLessThanOrEqual(m('13:30'));
+    }
+    // With one day only there is nowhere to go: the same two lunches cost more than a lunch and a dinner.
+    const oneDay = two([D(1, ['vf1', 'vf2', 'v1', 'v2'], null)]);
+    const same = run(oneDay, { meals: { f1: 'lunch', f2: 'lunch' } });
+    const apart = run(oneDay, { meals: { f1: 'lunch', f2: 'dinner' } });
+    expect(same.cost).toBeGreaterThan(apart.cost + 100);
+    expect(startOf(apart, 'vf2')).toBeGreaterThan(startOf(apart, 'vf1'));
+  });
+
+  it('does not price a booked meal for its hour, and gives the same answer twice', () => {
+    const booked: Trip = { ...day(), visits: day().visits.map((v) => (v.visitId === 'vf' ? { ...v, fixed: { time: '15:00', kind: 'RESERVATION' as const } } : v)) };
+    const named = run(booked, { meals: { f: 'lunch' } });
+    expect(named.cost).toBe(run(booked).cost); // 15:00 is nearest to lunch either way, and a booking is not judged for being off it
+    expect(named.hardViolations).toBe(0);
+    const input = { meals: { f: 'dinner' as const } };
+    expect(run(day(), input)).toEqual(run(day(), input));
+  });
+});
+
 describe('optimizeTrip: placing what is not on a day yet', () => {
   it('builds the days from a basket, bookings staying where they are', () => {
     const t = trip({

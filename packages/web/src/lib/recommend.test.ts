@@ -223,3 +223,32 @@ describe('summarizeRecommendation', () => {
     expect(diff.changes[0]).toMatchObject({ visitId: 'vy', newlyAssigned: true, toDay: 2 });
   });
 });
+
+describe('recommend: a restaurant\'s meal and the meal times (M67, phone only)', () => {
+  // One day from home at 10:00, everything within a kilometre or two: the restaurant can open the day (about 10:15) or
+  // follow one sight (about 13:00), two (about 15:45) or all three (about 18:30), so only the meal decides where it goes.
+  const t = trip({
+    firstDay: { basis: 'DEPART_ORIGIN', departTime: '10:00' },
+    places: [P('f', 'FOOD', 37.57, 126.985), P('s1', 'SIGHT', 37.571, 126.98), P('s2', 'SIGHT', 37.572, 126.99), P('s3', 'SIGHT', 37.569, 126.982), P('L', 'LODGING', 37.573, 126.987)],
+    visits: [V('vf', 'f', { dateFlexible: false }), ...['s1', 's2', 's3'].map((r, i) => V(`v${i + 1}`, r, { stayMinutes: 150, dateFlexible: false }))],
+    days: [D(1, ['vf', 'v1', 'v2', 'v3'], 'L'), D(2, [])],
+  });
+  const at = (plan: Trip) => order(plan, 1).indexOf('vf');
+
+  it('places it by the chosen meal, and by moved meal times; without either, as before', () => {
+    expect(at(recommendRoute(t, home))).toBe(1); // lunch, told from the clock
+    expect(at(recommendRoute(t, home, { notes: { f: { meal: 'DINNER' } } }))).toBe(3);
+    expect(at(recommendRoute(t, home, { notes: { f: { meal: 'LUNCH' } } }))).toBe(1);
+    expect(at(recommendRoute(t, home, { mealTimes: { breakfast: ['08:00', '09:30'], lunch: ['15:00', '16:30'], dinner: ['19:00', '20:30'] } }))).toBe(2);
+    // A choice left on a place that is not a restaurant is not read.
+    expect(recommendRoute(t, home, { notes: { s1: { meal: 'DINNER' } } })).toEqual(recommendRoute(t, home));
+  });
+
+  it('gives the same answer twice and never puts the choice in what the car receives', async () => {
+    const opts = { notes: { f: { meal: 'DINNER' as const } } };
+    const out = recommendRoute(t, home, opts);
+    expect(recommendRoute(t, home, opts)).toEqual(out);
+    const sent = JSON.stringify(await toTransfer({ ...(await newDoc(out, home)), notes: opts.notes }, true));
+    expect(sent).not.toMatch(/DINNER|"meal"/);
+  });
+});

@@ -1,6 +1,7 @@
 import { getHere } from './here';
-import { KEY_HERE, KEY_HOME, minutes, optimizeTrip, type Endpoint, type GapSlot, type Home, type LodgingNote, type Trip, type Visit } from '@tteonaljido/shared';
+import { KEY_HERE, KEY_HOME, minutes, optimizeTrip, type Endpoint, type MealSlot, type GapSlot, type Home, type LodgingNote, type Trip, type Visit } from '@tteonaljido/shared';
 import type { NewPlace } from '../editor/PlaceSearch';
+import { DEFAULT_MEAL_TIMES, mealsOf, toMealWindows, type MealTimes } from './meals';
 import type { TripNotes } from './notes';
 import { assign, move, moveToDay, placeOf, rememberLegs, unassign, visitOf, type LegBook } from './trips';
 
@@ -68,8 +69,10 @@ export function estimateDriveMinutes(metres: number): number {
 export interface RecommendOptions {
   /** Driving times already measured for a pair of places (the editor's leg book); the plan's own legs are used as well. */
   book?: LegBook;
-  /** The trip's phone-only notes: a lodging's check-in and check-out times are read from them. */
+  /** The trip's phone-only notes: a lodging's check-in and check-out times and a restaurant's meal (M67) are read from them. */
   notes?: TripNotes;
+  /** When each meal is eaten (설정 › 식사 시간, M67); the usual times when not given. */
+  mealTimes?: MealTimes;
   /** Favorite places outside the trip that may be offered for a gap of two hours or more. */
   pool?: (NewPlace & { id: string })[];
   iterations?: number;
@@ -104,6 +107,8 @@ export function recommend(plan: Trip, home: Home | null, opts: RecommendOptions 
   const lodging = Object.fromEntries(
     Object.entries(opts.notes ?? {}).flatMap(([ref, n]) => (n.checkIn || n.checkOut ? [[ref, { ...(n.checkIn ? { checkIn: minutes(n.checkIn) } : {}), ...(n.checkOut ? { checkOut: minutes(n.checkOut) } : {}) }]] : [])),
   );
+  // The meal a restaurant was set to (phone only, M67). A choice left on a place that is no longer a restaurant is not passed.
+  const meals: Record<string, MealSlot> = Object.fromEntries(Object.entries(mealsOf(opts.notes)).filter(([ref]) => placeOf(plan, ref)?.category === 'FOOD'));
   // Estimates are brought in line with this trip's measured legs (their median ratio), so that a pair nobody has
   // measured is not preferred — or avoided — just because the estimate runs fast or slow in this region.
   const ratios = [...known].flatMap(([key, minutes]) => {
@@ -122,9 +127,10 @@ export function recommend(plan: Trip, home: Home | null, opts: RecommendOptions 
       return isFinite(m) ? Math.max(3, Math.round(estimateDriveMinutes(m) * scale)) : null;
     },
     lodging,
+    meals,
     pool: (opts.pool ?? []).filter((f) => f.latE7 !== null && !plan.places.some((p) => p.name === f.name && p.latE7 === f.latE7)).map((f) => ({ key: `fav:${f.id}`, name: f.name, category: f.category, hours: f.hours })),
     // Enough steps to settle a trip of this size (measured: the 13-stop sample settles well inside this), capped for big ones.
-    config: { iterations: opts.iterations ?? Math.min(12_000, 2_000 + 800 * movable) },
+    config: { iterations: opts.iterations ?? Math.min(12_000, 2_000 + 800 * movable), mealWindows: toMealWindows(opts.mealTimes ?? DEFAULT_MEAL_TIMES) },
   });
 
   // Realize through the editor's own pure ops so leg bookkeeping stays consistent.

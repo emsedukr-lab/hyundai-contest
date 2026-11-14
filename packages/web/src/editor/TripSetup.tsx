@@ -12,8 +12,9 @@ import { favorites } from '../lib/db';
 import { recommend, summarizeRecommendation, type RecommendInsights, type RecommendationDiff } from '../lib/recommend';
 import { getHere, locate } from '../lib/here';
 import { allRuns, applyRun, fetchRun } from '../lib/routeTimes';
+import { mealTimes as storedMealTimes } from '../lib/meals';
 import { placeOf, relinkLegs, rememberLegs, removePlace, setReservation, setupReady, suggestVisitTime, updateVisit, type LegBook, type SetupStep } from '../lib/trips';
-import { useNotes } from './NotesContext';
+import { MealChips, useNotes } from './NotesContext';
 import { PlaceCollector } from './sheets/PlaceSheet';
 import type { Notice } from './sheets/PlaceSheet';
 import { RecommendPreview } from './RecommendPreview';
@@ -73,7 +74,8 @@ export function TripSetup({
     await wait(500);
     const pool = await favorites.all().catch(() => []);
     // The whole trip is arranged at once (M64): first on straight-line estimates of the driving times…
-    let found = recommend(plan, home, { notes, pool });
+    const mealTimes = storedMealTimes();
+    let found = recommend(plan, home, { notes, pool, mealTimes });
     setStage(2);
     await wait(500);
     setStage(3);
@@ -93,7 +95,7 @@ export function TripSetup({
     // …then once more with the real times of that order, in case they change which order is best.
     const book: LegBook = new Map();
     rememberLegs(next, book);
-    const again = recommend(next, home, { notes, pool, book });
+    const again = recommend(next, home, { notes, pool, book, mealTimes });
     if (again.plan !== next && summarizeRecommendation(next, again.plan).changed) next = await timed(relinkLegs(next, again.plan, book));
     found = { plan: next, insights: again.insights };
     await wait(300);
@@ -166,6 +168,13 @@ export function TripSetup({
                       {t('setup.must')}
                     </button>
                   </div>
+                  {/* A restaurant's meal (M67), set before the first recommendation: 자동 unless chosen. */}
+                  {p?.category === 'FOOD' && (
+                    <div className="tl-setup-meal">
+                      <span className="tl-meta">{t('meal.title')}</span>
+                      <MealChips placeRef={v.placeRef} label={t('meal.aria', { name: p.name })} />
+                    </div>
+                  )}
                   <Switch label={t('setup.reserved')} value={booked} onChange={(on) => (on ? reserve(day, v.fixed?.time ?? suggestVisitTime(plan, v.visitId, day)) : onChange(setReservation(plan, v.visitId, null, null)))} />
                   {booked && (
                     <div className="tl-setup-reserve">

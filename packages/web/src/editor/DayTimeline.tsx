@@ -13,6 +13,7 @@ import { SwipeToRemove } from '../components/SwipeToRemove';
 import { kmLabel } from '../lib/routeTimes';
 import { issueText, leaveFor, legKeys, moveTo, nodeIssues, placeOf, stopRangeText, visitOf } from '../lib/trips';
 import { dayEnds, legEnds } from './dayInfo';
+import { mealChoiceLabel } from '../lib/meals';
 import { useNotes } from './NotesContext';
 import './timeline.css';
 
@@ -259,6 +260,8 @@ function StopCard({
   const v = visitOf(plan, id)!;
   const p = placeOf(plan, v.placeRef)!;
   const memo = notes[p.placeRef]?.memo;
+  // M67: the meal a restaurant was set to, said quietly ahead of its time ("점심 · 13:00 ~ 14:00 · 1시간").
+  const meal = p.category === 'FOOD' ? notes[p.placeRef]?.meal : undefined;
   const conflict = issues.length > 0;
   // M51 — line 2: 'start ~ end · stay' (no 도착/머무는 시간 labels). A fixed time leads with a blue lock (the time it is
   // held to); a stop whose date or time is only held, not set, a grey one. Desired time and memo trail and truncate.
@@ -302,6 +305,7 @@ function StopCard({
                 <LockIcon />
               </span>
             )}
+            {meal && <span className="tl-mealtag">{mealChoiceLabel(meal)} ·</span>}
             {range && <span className={`tl-range${lock === 'fixed' ? ' is-fixed' : ''}`}>{range}</span>}
             <span className="tl-rest">{range ? ` · ${rest}` : rest}</span>
           </span>

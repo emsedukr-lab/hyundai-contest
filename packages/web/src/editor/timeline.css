@@ -1354,3 +1354,41 @@
     transition: none;
   }
 }
+
+/*
+ * 식사 (M67): a restaurant's meal as four chips (자동 · 아침 · 점심 · 저녁) — the 34 pill of the other chips with a 44 tall
+ * hit area. In step 3 of a new trip the chips sit on one line beside their label, a little tighter so the line holds
+ * at 320. On a day's card the chosen meal is words only, ahead of the time.
+ */
+.tl-meal {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 8px;
+}
+.tl-meal-chip {
+  position: relative;
+}
+.tl-meal-chip::after {
+  content: '';
+  position: absolute;
+  inset: -5px 0;
+}
+.tl-setup-meal {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding-bottom: 4px;
+}
+.tl-setup-meal > .tl-meta {
+  flex: none;
+}
+.tl-setup-meal .tl-meal {
+  gap: 10px 6px;
+}
+.tl-setup-meal .tl-chip {
+  padding: 0 11px;
+}
+.tl-mealtag {
+  flex: none;
+}

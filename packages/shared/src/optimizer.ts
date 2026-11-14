@@ -11,7 +11,8 @@ import { minutes } from './timeline';
  * cheapest timetable it has seen. "Cost" is one number per timetable:
  *
  *  - driving and parking minutes, and minutes spent waiting (for a booking, for a place to open);
- *  - meals at meal times (아침 08:00–09:30, 점심 11:30–13:30, 저녁 17:30–19:30), no second lunch or dinner in a day;
+ *  - meals at meal times (아침 08:00–09:30, 점심 11:30–13:30, 저녁 17:30–19:30 unless `mealWindows` says otherwise), no
+ *    second lunch or dinner in a day; a restaurant the traveller named as a meal (`meals`) is held to that meal's time;
  *  - at most `maxCafesPerDay` cafes a day, and a cafe is best right after lunch (less so after dinner);
  *  - a place left out costs by its importance; a day that runs past its end costs by the minute;
  *  - and what must never happen costs more than everything else together: a booking not reached
@@ -26,6 +27,11 @@ import { minutes } from './timeline';
  *
  * Deterministic: the random numbers come from `seed`, and the amount of work from `iterations`.
  */
+export type MealSlot = 'breakfast' | 'lunch' | 'dinner';
+/** When each meal is eaten: [from, to] in minutes of the day. */
+export type MealWindows = Record<MealSlot, [number, number]>;
+export const DEFAULT_MEAL_WINDOWS: MealWindows = { breakfast: [480, 570], lunch: [690, 810], dinner: [1050, 1170] };
+
 export interface OptimizerConfig {
   parkingMinutes: number;
   reservationLeadMinutes: number;
@@ -38,6 +44,8 @@ export interface OptimizerConfig {
   defaultEndBy: number;
   iterations: number;
   seed: number;
+  /** Meal times a restaurant's start is judged against (M67: the traveller may move them). */
+  mealWindows: MealWindows;
 }
 
 export const OPTIMIZER_DEFAULTS: OptimizerConfig = {
@@ -49,6 +57,7 @@ export const OPTIMIZER_DEFAULTS: OptimizerConfig = {
   defaultEndBy: 21 * 60,
   iterations: 12_000,
   seed: 20_261_113,
+  mealWindows: DEFAULT_MEAL_WINDOWS,
 };
 
 /** How long a visit lasts when the traveller has not said: a meal an hour, a cafe 45 minutes, a sight an hour and a half. */
@@ -72,6 +81,11 @@ export interface OptimizerInput {
   drive: (fromKey: string, toKey: string) => number | null;
   /** Check-in and check-out minute of a lodging, where the traveller entered them (by placeRef). */
   lodging?: Record<string, { checkIn?: number; checkOut?: number }>;
+  /**
+   * The meal a restaurant is for, where the traveller said so (by placeRef; FOOD places only). Such a stop is judged
+   * against that meal's time instead of the one its clock time is nearest to; without an entry nothing changes.
+   */
+  meals?: Record<string, MealSlot>;
   /** Places outside the trip that may fill a long gap. */
   pool?: PoolPlace[];
   config?: Partial<OptimizerConfig>;
@@ -141,6 +155,14 @@ const WAIT = 1.8;
 /** Waiting past an hour: a stop of the trip's own should go there first. */
 const LONG_WAIT = 3;
 const MEAL_OFF = { base: 40, perMinute: 1.5, most: 250 };
+/**
+ * A meal the traveller named (M67) is priced by the same minute, but the price keeps growing for longer: a dinner
+ * place at lunchtime is five hours off, and under the usual cap 12:30 and 15:00 would cost the same — on a day that
+ * ends mid-afternoon the search then had no reason to move it out of lunchtime (seen on the sample trip). The rate is
+ * unchanged, so a detour is still weighed by the minute; only the furthest miss (dinner at noon) costs more, about two
+ * second lunches.
+ */
+const MEAL_OFF_CHOSEN_MOST = 600;
 const MEAL_TWICE = 300;
 const CAFE_OVER = 400;
 const CAFE_AFTER = { lunch: 60, other: 25 };
@@ -163,7 +185,7 @@ const MIN_GAIN = 15;
 const FALLBACK_DRIVE = 20;
 const UNPLACED: Record<Visit['importance'], number> = { MUST: HARD, NORMAL: 75_000, OPTIONAL: 25_000 };
 const ASSIGNABLE: ReadonlySet<string> = new Set(['NOT_SCHEDULED_YET', 'NO_TIME']);
-const MEALS = { breakfast: [480, 570], lunch: [690, 810], dinner: [1050, 1170] } as const;
+const MEAL_SLOTS = ['breakfast', 'lunch', 'dinner'] as const;
 
 type Span = [open: number, close: number];
 /** 'any' = nothing to check; [] = closed that day. */
@@ -173,6 +195,8 @@ interface Node {
   id: string;
   key: string;
   category: Place['category'];
+  /** The meal the traveller named for this restaurant; null when it is to be told from the clock. */
+  meal: MealSlot | null;
   stay: number;
   fixed: number | null;
   desired: number | null;
@@ -233,6 +257,7 @@ interface State {
 
 export function optimizeTrip(input: OptimizerInput): Optimized {
   const cfg = { ...OPTIMIZER_DEFAULTS, ...input.config };
+  const MEALS = cfg.mealWindows;
   const { trip } = input;
   const nDays = trip.days.length;
   const placeOf = new Map(trip.places.map((p) => [p.placeRef, p]));
@@ -251,6 +276,7 @@ export function optimizeTrip(input: OptimizerInput): Optimized {
       id: v.visitId,
       key: v.placeRef,
       category: p.category,
+      meal: p.category === 'FOOD' ? (input.meals?.[v.placeRef] ?? null) : null,
       stay: v.stayMinutes,
       fixed: v.fixed ? minutes(v.fixed.time) : null,
       desired: v.desiredTime ? minutes(v.desiredTime) : null,
@@ -372,15 +398,16 @@ export function optimizeTrip(input: OptimizerInput): Optimized {
 
       let isLunchMeal = false;
       if (n.category === 'FOOD' && start !== null) {
-        // Which meal this is: the meal time it falls in, or — off every meal time — the one it is nearest to.
+        // Which meal this is: the one the traveller named, else the meal time it falls in, or — off every meal time —
+        // the one it is nearest to.
         const at = start;
         const off = (w: readonly [number, number]) => (at < w[0] ? w[0] - at : at > w[1] ? at - w[1] : 0);
-        const slot = (['breakfast', 'lunch', 'dinner'] as const).reduce((a, b) => (off(MEALS[b]) < off(MEALS[a]) ? b : a));
+        const slot = n.meal ?? MEAL_SLOTS.reduce((a, b) => (off(MEALS[b]) < off(MEALS[a]) ? b : a));
         // One of each a day: two restaurants an hour apart are two lunches, whatever the clock says.
         if (meals[slot] > 0) cost += MEAL_TWICE;
         meals[slot] += 1;
         isLunchMeal = slot === 'lunch';
-        if (off(MEALS[slot]) > 0 && n.fixed === null) cost += Math.min(MEAL_OFF.most, MEAL_OFF.base + off(MEALS[slot]) * MEAL_OFF.perMinute);
+        if (off(MEALS[slot]) > 0 && n.fixed === null) cost += Math.min(n.meal ? MEAL_OFF_CHOSEN_MOST : MEAL_OFF.most, MEAL_OFF.base + off(MEALS[slot]) * MEAL_OFF.perMinute);
       }
       // Untimed meals: each further one on the day costs more, as a second lunch would.
       if (n.category === 'FOOD' && start === null) cost += MEAL_UNTIMED * ++untimedMeals;

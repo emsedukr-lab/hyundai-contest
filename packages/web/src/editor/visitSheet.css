@@ -237,3 +237,11 @@
 .vd > .vd-delete {
   border-top: 0;
 }
+
+/* 식사 (M67): the chips beside their label where the four fit on one line, under it on a narrow phone. */
+@media (max-width: 379px) {
+  .vd-row-meal {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 8px;
+  }
+}
