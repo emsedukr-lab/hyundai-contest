@@ -152,9 +152,7 @@ export function HomePage() {
           </ul>
         </Section>
       )}
-      <Button className="tn-newtrip-fab" label={t('trips.create')} variant="primary" size="lg" elevation="med" icon={<PlusIcon />} onClick={() => navigate('/trips/new')}>
-        {t('home.newTrip')}
-      </Button>
+      <Button className="tn-newtrip-fab" label={t('trips.create')} variant="primary" size="lg" elevation="med" icon={<PlusIcon />} isIconOnly width={56} onClick={() => navigate('/trips/new')} />
       {/* M52: 되돌리기 for a trip swiped away, above the tab bar. */}
       <div role="status">
         {removed && <UndoSnackbar above="tab" text={t('home.deleted', { name: removed.plan.name })} onUndo={() => void undoRemove()} onClose={() => setRemoved(null)} />}

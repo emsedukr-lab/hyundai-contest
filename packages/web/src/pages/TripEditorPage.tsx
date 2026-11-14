@@ -99,7 +99,7 @@ const shortPeriod = (start: string, end: string) => {
  * single scroll. Each section's header sticks under the top bar while its section is on screen, so you always see which
  * part you are in. Places are added with the + button in the bottom bar to the whole trip (M40: a day is set in the place's details;
  * its badge counts the places on no day yet). Every input opens in a bottom sheet; problems show on the node they concern. Below: one action,
- * 경로 보고 차로 보내기. Edits save on their own (M66): shortly after each change, at once when the setup finishes, and on
+ * 확인 후 차로 보내기. Edits save on their own (M66): shortly after each change, at once when the setup finishes, and on
  * the way out; the top bar says 저장 중 / 저장됨.
  */
 export function TripEditorPage({ tripId }: { tripId: string | null }) {
@@ -588,25 +588,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
   );
 
   // One action below, always the same (M66): the trip saves on its own, so there is no 저장 to press first.
-  // Beside it, 장소 추가 (the + that used to float over the cards): to the whole trip — a place's day is set in its details.
-  // The badge counts the places on no day yet.
-  const cta = (
-    <>
-      <button
-        type="button"
-        className="tl-fab is-secondary"
-        onClick={() => setSheet({ kind: 'place' })}
-        aria-label={`${t('tl.placeSheet')}${pool.length ? ` · ${t('tl.pool', { n: pool.length })}` : ''}${poolNeedsCare ? ` · ${t('tl.fixedPool')}` : ''}`}>
-        <PlusIcon />
-        {pool.length > 0 && (
-          <span className={`tl-fab-badge${poolNeedsCare ? ' is-warn' : ''}`} aria-hidden="true">
-            {pool.length}
-          </span>
-        )}
-      </button>
-      <Button label={t('tl.send')} variant="primary" size="lg" width="100%" onClick={() => void handOut(() => setSheet({ kind: 'send' }))} />
-    </>
-  );
+  const cta = <Button label={t('tl.send')} variant="primary" size="lg" width="100%" onClick={() => void handOut(() => setSheet({ kind: 'send' }))} />;
   // The quiet save state beside the menu: 저장 중 while a change waits for its save, 저장됨 once it is on the phone.
   const saveState = saveFailed ? t('editor.saveFailed') : dirty ? t('editor.saving') : stored ? t('editor.savedState') : '';
 
@@ -861,6 +843,22 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
         ))}
 
         </>
+      )}
+
+      {/* Add places to the whole trip; the badge counts places not assigned to a day. */}
+      {!inSetup && (
+        <button
+          type="button"
+          className={`tl-fab${notice?.undo ? ' is-raised' : ''}`}
+          onClick={() => setSheet({ kind: 'place' })}
+          aria-label={`${t('tl.placeSheet')}${pool.length ? ` · ${t('tl.pool', { n: pool.length })}` : ''}${poolNeedsCare ? ` · ${t('tl.fixedPool')}` : ''}`}>
+          <PlusIcon />
+          {pool.length > 0 && (
+            <span className={`tl-fab-badge${poolNeedsCare ? ' is-warn' : ''}`} aria-hidden="true">
+              {pool.length}
+            </span>
+          )}
+        </button>
       )}
 
       {sheet?.kind === 'start' && <StartSheet isOpen onClose={close} plan={plan} home={home} dayIndex={sheet.day} onChange={edit} onOpenSettings={() => leave('/settings')} />}

@@ -279,13 +279,12 @@
 }
 
 /*
- * Floating "+" (add a place) above the bottom action, kept inside the 480pt content column on wide screens. The screen's
- * one blue fill is its bottom button, so the + floats as a white circle (surface-float, shadow-2) with an accent glyph.
+ * Floating "+" (add a place) above the bottom action, matching the home screen's new-trip button.
  */
 .tl-fab {
   position: fixed;
   z-index: 6;
-  right: calc(max(0px, (100vw - 480px) / 2) + 20px);
+  right: max(20px, calc((100% - 440px) / 2));
   bottom: calc(96px + env(safe-area-inset-bottom));
   width: 56px;
   height: 56px;
@@ -293,8 +292,8 @@
   place-items: center;
   border: 0;
   border-radius: 9999px;
-  background: var(--tn-surface-float);
-  color: var(--tn-accent);
+  background: var(--tn-accent);
+  color: var(--tn-on-accent);
   box-shadow: var(--tn-shadow-2);
   cursor: pointer;
   transition: background-color 120ms var(--tn-ease);
@@ -305,7 +304,7 @@
 }
 /* Pressed: one step darker (fill-weak-pressed), the shadow unchanged. */
 .tl-fab:active {
-  background: var(--tn-fill-weak-pressed);
+  background: var(--tn-accent-pressed);
 }
 .tl-fab:focus-visible {
   outline: 2px solid var(--tn-accent);
@@ -1278,24 +1277,6 @@
   content: '';
   position: absolute;
   inset: 0;
-}
-
-/*
- * 장소 추가 sits in the bottom bar, left of the main action (it floated over the cards before and covered drag handles
- * and the lodging card's end). A 56 square secondary button on the canvas; the badge still counts 담아 둔 곳.
- */
-.tl-fab,
-.tl-fab.is-raised {
-  position: relative;
-  right: auto;
-  bottom: auto;
-  z-index: auto;
-  flex: none;
-  border-radius: 16px;
-  background: var(--tn-fill-weak-on-canvas);
-  color: var(--tn-text-primary);
-  box-shadow: none;
-  transition: background-color 120ms var(--tn-ease);
 }
 
 /* 여행 이름: a field that looks like one at rest (fill-weak, radius 12, 48 tall) and takes the accent edge on focus. */
