@@ -24,3 +24,6 @@ test-results/
 .work/
 submission/figures/*.raw.png
 generated-images/
+
+# impeccable: engine binary is re-downloaded on first run; critique run files stay local
+.claude/skills/impeccable/scripts/bin/
