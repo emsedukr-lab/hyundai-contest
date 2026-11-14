@@ -1,6 +1,6 @@
 import { SELF } from 'cloudflare:test';
 import { describe, expect, it } from 'vitest';
-import { allowedHost, isKakaoFolder, kakaoFolderId, naverCategory, naverFolderApi, naverPlacePage, parseOg, resolveShare } from '../src/resolve';
+import { allowedHost, naverCategory, naverFolderApi, naverPlacePage, parseOg, resolveShare } from '../src/resolve';
 
 const page = (head: string) => `<!doctype html><html><head>${head}</head><body></body></html>`;
 
@@ -10,7 +10,7 @@ describe('공유 링크 og 파싱 (parseOg)', () => {
   });
 
   it('속성 순서가 반대여도 읽는다', () => {
-    expect(parseOg(page(`<meta content='테라로사 | 카카오맵' property='og:title'>`))?.name).toBe('테라로사');
+    expect(parseOg(page(`<meta content='테라로사 | 네이버 지도' property='og:title'>`))?.name).toBe('테라로사');
   });
 
   it('큰따옴표 값 안의 아포스트로피에서 잘리지 않는다', () => {
@@ -28,15 +28,16 @@ describe('공유 링크 og 파싱 (parseOg)', () => {
 
   it('장소가 아닌 앱 홈(앱 이름만)이나 og:title 없음은 실패', () => {
     expect(parseOg(page('<meta property="og:title" content="네이버 지도">'))).toBeNull();
-    expect(parseOg(page('<meta property="og:title" content="카카오맵">'))).toBeNull();
+    expect(parseOg(page('<meta property="og:title" content="NAVER Map">'))).toBeNull();
     expect(parseOg(page('<title>x</title>'))).toBeNull();
   });
 });
 
 describe('공유 링크 SSRF 가드 (네트워크 없이)', () => {
   it('허용 호스트만 통과', () => {
-    for (const h of ['naver.me', 'm.place.naver.com', 'kko.to', 'kko.kakao.com', 'place.map.kakao.com']) expect(allowedHost(h)).toBe(true);
-    for (const h of ['evil.com', 'naver.com.evil.com', 'kakao.com.attacker.net', 'notnaver.me', 'kko.kl', 'localhost', '127.0.0.1']) expect(allowedHost(h)).toBe(false);
+    for (const h of ['naver.me', 'm.place.naver.com', 'map.naver.com']) expect(allowedHost(h)).toBe(true);
+    // Kakao Map share links are not imported (2026-11-15): only Naver hosts are read.
+    for (const h of ['kko.to', 'kko.kakao.com', 'place.map.kakao.com', 'map.kakao.com', 'evil.com', 'naver.com.evil.com', 'notnaver.me', 'localhost', '127.0.0.1']) expect(allowedHost(h)).toBe(false);
   });
 
   it('네이버 지도 앱 주소는 같은 장소의 모바일 장소 페이지로 바꿔 읽는다', () => {
@@ -175,34 +176,19 @@ describe('네이버 저장 목록 링크', () => {
   });
 });
 
-describe('카카오맵 즐겨찾기 폴더 (읽지 않음)', () => {
-  it('폴더 id: 두 링크 모양 모두, 장소 링크는 아님', () => {
-    expect(kakaoFolderId(new URL('https://applink.map.kakao.com/collection?folderid=24854214&share_code=abc'))).toBe('24854214');
-    expect(kakaoFolderId(new URL('https://map.kakao.com/?map_type=TYPE_SKYVIEW&folderid=24854214&page=bookmark'))).toBe('24854214');
-    expect(kakaoFolderId(new URL('https://map.kakao.com/?folderid=1;evil'))).toBeNull();
-    expect(isKakaoFolder(new URL('https://place.map.kakao.com/8654759'))).toBe(false);
-  });
-
-  it('폴더 링크는 unsupported — 카카오에는 아무것도 요청하지 않는다 (kko.to는 어디로 가는지만 본다)', async () => {
-    const seen: string[] = [];
-    const fetcher = (async (input: URL | string) => {
-      const u = String(input);
-      seen.push(u);
-      if (u.startsWith('https://kko.to/')) return new Response(null, { status: 301, headers: { Location: 'https://map.kakao.com/?map_type=TYPE_SKYVIEW&map_hybrid=true&folderid=24857277&target=other&page=bookmark&share_code=DrdOHmaETFRaJdORxTlshg' } });
-      throw new Error(`must not be fetched: ${u}`);
+describe('카카오맵 링크 (가져오지 않음)', () => {
+  it('kko.to·카카오맵 장소·폴더 링크는 400 — 카카오에는 아무것도 요청하지 않는다', async () => {
+    let calls = 0;
+    const fetcher = (async () => {
+      calls++;
+      return new Response('nope');
     }) as unknown as typeof fetch;
-
-    expect(await (await resolveShare({ url: 'https://kko.to/G5MMYHyPRX' }, fetcher)).json()).toEqual({ kind: 'unsupported', source: 'kakao' });
-    expect(seen).toEqual(['https://kko.to/G5MMYHyPRX']);
-
-    seen.length = 0;
-    for (const url of ['https://applink.map.kakao.com/collection?folderid=24854214&share_code=abc', 'https://map.kakao.com/?folderid=24854214&target=other&page=bookmark', 'https://applink.map.kakao.com/collection?share_code=abc']) {
-      expect(await (await resolveShare({ url }, fetcher)).json()).toEqual({ kind: 'unsupported', source: 'kakao' });
+    for (const url of ['https://kko.to/G5MMYHyPRX', 'https://place.map.kakao.com/8654759', 'https://map.kakao.com/?folderid=24857277&target=other&page=bookmark', 'https://applink.map.kakao.com/collection?folderid=1']) {
+      expect((await resolveShare({ url }, fetcher)).status).toBe(400);
     }
-    expect(seen).toEqual([]);
+    expect(calls).toBe(0);
   });
 });
-
 
 describe('한 장소 링크', () => {
   it('지금처럼 이름·주소에 kind: place', async () => {

@@ -1,16 +1,17 @@
 import { json } from './http';
 
 /**
- * 공유 링크 해석 (resolve a map-app share link). Naver/Kakao "share → copy" gives a short link (naver.me, kko.to, …)
- * that the browser can't open cross-origin under the strict CSP, so the Worker follows it and reads the place name and
- * address from the page's Open Graph tags. Coordinates are NOT read here — the client resolves them with the existing
- * Kakao keyword search. Only allow-listed hosts are fetched (SSRF guard), redirects are followed manually with each
+ * 공유 링크 해석 (resolve a map-app share link). Only Naver Map links are read (decided 2026-11-15: places come from a
+ * Naver Map share or a pasted name; Kakao Map share links are not imported). Naver's "share → copy" gives a short link
+ * (naver.me) that the browser can't open cross-origin under the strict CSP, so the Worker follows it and reads the place
+ * name and address from the page's Open Graph tags. Coordinates are NOT read here — the client resolves them with the
+ * existing keyword search. Only allow-listed hosts are fetched (SSRF guard), redirects are followed manually with each
  * hop re-checked, and the URL and page content are never logged or stored. A Naver saved-list link is read from the
- * list's JSON instead (names, addresses and coordinates only — see parseNaverFolder); a Kakao folder link is not fetched.
+ * list's JSON instead (names, addresses and coordinates only — see parseNaverFolder).
  */
 
 // host must equal, or be a subdomain of, one of these
-const ALLOW = [/(^|\.)naver\.me$/, /(^|\.)naver\.com$/, /^kko\.to$/, /(^|\.)kakao\.com$/];
+const ALLOW = [/(^|\.)naver\.me$/, /(^|\.)naver\.com$/];
 export const allowedHost = (host: string) => ALLOW.some((re) => re.test(host.toLowerCase()));
 
 const str = (v: unknown) => (typeof v === 'string' ? v : '');
@@ -35,11 +36,11 @@ function meta(html: string, prop: string): string {
   return b ? decode(b[2]) : '';
 }
 
-/** Drops a trailing site suffix a provider may append to og:title (e.g. "경포호 : 네이버", "… | 카카오맵"). */
-const stripSuffix = (name: string) => name.replace(/\s*[-:|]\s*(네이버\s*지도|네이버|카카오\s*맵|카카오맵|kakao\s*map|naver\s*map)\s*$/i, '').trim();
+/** Drops a trailing site suffix Naver may append to og:title (e.g. "경포호 : 네이버"). */
+const stripSuffix = (name: string) => name.replace(/\s*[-:|]\s*(네이버\s*지도|네이버|naver\s*map)\s*$/i, '').trim();
 
 /** A title that is only the map app's name — what a link to the app's home page (not a place) carries. */
-const APP_ONLY = /^(네이버\s*지도|네이버|카카오\s*맵|카카오맵|카카오|kakao\s*map|naver\s*map|naver|kakao)$/i;
+const APP_ONLY = /^(네이버\s*지도|네이버|naver\s*map|naver)$/i;
 
 /** Control characters some pages leave in their tags (Naver ends og:title with U+001C) would keep the suffix on. */
 const clean = (s: string) => s.replace(/[\u0000-\u001f\u007f]+/g, ' ').replace(/\s+/g, ' ').trim();
@@ -81,25 +82,6 @@ export function naverFolderApi(u: URL): URL | null {
   else if (host === 'pages.map.naver.com') id = u.pathname.match(/\/shares\/([0-9a-f]{32})(?:\/|$)/i)?.[1] ?? u.searchParams.get('shareId') ?? undefined;
   if (!id || !SHARE_ID.test(id)) return null;
   return new URL(`https://pages.map.naver.com/save-pages/api/maps-bookmark/v3/shares/${id.toLowerCase()}/bookmarks?start=0&limit=100&sort=lastUseTime`);
-}
-
-/**
- * A Kakao Map favorites folder (`applink.map.kakao.com/collection?folderid=…`, `map.kakao.com/?folderid=…`, reached from
- * a `kko.to` share link). Folders are not read (decided 2026-11-15): Kakao has no official API for them, its share
- * page's preview shows five places at most, and its own list addresses refuse outside callers. The link is only
- * recognised, so the phone can say so; nothing is asked of Kakao for it.
- */
-export function isKakaoFolder(u: URL): boolean {
-  return kakaoFolderId(u) !== null;
-}
-
-/** The folder id of a Kakao favorites-folder link, or null. */
-export function kakaoFolderId(u: URL): string | null {
-  const host = u.hostname.toLowerCase();
-  const folder = (host === 'applink.map.kakao.com' && /^\/collection\/?$/.test(u.pathname)) || host === 'map.kakao.com' || host === 'm.map.kakao.com';
-  if (!folder) return null;
-  const id = u.searchParams.get('folderid');
-  return id && /^\d{1,15}$/.test(id) ? id : host === 'applink.map.kakao.com' && /^\/collection\/?$/.test(u.pathname) ? '' : null;
 }
 
 export type ListCategory = 'SIGHT' | 'FOOD' | 'CAFE' | 'LODGING' | 'OTHER';
@@ -199,8 +181,6 @@ async function readCapped(res: Response, cap: number, truncate: boolean): Promis
   return text + dec.decode(); // flush a multi-byte character split across the last chunk
 }
 
-const unsupportedKakao = () => json({ kind: 'unsupported', source: 'kakao' });
-
 /** Fetches a Naver saved-list's JSON (fixed URL, no redirects, 1 MB cap) and maps it. */
 async function naverList(api: URL, fetcher: typeof fetch): Promise<Response> {
   const res = await fetcher(api.toString(), { method: 'GET', redirect: 'manual', headers: { 'User-Agent': UA, Accept: 'application/json' }, signal: AbortSignal.timeout(5_000) });
@@ -221,8 +201,8 @@ async function naverList(api: URL, fetcher: typeof fetch): Promise<Response> {
 }
 
 /**
- * Three answers: `{kind:'place', name, address}` for a single place, `{kind:'list', source:'naver', …}` for a Naver
- * saved list, and `{kind:'unsupported', source:'kakao'}` for a Kakao favorites folder (recognised, not read).
+ * Two answers: `{kind:'place', name, address}` for a single Naver place and `{kind:'list', source:'naver', …}` for a
+ * Naver saved list. Any other host (Kakao included) is refused with 400 before anything is fetched.
  */
 export async function resolveShare(body: Record<string, unknown>, fetcher: typeof fetch = fetch): Promise<Response> {
   let url: URL;
@@ -234,7 +214,6 @@ export async function resolveShare(body: Record<string, unknown>, fetcher: typeo
   if (url.protocol !== 'https:' || !allowedHost(url.hostname)) return json({ error: 'BAD_REQUEST' }, 400);
 
   try {
-    if (isKakaoFolder(url)) return unsupportedKakao();
     const direct = naverFolderApi(url);
     if (direct) return await naverList(direct, fetcher);
 
@@ -249,7 +228,6 @@ export async function resolveShare(body: Record<string, unknown>, fetcher: typeo
         if (!loc) break;
         const next = new URL(loc, current);
         if (next.protocol !== 'https:' || !allowedHost(next.hostname)) return json({ error: 'RESOLVE_FAILED' }, 422);
-        if (isKakaoFolder(next)) return unsupportedKakao();
         const folder = naverFolderApi(next);
         if (folder) return await naverList(folder, fetcher);
         current = naverPlacePage(next) ?? next;
