@@ -45,10 +45,10 @@ npm run run:ios -w @tteonaljido/mobile
 
 | 파일 | 내용 |
 |---|---|
-| [`../../apk/mobile/떠날지도_모바일_release.apk`](../../apk/mobile/떠날지도_모바일_release.apk) | 서명된 release, 버전 0.2.0(2), 6.9MB, 2026-11-15. sha256 `d97f6993…` |
+| [`../../apk/mobile/이충지_떠날지도_모바일용_release.apk`](../../apk/mobile/이충지_떠날지도_모바일용_release.apk) | 서명된 release, 버전 0.2.0(2), 6.9MB, 2026-11-15. sha256 `d97f6993…` |
 | `apk/떠날지도_모바일_debug.apk` | 예전(0.1.0) debug 빌드(임시 debug 키). release와 서명이 달라 서로 덮어 설치되지 않음 |
 
-저장소 루트에서 `adb install -r apk/mobile/떠날지도_모바일_release.apk`로 Android 7(API 24) 이상 휴대폰에 넣거나 파일을 옮겨 설치합니다.
+저장소 루트에서 `adb install -r apk/mobile/이충지_떠날지도_모바일용_release.apk`로 Android 7(API 24) 이상 휴대폰에 넣거나 파일을 옮겨 설치합니다.
 
 - **서명**: 차량 앱과 같은 키(`.secrets/tteonaljido.jks`, 별칭 `tteonaljido`), APK 서명 v2 + v3. 인증서 SHA-256 지문은 `8F:E7:CC:E9:A3:62:10:A5:48:54:0B:2D:03:48:DB:89:DF:88:51:1F:55:3F:39:23:58:B4:52:C6:5D:0D:ED:99`이고 차량 APK와 같은 것을 확인했습니다. 이 지문이 App Link 검증 파일(남은 일 2)에 들어갑니다.
 - **다시 만들기**: `.secrets/`가 있는 Mac에서 `npm run app:sync` 후 `cd android && ANDROID_HOME=~/Library/Android/sdk JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home" ./gradlew :app:assembleRelease` → `app/build/outputs/apk/release/app-release.apk`. `android/app/build.gradle`이 차량 앱과 같은 `.secrets/signing.properties`를 읽고, 키가 없으면 서명 없이 만듭니다. (2026-11-11의 파일은 서명 없는 release를 따로 빌드한 뒤, 키가 있는 Mac 안에서 `apksigner`로 서명했습니다. 키와 비밀번호는 Mac 밖으로 나가지 않았습니다.)
