@@ -5,7 +5,7 @@ import { navigate } from '../lib/router';
 import './addFab.css';
 
 /**
- * The main screen's one floating add button. It opens a short menu — 여행 일정 추가 (a new trip) and 장소 추가 (the places
+ * The main screen's one floating add button. It opens a short menu — 여행 추가 (a new trip) and 장소 추가 (the places
  * screen, where a pasted place goes into a trip) — so those two ways in no longer need a tab bar. Tapping outside,
  * Escape or the button again closes it.
  */

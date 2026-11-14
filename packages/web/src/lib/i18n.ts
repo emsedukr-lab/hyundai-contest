@@ -64,7 +64,7 @@ const ko = {
   // pages/HomePage.tsx
   'home.title': '떠날지도',
   'home.add.label': '추가',
-  'home.add.trip': '여행 일정 추가',
+  'home.add.trip': '여행 추가',
   'home.add.place': '장소 추가',
   'home.connectAria': '차량 연결 (QR 스캔)',
   'home.tagline': '여행을 휴대폰에서 짜고, 차에서 QR로 불러와요',
