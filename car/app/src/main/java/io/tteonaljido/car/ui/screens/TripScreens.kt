@@ -72,6 +72,7 @@ import io.tteonaljido.car.ui.components.SwitchRow
 import io.tteonaljido.car.ui.components.Tag
 import io.tteonaljido.car.ui.components.Tone
 import io.tteonaljido.car.ui.components.PleosHeader
+import io.tteonaljido.car.ui.components.PleosIconButton
 import io.tteonaljido.car.ui.components.SegmentedControl
 import io.tteonaljido.car.ui.components.weakFace
 import io.tteonaljido.car.ui.issueText
@@ -277,6 +278,8 @@ fun TripDetailScreen(vm: TripsViewModel, localId: String, drive: DriveState, dem
                 val chipLabels = t.view.days.associate { it.dayIndex to stringResource(R.string.day_n, it.dayIndex) }
                 SegmentedControl(t.view.days.map { it.dayIndex }, day, { chipLabels.getValue(it) }, { "day$it" }, Modifier.widthIn(max = 640.dp)) { day = it }
             }
+            // Removing the trip: a trash can at the far right of the header; the popup that follows asks before anything is deleted.
+            if (drive.parked) PleosIconButton(R.drawable.ic_trash, stringResource(R.string.delete_trip), { confirmDelete = true }, plain = false)
         }
     }) {
         if (demoClock) DemoClockLine(now)
@@ -308,7 +311,6 @@ fun TripDetailScreen(vm: TripsViewModel, localId: String, drive: DriveState, dem
                 Column(verticalArrangement = Arrangement.spacedBy(Space.x24)) {
                     NextPanel(vm, t, day, live, vm.hereFor(t, day, now, here), arrival?.takeIf { it.localId == t.localId }, naviLive, rest.takeIf { isToday })
                     departure?.let { DepartureCard(it) }
-                    DeleteTrip { confirmDelete = true }
                 }
             }
             if (wide) Row(horizontalArrangement = Arrangement.spacedBy(Space.x40)) {
@@ -319,7 +321,6 @@ fun TripDetailScreen(vm: TripsViewModel, localId: String, drive: DriveState, dem
                 NextPanel(vm, t, day, live, vm.hereFor(t, day, now, here), arrival?.takeIf { it.localId == t.localId }, naviLive, rest.takeIf { isToday })
                 departure?.let { DepartureCard(it) }
                 route()
-                DeleteTrip { confirmDelete = true }
                 Spacer(Modifier.height(Space.x32))
             }
         }
@@ -335,12 +336,7 @@ fun TripDetailScreen(vm: TripsViewModel, localId: String, drive: DriveState, dem
     }
 }
 
-/** Removing the trip is a plain Small button at the end of the panel; the popup that follows asks before anything is deleted. */
-@Composable
-private fun DeleteTrip(onClick: () -> Unit) {
-    PleosButton(stringResource(R.string.delete_trip), onClick, type = ButtonType.BASIC, size = ButtonSize.SMALL)
-}
-
+/** The live status: how it goes now ([head]) and against the binding deadline ([tail], shown as a tag). */
 private data class LiveLine(val head: String?, val tail: String?, val tone: Tone)
 
 @Composable
