@@ -24,6 +24,7 @@
  * goes through these or the theme's --color-* / --radius-* / --shadow-* variables. Shadows are TOSS.md §4.
  */
 :root {
+  scrollbar-gutter: stable;
   /* faces */
   --tn-canvas: light-dark(#f2f4f6, #17171c);
   --tn-surface: light-dark(#ffffff, #202027);
@@ -177,30 +178,17 @@
   background: var(--tn-fill-weak-pressed);
 }
 
-/* A labelled action in the top bar (여행: 새 여행) — a secondary button M (40, radius 12) on the canvas. */
-.tn-headbtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  height: 40px;
-  padding: 0 14px 0 10px;
-  border: 0;
-  border-radius: 12px;
-  background: var(--tn-fill-weak-on-canvas);
-  color: var(--tn-text-primary);
-  font: inherit;
-  font-size: 15px;
-  line-height: 19px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 120ms var(--tn-ease);
+/* New trip stays above the tab bar, inside the same 480px content column. */
+.tn-newtrip-fab {
+  position: fixed;
+  z-index: 6;
+  right: max(20px, calc((100% - 440px) / 2));
+  bottom: calc(72px + env(safe-area-inset-bottom));
+  min-height: 56px;
+  border-radius: 9999px;
 }
-.tn-headbtn svg {
-  width: 20px;
-  height: 20px;
-}
-.tn-headbtn:active {
-  background: var(--tn-fill-weak-pressed);
+.tn-main-tab:has(> .tn-newtrip-fab) {
+  padding-bottom: calc(144px + env(safe-area-inset-bottom));
 }
 
 /* Room under the content for the tab bar / the bottom CTA. */
@@ -454,7 +442,6 @@
 
 .tn-tab:focus-visible,
 .tn-iconbtn:focus-visible,
-.tn-headbtn:focus-visible,
 .tn-row:focus-visible {
   outline: 2px solid var(--tn-accent);
   outline-offset: -2px;
@@ -695,8 +682,7 @@ div:has(> .astryx-switch) {
 @media (prefers-reduced-motion: reduce) {
   .tn-tab svg,
   .tn-row,
-  .tn-iconbtn,
-  .tn-headbtn {
+  .tn-iconbtn {
     transition: none;
   }
 }
@@ -957,15 +943,6 @@ div:has(> .astryx-switch) {
 
 /* ---------- M66: UX fixes ---------- */
 
-/* The 40px header action (새 여행) is 44 to the touch. */
-.tn-headbtn {
-  position: relative;
-}
-.tn-headbtn::after {
-  content: '';
-  position: absolute;
-  inset: -2px 0;
-}
 /* Two actions that sit side by side where both labels fit and stack at full width where they do not (320px). */
 .tn-btnrow {
   display: flex;

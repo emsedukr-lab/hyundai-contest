@@ -181,47 +181,6 @@
   }
 }
 
-/*
- * M66: the blocks that change least fold to one row each — title left, current value right (secondary, one line),
- * Astryx's chevron at the end — and open in place. 56 tall, on the same hairlines as the groups above.
- */
-.vd-fold {
-  border-top: 1px solid var(--tn-hairline);
-}
-.vd-fold-row {
-  flex: 1 1 auto;
-  min-width: 0;
-  min-height: 56px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding-right: 8px; /* air between the value and Astryx's chevron */
-}
-.vd-fold-title {
-  flex: none;
-  font-size: 15px;
-  line-height: 23px;
-  font-weight: 600;
-  color: var(--tn-text-primary);
-}
-.vd-fold-value {
-  min-width: 0;
-  font-size: 13px;
-  line-height: 20px;
-  font-weight: 400;
-  color: var(--color-text-secondary);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-variant-numeric: tabular-nums;
-}
-.vd-fold-body {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 4px 0 20px;
-}
 /* 장소 삭제: the last thing in the sheet, a quiet text button in the negative ink (its confirm carries the fill). */
 .vd-delete.tl-textbtn {
   align-self: flex-start;

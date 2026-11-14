@@ -20,7 +20,7 @@ import { defaultHome } from '../lib/settings';
 import { newDoc, nightsLabel, nowIso, unassignedVisits, type TripDoc } from '../lib/trips';
 
 /**
- * 여행 tab (M45): the next trip as a card with its whole route, the other trips in one list, and 새 여행 in the top bar.
+ * 여행 tab (M45): the next trip as a card with its whole route, the other trips in one list, and 새 여행 floating above the bottom tabs.
  * The sample trip has no menu; `/?sample=1` still adds it for demos and tests (the address is cleaned right after).
  */
 export function HomePage() {
@@ -87,15 +87,9 @@ export function HomePage() {
     if (!o) return '';
     return ` · ${o.length === 1 ? t('home.overlapWith', { name: o[0].plan.name }) : t('home.overlapWithMany', { name: o[0].plan.name, n: o.length - 1 })}`;
   };
-  const newTrip = (
-    <button type="button" className="tn-headbtn" onClick={() => navigate('/trips/new')} aria-label={t('trips.create')}>
-      <PlusIcon />
-      {t('home.newTrip')}
-    </button>
-  );
 
   return (
-    <TabScreen path="/" title={t('home.title')} actions={newTrip}>
+    <TabScreen path="/" title={t('home.title')}>
       <div className="tn-intro">
         <p>{t('home.tagline')}</p>
       </div>
@@ -158,6 +152,9 @@ export function HomePage() {
           </ul>
         </Section>
       )}
+      <Button className="tn-newtrip-fab" label={t('trips.create')} variant="primary" size="lg" elevation="med" icon={<PlusIcon />} onClick={() => navigate('/trips/new')}>
+        {t('home.newTrip')}
+      </Button>
       {/* M52: 되돌리기 for a trip swiped away, above the tab bar. */}
       <div role="status">
         {removed && <UndoSnackbar above="tab" text={t('home.deleted', { name: removed.plan.name })} onUndo={() => void undoRemove()} onClose={() => setRemoved(null)} />}

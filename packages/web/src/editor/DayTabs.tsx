@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { t } from '../lib/i18n';
 
 /**
- * 일차 탭 바 (Pleos `ivi_segmented_control/solid`): 여행 정보 · 1일차 · 2일차 …, stuck under the top bar like the car
+ * 일차 탭 바 (Pleos `ivi_segmented_control/solid`): 전체 · 1일차 · 2일차 …, stuck under the top bar like the car
  * app's day tabs. The editor stays one continuous scroll (M30): a tab jumps to its section, and scrolling moves the
  * selection (0 = 여행 정보). The selected segment is the raised face of the bar (timeline.css); the segments scroll
  * sideways inside the bar on long trips and keep the selection in view.
@@ -26,7 +26,7 @@ export function DayTabs({ days, active, onPick }: { days: number[]; active: numb
   return (
     <nav className="tl-daytabs" aria-label={t('tl.dayTabs')}>
       <div className="tl-daytabs-row" ref={row}>
-        {chip(0, t('tl.basicsTitle'))}
+        {chip(0, t('tl.dayAll'))}
         {days.map((d) => chip(d, t('common.day', { day: d })))}
       </div>
     </nav>

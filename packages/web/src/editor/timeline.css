@@ -875,6 +875,10 @@
 .tl-section {
   scroll-margin-top: calc(56px + 56px + env(safe-area-inset-top));
 }
+/* Let even a short final day reach the tabs: 112px stuck bars, 120px bottom CTA padding. */
+.tl-section[data-day]:last-of-type {
+  min-height: calc(100dvh - 112px - 120px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+}
 .tl-sechead-text {
   flex: 1 1 auto;
   min-width: 0;

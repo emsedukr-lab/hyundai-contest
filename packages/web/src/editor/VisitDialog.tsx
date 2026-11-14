@@ -1,5 +1,4 @@
 import { Button } from '@astryxdesign/core/Button';
-import { Collapsible } from '@astryxdesign/core/Collapsible';
 import type { ISODateString } from '@astryxdesign/core/Calendar';
 import { DateInput } from '@astryxdesign/core/DateInput';
 import { SegmentedControl, SegmentedControlItem } from '@astryxdesign/core/SegmentedControl';
@@ -34,27 +33,6 @@ function Group({ title, children }: { title: string; children: ReactNode }) {
     <section className="vd-group">
       <h3 className="vd-group-title">{title}</h3>
       {children}
-    </section>
-  );
-}
-
-/**
- * A block that changes least, folded to one row (M66): its title and the current value ("영업시간 · 모름"), opening in
- * place. Astryx Collapsible carries the button, aria-expanded and the chevron.
- */
-function Fold({ title, value, children }: { title: string; value: string; children: ReactNode }) {
-  return (
-    <section className="vd-fold">
-      <Collapsible
-        defaultIsOpen={false}
-        trigger={
-          <span className="vd-fold-row">
-            <span className="vd-fold-title">{title}</span>
-            <span className="vd-fold-value">{value}</span>
-          </span>
-        }>
-        <div className="vd-fold-body">{children}</div>
-      </Collapsible>
     </section>
   );
 }
@@ -106,8 +84,7 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
  *          choice (자유 / 희망 / 고정 — the desired and fixed times used to be two inputs showing the same time), and the
  *          flexibility that goes with it.
  *   머무는 시간 — in hours and minutes with presets and ±15, not a raw minute count.
- *   중요도 · 메모 · 영업시간 (Kakao Map link, or typed hours) · 장소 정보 (type, why it is on no day) change least: each is
- *   one folded row showing its current value (M66), so the sheet opens on the two things people come to set.
+ *   중요도 · 메모 · 영업시간 (Kakao Map link, or typed hours) · 장소 정보 stay visible as labelled groups.
  * Edits apply live, so the one button is 완료; 장소 삭제 is a quiet text button at the end of the sheet and asks once (the
  * confirm carries the negative fill). Choosing 전체 일정 takes a stop off its day (the keyboard way to swipe it off).
  */
@@ -197,18 +174,7 @@ export function VisitDialog({
     if (next.length > 0) setHours(daily.open, daily.close, next); // at least one open day
   };
 
-  // One-line values for the folded rows.
   const note = notes[place.placeRef];
-  const memoValue =
-    [place.category === 'LODGING' && note?.checkIn ? t('tl.checkInAt', { time: note.checkIn }) : '', place.category === 'LODGING' && note?.checkOut ? t('tl.checkOutAt', { time: note.checkOut }) : '', note?.memo?.split('\n')[0] ?? '']
-      .filter(Boolean)
-      .join(' · ') || t('visit.fold.none');
-  const hoursValue =
-    hours.status === 'UNKNOWN' ? t('visit.hours.unknown')
-    : hours.status === 'ALWAYS_OPEN' ? t('visit.hours.none')
-    : daily && !grouped ? `${openDays.length === 7 ? t('visit.hours.everyDay') : daysLabel(openDays.map(Number))} ${daily.open}–${daily.close}`
-    : t('visit.hours.enter');
-  const importanceValue = visit?.importance === 'MUST' ? t('common.mustAria') : visit?.importance === 'OPTIONAL' ? t('visit.importance.optional') : t('visit.importance.normal');
 
   const flexItems = [
     { value: 'no', label: t('visit.flex.keep') },
@@ -343,7 +309,7 @@ export function VisitDialog({
         )}
 
         {visit && (
-          <Fold title={t('visit.importance')} value={importanceValue}>
+          <Group title={t('visit.importance')}>
             <Segments
               label={t('visit.importance')}
               value={visit.importance}
@@ -354,15 +320,15 @@ export function VisitDialog({
                 { value: 'OPTIONAL', label: t('visit.importance.optional') },
               ]}
             />
-          </Fold>
+          </Group>
         )}
 
         {/* Phone-only notes: lodging gets check-in/out and a memo, any other place a memo. */}
-        <Fold title={t('tl.memo')} value={memoValue}>
+        <Group title={t('tl.memo')}>
           {place.category === 'LODGING' ? <LodgingNoteFields placeRef={place.placeRef} /> : <PlaceMemoField placeRef={place.placeRef} />}
-        </Fold>
+        </Group>
 
-        <Fold title={t('visit.hoursTitle')} value={hoursValue}>
+        <Group title={t('visit.hoursTitle')}>
           {/* 모름 · 따로 없음 (a lake, a beach, a street: nothing to check) · 직접 입력 */}
           <Segments
             label={t('visit.hoursTitle')}
@@ -442,9 +408,9 @@ export function VisitDialog({
               )}
             </>
           )}
-        </Fold>
+        </Group>
 
-        <Fold title={t('visit.section.place')} value={CATEGORY_LABEL[place.category]}>
+        <Group title={t('visit.section.place')}>
           <Row label={t('common.type')}>
             <Segments
               label={t('common.type')}
@@ -469,7 +435,7 @@ export function VisitDialog({
               />
             </Row>
           )}
-        </Fold>
+        </Group>
 
         {/* The rare, destructive action: last in the scroll and quiet. Its confirm takes over the footer. */}
         {!confirmDelete && (
