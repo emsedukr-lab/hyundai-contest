@@ -51,6 +51,9 @@ import io.tteonaljido.car.ui.components.weakFace
 import io.tteonaljido.car.ui.theme.Pleos
 import io.tteonaljido.trip.Endpoint
 import io.tteonaljido.trip.Importance
+import io.tteonaljido.trip.Issue
+import io.tteonaljido.trip.Severity
+import io.tteonaljido.car.ui.badgeText
 import io.tteonaljido.trip.LegFrom
 import io.tteonaljido.trip.LocalTrip
 import io.tteonaljido.trip.TripOverview
@@ -112,7 +115,7 @@ fun DayHeading(t: LocalTrip, day: Int) {
 }
 
 @Composable
-fun DayTimeline(t: LocalTrip, day: Int, live: LiveView?) {
+fun DayTimeline(t: LocalTrip, day: Int, live: LiveView?, issues: List<Issue> = emptyList()) {
     val plan = t.view
     val d = plan.days[day - 1]
     val times = remember(t, day) { TripValidator.timeline(plan, day, t.overlay).associateBy { it.visitId } }
@@ -190,6 +193,8 @@ fun DayTimeline(t: LocalTrip, day: Int, live: LiveView?) {
                             PleosText(stringResource(R.string.time_check) + " · " + durationLabel(v.stayMinutes), Pleos.type.bodyMediumNormal, colorResource(R.color.tn_text_secondary), maxLines = 1)
                         }
                     }
+                    // What needs a look at this stop (closed, late for a fixed time): a badge on the card, with its severity in the words and the colour.
+                    issues.filter { it.visitId == id }.forEach { Tag(badgeText(it), if (it.severity == Severity.CONFLICT) Tone.ERROR else Tone.CAUTION, maxLines = 2) }
                     // Only when the live time differs from the plan: the same number twice is noise.
                     projArrive[id]?.takeIf { it != time?.arrive }?.let { now ->
                         val planned = time?.arrive

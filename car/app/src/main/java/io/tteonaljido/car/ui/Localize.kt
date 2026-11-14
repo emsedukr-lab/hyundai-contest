@@ -74,3 +74,14 @@ fun changeText(c: Change): String = CHANGE[c.code]?.let { stringResource(it, *c.
 
 @Composable
 fun noteText(s: NextStep): String = NEXT[s.noteCode]?.let { stringResource(it, *s.noteArgs.toTypedArray()) } ?: s.note
+
+/** A finding tied to one stop, short enough for a badge on that stop's card (the card already names the place and the day). */
+@Composable
+fun badgeText(i: Issue): String = when (i.code) {
+    "LATE_FOR_FIXED" -> stringResource(R.string.badge_late, i.args.getOrElse(2) { "" }, i.args.getOrElse(3) { "" })
+    "FIXED_UNCHECKED" -> stringResource(R.string.badge_unchecked, i.args.getOrElse(2) { "" })
+    "CLOSED_DATE" -> stringResource(R.string.badge_closed_date)
+    "CLOSED_WEEKDAY" -> stringResource(R.string.badge_closed_weekday)
+    "OUTSIDE_HOURS" -> stringResource(R.string.badge_outside_hours)
+    else -> issueText(i)
+}

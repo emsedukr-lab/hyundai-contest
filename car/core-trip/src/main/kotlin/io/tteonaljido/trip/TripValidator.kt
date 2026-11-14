@@ -9,7 +9,7 @@ import java.time.LocalDate
 enum class Severity { CONFLICT, UNCERTAIN, INFO }
 
 /** `text` is Korean for logs and tests; apps localize from `code` + `args` (strings `issue_<code>`). */
-data class Issue(val severity: Severity, val code: String, val text: String, val dayIndex: Int? = null, val args: List<String> = emptyList())
+data class Issue(val severity: Severity, val code: String, val text: String, val dayIndex: Int? = null, val args: List<String> = emptyList(), val visitId: String? = null)
 
 data class ValidationReport(val issues: List<Issue>) {
     val conflicts get() = issues.count { it.severity == Severity.CONFLICT }
@@ -204,10 +204,10 @@ object TripValidator {
                 val fixed = v.fixed?.let { minutes(it.time) }
                 // Late = arriving after the fixed time; no parking time is added (M42).
                 if (fixed != null && st.arrive != null && st.arrive > fixed) {
-                    add(Severity.CONFLICT, "LATE_FOR_FIXED", "${n}일차 '$name' 고정 ${v.fixed!!.time}에 늦어요 (예상 ${hhmm(st.arrive)})", n, n, name, v.fixed!!.time, hhmm(st.arrive))
+                    add(Severity.CONFLICT, "LATE_FOR_FIXED", "${n}일차 '$name' 고정 ${v.fixed!!.time}에 늦어요 (예상 ${hhmm(st.arrive)})", n, n, name, v.fixed!!.time, hhmm(st.arrive)); out[out.lastIndex] = out.last().copy(visitId = v.visitId)
                 }
-                if (fixed != null && st.arrive == null) add(Severity.UNCERTAIN, "FIXED_UNCHECKED", "${n}일차 '$name' 고정 ${v.fixed!!.time}: 이동시간이 없어 확인할 수 없어요", n, n, name, v.fixed!!.time)
-                hoursIssue(trip, v.placeRef, date, st)?.let { add(Severity.CONFLICT, it.code, "${n}일차 '$name' ${it.text}", n, n, name, *it.extra.toTypedArray()) }
+                if (fixed != null && st.arrive == null) add(Severity.UNCERTAIN, "FIXED_UNCHECKED", "${n}일차 '$name' 고정 ${v.fixed!!.time}: 이동시간이 없어 확인할 수 없어요", n, n, name, v.fixed!!.time).also { out[out.lastIndex] = out.last().copy(visitId = v.visitId) }
+                hoursIssue(trip, v.placeRef, date, st)?.let { add(Severity.CONFLICT, it.code, "${n}일차 '$name' ${it.text}", n, n, name, *it.extra.toTypedArray()); out[out.lastIndex] = out.last().copy(visitId = v.visitId) }
             }
             val end = dayEnd(trip, n, overlay)
             val endBy = d.endBy?.let(::minutes)
