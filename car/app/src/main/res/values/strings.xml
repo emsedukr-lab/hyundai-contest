@@ -408,4 +408,5 @@
     <string name="detail_subtitle_rev">%1$s · 수정 %2$d</string>
     <string name="more">더보기</string>
     <string name="leg_by_navi">내비가 잰 구간</string>
+    <string name="tl_distance">%1$skm</string>
 </resources>

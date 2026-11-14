@@ -70,6 +70,9 @@ import java.util.Locale
  * 타임라인). Read-only here: the plan is edited on the phone.
  */
 
+/** Width of the distance column between two stops, so distances and times line up row to row. */
+private val DISTANCE_COLUMN = 96.dp
+
 /** The rail column is an icon button wide (80), its markers 48 — the design system's icon sizes. */
 private val RAIL @Composable get() = dimensionResource(R.dimen.pleos_buttons_icon_medium_width)
 private val MARKER @Composable get() = Space.x48
@@ -312,19 +315,17 @@ private fun Bar(tag: String, name: String, time: String?, quietTime: Boolean = f
 private fun LegRow(t: LocalTrip, day: Int, k: Int) {
     val leg = TripValidator.leg(t.view, t.overlay, day, k)
     RailRow(marker = null) {
-        Row(Modifier.heightIn(min = Space.x48).padding(start = Space.x16), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.x12)) {
+        Row(Modifier.heightIn(min = Space.x48).padding(start = Space.x16), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.x32)) {
             if (leg == null) {
                 PleosText(stringResource(R.string.tl_leg_unknown), Pleos.type.bodySmall, colorResource(R.color.tn_text_secondary), maxLines = 1)
             } else {
                 val metres = leg.metres
-                PleosText(
-                    when {
-                        leg.from != LegFrom.NAVI -> stringResource(R.string.tl_leg, durationLabel(leg.minutes))
-                        metres != null && metres > 0 -> stringResource(R.string.tl_leg_navi_km, durationLabel(leg.minutes), kmLabel(metres))
-                        else -> stringResource(R.string.tl_leg_navi, durationLabel(leg.minutes))
-                    },
-                    Pleos.type.bodySmall, colorResource(R.color.tn_text_secondary), maxLines = 1,
-                )
+                val quiet = colorResource(R.color.tn_text_secondary)
+                // Two columns so the rows line up: the distance right-aligned in a fixed width (blank when there is none), then the time.
+                Box(Modifier.width(DISTANCE_COLUMN), contentAlignment = Alignment.CenterEnd) {
+                    if (leg.from == LegFrom.NAVI && metres != null && metres > 0) PleosText(stringResource(R.string.tl_distance, kmLabel(metres)), Pleos.type.bodySmall, quiet, maxLines = 1)
+                }
+                PleosText(durationLabel(leg.minutes), Pleos.type.bodySmall, quiet, maxLines = 1)
             }
         }
     }
