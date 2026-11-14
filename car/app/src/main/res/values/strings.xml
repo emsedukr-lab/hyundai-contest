@@ -32,7 +32,7 @@
     <string name="detail_subtitle">%1$s · %2$s · v%3$d</string>
     <string name="to_check">확인할 점</string>
     <string name="nothing_to_check">이 날은 확인할 점이 없어요</string>
-    <string name="load_navi_home">내비 \'집\' 불러오기</string>
+    <string name="load_navi_home">내비에 저장된 집 주소 쓰기</string>
     <string name="delete_trip">이 여행 삭제</string>
     <string name="delete_trip_title">이 여행을 삭제할까요?</string>
     <string name="delete_trip_body">차량에서만 지워지고, 휴대폰 여행은 그대로예요.</string>
@@ -41,7 +41,7 @@
     <string name="lodging_undecided">숙소 미정</string>
     <string name="origin_place">출발지</string>
     <string name="next_destination_day">다음 목적지 · %1$d일차</string>
-    <string name="guide_next">다음 목적지 안내</string>
+    <string name="guide_next">길안내 시작</string>
     <string name="mark_arrived">도착 처리</string>
     <string name="drive_remain">%1$skm 남음</string>
     <string name="drive_must">꼭 가야 하는 고정 일정</string>
@@ -222,7 +222,7 @@
     <string name="skip">건너뛰기</string>
     <string name="undo_arrival">도착 되돌리기</string>
     <string name="unskip">%1$s 되돌리기</string>
-    <string name="undo_depart">출발지를 계획대로</string>
+    <string name="undo_depart">계획한 출발지로 되돌리기</string>
     <string name="depart_here">여기서 출발</string>
     <string name="nearby_chargers">근처 충전소</string>
     <string name="here_checking">현재 위치와 내비 예상 시간을 확인하는 중</string>
@@ -244,7 +244,7 @@
     <string name="undefer_last">미룬 곳 되돌리기</string>
     <string name="defer_to_day">%1$s일차로 미루기</string>
     <string name="undefer_day">미룬 날 되돌리기</string>
-    <string name="guide_today">오늘 경로 전송</string>
+    <string name="guide_today">오늘 경로를 내비로 보내기</string>
     <string name="guide_today_working">오늘 경로 %1$s곳을 내비로 보내는 중…</string>
     <string name="guide_today_done">오늘 경로 %1$s곳을 내비에 올렸어요</string>
     <string name="energy_fast">다음 정류장에서 급속 충전 권장 · 잔량 %1$d%%</string>
@@ -284,7 +284,7 @@
     <string name="tl_must">꼭 가야 할 곳</string>
     <string name="tl_range">%1$s ~ %2$s</string>
     <string name="tl_leg">↓ %1$s</string>
-    <string name="tl_leg_navi">↓ %1$s · 내비</string>
+    <string name="tl_leg_navi">↓ %1$s</string>
     <string name="tl_leg_unknown">↓ 내비가 재요</string>
     <string name="dur_m">%1$d분</string>
     <string name="dur_h">%1$d시간</string>
@@ -376,10 +376,10 @@
     <string name="order_cannot">%1$d일차는 출발지나 도착지, 장소 위치가 정해지지 않아 순서를 비교할 수 없어요</string>
     <string name="order_car">%1$d일차는 차량에서 바꾼 순서예요 · 휴대폰 계획은 그대로예요</string>
     <string name="order_apply">이 순서로 바꾸기</string>
-    <string name="order_reset_btn">계획 순서로 되돌리기</string>
+    <string name="order_reset_btn">방문 순서 되돌리기</string>
     <string name="order_applied">%1$s일차를 내비 기준 빠른 순서로 바꿨어요</string>
     <string name="order_reset">%1$s일차를 계획 순서로 되돌렸어요</string>
-    <string name="tl_leg_navi_km">↓ %1$s · %2$skm · 내비</string>
+    <string name="tl_leg_navi_km">↓ %1$s · %2$skm</string>
     <string name="sum_drive_km">운전 %1$s · %2$skm</string>
     <!-- M66: findings split by who settles them, why a button is off, the next-trip card's open row -->
     <string name="navi_fills_title">내비가 채워요</string>
@@ -397,11 +397,15 @@
     <string name="badge_unchecked">고정 %1$s · 이동시간 없어 확인 불가</string>
     <string name="badge_closed_date">휴무일</string>
     <string name="badge_closed_weekday">이 요일 휴무</string>
-    <string name="badge_outside_hours">영업시간 밖</string>
+    <string name="badge_outside_hours">영업시간 외</string>
     <string name="order_apply_saves">더 빠른 순서로 · %1$s 단축</string>
     <string name="cat_sight">명소</string>
     <string name="cat_food">식당</string>
     <string name="cat_cafe">카페</string>
     <string name="cat_lodging">숙소</string>
     <string name="cat_other">기타</string>
+    <string name="next_destination">다음 목적지</string>
+    <string name="detail_subtitle_rev">%1$s · 수정 %2$d</string>
+    <string name="more">더보기</string>
+    <string name="leg_by_navi">내비가 잰 구간</string>
 </resources>

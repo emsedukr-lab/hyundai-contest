@@ -32,7 +32,7 @@
     <string name="detail_subtitle">%1$s · %2$s · v%3$d</string>
     <string name="to_check">To check</string>
     <string name="nothing_to_check">Nothing to check for this day</string>
-    <string name="load_navi_home">Use navigation \'Home\'</string>
+    <string name="load_navi_home">Use the navigation\'s home address</string>
     <string name="delete_trip">Delete this trip</string>
     <string name="delete_trip_title">Delete this trip?</string>
     <string name="delete_trip_body">Removed from this car only; the phone trip stays.</string>
@@ -41,7 +41,7 @@
     <string name="lodging_undecided">no lodging yet</string>
     <string name="origin_place">start point</string>
     <string name="next_destination_day">Next stop · day %1$d</string>
-    <string name="guide_next">Guide to next stop</string>
+    <string name="guide_next">Start guidance</string>
     <string name="mark_arrived">Mark arrived</string>
     <string name="drive_remain">%1$skm to go</string>
     <string name="drive_must">A must-keep fixed stop</string>
@@ -222,7 +222,7 @@
     <string name="skip">Skip</string>
     <string name="undo_arrival">Undo arrival</string>
     <string name="unskip">Restore %1$s</string>
-    <string name="undo_depart">Start as planned</string>
+    <string name="undo_depart">Back to the planned start</string>
     <string name="depart_here">Start from here</string>
     <string name="nearby_chargers">Nearby chargers</string>
     <string name="here_checking">Checking your location and the navigation estimate</string>
@@ -244,7 +244,7 @@
     <string name="undefer_last">Restore moved stop</string>
     <string name="defer_to_day">Move to day %1$s</string>
     <string name="undefer_day">Undo day move</string>
-    <string name="guide_today">Send today\'s route</string>
+    <string name="guide_today">Send today\'s route to navigation</string>
     <string name="guide_today_working">Sending %1$s stops to the navigation…</string>
     <string name="guide_today_done">Loaded %1$s stops into the navigation</string>
     <string name="energy_fast">Fast-charge at the next stop · %1$d%% left</string>
@@ -284,7 +284,7 @@
     <string name="tl_must">Must-visit</string>
     <string name="tl_range">%1$s – %2$s</string>
     <string name="tl_leg">↓ %1$s</string>
-    <string name="tl_leg_navi">↓ %1$s · navigation</string>
+    <string name="tl_leg_navi">↓ %1$s</string>
     <string name="tl_leg_unknown">↓ Measured by the navigation</string>
     <string name="dur_m">%1$d min</string>
     <string name="dur_h">%1$d h</string>
@@ -376,10 +376,10 @@
     <string name="order_cannot">Day %1$d has no fixed start, end or place location, so its order cannot be compared</string>
     <string name="order_car">Day %1$d follows an order chosen in the car · the phone\'s plan is unchanged</string>
     <string name="order_apply">Use this order</string>
-    <string name="order_reset_btn">Back to the planned order</string>
+    <string name="order_reset_btn">Restore visit order</string>
     <string name="order_applied">Day %1$s now follows the navigation\'s faster order</string>
     <string name="order_reset">Day %1$s is back in the planned order</string>
-    <string name="tl_leg_navi_km">↓ %1$s · %2$s km · navigation</string>
+    <string name="tl_leg_navi_km">↓ %1$s · %2$s km</string>
     <string name="sum_drive_km">Driving %1$s · %2$s km</string>
     <!-- M66: findings split by who settles them, why a button is off, the next-trip card's open row -->
     <string name="navi_fills_title">Filled in by the navigation</string>
@@ -404,4 +404,8 @@
     <string name="cat_cafe">Cafe</string>
     <string name="cat_lodging">Stay</string>
     <string name="cat_other">Other</string>
+    <string name="next_destination">Next stop</string>
+    <string name="detail_subtitle_rev">%1$s · revision %2$d</string>
+    <string name="more">More</string>
+    <string name="leg_by_navi">Measured by the navigation</string>
 </resources>

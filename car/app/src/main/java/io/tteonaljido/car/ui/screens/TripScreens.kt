@@ -72,6 +72,10 @@ import io.tteonaljido.car.ui.components.SwitchRow
 import io.tteonaljido.car.ui.components.Tag
 import io.tteonaljido.car.ui.components.Tone
 import io.tteonaljido.car.ui.components.PleosHeader
+import io.tteonaljido.trip.Issue
+import io.tteonaljido.car.ui.badgeText
+import io.tteonaljido.car.ui.components.PleosOverflowMenu
+import io.tteonaljido.car.ui.components.MenuItem
 import io.tteonaljido.car.ui.components.PleosIconButton
 import io.tteonaljido.car.ui.components.SegmentedControl
 import io.tteonaljido.car.ui.components.weakFace
@@ -270,7 +274,8 @@ fun TripDetailScreen(vm: TripsViewModel, localId: String, drive: DriveState, dem
         // While driving the card below is the whole screen; Back still works, there is nothing to tap.
         PleosHeader(
             tripTitle(t),
-            stringResource(R.string.detail_subtitle, periodLabel(t.view), nightsLabel(t.view), t.meta.revision),
+            // The period only: the nights are in the title, and a revision is named from the second import on.
+            if (t.meta.revision > 1) stringResource(R.string.detail_subtitle_rev, periodLabel(t.view), t.meta.revision) else periodLabel(t.view),
             onBack = if (drive.parked) onBack else null,
         ) {
             // The day switch sits at the top right of the header; one day has nothing to switch between.
@@ -278,8 +283,20 @@ fun TripDetailScreen(vm: TripsViewModel, localId: String, drive: DriveState, dem
                 val chipLabels = t.view.days.associate { it.dayIndex to stringResource(R.string.day_n, it.dayIndex) }
                 SegmentedControl(t.view.days.map { it.dayIndex }, day, { chipLabels.getValue(it) }, { "day$it" }, Modifier.widthIn(max = 640.dp)) { day = it }
             }
-            // Removing the trip: a trash can at the far right of the header; the popup that follows asks before anything is deleted.
-            if (drive.parked) PleosIconButton(R.drawable.ic_trash, stringResource(R.string.delete_trip), { confirmDelete = true }, plain = false)
+            // 더보기: what is rarely needed sits in a menu at the far right, apart from the day switch — putting the start or
+            // the visit order back, and removing the trip (the popup that follows asks before anything is deleted).
+            if (drive.parked) {
+                Spacer(Modifier.width(Space.x16))
+                val undoDepart = stringResource(R.string.undo_depart)
+                val resetOrder = stringResource(R.string.order_reset_btn)
+                val deleteTrip = stringResource(R.string.delete_trip)
+                val hasCarOrder = remember(t, day) { CarOrder.of(t.plan, t.overlay, day) != null }
+                PleosOverflowMenu(stringResource(R.string.more), buildList {
+                    if (t.overlay.originFor(t.view, day) != null) add(MenuItem(undoDepart, "undoDepart") { vm.undoDepartHere(t.localId, day) })
+                    if (hasCarOrder) add(MenuItem(resetOrder, "resetOrder") { vm.resetOrder(t.localId, day) })
+                    add(MenuItem(deleteTrip, deleteTrip, destructive = true) { confirmDelete = true })
+                })
+            }
         }
     }) {
         if (demoClock) DemoClockLine(now)
@@ -309,7 +326,7 @@ fun TripDetailScreen(vm: TripsViewModel, localId: String, drive: DriveState, dem
             }
             val side: @Composable () -> Unit = {
                 Column(verticalArrangement = Arrangement.spacedBy(Space.x24)) {
-                    NextPanel(vm, t, day, live, vm.hereFor(t, day, now, here), arrival?.takeIf { it.localId == t.localId }, naviLive, rest.takeIf { isToday })
+                    NextPanel(vm, t, day, live, vm.hereFor(t, day, now, here), arrival?.takeIf { it.localId == t.localId }, naviLive, rest.takeIf { isToday }, found.person)
                     departure?.let { DepartureCard(it) }
                 }
             }
@@ -318,7 +335,7 @@ fun TripDetailScreen(vm: TripsViewModel, localId: String, drive: DriveState, dem
                 Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) { side(); Spacer(Modifier.height(Space.x32)) }
             } else Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(Space.x32)) {
                 // Half screen (840dp): what to do next first, then the day.
-                NextPanel(vm, t, day, live, vm.hereFor(t, day, now, here), arrival?.takeIf { it.localId == t.localId }, naviLive, rest.takeIf { isToday })
+                NextPanel(vm, t, day, live, vm.hereFor(t, day, now, here), arrival?.takeIf { it.localId == t.localId }, naviLive, rest.takeIf { isToday }, found.person)
                 departure?.let { DepartureCard(it) }
                 route()
                 Spacer(Modifier.height(Space.x32))
@@ -414,7 +431,7 @@ private fun DrivingTripView(t: LocalTrip, day: Int, live: LiveView?, naviLive: N
 
 /** 다음 목적지: the name, how it goes against the next fixed time, and what can be done about it here. */
 @Composable
-private fun NextPanel(vm: TripsViewModel, t: LocalTrip, day: Int, live: LiveView?, here: HereEstimate?, arrival: ArrivalNote?, naviLive: NaviLive?, rest: RestAdvice?) {
+private fun NextPanel(vm: TripsViewModel, t: LocalTrip, day: Int, live: LiveView?, here: HereEstimate?, arrival: ArrivalNote?, naviLive: NaviLive?, rest: RestAdvice?, issues: List<Issue> = emptyList()) {
     val step = remember(t, day) { NextDestination.of(t.view, t.overlay, day) }
     // "오늘 경로 전송" needs at least two upcoming stops with coordinates (destination + ≥1 waypoint).
     val canBundle = remember(t, day) {
@@ -432,8 +449,12 @@ private fun NextPanel(vm: TripsViewModel, t: LocalTrip, day: Int, live: LiveView
     val zone = remember(t) { t.view.zoneOrUtc() }
     fun clock(ms: Long) = java.time.Instant.ofEpochMilli(ms).atZone(zone).let { String.format(Locale.ROOT, "%02d:%02d", it.hour, it.minute) }
     PleosCard(gap = Space.x16) {
-        PleosText(stringResource(R.string.next_destination_day, day), Pleos.type.bodyMedium, secondary, maxLines = 1)
+        PleosText(stringResource(R.string.next_destination), Pleos.type.bodyMedium, secondary, maxLines = 1)
         PleosText(label, Pleos.type.titleLarge, maxLines = 2)
+        // What the timeline flags on this stop (closed, late for a fixed time) is said here too, before guidance starts.
+        (step.target as? Target.Stop)?.let { stop ->
+            issues.filter { it.visitId == stop.visitId }.forEach { Tag(badgeText(it), if (it.severity == Severity.CONFLICT) Tone.ERROR else Tone.CAUTION, maxLines = 2) }
+        }
         val note = noteText(step)
         if (note.isNotBlank()) PleosText(note, Pleos.type.bodyMediumNormal, secondary, maxLines = 1)
         live?.let { v ->
@@ -494,11 +515,9 @@ private fun NextPanel(vm: TripsViewModel, t: LocalTrip, day: Int, live: LiveView
             if (isToday) (step.target as? Target.Stop)?.let { s -> add { m -> PleosButton(stringResource(R.string.mark_arrived), { vm.markVisited(t.localId, s.visitId) }, type = ButtonType.BASIC, modifier = m, tag = "visited") } }
             if (isToday) add { m -> PleosButton(stringResource(R.string.depart_here), { vm.departHere(t.localId, day) }, type = ButtonType.BASIC, modifier = m, tag = "departHere") }
         }
-        // What the plan can take back or have the navigation settle (undo the start, the car's order, a faster order, timing, home): small, and only while it applies.
+        // What the navigation can settle (a faster order, timing, home): small, and only while it applies. Putting things back is in the header's 더보기.
         ActionGrid {
-            if (t.overlay.originFor(t.view, day) != null) add { m -> PleosButton(stringResource(R.string.undo_depart), { vm.undoDepartHere(t.localId, day) }, type = ButtonType.BASIC, size = ButtonSize.SMALL, modifier = m, tag = "undoDepart") }
             if (faster != null) add { m -> PleosButton(stringResource(R.string.order_apply_saves, durationLabel(faster.savedMinutes)), { vm.applyOrder(t.localId, day, faster.order) }, type = ButtonType.WEAK, size = ButtonSize.SMALL, modifier = m, tag = "applyOrder") }
-            else if (carOrder != null) add { m -> PleosButton(stringResource(R.string.order_reset_btn), { vm.resetOrder(t.localId, day) }, type = ButtonType.BASIC, size = ButtonSize.SMALL, modifier = m, tag = "resetOrder") }
             if (cover.total > 0 && cover.measured < cover.total) add { m -> PleosButton(stringResource(R.string.navi_measure_all), { vm.measureTrip(t.localId) }, type = ButtonType.BASIC, size = ButtonSize.SMALL, modifier = m, tag = "naviMeasure") }
             else if (faster == null && carOrder == null && canOrder) add { m -> PleosButton(stringResource(R.string.navi_optimize_day, day), { vm.measureDay(t.localId, day) }, type = ButtonType.BASIC, size = ButtonSize.SMALL, modifier = m, tag = "naviOptimize") }
             if (needsHome) add { m -> PleosButton(stringResource(R.string.load_navi_home), { vm.loadNaviHome(t.localId) }, type = ButtonType.BASIC, size = ButtonSize.SMALL, modifier = m, tag = "naviHome") }

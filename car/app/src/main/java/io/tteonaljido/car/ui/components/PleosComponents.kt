@@ -34,6 +34,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
@@ -61,7 +63,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupProperties
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.DialogWindowProvider
 import io.tteonaljido.car.R
@@ -254,6 +260,56 @@ fun PleosIconButton(@DrawableRes icon: Int, tag: String, onClick: () -> Unit, pl
         contentAlignment = Alignment.Center,
     ) {
         Icon(icon, dimensionResource(R.dimen.pleos_buttons_icon_medium_content), colorResource(R.color.tn_text_primary))
+    }
+}
+
+/** One row of [PleosOverflowMenu]; a destructive one reads in `negative-text` and still asks before it acts. */
+class MenuItem(val label: String, val tag: String, val destructive: Boolean = false, val onClick: () -> Unit)
+
+/**
+ * 더보기 (⋮): the icon button and, under it, a white card listing what is rarely needed — putting things back, removing
+ * the trip — so those stay off the screen and away from the day switch. Nothing to list, nothing drawn.
+ */
+@Composable
+fun PleosOverflowMenu(tag: String, items: List<MenuItem>) {
+    if (items.isEmpty()) return
+    var open by remember { mutableStateOf(false) }
+    val below = with(LocalDensity.current) { (dimensionResource(R.dimen.pleos_buttons_icon_medium_width) + Space.x8).roundToPx() }
+    val shape = RoundedCornerShape(Radius.r24)
+    Box {
+        PleosIconButton(R.drawable.ic_more, tag, { open = true })
+        if (open) Popup(alignment = Alignment.TopEnd, offset = IntOffset(0, below), onDismissRequest = { open = false }, properties = PopupProperties(focusable = true)) {
+            CompositionLocalProvider(LocalLayer provides Layer.SURFACE) {
+                Column(
+                    Modifier
+                        .padding(Space.x16) // room for the shadow inside the popup window
+                        .width(IntrinsicSize.Max)
+                        .widthIn(min = 360.dp)
+                        .shadowLevel3(Radius.r24)
+                        .clip(shape)
+                        .background(colorResource(R.color.tn_surface))
+                        .padding(Space.x8),
+                ) {
+                    items.forEach { item ->
+                        val source = remember { MutableInteractionSource() }
+                        val pressed by source.collectIsPressedAsState()
+                        Box(
+                            Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = dimensionResource(R.dimen.pleos_buttons_basic_medium_height))
+                                .clip(RoundedCornerShape(Radius.r16))
+                                .background(if (pressed) weakFace(pressed = true) else Color.Transparent)
+                                .clickable(interactionSource = source, indication = null, role = Role.Button) { open = false; item.onClick() }
+                                .semantics { contentDescription = item.tag }
+                                .padding(horizontal = Space.x24),
+                            contentAlignment = Alignment.CenterStart,
+                        ) {
+                            PleosText(item.label, Pleos.type.bodyLargeStrong, colorResource(if (item.destructive) R.color.tn_negative_text else R.color.tn_text_primary), maxLines = 1)
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 

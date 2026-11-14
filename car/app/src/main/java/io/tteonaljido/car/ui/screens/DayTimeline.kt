@@ -28,6 +28,8 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -144,7 +146,7 @@ fun DayTimeline(t: LocalTrip, day: Int, live: LiveView?, issues: List<Issue> = e
         RailRow(top = false, marker = { Marker(fill = colorResource(R.color.tn_text_primary), size = Space.x32) }) {
             Bar(
                 stringResource(R.string.tl_start), startName,
-                startAt?.let { stringResource(R.string.tl_depart_at, TripValidator.hhmm(it)) } ?: stringResource(R.string.tl_depart_free),
+                startAt?.let { TripValidator.hhmm(it) } ?: stringResource(R.string.tl_depart_free), // the 출발 tag in front already says what the time is
                 quietTime = startAt == null,
             )
         }
@@ -311,12 +313,14 @@ private fun Bar(tag: String, name: String, time: String?, quietTime: Boolean = f
 @Composable
 private fun LegRow(t: LocalTrip, day: Int, k: Int) {
     val leg = TripValidator.leg(t.view, t.overlay, day, k)
+    val byNavi = stringResource(R.string.leg_by_navi)
     RailRow(marker = null) {
         Row(Modifier.heightIn(min = Space.x48).padding(start = Space.x16), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.x12)) {
             if (leg == null) {
                 PleosText(stringResource(R.string.tl_leg_unknown), Pleos.type.bodySmall, colorResource(R.color.tn_text_secondary), maxLines = 1)
             } else {
                 val metres = leg.metres
+                // A small car marks a leg the car's navigation measured; the phone's estimate has none. Information only, nothing to tap.
                 PleosText(
                     when {
                         leg.from != LegFrom.NAVI -> stringResource(R.string.tl_leg, durationLabel(leg.minutes))
@@ -325,6 +329,7 @@ private fun LegRow(t: LocalTrip, day: Int, k: Int) {
                     },
                     Pleos.type.bodySmall, colorResource(R.color.tn_text_secondary), maxLines = 1,
                 )
+                if (leg.from == LegFrom.NAVI) Icon(R.drawable.ic_car, Space.x32, colorResource(R.color.tn_text_secondary), Modifier.semantics { contentDescription = byNavi })
             }
         }
     }
