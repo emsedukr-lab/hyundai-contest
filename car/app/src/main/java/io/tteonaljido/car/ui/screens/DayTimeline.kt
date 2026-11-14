@@ -167,7 +167,7 @@ fun DayTimeline(t: LocalTrip, day: Int, live: LiveView?, issues: List<Issue> = e
                 PleosCard(Modifier.padding(vertical = Space.x8), padding = Space.x24, gap = Space.x8) {
                     // One line per stop: name (꼭), the time and stay, then what needs a look (status, closed / late badges).
                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.x16)) {
-                        Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.x12)) {
+                        Row(Modifier.weight(1.3f), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.x12)) {
                             // The kind of place, like the 출발 / 숙소 tag of the bars: 명소 · 식당 · 카페 · 숙소 · 기타.
                             plan.places.firstOrNull { it.placeRef == v.placeRef }?.category?.let { Tag(stringResource(categoryLabel(it))) }
                             PleosText(
@@ -177,6 +177,9 @@ fun DayTimeline(t: LocalTrip, day: Int, live: LiveView?, issues: List<Issue> = e
                             )
                             if (v.importance == Importance.MUST) MustTag(stringResource(R.string.tl_must))
                         }
+                        // Time, stay and badges share the rest of the line with the name, so a narrow window shortens the name
+                        // (with an ellipsis) instead of pushing it out.
+                        Row(Modifier.weight(2f), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.x16, Alignment.End)) {
                         // A fixed time is marked by the lock and the bold time in `accent-text` (TOSS.md §5 타임라인).
                         val fixedColor = colorResource(R.color.tn_accent_text)
                         if (v.fixed != null) Icon(R.drawable.ic_lock, Space.x32, fixedColor)
@@ -191,7 +194,7 @@ fun DayTimeline(t: LocalTrip, day: Int, live: LiveView?, issues: List<Issue> = e
                                     append(" · "); append(durationLabel(v.stayMinutes))
                                 },
                                 style = Pleos.type.bodyMedium.copy(fontWeight = FontWeight.Normal, color = colorResource(R.color.tn_text_secondary)),
-                                maxLines = 1, softWrap = false,
+                                maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis,
                             )
                         } else {
                             PleosText(stringResource(R.string.time_check) + " · " + durationLabel(v.stayMinutes), Pleos.type.bodyMediumNormal, colorResource(R.color.tn_text_secondary), maxLines = 1)
@@ -199,6 +202,8 @@ fun DayTimeline(t: LocalTrip, day: Int, live: LiveView?, issues: List<Issue> = e
                         status?.let { (text, tone) -> Tag(text, tone) }
                         // What needs a look at this stop (closed, late for a fixed time): a badge on the line, severity in the words and the colour.
                         issues.filter { it.visitId == id }.forEach { Tag(badgeText(it), if (it.severity == Severity.CONFLICT) Tone.ERROR else Tone.CAUTION) }
+                    
+                        }
                     }
                     // Only when the live time differs from the plan: the same number twice is noise.
                     projArrive[id]?.takeIf { it != time?.arrive }?.let { now ->

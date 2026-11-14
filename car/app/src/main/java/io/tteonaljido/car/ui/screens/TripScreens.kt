@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
@@ -270,6 +271,10 @@ fun TripDetailScreen(vm: TripsViewModel, localId: String, drive: DriveState, dem
     val rest = remember(now, live, naviLive, vehicle, session) { vm.rest(now, live, naviLive, session) }
     val departure = remember(live, vehicle, energy) { if (isToday) vm.departure(live) else null }
 
+    // The day switch sits in the header only when the window has room for it beside the title and the menu; a narrower window
+    // (half screen, more days) puts it on its own row under the header instead of cutting its last day off.
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+    val narrowHeader = t.view.days.size > 1 && maxWidth < (700 + 125 * t.view.days.size).dp
     Screen(header = {
         // While driving the card below is the whole screen; Back still works, there is nothing to tap.
         PleosHeader(
@@ -279,7 +284,7 @@ fun TripDetailScreen(vm: TripsViewModel, localId: String, drive: DriveState, dem
             onBack = if (drive.parked) onBack else null,
         ) {
             // The day switch sits at the top right of the header; one day has nothing to switch between.
-            if (drive.parked && t.view.days.size > 1) {
+            if (drive.parked && t.view.days.size > 1 && !narrowHeader) {
                 val chipLabels = t.view.days.associate { it.dayIndex to stringResource(R.string.day_n, it.dayIndex) }
                 SegmentedControl(t.view.days.map { it.dayIndex }, day, { chipLabels.getValue(it) }, { "day$it" }, Modifier.widthIn(max = 640.dp)) { day = it }
             }
@@ -310,6 +315,10 @@ fun TripDetailScreen(vm: TripsViewModel, localId: String, drive: DriveState, dem
                 Tag(issueText(past), Tone.CAUTION, large = true)
                 PleosButton(stringResource(R.string.delete_trip), { confirmDelete = true }, type = ButtonType.BASIC, size = ButtonSize.SMALL, tag = "pastDelete")
             }
+        }
+        if (drive.parked && narrowHeader) {
+            val chipLabels = t.view.days.associate { it.dayIndex to stringResource(R.string.day_n, it.dayIndex) }
+            SegmentedControl(t.view.days.map { it.dayIndex }, day, { chipLabels.getValue(it) }, { "day$it" }) { day = it }
         }
         val found = remember(report, day) { TripFindings.of(report, day) }
         BoxWithConstraints(Modifier.fillMaxWidth().weight(1f)) {
@@ -343,6 +352,7 @@ fun TripDetailScreen(vm: TripsViewModel, localId: String, drive: DriveState, dem
         }
     }
 
+    }
     // No popups while driving: a pending one waits until the car is parked again.
     if (drive.parked) GuideDialogs(vm, guide)
     if (confirmDelete && drive.parked) {
