@@ -488,26 +488,20 @@ private fun NextPanel(vm: TripsViewModel, t: LocalTrip, day: Int, live: LiveView
         val needsHome = t.view.home == null && t.overlay.home == null && (t.view.origin is Endpoint.Home || t.view.finalDestination is Endpoint.Home)
         ActionGrid {
             if (canBundle) add { m -> PleosButton(stringResource(R.string.guide_today), { vm.guideToday(t.localId, day) }, type = ButtonType.BASIC, modifier = m, tag = "guideToday") }
-            (step.target as? Target.Stop)?.let { s -> add { m -> PleosButton(stringResource(R.string.mark_arrived), { vm.markVisited(t.localId, s.visitId) }, type = ButtonType.BASIC, enabled = isToday, modifier = m, tag = "visited") } }
-            // On the first day this also moves the day's start to where the car stands; on a later day the start stays the
-            // lodging of the night before and this only asks the navigation for the time from here (M59).
-            add { m -> PleosButton(stringResource(R.string.depart_here), { vm.departHere(t.localId, day) }, type = ButtonType.BASIC, enabled = isToday, modifier = m, tag = "departHere") }
-            if (t.overlay.originFor(t.view, day) != null) add { m -> PleosButton(stringResource(R.string.undo_depart), { vm.undoDepartHere(t.localId, day) }, type = ButtonType.BASIC, modifier = m, tag = "undoDepart") }
-            if (faster != null) add { m -> PleosButton(stringResource(R.string.order_apply_saves, durationLabel(faster.savedMinutes)), { vm.applyOrder(t.localId, day, faster.order) }, type = ButtonType.WEAK, modifier = m, tag = "applyOrder") }
-            else if (carOrder != null) add { m -> PleosButton(stringResource(R.string.order_reset_btn), { vm.resetOrder(t.localId, day) }, type = ButtonType.BASIC, modifier = m, tag = "resetOrder") }
-            if (cover.total > 0 && cover.measured < cover.total) add { m -> PleosButton(stringResource(R.string.navi_measure_all), { vm.measureTrip(t.localId) }, type = ButtonType.BASIC, modifier = m, tag = "naviMeasure") }
-            else if (faster == null && carOrder == null && canOrder) add { m -> PleosButton(stringResource(R.string.navi_optimize_day, day), { vm.measureDay(t.localId, day) }, type = ButtonType.BASIC, modifier = m, tag = "naviOptimize") }
-            if (needsHome) add { m -> PleosButton(stringResource(R.string.load_navi_home), { vm.loadNaviHome(t.localId) }, type = ButtonType.BASIC, modifier = m, tag = "naviHome") }
+            if (isToday) (step.target as? Target.Stop)?.let { s -> add { m -> PleosButton(stringResource(R.string.mark_arrived), { vm.markVisited(t.localId, s.visitId) }, type = ButtonType.BASIC, modifier = m, tag = "visited") } }
+            if (isToday) add { m -> PleosButton(stringResource(R.string.depart_here), { vm.departHere(t.localId, day) }, type = ButtonType.BASIC, modifier = m, tag = "departHere") }
         }
-        // A disabled button says why, in one quiet line: these two act on the day the car is on, and guidance needs a stop to go to.
-        val onTrip = vm.todayIndex(t)
-        val hasArrive = step.target is Target.Stop
-        val why = when {
-            step.target == null -> stringResource(R.string.why_no_target)
-            isToday -> null
-            onTrip != null -> stringResource(if (hasArrive) R.string.why_other_day_both else R.string.why_other_day_depart, onTrip)
-            else -> stringResource(if (hasArrive) R.string.why_not_travelling_both else R.string.why_not_travelling_depart)
+        // What the plan can take back or have the navigation settle (undo the start, the car's order, a faster order, timing, home): small, and only while it applies.
+        ActionGrid {
+            if (t.overlay.originFor(t.view, day) != null) add { m -> PleosButton(stringResource(R.string.undo_depart), { vm.undoDepartHere(t.localId, day) }, type = ButtonType.BASIC, size = ButtonSize.SMALL, modifier = m, tag = "undoDepart") }
+            if (faster != null) add { m -> PleosButton(stringResource(R.string.order_apply_saves, durationLabel(faster.savedMinutes)), { vm.applyOrder(t.localId, day, faster.order) }, type = ButtonType.WEAK, size = ButtonSize.SMALL, modifier = m, tag = "applyOrder") }
+            else if (carOrder != null) add { m -> PleosButton(stringResource(R.string.order_reset_btn), { vm.resetOrder(t.localId, day) }, type = ButtonType.BASIC, size = ButtonSize.SMALL, modifier = m, tag = "resetOrder") }
+            if (cover.total > 0 && cover.measured < cover.total) add { m -> PleosButton(stringResource(R.string.navi_measure_all), { vm.measureTrip(t.localId) }, type = ButtonType.BASIC, size = ButtonSize.SMALL, modifier = m, tag = "naviMeasure") }
+            else if (faster == null && carOrder == null && canOrder) add { m -> PleosButton(stringResource(R.string.navi_optimize_day, day), { vm.measureDay(t.localId, day) }, type = ButtonType.BASIC, size = ButtonSize.SMALL, modifier = m, tag = "naviOptimize") }
+            if (needsHome) add { m -> PleosButton(stringResource(R.string.load_navi_home), { vm.loadNaviHome(t.localId) }, type = ButtonType.BASIC, size = ButtonSize.SMALL, modifier = m, tag = "naviHome") }
         }
+        // Guidance needs a stop to go to; say so in one quiet line when there is none.
+        val why = if (step.target == null) stringResource(R.string.why_no_target) else null
         why?.let { PleosText(it, Pleos.type.bodySmall, secondary, maxLines = 2) }
         if (skip != null || defer != null || energy != null || rest != null || arrival?.visitId != null || skippedToday.isNotEmpty() || deferredToday.isNotEmpty() || deferredAway.isNotEmpty() || lowSoc) {
             ActionGrid {
