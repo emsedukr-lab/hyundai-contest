@@ -2,8 +2,8 @@
 
 모바일 웹(`packages/web`)의 화면을 그대로 담은 휴대폰 앱입니다. [Capacitor](https://capacitorjs.com) 8.6으로 포장하며, 화면 코드는 하나이고 모바일 웹도 그대로 유지합니다(앱이 없으면 차량 QR은 지금처럼 브라우저에서 열립니다).
 
-- 앱 ID `io.tteonaljido.mobile` (차량 앱은 `io.tteonaljido.car`), 버전 0.1.0
-- 2026-11-11 뼈대 단계: 차량 앱과 같은 키로 서명한 Android release APK를 `apk/떠날지도_모바일_release.apk`에 두었습니다(아래 'APK'). **iOS 빌드와 실제 기기 동작은 아직 확인하지 못했습니다.**
+- 앱 ID `io.tteonaljido.mobile` (차량 앱은 `io.tteonaljido.car`), 버전 0.2.0
+- 2026-11-15: 지금 웹 화면 그대로의 서명 release APK 0.2.0을 `apk/떠날지도_모바일_release.apk`에 두고, Android 휴대폰 에뮬레이터에서 실행해 확인했습니다(아래 '확인한 것'). **iOS 빌드와 실제 휴대폰 동작은 아직 확인하지 못했습니다.**
 
 ## 구조
 
@@ -44,16 +44,15 @@ npm run run:ios -w @tteonaljido/mobile
 
 | 파일 | 내용 |
 |---|---|
-| `apk/떠날지도_모바일_release.apk` | 서명된 release, 버전 0.1.0(1), 5.9MB, 2026-11-11. sha256 `5b11841f…` |
-| `apk/떠날지도_모바일_debug.apk` | 같은 화면의 debug 빌드(임시 debug 키). release와 서명이 달라 서로 덮어 설치되지 않음 |
+| `apk/떠날지도_모바일_release.apk` | 서명된 release, 버전 0.2.0(2), 6.9MB, 2026-11-15. sha256 `d97f6993…` |
+| `apk/떠날지도_모바일_debug.apk` | 예전(0.1.0) debug 빌드(임시 debug 키). release와 서명이 달라 서로 덮어 설치되지 않음 |
 
 Android 7(API 24) 이상 휴대폰에 `adb install -r apk/떠날지도_모바일_release.apk`로 넣거나 파일을 옮겨 설치합니다.
 
 - **서명**: 차량 앱과 같은 키(`.secrets/tteonaljido.jks`, 별칭 `tteonaljido`), APK 서명 v2 + v3. 인증서 SHA-256 지문은 `8F:E7:CC:E9:A3:62:10:A5:48:54:0B:2D:03:48:DB:89:DF:88:51:1F:55:3F:39:23:58:B4:52:C6:5D:0D:ED:99`이고 차량 APK와 같은 것을 확인했습니다. 이 지문이 App Link 검증 파일(남은 일 2)에 들어갑니다.
-- **다시 만들기**: `.secrets/`가 있는 Mac에서 `npm run app:sync` 후 `cd android && ./gradlew :app:assembleRelease` → `app/build/outputs/apk/release/app-release.apk`. `android/app/build.gradle`이 차량 앱과 같은 `.secrets/signing.properties`를 읽고, 키가 없으면 서명 없이 만듭니다. (2026-11-11의 파일은 서명 없는 release를 따로 빌드한 뒤, 키가 있는 Mac 안에서 `apksigner`로 서명했습니다. 키와 비밀번호는 Mac 밖으로 나가지 않았습니다.)
-- **서버를 다시 배포하기 전에는** 화면·여행 만들기·저장만 되고, 장소 검색·이동시간·차량 연결은 오류가 납니다(CORS 미반영).
-- **카카오 지도 키 없이** 빌드해서 일차 지도는 SVG 스케치로 나옵니다. 키를 넣은 빌드는 카카오 콘솔에 앱 출처를 등록한 뒤에 의미가 있습니다(남은 일 3).
-- 기기에서 실행해 본 적은 없습니다. 빌드, 서명, APK 내용(권한·아이콘·화면 파일)만 확인했습니다.
+- **다시 만들기**: `.secrets/`가 있는 Mac에서 `npm run app:sync` 후 `cd android && ANDROID_HOME=~/Library/Android/sdk JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home" ./gradlew :app:assembleRelease` → `app/build/outputs/apk/release/app-release.apk`. `android/app/build.gradle`이 차량 앱과 같은 `.secrets/signing.properties`를 읽고, 키가 없으면 서명 없이 만듭니다. (2026-11-11의 파일은 서명 없는 release를 따로 빌드한 뒤, 키가 있는 Mac 안에서 `apksigner`로 서명했습니다. 키와 비밀번호는 Mac 밖으로 나가지 않았습니다.)
+- 카카오 지도 키(`packages/web/.env.local`)를 넣어 빌드했고, 에뮬레이터에서 카카오 지도가 실제로 표시됐습니다.
+- 실제 휴대폰에서는 아직 실행해 보지 않았습니다(에뮬레이터만).
 
 ## 웹과 다른 점
 
@@ -72,6 +71,17 @@ Android 7(API 24) 이상 휴대폰에 `adb install -r apk/떠날지도_모바일
 | 로그 | — | Capacitor 로그 끔(`loggingBehavior: 'none'`): 파일 내용·QR 링크가 logcat·Xcode 콘솔에 남지 않게 |
 
 QR 내용(`#v1.sid.scanSecret.fp`), 종단간 암호화, 전송 스키마, 저장 위치(휴대폰 안 IndexedDB)는 웹과 같습니다.
+
+## 확인한 것 (2026-11-15, 0.2.0)
+
+Android 15 휴대폰 에뮬레이터(Pixel 7)에 release APK를 설치해 확인했습니다.
+
+- 서명 v2+v3, 인증서 지문이 차량 앱과 같음. 런처 아이콘·시작 화면이 새 아이콘
+- 첫 화면: 하단 탭 없음, 상단 QR(연결)·톱니(설정), 플로팅 ＋ 메뉴(여행 추가·장소 추가), 샘플 여행 추가, 한국어·영어(기기 언어)
+- 배포 서버 연결(CORS): 네이버 지도 저장 목록 링크 → '인천' 목록 9곳과 카카오 지도 표시
+- 카카오맵 링크를 붙여넣으면 담지 않고 '카카오맵 링크는 지원하지 않아요' 안내
+- QR 아이콘 → 카메라 스캔 화면(에뮬레이터 카메라라 실제 QR 인식은 미확인), Android 뒤로 버튼으로 앞 화면·첫 화면
+- 앱은 지도 앱의 '공유'를 아직 받지 못하므로, 장소 화면의 '네이버 지도에서 공유 → 떠날지도' 안내는 앱에서 숨김(웹에는 그대로)
 
 ## 확인한 것 (2026-11-10)
 
