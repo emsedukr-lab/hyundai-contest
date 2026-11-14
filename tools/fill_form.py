@@ -7,12 +7,16 @@ visible headings, which are what reviewers read).
 Each `## N.` section of the source goes into answer box N, written in a small markdown subset:
 
     ### 소제목                      bold navy subheading
+    #### 작은 제목                   smaller bold heading for one item under a subheading
     - 항목 / `  - 하위 항목`         bullets (a leading ①…⑳ replaces the bullet glyph)
     **굵게**, `API명`               bold / monospace runs
     > 요약                          shaded summary line with a navy bar
     | a | b | + |---|---|          table, header row first; an optional next line
     {cols: 30/70; caption: 설명}    sets column widths (%) and a "표 N." caption above it
     ![설명](figures/x.png){70%}     figure (PNG or JPEG) with a "그림 N." caption (optional narrower width)
+    :::side figures/x.jpg | 설명     a picture on the left with the lines up to the closing `:::` on its right
+    …                               (paragraphs, bullets, quotes, small headings); numbered like any figure
+    :::
     blank line                      paragraph break; any other line is a paragraph
 
 The template's box is a one-cell table holding an inline plain-text content control, which cannot hold paragraphs,
@@ -46,6 +50,9 @@ BAR = "3182F6"  # Toss blue-500
 GREY = "4E5968"  # Toss grey-700 (text-secondary)
 BODY = 20  # half-points (10pt)
 SMALL = 18  # tables
+CAPTION_MAX = 40  # a caption is a one-line name tag; the explanation belongs in the text
+SIDE_PICTURE = 40  # % of the answer width taken by the picture of a side-by-side block
+SIDE_CAPTION_MAX = 26  # what fits on one line under that picture
 LINE = 'w:line="288" w:lineRule="auto"'
 BULLETS = 900  # numbering ids added to numbering.xml (template uses 0–13 / 1–15)
 
@@ -75,8 +82,22 @@ def blocks(lines: list[str]) -> list[tuple]:
         i += 1
         if not st:
             continue
-        if f := FIGURE.match(st):
+        if st.startswith(":::side"):
+            m = re.match(r"^:::side\s+(\S+)\s*\|\s*(.+)$", st)
+            if not m:
+                raise SystemExit(f"side block needs ':::side <picture> | <caption>': {st}")
+            inner = []
+            while i < len(lines) and lines[i].strip() != ":::":
+                inner.append(lines[i])
+                i += 1
+            if i == len(lines):
+                raise SystemExit(f"side block is not closed with ':::': {st}")
+            i += 1
+            out.append(("side", m.group(2).strip(), m.group(1), blocks(inner)))
+        elif f := FIGURE.match(st):
             out.append(("figure", f.group(1), f.group(2), int(f.group(3) or 100)))
+        elif st.startswith("#### "):
+            out.append(("subheading", st[5:].strip()))
         elif st.startswith("### "):
             out.append(("heading", st[4:].strip()))
         elif st.startswith("> "):
@@ -157,6 +178,11 @@ def heading_xml(text: str, first: bool) -> str:
     return para(inline(text, size=22, bold=True, color=NAVY), before=40 if first else 220, after=80, head=keep)
 
 
+def subheading_xml(text: str, first: bool = False) -> str:
+    keep = "" if first else "<w:keepNext/>"
+    return para(inline(text, size=21, bold=True, color=NAVY), before=0 if first else 140, after=50, head=keep)
+
+
 def bullet_xml(level: int, text: str) -> str:
     c = CIRCLED.match(text)
     if c and level == 1:
@@ -175,6 +201,8 @@ def quote_xml(text: str) -> str:
 
 
 def caption_xml(kind: str, n: int, text: str, before: int, after: int, keep: bool) -> str:
+    if kind == "그림" and len(text) > CAPTION_MAX:
+        raise SystemExit(f"caption longer than {CAPTION_MAX} characters ({len(text)}): {text}")
     content = run(f"{kind} {n}. ", size=17, bold=True, color=BLUE) + run(text, size=17, color=GREY)
     return para(content, before=before, after=after, head="<w:keepNext/>" if keep else "",
                 line='w:line="260" w:lineRule="exact"', jc='<w:jc w:val="center"/>')
@@ -239,13 +267,12 @@ def image_size(path: Path) -> tuple[int, int]:
     raise SystemExit(f"not a PNG or JPEG: {path}")
 
 
-def figure_xml(n: int, rid: str, path: Path, caption: str, pct: int = 100) -> str:
+def picture_xml(n: int, rid: str, path: Path, caption: str, cx: int, before: int = 160) -> str:
     w, h = image_size(path)
-    cx = MAX_EMU * pct // 100
     cy = round(cx * h / w)
     cap = escape(caption)
-    pic = (
-        f'<w:p><w:pPr><w:keepNext/><w:spacing w:before="160" w:after="60"/><w:jc w:val="center"/></w:pPr><w:r><w:drawing>'
+    return (
+        f'<w:p><w:pPr><w:keepNext/><w:spacing w:before="{before}" w:after="60"/><w:jc w:val="center"/></w:pPr><w:r><w:drawing>'
         f'<wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="{cx}" cy="{cy}"/><wp:effectExtent l="0" t="0" r="0" b="0"/>'
         f'<wp:docPr id="{9000 + n}" name="그림 {n}" descr="{cap}"/>'
         f'<wp:cNvGraphicFramePr><a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="1"/></wp:cNvGraphicFramePr>'
@@ -255,7 +282,52 @@ def figure_xml(n: int, rid: str, path: Path, caption: str, pct: int = 100) -> st
         f'<pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="{cx}" cy="{cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic>'
         f'</a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>'
     )
-    return pic + caption_xml("그림", n, caption, before=0, after=180, keep=False)
+
+
+def figure_xml(n: int, rid: str, path: Path, caption: str, pct: int = 100) -> str:
+    return picture_xml(n, rid, path, caption, MAX_EMU * pct // 100) + caption_xml("그림", n, caption, before=0, after=180, keep=False)
+
+
+def text_xml(bs: list[tuple]) -> str:
+    """Paragraph-level blocks only (the right-hand side of a side-by-side block)."""
+    out = []
+    for k, b in enumerate(bs):
+        if b[0] == "para":
+            out.append(para(inline(b[1])))
+        elif b[0] == "bullet":
+            out.append(bullet_xml(b[1], b[2]))
+        elif b[0] == "quote":
+            out.append(quote_xml(b[1]))
+        elif b[0] == "subheading":
+            out.append(subheading_xml(b[1], first=k == 0))
+        else:
+            raise SystemExit(f"a side block holds text only, not a {b[0]}")
+    return "".join(out).replace("<w:keepNext/>", "")
+
+
+def side_xml(n: int, rid: str, path: Path, caption: str, inner: list[tuple]) -> str:
+    """A borderless two-column table: the picture with its caption on the left, the text on the right."""
+    if len(caption) > SIDE_CAPTION_MAX:
+        raise SystemExit(f"side caption longer than {SIDE_CAPTION_MAX} characters ({len(caption)}): {caption}")
+    wl = TABLE_W * SIDE_PICTURE // 100
+    wr = TABLE_W - wl
+    left = picture_xml(n, rid, path, caption, (wl - 200) * 635, before=0) + caption_xml("그림", n, caption, before=0, after=0, keep=False)
+    left = left.replace("<w:keepNext/>", "")
+    tblpr = (
+        f'<w:tblPr><w:tblW w:w="{TABLE_W}" w:type="dxa"/><w:jc w:val="center"/><w:tblLayout w:type="fixed"/>'
+        '<w:tblCellMar><w:top w:w="60" w:type="dxa"/><w:left w:w="0" w:type="dxa"/><w:bottom w:w="60" w:type="dxa"/><w:right w:w="0" w:type="dxa"/></w:tblCellMar>'
+        '<w:tblLook w:val="04A0" w:firstRow="0" w:lastRow="0" w:firstColumn="0" w:lastColumn="0" w:noHBand="1" w:noVBand="1"/></w:tblPr>'
+    )
+    grid = f'<w:tblGrid><w:gridCol w:w="{wl}"/><w:gridCol w:w="{wr}"/></w:tblGrid>'
+    lmar = '<w:tcMar><w:left w:w="0" w:type="dxa"/><w:right w:w="200" w:type="dxa"/></w:tcMar>'
+    rmar = '<w:tcMar><w:left w:w="120" w:type="dxa"/><w:right w:w="0" w:type="dxa"/></w:tcMar>'
+    row = (
+        '<w:tr><w:trPr><w:cantSplit/></w:trPr>'
+        f'<w:tc><w:tcPr><w:tcW w:w="{wl}" w:type="dxa"/>{lmar}<w:vAlign w:val="center"/></w:tcPr>{left}</w:tc>'
+        f'<w:tc><w:tcPr><w:tcW w:w="{wr}" w:type="dxa"/>{rmar}<w:vAlign w:val="center"/></w:tcPr>{text_xml(inner)}</w:tc>'
+        '</w:tr>'
+    )
+    return f"<w:tbl>{tblpr}{grid}{row}</w:tbl>"
 
 
 class Counter:
@@ -264,25 +336,72 @@ class Counter:
         self.table = 0
 
 
-def render(bs: list[tuple], count: Counter, media: list[tuple[str, Path]]) -> list[tuple[str, bool]]:
-    """Renders one answer as chunks: (xml, keep_together).
+def render(bs: list[tuple], count: Counter, media: list[tuple[str, Path]]) -> list[tuple[str, bool | str]]:
+    """Renders one answer as chunks: (xml, keep), keep being False, True or "tight".
 
-    Each table, with its caption and a heading right above it, is a chunk of its own that must stay on one page;
-    the blocks between tables form chunks that may break anywhere. `fill` turns every chunk into a row of the
-    answer box (see there for why).
+    Each table or side-by-side block, with a heading right above it, is a chunk of its own that must stay on one
+    page (True). So are a heading with the block after it and a picture with its caption ("tight": no extra
+    space around). The text in between forms chunks that may break anywhere. `fill` turns every chunk into a row
+    of the answer box (see there for why).
     """
-    chunks: list[tuple[str, bool]] = []
+    chunks: list[tuple[str, bool | str]] = []
     run_: list[tuple[str, str]] = []  # (kind, xml) of the current breakable stretch
 
     def flush():
-        if run_:
-            chunks.append(("".join(x for _, x in run_), False))
-            run_.clear()
+        # Word ignores keep-with-next inside the answer cell, so what must stay together gets a row of its own
+        # that may not split: a heading with the block right after it, and a picture with its caption.
+        loose: list[str] = []
+
+        def end_loose():
+            if loose:
+                chunks.append(("".join(loose), False))
+                loose.clear()
+
+        i = 0
+        while i < len(run_):
+            kind, xml = run_[i]
+            if kind in ("heading", "subheading"):
+                j = i + 1
+                while j < len(run_) and run_[j][0] in ("heading", "subheading"):
+                    j += 1
+                end_loose()
+                chunks.append(("".join(x for _, x in run_[i : j + 1]), "tight"))
+                i = j + 1
+            elif kind == "figure":
+                end_loose()
+                chunks.append((xml, "tight"))
+                i += 1
+            else:
+                loose.append(xml)
+                i += 1
+        end_loose()
+        run_.clear()
+
+    def pop_headings() -> str:
+        """The headings right above a table or a side-by-side block: they go into its row, so they stay with it."""
+        heads: list[str] = []
+        while run_ and run_[-1][0] in ("heading", "subheading"):
+            heads.insert(0, run_.pop()[1])
+        return "".join(heads)
 
     for k, b in enumerate(bs):
         kind = b[0]
         if kind == "heading":
             run_.append((kind, heading_xml(b[1], first=k == 0)))
+        elif kind == "subheading":
+            run_.append((kind, subheading_xml(b[1], first=k == 0)))
+        elif kind == "side":
+            _, caption, rel, inner = b
+            path = (SOURCE.parent / rel).resolve()
+            if not path.exists():
+                raise SystemExit(f"figure not found: {rel}")
+            count.figure += 1
+            rid = f"rIdFig{count.figure}"
+            media.append((rid, path))
+            # A heading right above stays with the block, as it does with a table.
+            head = pop_headings()
+            flush()
+            chunks.append((head + side_xml(count.figure, rid, path, caption, inner), True))
         elif kind == "para":
             run_.append((kind, para(inline(b[1]))))
         elif kind == "bullet":
@@ -291,7 +410,7 @@ def render(bs: list[tuple], count: Counter, media: list[tuple[str, Path]]) -> li
             run_.append((kind, quote_xml(b[1])))
         elif kind == "table":
             _, rows, cols, caption = b
-            head = run_.pop()[1] if run_ and run_[-1][0] == "heading" else ""
+            head = pop_headings()
             flush()
             inner = head
             if caption:
@@ -311,7 +430,7 @@ def render(bs: list[tuple], count: Counter, media: list[tuple[str, Path]]) -> li
     return chunks
 
 
-def answer_rows(chunks: list[tuple[str, bool]], sdt_pr: str) -> str:
+def answer_rows(chunks: list[tuple[str, bool | str]], sdt_pr: str) -> str:
     """The answer box's rows, wrapped in one row-level content control that keeps the template's alias/tag/id.
 
     Word honours "don't split this row" only for rows of the box table itself: inside the cell it ignores
@@ -329,8 +448,9 @@ def answer_rows(chunks: list[tuple[str, bool]], sdt_pr: str) -> str:
             end = xml.find("</w:pPr>")
             if end != -1:
                 xml = xml[:end].replace("<w:keepNext/>", "") + xml[end:]
-        top = 110 if i == 0 else (80 if keep else 0)
-        bottom = 110 if i == len(chunks) - 1 else (80 if keep else 0)
+        # A table or a side-by-side block gets a little air; a "tight" group reads as part of the running text.
+        top = 110 if i == 0 else (80 if keep is True else 0)
+        bottom = 110 if i == len(chunks) - 1 else (80 if keep is True else 0)
         if xml.endswith("</w:tbl>") or not xml:
             # A cell must end with a paragraph; this one is all but invisible.
             xml += '<w:p><w:pPr><w:spacing w:before="0" w:after="0" w:line="40" w:lineRule="exact"/><w:rPr><w:sz w:val="4"/></w:rPr></w:pPr></w:p>'
