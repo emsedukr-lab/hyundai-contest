@@ -274,7 +274,7 @@ fun TripDetailScreen(vm: TripsViewModel, localId: String, drive: DriveState, dem
     // The day switch sits in the header only when the window has room for it beside the title and the menu; a narrower window
     // (half screen, more days) puts it on its own row under the header instead of cutting its last day off.
     BoxWithConstraints(Modifier.fillMaxSize()) {
-    val narrowHeader = t.view.days.size > 1 && maxWidth < (700 + 125 * t.view.days.size).dp
+    val narrowHeader = t.view.days.size > 1 && maxWidth < (750 + 125 * t.view.days.size).dp
     Screen(header = {
         // While driving the card below is the whole screen; Back still works, there is nothing to tap.
         PleosHeader(
@@ -301,6 +301,8 @@ fun TripDetailScreen(vm: TripsViewModel, localId: String, drive: DriveState, dem
                     if (hasCarOrder) add(MenuItem(resetOrder, "resetOrder") { vm.resetOrder(t.localId, day) })
                     add(MenuItem(deleteTrip, deleteTrip, destructive = true) { confirmDelete = true })
                 })
+                // Keep clear of the window's right edge, so the day switch and the menu are never cut off there.
+                Spacer(Modifier.width(Space.x48))
             }
         }
     }) {
