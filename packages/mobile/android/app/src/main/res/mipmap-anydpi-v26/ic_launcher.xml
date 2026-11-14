@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 차량 앱과 같은 표식(접힌 지도 + 핀). 그림은 drawable-v24/ic_launcher_foreground.xml, 바탕은 values/ic_launcher_background.xml -->
+<!-- 차량 앱과 같은 표식(접힌 지도 + 핀). 전경 그림은 mipmap-*/ic_launcher_foreground.png, 테마 아이콘용 단색은 drawable-v24/ic_launcher_monochrome.xml, 바탕은 values/ic_launcher_background.xml -->
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
     <background android:drawable="@color/ic_launcher_background" />
-    <foreground android:drawable="@drawable/ic_launcher_foreground" />
-    <monochrome android:drawable="@drawable/ic_launcher_foreground" />
+    <foreground android:drawable="@mipmap/ic_launcher_foreground" />
+    <monochrome android:drawable="@drawable/ic_launcher_monochrome" />
 </adaptive-icon>
