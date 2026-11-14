@@ -237,13 +237,13 @@
   <div class="sec">차량 — 불러오고, 내비로 재고, 안내받기</div>
   <div class="cshots">
     <div><img src="img/car-qr.png" alt="차량 QR 화면"><div class="cap"><b>① 일회용 QR</b> · 단계 1/4, 5분·1회, QR에는 여행·개인정보 없음</div></div>
-    <div><img src="img/car-review.png" alt="받은 여행 재검증 결과"><div class="cap"><b>② 다시 확인한 결과</b> · 충돌 0 · 확인 필요 4, 계획은 그대로 · 차에서 한 번 더 승인</div></div>
-    <div><img src="img/car-faster.png" alt="내비 기준 더 빠른 순서 제안"><div class="cap"><b>③ 내비 기준 더 빠른 순서</b> · 13구간을 내비로 잰 뒤 1일차 '운전 11분 단축' 제안</div></div>
+    <div><img src="img/car-review.png" alt="받은 여행 재검증 결과"><div class="cap"><b>② 다시 확인한 결과</b> · 확인할 점 없음 · 내비가 채울 것은 따로 안내, 계획은 그대로 · 차에서 한 번 더 승인</div></div>
+    <div><img src="img/car-faster.png" alt="내비 기준 더 빠른 순서 제안"><div class="cap"><b>③ 내비 기준 더 빠른 순서</b> · 13구간을 내비로 잰 뒤 1일차 '운전 19분 단축' 제안</div></div>
     <div><img src="img/car-measured.png" alt="바꾼 순서와 내비가 잰 구간"><div class="cap"><b>④ 내비가 잰 하루</b> · '↓ 6분 · 3km · 내비', 운전 2시간 41분 · 218km, 휴대폰 계획은 그대로</div></div>
     <div><img src="img/car-timekeeper.png" alt="시간 지킴이와 출발 전 점검"><div class="cap"><b>⑤ 시간 지킴이</b> · '13:00 예약까지 여유 135분', 장소마다 지금 도착과 계획 비교, 출발 전 점검</div></div>
     <div><img src="img/car-driving.png" alt="주행 중 단순화 화면"><div class="cap"><b>⑥ 주행 중 화면</b> · 다음 목적지·도착 예상·여유만, 버튼 없음</div></div>
   </div>
-  <p class="note" style="margin-top:2mm;">2026-11-14 Pleos Connect Emulator에서 서명 release 0.7.0으로 찍은 화면입니다(앱 영역만 잘라 냄). ③④는 에뮬레이터 내비가 실제로 잰 값(단축 시간은 잴 때의 교통에 따라 달라짐), ⑤⑥의 시연 시각과 주행은 에뮬레이터 전용 표시입니다. 화면은 토스 시각 언어(파랑 강조는 화면당 하나)에 Pleos 운전 중 기준(글자 20sp·터치 64dp)을 지켜 만들었습니다.</p>
+  <p class="note" style="margin-top:2mm;">2026-11-14 Pleos Connect Emulator에서 서명 release 0.8.0으로 찍은 화면입니다(앱 영역만 잘라 냄). ③④는 에뮬레이터 내비가 실제로 잰 값(단축 시간은 잴 때의 교통에 따라 달라짐), ⑤⑥의 시연 시각과 주행은 에뮬레이터 전용 표시입니다. 화면은 토스 시각 언어(파랑 강조는 화면당 하나)에 Pleos 운전 중 기준(글자 20sp·터치 64dp)을 지켜 만들었습니다.</p>
 
   <footer>
     <span>떠날지도 · 현대자동차그룹 차량용 앱 공모전 출품작</span>
@@ -322,7 +322,7 @@
 
   <div class="sec">검증 수치</div>
   <div class="metrics">
-    <div class="metric"><div class="mv">548개</div><div class="ml">단위·통합 시험 통과<br>(차량 212 + 웹·서버·공용 336)</div></div>
+    <div class="metric"><div class="mv">568개</div><div class="ml">단위·통합 시험 통과<br>(차량 220 + 웹·서버·공용 348)</div></div>
     <div class="metric"><div class="mv">61 MB</div><div class="ml">최대 메모리(PSS)<br>기준 400 MB 이하</div></div>
     <div class="metric"><div class="mv">84 ms</div><div class="ml">화면 전환 최대 프레임<br>기준 응답 250 ms</div></div>
     <div class="metric"><div class="mv">2.2 – 2.6초</div><div class="ml">콜드 스타트<br>(컴파일 후 0.4 – 0.5초)</div></div>
@@ -367,6 +367,7 @@
       <tr><td class="m">M63</td><td>현대차 내비가 시간·거리·순서의 기준: 경유지 경로로 전 구간 측정 · 날짜별 순서 최적화(차량에서만 순서 변경, 되돌리기) · 오늘 경로에 남은 장소 모두 전송</td><td><span class="st done">완료</span></td><td>시험 512개·에뮬레이터 실제 내비</td></tr>
       <tr><td class="m">M64</td><td>여행 전체 동선 최적화 엔진: 날짜 배정과 순서를 함께 탐색(예약 10분 전·영업시간·식사 시간·식사 뒤 카페·입퇴실), 휴대폰 경로 추천에 연결 · 늦게 출발하기(퇴실 시간 안에서) · 화면 다듬기</td><td><span class="st done">완료</span></td><td>시험 548개·배포 화면</td></tr>
       <tr><td class="m">M65</td><td>디자인 체계를 토스 시각 언어로(파랑 강조 하나·흰 카드·옅은 태그·Pretendard, Astryx 0.7.15) — 배치·흐름·문구는 그대로, 차량은 Pleos 치수·글자·주행 규칙 유지 (APK 0.7.0)</td><td><span class="st done">완료</span></td><td>시험 548개·주야간 대비·실제 연동</td></tr>
+      <tr><td class="m">M66</td><td>UX 점검(impeccable) 15건 개선: 보내기 시트의 QR 스캔 버튼, 자동 저장, 시각을 모르는 날의 이유·해결 안내, 장소 시트 접기, 용어 통일, 첫 로딩 584 → 337KB, 휴대폰 글자 크기 낮춤 · 차량은 내비가 채울 항목과 사람이 할 일을 구분 (APK 0.8.0)</td><td><span class="st done">완료</span></td><td>시험 568개·모바일 E2E</td></tr>
       <tr><td class="m">M6</td><td>문서 6종·README·배포·서명 APK·기획서·소개서 (11/14 갱신)</td><td><span class="st done">완료</span></td><td>—</td></tr>
       <tr><td class="m">M7</td><td>실제 폰 QR 인식·실차 검증·성능·PT 리허설</td><td><span class="st plan">예정</span></td><td>11/16 – 12/2</td></tr>
     </tbody>
