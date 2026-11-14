@@ -1,16 +1,14 @@
 import type { ReactNode } from 'react';
-import { TabBar } from './TabBar';
 import { TopBar } from './TopBar';
 
-/** A tab root: large top bar, scrolling content on the grey canvas, the flat tab bar. */
-export function TabScreen({ path, title, actions, children }: { path: string; title: ReactNode; actions?: ReactNode; children: ReactNode }) {
+/** The main screen (여행): large top bar with its icon actions, scrolling content on the grey canvas. No tab bar — 연결 and 설정 are icons in the top bar, 장소 comes from the floating add button. */
+export function RootScreen({ title, actions, children }: { title: ReactNode; actions?: ReactNode; children: ReactNode }) {
   return (
     <div className="tn-screen">
       <div className="tn-col">
         <TopBar title={title} actions={actions} large />
         <main className="tn-main-tab">{children}</main>
       </div>
-      <TabBar current={path} />
     </div>
   );
 }

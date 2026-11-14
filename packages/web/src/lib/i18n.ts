@@ -63,6 +63,10 @@ const ko = {
 
   // pages/HomePage.tsx
   'home.title': '떠날지도',
+  'home.add.label': '추가',
+  'home.add.trip': '여행 일정 추가',
+  'home.add.place': '장소 추가',
+  'home.connectAria': '차량 연결 (QR 스캔)',
   'home.tagline': '여행을 휴대폰에서 짜고, 차에서 QR로 불러와요',
   'home.sampleAdded': '강릉 3박 4일 샘플을 추가했어요. 좌표는 시연용 근사값이에요.',
   'home.imported': '여행 {n}개를 가져왔어요',
@@ -932,6 +936,10 @@ const en: Record<Key, string> = {
 
   // pages/HomePage.tsx
   'home.title': 'The Naljido',
+  'home.add.label': 'Add',
+  'home.add.trip': 'Add a trip',
+  'home.add.place': 'Add a place',
+  'home.connectAria': 'Connect to the car (scan QR)',
   'home.tagline': 'Plan trips on your phone, then load them in the car with a QR code',
   'home.sampleAdded': 'Added a 3-night Gangneung sample trip. Its coordinates are approximate, for demo use.',
   'home.imported': 'Imported {n} {n|trip|trips}',

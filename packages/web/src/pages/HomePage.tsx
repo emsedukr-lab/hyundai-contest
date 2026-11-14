@@ -8,10 +8,11 @@ import { NextTrip } from '../components/NextTrip';
 import { SwipeToRemove } from '../components/SwipeToRemove';
 import { UndoSnackbar } from '../components/UndoSnackbar';
 import { dateOverlaps, pickNextTrip, sortOtherTrips } from '../lib/nextTrip';
-import { PlusIcon } from '../components/shell/icons';
+import { AddFab } from '../components/AddFab';
+import { GearIcon, QrIcon } from '../components/shell/icons';
 import { Row, Section } from '../components/shell/rows';
 import { Tag } from '../components/shell/Tag';
-import { TabScreen } from '../components/shell/Screens';
+import { RootScreen } from '../components/shell/Screens';
 import { TRIPS_CHANGED, sendLog, trips, type SendLogEntry } from '../lib/db';
 import { periodLabel, sentLabel } from '../lib/format';
 import { t } from '../lib/i18n';
@@ -20,7 +21,8 @@ import { defaultHome } from '../lib/settings';
 import { newDoc, nightsLabel, nowIso, unassignedVisits, type TripDoc } from '../lib/trips';
 
 /**
- * 여행 tab (M45): the next trip as a card with its whole route, the other trips in one list, and 새 여행 floating above the bottom tabs.
+ * 여행 (the main screen, no tab bar): the next trip as a card with its whole route and the other trips in one list. 연결 (a QR icon,
+ * the car's QR is scanned there) and 설정 (a gear) sit in the top bar; the floating button adds a trip or a place.
  * The sample trip has no menu; `/?sample=1` still adds it for demos and tests (the address is cleaned right after).
  */
 export function HomePage() {
@@ -89,7 +91,18 @@ export function HomePage() {
   };
 
   return (
-    <TabScreen path="/" title={t('home.title')}>
+    <RootScreen
+      title={t('home.title')}
+      actions={
+        <>
+          <button type="button" className="tn-iconbtn" aria-label={t('home.connectAria')} onClick={() => navigate('/car')}>
+            <QrIcon />
+          </button>
+          <button type="button" className="tn-iconbtn" aria-label={t('nav.settings')} onClick={() => navigate('/settings')}>
+            <GearIcon />
+          </button>
+        </>
+      }>
       <div className="tn-intro">
         <p>{t('home.tagline')}</p>
       </div>
@@ -152,11 +165,11 @@ export function HomePage() {
           </ul>
         </Section>
       )}
-      <Button className="tn-newtrip-fab" label={t('trips.create')} variant="primary" size="lg" elevation="med" icon={<PlusIcon />} isIconOnly width={56} onClick={() => navigate('/trips/new')} />
-      {/* M52: 되돌리기 for a trip swiped away, above the tab bar. */}
+      <AddFab />
+      {/* M52: 되돌리기 for a trip swiped away, above the floating add button. */}
       <div role="status">
         {removed && <UndoSnackbar above="tab" text={t('home.deleted', { name: removed.plan.name })} onUndo={() => void undoRemove()} onClose={() => setRemoved(null)} />}
       </div>
-    </TabScreen>
+    </RootScreen>
   );
 }

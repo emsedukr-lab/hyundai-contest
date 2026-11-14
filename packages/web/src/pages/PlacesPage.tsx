@@ -6,7 +6,7 @@ import { TextArea } from '@astryxdesign/core/TextArea';
 import { TRANSFER_LIMITS } from '@tteonaljido/shared';
 import { CloseIcon, PinIcon, ShareIcon } from '../components/shell/icons';
 import { Row, Section } from '../components/shell/rows';
-import { TabScreen } from '../components/shell/Screens';
+import { PushScreen } from '../components/shell/Screens';
 import { BulkAddDialog } from '../editor/BulkAddDialog';
 import { CATEGORY_LABEL, type NewPlace } from '../editor/PlaceSearch';
 import { favorites, trips } from '../lib/db';
@@ -112,7 +112,7 @@ export function PlacesPage() {
   };
 
   return (
-    <TabScreen path="/places" title={t('nav.places')}>
+    <PushScreen title={t('nav.places')} onBack={() => navigate('/')}>
       <div className="tn-intro">
         <p>{t('places.intro')}</p>
       </div>
@@ -188,6 +188,6 @@ export function PlacesPage() {
           </ul>
         )}
       </Section>
-    </TabScreen>
+    </PushScreen>
   );
 }

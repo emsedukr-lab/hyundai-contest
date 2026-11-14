@@ -178,73 +178,15 @@
   background: var(--tn-fill-weak-pressed);
 }
 
-/* New trip stays above the tab bar, inside the same 480px content column. */
-.tn-newtrip-fab {
-  position: fixed;
-  z-index: 6;
-  right: max(20px, calc((100% - 440px) / 2));
-  bottom: calc(72px + env(safe-area-inset-bottom));
-  min-height: 56px;
-  border-radius: 9999px;
-}
-.tn-main-tab:has(> .tn-newtrip-fab) {
-  padding-bottom: calc(144px + env(safe-area-inset-bottom));
-}
-
-/* Room under the content for the tab bar / the bottom CTA. */
+/* Room under the content for the floating add button / the bottom CTA. */
 .tn-main-tab {
-  padding-bottom: calc(88px + env(safe-area-inset-bottom));
+  padding-bottom: calc(112px + env(safe-area-inset-bottom));
 }
 .tn-main-push {
   padding-bottom: calc(120px + env(safe-area-inset-bottom));
 }
 .tn-main-plain {
   padding-bottom: calc(32px + env(safe-area-inset-bottom));
-}
-
-/* Tab bar: surface, a hairline on top. Active = filled icon + primary text, the rest outlined + tertiary. */
-.tn-tabbar {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 10;
-  padding-bottom: env(safe-area-inset-bottom);
-  background: var(--tn-surface);
-  border-top: 1px solid var(--tn-hairline);
-}
-.tn-tabbar ul {
-  max-width: 480px;
-  margin: 0 auto;
-  padding: 0 8px;
-  list-style: none;
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  box-sizing: border-box;
-}
-.tn-tab {
-  min-height: 56px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-  text-decoration: none;
-  font-size: 12px;
-  line-height: 17px;
-  font-weight: 500;
-  color: var(--tn-text-tertiary);
-  -webkit-tap-highlight-color: transparent;
-}
-.tn-tab svg {
-  width: 24px;
-  height: 24px;
-}
-.tn-tab[aria-current='page'] {
-  color: var(--tn-text-primary);
-}
-.tn-tab:active svg {
-  transform: scale(0.94);
 }
 
 /*
@@ -440,7 +382,6 @@
   padding-right: 20px;
 }
 
-.tn-tab:focus-visible,
 .tn-iconbtn:focus-visible,
 .tn-row:focus-visible {
   outline: 2px solid var(--tn-accent);
@@ -680,7 +621,6 @@ div:has(> .astryx-switch) {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .tn-tab svg,
   .tn-row,
   .tn-iconbtn {
     transition: none;

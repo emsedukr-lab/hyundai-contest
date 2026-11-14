@@ -99,7 +99,7 @@
 | 상태 줄 | 상태 점(`positive`·`warning`·`negative`·`accent`) + 문장 — 뜻은 항상 글에 있음 |
 | 시트·대화상자(차량 팝업) | `surface-float`, 보더 없음, 시트 shadow·대화상자 shadow-3, 뒤 `overlay`. 차량 팝업 버튼 배치(동작 → 취소)는 그대로 |
 | 토스트·스낵바 | `toast` 면 + 흰 글자, 모서리 14(차량 24), 되돌리기 글자는 흰색 굵게 |
-| 탭바(휴대폰) | `surface`, 위 `hairline`, 활성 Filled 아이콘 + `text-primary`, 비활성 Outlined + `text-tertiary` |
+| 플로팅 추가 버튼(휴대폰, M70 — 탭바는 없앰) | 56 원형 `accent` + `on-accent` 아이콘, 그림자 Level2, 눌러 `surface` 메뉴(r24, 항목 56)를 위로 펼침. 상단 바 오른쪽은 아이콘 버튼(44) |
 | 하단 고정 버튼(휴대폰) | XL 56 주 버튼, 좌우 20, 위로 24px `canvas`→투명 보호 그라데이션 |
 | 진행 단계 막대 | 완료·현재 `accent`, 남은 칸 `hairline` |
 | 타임라인 | 레일 `hairline` 점선, 번호 원 `fill-weak` + `text-primary`(지난 곳 `text-tertiary`), 고정 시각은 자물쇠 + `accent-text` 굵은 시각 |

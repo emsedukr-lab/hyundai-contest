@@ -1,5 +1,5 @@
 /*
- * Snackbar with 되돌리기 (M36 editor, shared M52), above the bottom action or the tab bar — the toast of
+ * Snackbar with 되돌리기 (M36 editor, shared M52), above the bottom action or the floating add button — the toast of
  * design/TOSS.md: the toast face with white text (both themes), radius 14, the toast shadow; 되돌리기 white and bold.
  */
 .tl-snack {
@@ -61,5 +61,5 @@
   outline-offset: -3px;
 }
 .tl-snack.is-tab {
-  bottom: calc(68px + env(safe-area-inset-bottom)); /* above the 56pt tab bar */
+  bottom: calc(96px + env(safe-area-inset-bottom)); /* above the floating add button */
 }

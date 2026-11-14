@@ -2,7 +2,7 @@ import { lazy, Suspense, useEffect, useState } from 'react';
 import { Button } from '@astryxdesign/core/Button';
 import { CarIcon, MapIcon } from '../components/shell/icons';
 import { Row, Section } from '../components/shell/rows';
-import { TabScreen } from '../components/shell/Screens';
+import { PushScreen } from '../components/shell/Screens';
 import { sendLog, trips } from '../lib/db';
 import { dateLabel, dayOf } from '../lib/format';
 import { t } from '../lib/i18n';
@@ -55,7 +55,7 @@ export function CarPage() {
   }, []);
 
   return (
-    <TabScreen path="/car" title={t('nav.connect')}>
+    <PushScreen title={t('nav.connect')} onBack={() => navigate('/')}>
       <div className="tn-intro">
         <p>{t('car.intro')}</p>
       </div>
@@ -128,6 +128,6 @@ export function CarPage() {
         />
         </Suspense>
       )}
-    </TabScreen>
+    </PushScreen>
   );
 }

@@ -6,7 +6,7 @@ import { TextInput } from '@astryxdesign/core/TextInput';
 import { useInstallPrompt } from '../components/InstallHint';
 import { DownloadIcon, InfoIcon, PhoneIcon, PresetIcon, ShieldIcon, UploadIcon } from '../components/shell/icons';
 import { Row, Section } from '../components/shell/rows';
-import { TabScreen } from '../components/shell/Screens';
+import { PushScreen } from '../components/shell/Screens';
 import { trips } from '../lib/db';
 import type { MealSlot } from '@tteonaljido/shared';
 import { checkBackupTrip } from '../lib/backup';
@@ -107,7 +107,7 @@ export function SettingsPage() {
   };
 
   return (
-    <TabScreen path="/settings" title={t('nav.settings')}>
+    <PushScreen title={t('nav.settings')} onBack={() => navigate('/')}>
       {message && (
         <div className="tn-pad" style={{ paddingTop: 8 }}>
           <Banner status="info" title={message} isDismissable onDismiss={() => setMessage(null)} />
@@ -240,6 +240,6 @@ export function SettingsPage() {
       <p className="tn-note" style={{ marginTop: 16 }}>
         {t('home.storageNote')}
       </p>
-    </TabScreen>
+    </PushScreen>
   );
 }
