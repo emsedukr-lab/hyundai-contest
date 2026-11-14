@@ -11,6 +11,8 @@ import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -226,7 +228,7 @@ fun PleosButton(
             .padding(horizontal = padH),
         contentAlignment = Alignment.Center,
     ) {
-        PleosText(label, style, fg, maxLines = 1)
+        PleosText(label, style, fg, maxLines = 2, align = TextAlign.Center)
     }
 }
 
@@ -555,12 +557,30 @@ fun MustTag(label: String, modifier: Modifier = Modifier, large: Boolean = false
     }
 }
 
-/** One line with its state dot in front; the meaning is always in the words. */
+/** One line with its state dot in front; the meaning is always in the words. The dot stays on the first line when the text wraps; every line reads the same weight. */
 @Composable
-fun StatusLine(text: String, tone: Tone = Tone.NEUTRAL, style: TextStyle = Pleos.type.bodyMedium) {
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.x16)) {
-        Dot(tone)
-        PleosText(text, style, maxLines = 2)
+fun StatusLine(text: String, tone: Tone = Tone.NEUTRAL, style: TextStyle = Pleos.type.bodyMediumNormal) {
+    Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(Space.x16)) {
+        Box(Modifier.padding(top = Space.x12)) { Dot(tone) }
+        PleosText(text, style, modifier = Modifier.weight(1f), maxLines = 3)
+    }
+}
+
+/**
+ * Buttons laid out on a two-column grid: equal widths, equal heights per row, a lone last button across the full width.
+ * Replaces a wrapping row, whose buttons took whatever width their words needed and ended ragged.
+ */
+@Composable
+fun ActionGrid(build: MutableList<@Composable (Modifier) -> Unit>.() -> Unit) {
+    val items = buildList(build)
+    if (items.isEmpty()) return
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Space.x12)) {
+        items.chunked(2).forEach { row ->
+            if (row.size == 1) row[0](Modifier.fillMaxWidth())
+            else Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(Space.x12)) {
+                row.forEach { it(Modifier.weight(1f).fillMaxHeight()) }
+            }
+        }
     }
 }
 

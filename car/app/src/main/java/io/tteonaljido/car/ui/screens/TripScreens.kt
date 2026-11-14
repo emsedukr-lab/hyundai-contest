@@ -50,6 +50,7 @@ import io.tteonaljido.car.guide.ArrivalNote
 import io.tteonaljido.car.navi.NaviLive
 import io.tteonaljido.car.safety.DriveState
 import io.tteonaljido.car.safety.parked
+import io.tteonaljido.car.ui.components.ActionGrid
 import io.tteonaljido.car.ui.components.ButtonSize
 import io.tteonaljido.car.ui.components.ButtonType
 import io.tteonaljido.car.ui.components.MustTag
@@ -375,11 +376,11 @@ private fun NaviPlanCard(vm: TripsViewModel, t: LocalTrip, day: Int, now: Long) 
         // is said by the popup that asks before it starts, not here.
         val faster = advice as? RouteOptimizer.Outcome.Faster
         val canOrder = advice.let { it != null && it !is RouteOptimizer.Outcome.NotApplicable }
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.x12), verticalArrangement = Arrangement.spacedBy(Space.x12)) {
-            if (faster != null) PleosButton(stringResource(R.string.order_apply), { vm.applyOrder(t.localId, day, faster.order) }, type = ButtonType.WEAK, tag = "applyOrder")
-            if (cover.total > 0) PleosButton(stringResource(R.string.navi_measure_all), { vm.measureTrip(t.localId) }, type = ButtonType.BASIC, tag = "naviMeasure")
-            if (faster == null && carOrder != null) PleosButton(stringResource(R.string.order_reset_btn), { vm.resetOrder(t.localId, day) }, type = ButtonType.BASIC, tag = "resetOrder")
-            else if (faster == null && canOrder) PleosButton(stringResource(R.string.navi_optimize_day, day), { vm.measureDay(t.localId, day) }, type = ButtonType.BASIC, tag = "naviOptimize")
+        ActionGrid {
+            if (faster != null) add { m -> PleosButton(stringResource(R.string.order_apply), { vm.applyOrder(t.localId, day, faster.order) }, type = ButtonType.WEAK, modifier = m, tag = "applyOrder") }
+            if (cover.total > 0) add { m -> PleosButton(stringResource(R.string.navi_measure_all), { vm.measureTrip(t.localId) }, type = ButtonType.BASIC, modifier = m, tag = "naviMeasure") }
+            if (faster == null && carOrder != null) add { m -> PleosButton(stringResource(R.string.order_reset_btn), { vm.resetOrder(t.localId, day) }, type = ButtonType.BASIC, modifier = m, tag = "resetOrder") }
+            else if (faster == null && canOrder) add { m -> PleosButton(stringResource(R.string.navi_optimize_day, day), { vm.measureDay(t.localId, day) }, type = ButtonType.BASIC, modifier = m, tag = "naviOptimize") }
         }
     }
 }
@@ -546,13 +547,13 @@ private fun NextPanel(vm: TripsViewModel, t: LocalTrip, day: Int, live: LiveView
         val isToday = vm.todayIndex(t) == day
         Spacer(Modifier.height(Space.x4))
         PleosButton(stringResource(R.string.guide_next), { vm.guideNext(t.localId, day) }, Modifier.fillMaxWidth(), enabled = step.target != null, tag = "guide")
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.x12), verticalArrangement = Arrangement.spacedBy(Space.x12)) {
-            if (canBundle) PleosButton(stringResource(R.string.guide_today), { vm.guideToday(t.localId, day) }, type = ButtonType.BASIC, tag = "guideToday")
-            (step.target as? Target.Stop)?.let { s -> PleosButton(stringResource(R.string.mark_arrived), { vm.markVisited(t.localId, s.visitId) }, type = ButtonType.BASIC, enabled = isToday, tag = "visited") }
+        ActionGrid {
+            if (canBundle) add { m -> PleosButton(stringResource(R.string.guide_today), { vm.guideToday(t.localId, day) }, type = ButtonType.BASIC, modifier = m, tag = "guideToday") }
+            (step.target as? Target.Stop)?.let { s -> add { m -> PleosButton(stringResource(R.string.mark_arrived), { vm.markVisited(t.localId, s.visitId) }, type = ButtonType.BASIC, enabled = isToday, modifier = m, tag = "visited") } }
             // On the first day this also moves the day's start to where the car stands; on a later day the start stays the
             // lodging of the night before and this only asks the navigation for the time from here (M59).
-            PleosButton(stringResource(R.string.depart_here), { vm.departHere(t.localId, day) }, type = ButtonType.BASIC, enabled = isToday, tag = "departHere")
-            if (t.overlay.originFor(t.view, day) != null) PleosButton(stringResource(R.string.undo_depart), { vm.undoDepartHere(t.localId, day) }, type = ButtonType.BASIC, tag = "undoDepart")
+            add { m -> PleosButton(stringResource(R.string.depart_here), { vm.departHere(t.localId, day) }, type = ButtonType.BASIC, enabled = isToday, modifier = m, tag = "departHere") }
+            if (t.overlay.originFor(t.view, day) != null) add { m -> PleosButton(stringResource(R.string.undo_depart), { vm.undoDepartHere(t.localId, day) }, type = ButtonType.BASIC, modifier = m, tag = "undoDepart") }
         }
         // A disabled button says why, in one quiet line: these two act on the day the car is on, and guidance needs a stop to go to.
         val onTrip = vm.todayIndex(t)
@@ -565,20 +566,20 @@ private fun NextPanel(vm: TripsViewModel, t: LocalTrip, day: Int, live: LiveView
         }
         why?.let { PleosText(it, Pleos.type.bodySmall, secondary, maxLines = 2) }
         if (skip != null || defer != null || energy != null || rest != null || arrival?.visitId != null || skippedToday.isNotEmpty() || deferredToday.isNotEmpty() || deferredAway.isNotEmpty() || lowSoc) {
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.x12), verticalArrangement = Arrangement.spacedBy(Space.x12)) {
-                skip?.let { s -> PleosButton(stringResource(R.string.skip), { vm.skip(t.localId, s.visitId) }, size = ButtonSize.SMALL, tag = "skip") }
-                defer?.let { s -> PleosButton(stringResource(R.string.defer_back), { vm.defer(t.localId, s.visitId) }, type = ButtonType.BASIC, size = ButtonSize.SMALL, tag = "defer") }
-                if (defer != null && nextDay != null) PleosButton(stringResource(R.string.defer_to_day, nextDay.toString()), { vm.deferToDay(t.localId, defer.visitId, nextDay) }, type = ButtonType.BASIC, size = ButtonSize.SMALL, tag = "deferDay")
-                arrival?.visitId?.let { id -> PleosButton(stringResource(R.string.undo_arrival), { vm.undoVisited(t.localId, id) }, type = ButtonType.BASIC, size = ButtonSize.SMALL, tag = "undoArrival") }
-                skippedToday.lastOrNull()?.let { PleosButton(stringResource(R.string.unskip_last), { vm.unskip(t.localId, it) }, type = ButtonType.BASIC, size = ButtonSize.SMALL, tag = "unskip") }
-                deferredToday.lastOrNull()?.let { PleosButton(stringResource(R.string.undefer_last), { vm.undefer(t.localId, it) }, type = ButtonType.BASIC, size = ButtonSize.SMALL, tag = "undefer") }
-                deferredAway.lastOrNull()?.let { PleosButton(stringResource(R.string.undefer_day), { vm.undeferDay(t.localId, it) }, type = ButtonType.BASIC, size = ButtonSize.SMALL, tag = "undeferDay") }
+            ActionGrid {
+                skip?.let { s -> add { m -> PleosButton(stringResource(R.string.skip), { vm.skip(t.localId, s.visitId) }, size = ButtonSize.SMALL, modifier = m, tag = "skip") } }
+                defer?.let { s -> add { m -> PleosButton(stringResource(R.string.defer_back), { vm.defer(t.localId, s.visitId) }, type = ButtonType.BASIC, size = ButtonSize.SMALL, modifier = m, tag = "defer") } }
+                if (defer != null && nextDay != null) add { m -> PleosButton(stringResource(R.string.defer_to_day, nextDay.toString()), { vm.deferToDay(t.localId, defer.visitId, nextDay) }, type = ButtonType.BASIC, size = ButtonSize.SMALL, modifier = m, tag = "deferDay") }
+                arrival?.visitId?.let { id -> add { m -> PleosButton(stringResource(R.string.undo_arrival), { vm.undoVisited(t.localId, id) }, type = ButtonType.BASIC, size = ButtonSize.SMALL, modifier = m, tag = "undoArrival") } }
+                skippedToday.lastOrNull()?.let { add { m -> PleosButton(stringResource(R.string.unskip_last), { vm.unskip(t.localId, it) }, type = ButtonType.BASIC, size = ButtonSize.SMALL, modifier = m, tag = "unskip") } }
+                deferredToday.lastOrNull()?.let { add { m -> PleosButton(stringResource(R.string.undefer_last), { vm.undefer(t.localId, it) }, type = ButtonType.BASIC, size = ButtonSize.SMALL, modifier = m, tag = "undefer") } }
+                deferredAway.lastOrNull()?.let { add { m -> PleosButton(stringResource(R.string.undefer_day), { vm.undeferDay(t.localId, it) }, type = ButtonType.BASIC, size = ButtonSize.SMALL, modifier = m, tag = "undeferDay") } }
                 energy?.let { e ->
                     val refuel = e.action == io.tteonaljido.trip.EnergyAction.REFUEL
-                    PleosButton(stringResource(if (refuel) R.string.find_fuel else R.string.nearby_chargers), { if (refuel) vm.openFuelSearch() else vm.openChargers() }, type = ButtonType.BASIC, size = ButtonSize.SMALL, tag = "energy")
+                    add { m -> PleosButton(stringResource(if (refuel) R.string.find_fuel else R.string.nearby_chargers), { if (refuel) vm.openFuelSearch() else vm.openChargers() }, type = ButtonType.BASIC, size = ButtonSize.SMALL, modifier = m, tag = "energy") }
                 }
-                if (lowSoc && energy == null) PleosButton(stringResource(R.string.nearby_chargers), vm::openChargers, type = ButtonType.BASIC, size = ButtonSize.SMALL, tag = "chargers")
-                if (rest != null) PleosButton(stringResource(R.string.find_rest_area), vm::openRestAreas, type = ButtonType.BASIC, size = ButtonSize.SMALL, tag = "restArea")
+                if (lowSoc && energy == null) add { m -> PleosButton(stringResource(R.string.nearby_chargers), vm::openChargers, type = ButtonType.BASIC, size = ButtonSize.SMALL, modifier = m, tag = "chargers") }
+                if (rest != null) add { m -> PleosButton(stringResource(R.string.find_rest_area), vm::openRestAreas, type = ButtonType.BASIC, size = ButtonSize.SMALL, modifier = m, tag = "restArea") }
             }
         }
     }
