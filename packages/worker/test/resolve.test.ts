@@ -210,12 +210,12 @@ describe('카카오맵 즐겨찾기 폴더 (공유 페이지의 링크 미리보
       if (u.toString().startsWith('https://kko.to/')) return new Response(null, { status: 301, headers: { Location: 'https://map.kakao.com/?map_type=TYPE_SKYVIEW&map_hybrid=true&folderid=24854214&target=other&page=bookmark' } });
       if (u.hostname === 'map.kakao.com') return pageAnswer();
       expect(new Headers(init?.headers).get('Authorization')).toBe('KakaoAK key');
-      const near = Number(u.searchParams.get('y')) > 36.453;
+      const near = Number(u.searchParams.get('y')) > 36.450;
       if (u.pathname.endsWith('/category.json'))
         return Response.json({
           documents:
             near && u.searchParams.get('category_group_code') === 'FD6'
-              ? [{ id: '99999', place_name: '신탄진 칼국수', category_group_code: 'FD6', category_name: '음식점 > 한식 > 국수', road_address_name: '대전 대덕구 신탄진로 1', address_name: '대전 대덕구 신탄진동 1', x: '127.41360', y: '36.45345', distance: '12' }]
+              ? [{ id: '99999', place_name: '신탄진 칼국수', category_group_code: 'FD6', category_name: '음식점 > 한식 > 국수', road_address_name: '대전 대덕구 신탄진로 1', address_name: '대전 대덕구 신탄진동 1', x: '127.41280', y: '36.45070', distance: '12' }]
               : [],
         });
       if (u.pathname.endsWith('/coord2address.json')) return Response.json({ documents: [{ road_address: { address_name: '대전 대덕구 신탄진로 2', building_name: '' }, address: { address_name: '대전 대덕구 신탄진동 2' } }] });
@@ -232,7 +232,7 @@ describe('카카오맵 즐겨찾기 폴더 (공유 페이지의 링크 미리보
     expect(body.source).toBe('kakao');
     expect(body.title).toBe('test');
     expect(body.total).toBe(3);
-    expect(body.places[0]).toEqual({ name: '신탄진 칼국수', address: '대전 대덕구 신탄진로 1', latE7: 364534500, lonE7: 1274136000, category: 'FOOD', guessed: true });
+    expect(body.places[0]).toEqual({ name: '신탄진 칼국수', address: '대전 대덕구 신탄진로 1', latE7: 364507000, lonE7: 1274128000, category: 'FOOD', guessed: true });
     expect(body.places[1]).toMatchObject({ name: '대전 대덕구 신탄진로 2', address: '대전 대덕구 신탄진로 2', category: 'OTHER', guessed: true });
     expect(JSON.stringify(body)).not.toContain('99999');
     const pages = up.seen.filter((u) => new URL(u).hostname === 'map.kakao.com');
@@ -248,9 +248,9 @@ describe('카카오맵 즐겨찾기 폴더 (공유 페이지의 링크 미리보
     const body = (await (await resolveShare({ url: PAGE }, up.fetcher)).json()) as { places: { name: string; latE7: number; lonE7: number }[] };
     // to the user's checked values (6 decimals)
     expect(body.places.map((p) => [p.name, Math.round(p.latE7 / 10), Math.round(p.lonE7 / 10)])).toEqual([
-      ['', 36453499, 127413535],
-      ['', 36451271, 127416812],
-      ['', 36449224, 127412571],
+      ['', 36450738, 127412725],
+      ['', 36448510, 127416002],
+      ['', 36446463, 127411761],
     ]);
     expect(up.seen.some((u) => u.includes('dapi.kakao.com'))).toBe(false);
   });
@@ -292,9 +292,9 @@ describe('WCONGNAMUL → WGS84', () => {
       [592289, 819161],
     ].map(([x, y]) => wcongToWgs84(x, y));
     const want = [
-      [36.453499, 127.413535],
-      [36.451271, 127.416812],
-      [36.449224, 127.412571],
+      [36.450737, 127.412725],
+      [36.44851, 127.416002],
+      [36.446463, 127.411759],
     ];
     got.forEach((g, i) => {
       expect(g.lat).toBeCloseTo(want[i][0], 5);
