@@ -199,8 +199,8 @@ export function PlaceSearch({
   };
 
   /**
-   * Turn pasted map text into places. A link is read by the server first: a Naver 저장 목록 opens the list dialog (no
-   * searches), a Kakao favorites folder gets a clear message, a single place is searched by its name. Several lines (and
+   * Turn pasted map text into places. A Naver Map link is read by the server first: a 저장 목록 opens the list dialog (no
+   * searches), a single place is searched by its name; a Kakao Map link gets a clear message (not imported). Several lines (and
    * onPickMany available) → the bulk dialog searches each name. A single name → the normal single search.
    */
   const runPaste = async (text = paste) => {
@@ -214,11 +214,11 @@ export function PlaceSearch({
     }
     if (out.kind === 'empty') return setNote(t('place.paste.noName'));
     if (out.kind === 'failed') return setNote(t('place.resolve.failed'));
-    if (out.kind === 'unsupported') {
-      // Keep the paste box open: names copied from the folder can still be pasted (one per line).
+    if (out.kind === 'kakao') {
+      // Keep the paste box open: the place names can still be pasted (one per line).
       setShowPaste(true);
       setPaste('');
-      return setNote(t('place.paste.kakaoFolder'));
+      return setNote(t('place.paste.kakao'));
     }
     if (out.kind === 'list') {
       if (!onPickMany) return setNote(t('place.paste.listHere'));

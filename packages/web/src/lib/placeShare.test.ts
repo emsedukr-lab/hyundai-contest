@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isAddressLine, parsePastedPlace, parsePastedPlaces, sharedParamsFromSearch, sharedPlaceTerm, sharedUrl } from './placeShare';
+import { isAddressLine, isKakaoLink, parsePastedPlace, parsePastedPlaces, sharedParamsFromSearch, sharedPlaceTerm, sharedUrl } from './placeShare';
 
 describe('지도앱 공유 수집 파싱', () => {
   it('제목이 있으면 제목을 검색어로', () => {
@@ -106,5 +106,10 @@ describe('공유 텍스트 정리 (자동 추가 이름·주소 줄)', () => {
   it('주소 줄 판별: 도·시군구·번지가 모두 있어야 주소', () => {
     for (const a of ['강원 강릉시 저동 94', '서울 중구 세종대로 110', '경기 성남시 분당구 판교역로 166', '강원특별자치도 강릉시 운정동 256-1']) expect(isAddressLine(a)).toBe(true);
     for (const n of ['부산 해운대 블루라인파크', '제주 4.3평화공원', '서울숲', '광주 서구 1913송정역시장', '경기 수원시 화성행궁', '테라로사 경포호수점']) expect(isAddressLine(n)).toBe(false);
+  });
+
+  it('카카오맵 링크를 알아본다 (가져오지 않음)', () => {
+    for (const u of ['https://kko.to/G5MMYHyPRX', 'https://place.map.kakao.com/8654759', 'https://map.kakao.com/?folderid=1', 'https://kakao.com/x']) expect(isKakaoLink(u)).toBe(true);
+    for (const u of ['https://naver.me/abc', 'https://map.naver.com/p/entry/place/1', 'https://kakao.com.evil.net/x', 'https://kko.kl/xyz', null, 'not a url']) expect(isKakaoLink(u)).toBe(false);
   });
 });

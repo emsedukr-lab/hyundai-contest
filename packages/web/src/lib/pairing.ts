@@ -204,13 +204,7 @@ export interface ResolvedList {
   places: ListPlace[];
 }
 
-/** A link the server recognises but does not read: a Kakao Map favorites folder (only Naver saved lists are imported). */
-export interface ResolvedUnsupported {
-  kind: 'unsupported';
-  source: 'kakao';
-}
-
-export type Resolved = ResolvedPlace | ResolvedList | ResolvedUnsupported;
+export type Resolved = ResolvedPlace | ResolvedList;
 
 /** Asks the server to follow a Naver/Kakao share link and read the place (or saved list) from it (throws ApiError on failure). */
 export async function resolvePlace(url: string): Promise<Resolved> {
@@ -218,4 +212,4 @@ export async function resolvePlace(url: string): Promise<Resolved> {
 }
 
 /** A single place's name from a resolve answer, or null when the link was a list or an unsupported folder. */
-export const resolvedName = (r: Resolved): string | null => (r.kind === 'list' || r.kind === 'unsupported' ? null : r.name || null);
+export const resolvedName = (r: Resolved): string | null => (r.kind === 'list' ? null : r.name || null);

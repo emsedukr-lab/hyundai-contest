@@ -56,8 +56,8 @@ export function PlacesPage() {
       const out = await readPaste(text);
       if (out.kind === 'list') setReview({ list: out.list });
       else if (out.kind === 'terms') setReview({ terms: out.terms });
-      else setNote(t(out.kind === 'unsupported' ? 'place.paste.kakaoFolder' : out.kind === 'failed' ? 'place.resolve.failed' : 'place.paste.noName'));
-      if (out.kind === 'unsupported') setPaste('');
+      else setNote(t(out.kind === 'kakao' ? 'place.paste.kakao' : out.kind === 'failed' ? 'place.resolve.failed' : 'place.paste.noName'));
+      if (out.kind === 'kakao') setPaste('');
     } finally {
       setReading(false);
     }

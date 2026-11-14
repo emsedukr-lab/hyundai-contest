@@ -15,7 +15,7 @@ import { trips } from '../lib/db';
 import { t } from '../lib/i18n';
 import { ApiError, resolvePlace, searchPlaces, type PlaceHit } from '../lib/pairing';
 import { handOffPaste, sameAsShared } from '../lib/pasteImport';
-import { sharedParamsFromSearch, sharedPlaceTerm, sharedUrl } from '../lib/placeShare';
+import { isKakaoLink, sharedParamsFromSearch, sharedPlaceTerm, sharedUrl } from '../lib/placeShare';
 import { navigate } from '../lib/router';
 import { defaultHome } from '../lib/settings';
 import { addPlace, emptyPlan, newDoc, removePlace, savePlan, type TripDoc } from '../lib/trips';
@@ -35,7 +35,7 @@ interface AddState {
   place: NewPlace;
 }
 
-type Status = 'resolving' | 'added' | 'undone' | 'noTerm' | 'failed' | 'restored' | 'exists' | 'kakaoFolder';
+type Status = 'resolving' | 'added' | 'undone' | 'noTerm' | 'failed' | 'restored' | 'exists' | 'kakaoLink';
 
 /**
  * The outcome, stored on this /add history entry. The share query stays in the URL, so without it, coming Back from the
@@ -137,6 +137,11 @@ export function AddSharedPlacePage() {
     }
     void (async () => {
       try {
+        // A Kakao Map share is not imported (map-app sharing is Naver Map only): say so, add nothing, send nothing.
+        if (isKakaoLink(sharedUrl(params)) || /https?:\/\/(?:kko\.to|[^\s/]*kakao\.com)\b/i.test(`${params.text ?? ''} ${params.title ?? ''}`)) {
+          setStatus('kakaoLink');
+          return;
+        }
         // Prefer the shared title; if there's only a link, ask the server to read the place name from it.
         let name = term;
         if (!name) {
@@ -150,10 +155,6 @@ export function AddSharedPlacePage() {
                   handOffPaste(u);
                   navigate('/places', true);
                 }
-                return;
-              }
-              if (r.kind === 'unsupported') {
-                setStatus('kakaoFolder');
                 return;
               }
               name = r.name;
@@ -294,7 +295,7 @@ export function AddSharedPlacePage() {
         {goHome(false)}
         {openTrip(exists.tripId)}
       </>
-    ) : status === 'undone' || status === 'failed' || status === 'noTerm' || status === 'kakaoFolder' ? (
+    ) : status === 'undone' || status === 'failed' || status === 'noTerm' || status === 'kakaoLink' ? (
       goHome(true)
     ) : undefined;
 
@@ -313,7 +314,7 @@ export function AddSharedPlacePage() {
 
         {status === 'failed' && <Banner status="error" title={t('add.failed')} />}
         {status === 'exists' && exists && <Banner status="info" title={t('add.already', { trip: exists.tripName })} />}
-        {status === 'kakaoFolder' && <Banner status="info" title={t('place.paste.kakaoFolder')} />}
+        {status === 'kakaoLink' && <Banner status="info" title={t('place.paste.kakao')} />}
         {status === 'undone' && <Banner status="info" title={t('add.undone')} />}
         {status === 'restored' && restored && <Banner status="success" title={t('add.added', { name: restored.placeName, trip: restored.tripName })} />}
 

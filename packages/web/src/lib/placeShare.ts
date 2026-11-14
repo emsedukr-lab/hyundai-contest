@@ -34,6 +34,20 @@ export function sharedUrl(p: SharedParams): string | null {
   return null;
 }
 
+/**
+ * A Kakao Map share link (kko.to, place.map.kakao.com, map.kakao.com …). Places are not imported from Kakao Map shares
+ * (decided 2026-11-15: map-app sharing is Naver Map only), so such a link is recognised here and never sent anywhere.
+ */
+export function isKakaoLink(url: string | null | undefined): boolean {
+  if (!url) return false;
+  try {
+    const host = new URL(url.trim()).hostname.toLowerCase();
+    return host === 'kko.to' || host === 'kakao.com' || host.endsWith('.kakao.com');
+  } catch {
+    return false;
+  }
+}
+
 /** Reads a share payload from a URL's query string (what the GET share target delivers). */
 export function sharedParamsFromSearch(search: string): SharedParams {
   const q = new URLSearchParams(search);

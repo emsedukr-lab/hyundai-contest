@@ -34,8 +34,11 @@ describe('붙여넣기 읽기 (readPaste)', () => {
     expect(resolve).toHaveBeenCalledWith('https://naver.me/GntDZ5jO');
   });
 
-  it('카카오 폴더는 unsupported, 한 장소 링크는 복사한 이름 그대로 (없으면 읽은 이름)', async () => {
-    expect(await readPaste('https://kko.to/x', async () => ({ kind: 'unsupported', source: 'kakao' }))).toEqual({ kind: 'unsupported' });
+  it('카카오맵 링크는 서버에 묻지 않고 kakao, 네이버 한 장소 링크는 복사한 이름 그대로 (없으면 읽은 이름)', async () => {
+    const never = vi.fn(async () => list);
+    for (const text of ['https://kko.to/x', '[카카오맵] 경포호 https://kko.to/G5MMYHyPRX', '[카카오맵 즐겨찾기]\n대구\nhttps://kko.to/G5MMYHyPRX', '테라로사\nhttps://place.map.kakao.com/8654759'])
+      expect(await readPaste(text, never)).toEqual({ kind: 'kakao' });
+    expect(never).not.toHaveBeenCalled();
     expect(await readPaste('경포호\nhttps://naver.me/a', async () => ({ kind: 'place', name: '경포호수', address: '' }))).toEqual({ kind: 'terms', terms: ['경포호'] });
     expect(await readPaste('https://naver.me/a', async () => ({ name: '경포호', address: '' }))).toEqual({ kind: 'terms', terms: ['경포호'] });
   });

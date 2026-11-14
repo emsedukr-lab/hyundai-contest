@@ -1,16 +1,16 @@
 import type { Place } from '@tteonaljido/shared';
 import { resolvePlace, resolvedName, type ListPlace, type ResolvedList } from './pairing';
-import { parsePastedPlace, parsePastedPlaces } from './placeShare';
+import { isKakaoLink, parsePastedPlace, parsePastedPlaces } from './placeShare';
 
 /**
- * What a paste (or the clipboard) turns into. A link is asked to the server first, because the same short link can be
- * a single place, a whole Naver 저장 목록, or a Kakao favorites folder the server can't read; plain names (one per line)
- * go to the search as before.
+ * What a paste (or the clipboard) turns into. A Naver Map link is asked to the server first, because the same short
+ * link can be a single place or a whole 저장 목록; a Kakao Map link is not imported (map-app sharing is Naver Map only)
+ * and is never sent; plain names (one per line) go to the search as before.
  */
 export type PasteOutcome =
   | { kind: 'list'; list: ResolvedList }
   | { kind: 'terms'; terms: string[] }
-  | { kind: 'unsupported' }
+  | { kind: 'kakao' } // a Kakao Map share link: not imported
   | { kind: 'failed' } // a link the server could not read, and no name beside it
   | { kind: 'empty' }; // neither a name nor a link
 
@@ -21,11 +21,11 @@ export async function readPaste(text: string, resolve: Resolver = resolvePlace):
   const url = parsePastedPlace(text).url;
   // Several names: a list typed or copied by hand; the link (if any) is one of many lines and is not followed. Up to
   // two lines beside a link can still be a share's header ("[네이버 지도]", the list's name, a count), so it is read.
+  if (isKakaoLink(url) || /https?:\/\/(?:kko\.to|[^\s/]*kakao\.com)\b/i.test(text)) return { kind: 'kakao' };
   if (!url || terms.length > 2) return terms.length ? { kind: 'terms', terms } : { kind: 'empty' };
   try {
     const r = await resolve(url);
     if (r.kind === 'list') return r.places.length ? { kind: 'list', list: r } : { kind: 'failed' };
-    if (r.kind === 'unsupported') return { kind: 'unsupported' };
     // A single place: the name the user copied wins over the page's title (same as before links were read).
     if (terms.length) return { kind: 'terms', terms };
     const name = resolvedName(r);
