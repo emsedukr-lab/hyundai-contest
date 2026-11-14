@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { Button } from '@astryxdesign/core/Button';
 import { CarIcon, MapIcon } from '../components/shell/icons';
 import { Row, Section } from '../components/shell/rows';
@@ -9,7 +9,10 @@ import { t } from '../lib/i18n';
 import { SERVER_ORIGIN } from '../lib/platform';
 import { navigate } from '../lib/router';
 import { carQrTarget } from '../lib/qrLink';
-import { QrScanner } from '../components/QrScanner';
+import { sendIntent } from '../lib/sendIntent';
+
+// The scanner (camera + jsQR) loads when the button is pressed.
+const QrScanner = lazy(() => import('../components/QrScanner').then((m) => ({ default: m.QrScanner })));
 
 /** The pairing page remembers its session per browser window (ConnectPage's LAST_SID); /c resumes it. */
 const hasOpenConnection = () => {
@@ -58,7 +61,11 @@ export function CarPage() {
       </div>
       {/* Scan in the app: one tap opens the camera (asking permission), and the car's QR opens the connection here. */}
       <div className="tn-pad" style={{ paddingTop: 8, paddingBottom: 8 }}>
-        <Button label={t('car.scan')} variant="primary" size="lg" width="100%" onClick={() => setScanning(true)} />
+        <Button label={t('car.scan')} variant="primary" size="lg" width="100%" onClick={() => {
+            sendIntent.clear(); // from this tab no trip is chosen ahead: the pairing page asks
+            setScanning(true);
+          }}
+        />
       </div>
 
       {resumable && (
@@ -99,7 +106,7 @@ export function CarPage() {
                   onClick={() => navigate(`/trips/${r.tripId}`)}
                   lead={<MapIcon />}
                   title={r.name}
-                  subtitle={t('home.lastSend', { version: r.revision, date: dateLabel(dayOf(r.at)) })}
+                  subtitle={t('home.lastSend', { date: dateLabel(dayOf(r.at)) })}
                   chevron
                 />
               </li>
@@ -108,6 +115,7 @@ export function CarPage() {
         )}
       </Section>
       {scanning && (
+        <Suspense fallback={null}>
         <QrScanner
           onClose={() => setScanning(false)}
           onResult={(text) => {
@@ -118,6 +126,7 @@ export function CarPage() {
             return true;
           }}
         />
+        </Suspense>
       )}
     </TabScreen>
   );

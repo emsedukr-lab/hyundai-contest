@@ -1,17 +1,22 @@
 package io.tteonaljido.car.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -29,6 +34,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
@@ -54,6 +60,7 @@ import io.tteonaljido.car.ui.components.PleosButton
 import io.tteonaljido.car.ui.components.PleosCard
 import io.tteonaljido.car.ui.components.PleosSystemPopup
 import io.tteonaljido.car.ui.components.PleosText
+import io.tteonaljido.car.ui.components.Radius
 import io.tteonaljido.car.ui.components.Space
 import io.tteonaljido.car.ui.components.RowDivider
 import io.tteonaljido.car.ui.components.Screen
@@ -64,6 +71,7 @@ import io.tteonaljido.car.ui.components.Tag
 import io.tteonaljido.car.ui.components.Tone
 import io.tteonaljido.car.ui.components.PleosHeader
 import io.tteonaljido.car.ui.components.SegmentedControl
+import io.tteonaljido.car.ui.components.weakFace
 import io.tteonaljido.car.ui.issueText
 import io.tteonaljido.car.ui.noteText
 import io.tteonaljido.car.ui.text
@@ -77,7 +85,7 @@ import io.tteonaljido.trip.LocalTrip
 import io.tteonaljido.trip.NextDestination
 import io.tteonaljido.trip.Punctuality
 import io.tteonaljido.trip.RestAdvice
-import io.tteonaljido.trip.Severity
+import io.tteonaljido.trip.TripFindings
 import io.tteonaljido.trip.Target
 import io.tteonaljido.trip.TripOverview
 import io.tteonaljido.trip.TripValidator
@@ -144,11 +152,12 @@ private fun whenLabel(w: TripWhen): String = when (w) {
     TripWhen.Past -> stringResource(R.string.when_past)
 }
 
-/** 다음 여행: when it leaves, the name, the period, the whole route (the screen's one bright element), what to check. */
+/** 다음 여행: when it leaves, the name, the period, the whole route (the screen's one bright element), what to check, and the row that says it opens. */
 @Composable
 private fun NextTripCard(t: LocalTrip, today: java.time.LocalDate, onClick: () -> Unit) {
     val w = remember(t, today) { TripOverview.tripWhen(t.view.startDate, t.view.endDate, today) }
     val report = remember(t, today) { TripValidator.validate(t.view, t.overlay, today) }
+    val found = remember(report) { TripFindings.of(report) }
     val sketch = remember(t) { TripOverview.sketch(t.view, 300.0, 240.0, 18.0) }
     val secondary = colorResource(R.color.tn_text_secondary)
     PleosCard(onClick = onClick, padding = Space.x32, gap = Space.x24) {
@@ -162,30 +171,50 @@ private fun NextTripCard(t: LocalTrip, today: java.time.LocalDate, onClick: () -
                     PleosText(stringResource(R.string.trip_summary, periodLabel(t.view), nightsLabel(t.view), t.view.places.size), Pleos.type.bodyMediumNormal, secondary, maxLines = 2)
                 }
             }
+            // Counted: only what a person has to settle; what the navigation fills in is not a warning (TripFindings).
             val foot: @Composable () -> Unit = {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.x12)) {
                     val past = report.issues.firstOrNull { it.code == "PAST_TRIP" }
                     when {
                         past != null -> Tag(issueText(past), Tone.CAUTION, Modifier.weight(1f, fill = false))
-                        report.conflicts == 0 && report.uncertain == 0 -> PleosText(stringResource(R.string.all_clear), Pleos.type.bodyMediumNormal, secondary, maxLines = 1)
+                        found.clear -> PleosText(stringResource(R.string.all_clear), Pleos.type.bodyMediumNormal, secondary, maxLines = 1)
                         else -> {
-                            if (report.conflicts > 0) Tag(stringResource(R.string.count_conflicts, report.conflicts), Tone.ERROR)
-                            if (report.uncertain > 0) Tag(stringResource(R.string.count_uncertain, report.uncertain), Tone.CAUTION)
+                            if (found.conflicts > 0) Tag(stringResource(R.string.count_conflicts, found.conflicts), Tone.ERROR)
+                            if (found.toCheck > 0) Tag(stringResource(R.string.count_uncertain, found.toCheck), Tone.CAUTION)
                         }
                     }
                     Spacer(Modifier.weight(1f))
                     PleosText(stringResource(R.string.rev, t.meta.revision), Pleos.type.bodySmall, secondary, maxLines = 1)
-                    Icon(R.drawable.ic_chevron, Space.x40, colorResource(R.color.tn_text_disabled))
+                }
+            }
+            // The card's action, said out loud: a button-height row at the foot of the text. The whole card is the
+            // touch target (one node for a screen reader), so this row is a face and a label, not a second button.
+            val open: @Composable () -> Unit = {
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = dimensionResource(R.dimen.pleos_buttons_basic_medium_height))
+                        .clip(RoundedCornerShape(Radius.r24))
+                        .background(weakFace())
+                        .padding(start = Space.x32, end = Space.x20),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    PleosText(stringResource(R.string.open_trip), Pleos.type.bodyLargeStrong, modifier = Modifier.weight(1f), maxLines = 1)
+                    Icon(R.drawable.ic_chevron, Space.x40, colorResource(R.color.tn_text_secondary))
                 }
             }
             val drawing: @Composable (Modifier) -> Unit = { m ->
                 if (sketch.plotted >= 2) RouteSketch(sketch, w.focusDay, stringResource(R.string.sketch_desc, t.view.name), m)
                 else Box(m.padding(vertical = Space.x24)) { PleosText(stringResource(R.string.no_route), Pleos.type.bodySmall, secondary, maxLines = 2) }
             }
-            if (wide) Row(horizontalArrangement = Arrangement.spacedBy(Space.x48), verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(0.45f), verticalArrangement = Arrangement.spacedBy(Space.x32)) { head(); foot() }
+            // Wide: the text starts level with the sketch's top and the open row ends level with its bottom.
+            if (wide) Row(Modifier.height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(Space.x48)) {
+                Column(Modifier.weight(0.45f).fillMaxHeight(), verticalArrangement = Arrangement.SpaceBetween) {
+                    head()
+                    Column(Modifier.padding(top = Space.x32), verticalArrangement = Arrangement.spacedBy(Space.x20)) { foot(); open() }
+                }
                 drawing(Modifier.weight(0.55f))
-            } else Column(verticalArrangement = Arrangement.spacedBy(Space.x24)) { head(); drawing(Modifier.fillMaxWidth()); foot() }
+            } else Column(verticalArrangement = Arrangement.spacedBy(Space.x24)) { head(); drawing(Modifier.fillMaxWidth()); foot(); open() }
         }
     }
 }
@@ -319,12 +348,13 @@ private fun NaviPlanCard(vm: TripsViewModel, t: LocalTrip, day: Int, now: Long) 
     PleosCard(gap = Space.x16) {
         PleosText(stringResource(R.string.navi_plan_title), Pleos.type.titleSmall)
         val at = cover.latestAt
-        PleosText(
+        // Every leg measured: the result is the card's first line, with the positive dot, so it is the thing seen on coming back from the navigation.
+        if (cover.total > 0 && cover.measured == cover.total && at != null) StatusLine(stringResource(R.string.navi_plan_all, cover.total, clock(at)), Tone.OK, Pleos.type.bodyMediumNormal)
+        else PleosText(
             when {
                 cover.total == 0 -> stringResource(R.string.navi_plan_none)
                 cover.measured == 0 -> stringResource(R.string.navi_plan_phone)
-                cover.measured < cover.total || at == null -> stringResource(R.string.navi_plan_some, cover.total, cover.measured)
-                else -> stringResource(R.string.navi_plan_all, cover.total, clock(at))
+                else -> stringResource(R.string.navi_plan_some, cover.total, cover.measured)
             },
             Pleos.type.bodyMediumNormal, secondary,
         )
@@ -354,15 +384,17 @@ private fun NaviPlanCard(vm: TripsViewModel, t: LocalTrip, day: Int, now: Long) 
     }
 }
 
-/** 확인할 점: the day's conflicts and open questions, each with its severity in words and a colored dot. */
+/** 확인할 점: the day's conflicts and open questions, each with its severity in words and a colored dot; the navigation's own to-dos stay quiet. */
 @Composable
 private fun ToCheck(vm: TripsViewModel, t: LocalTrip, day: Int, report: io.tteonaljido.trip.ValidationReport) {
     val secondary = colorResource(R.color.tn_text_secondary)
     PleosCard(gap = Space.x16) {
         PleosText(stringResource(R.string.to_check), Pleos.type.titleSmall)
-        val shown = (report.forDay(day) + report.issues.filter { it.dayIndex == null && it.code != "PAST_TRIP" }).filter { it.severity != Severity.INFO }.take(5)
-        if (shown.isEmpty()) PleosText(stringResource(R.string.nothing_to_check), Pleos.type.bodyMediumNormal, secondary)
-        shown.forEach { SeverityLine(it.severity, issueText(it)) }
+        // What a person has to settle that day (and what is tied to no day), then what the navigation fills in by itself.
+        val found = remember(report, day) { TripFindings.of(report, day) }
+        if (found.clear) PleosText(stringResource(R.string.nothing_to_check), Pleos.type.bodyMediumNormal, secondary)
+        found.person.take(5).forEach { SeverityLine(it.severity, issueText(it)) }
+        NaviFills(found)
         if (t.view.home == null && t.overlay.home == null && (t.view.origin is Endpoint.Home || t.view.finalDestination is Endpoint.Home)) {
             PleosButton(stringResource(R.string.load_navi_home), { vm.loadNaviHome(t.localId) }, type = ButtonType.BASIC, tag = "naviHome")
         }
@@ -522,6 +554,16 @@ private fun NextPanel(vm: TripsViewModel, t: LocalTrip, day: Int, live: LiveView
             PleosButton(stringResource(R.string.depart_here), { vm.departHere(t.localId, day) }, type = ButtonType.BASIC, enabled = isToday, tag = "departHere")
             if (t.overlay.originFor(t.view, day) != null) PleosButton(stringResource(R.string.undo_depart), { vm.undoDepartHere(t.localId, day) }, type = ButtonType.BASIC, tag = "undoDepart")
         }
+        // A disabled button says why, in one quiet line: these two act on the day the car is on, and guidance needs a stop to go to.
+        val onTrip = vm.todayIndex(t)
+        val hasArrive = step.target is Target.Stop
+        val why = when {
+            step.target == null -> stringResource(R.string.why_no_target)
+            isToday -> null
+            onTrip != null -> stringResource(if (hasArrive) R.string.why_other_day_both else R.string.why_other_day_depart, onTrip)
+            else -> stringResource(if (hasArrive) R.string.why_not_travelling_both else R.string.why_not_travelling_depart)
+        }
+        why?.let { PleosText(it, Pleos.type.bodySmall, secondary, maxLines = 2) }
         if (skip != null || defer != null || energy != null || rest != null || arrival?.visitId != null || skippedToday.isNotEmpty() || deferredToday.isNotEmpty() || deferredAway.isNotEmpty() || lowSoc) {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(Space.x12), verticalArrangement = Arrangement.spacedBy(Space.x12)) {
                 skip?.let { s -> PleosButton(stringResource(R.string.skip), { vm.skip(t.localId, s.visitId) }, size = ButtonSize.SMALL, tag = "skip") }
@@ -564,7 +606,8 @@ private fun GuideDialogs(vm: TripsViewModel, g: Guide) {
         is Guide.Measuring -> PleosSystemPopup(stringResource(R.string.measure_title), text(g.msg), stringResource(R.string.measure_stop), vm::dismissGuide)
         is Guide.ConfirmMeasure -> PleosSystemPopup(
             stringResource(R.string.measure_confirm_title),
-            stringResource(R.string.measure_confirm_body, g.routes, g.routes * 15) + (g.current?.let { " " + stringResource(R.string.measure_confirm_ends, it) } ?: ""),
+            // Three lines at most: what the navigation does, for how long, and how to come back (the system does not let this app return by itself).
+            stringResource(if (g.current != null) R.string.measure_confirm_body_guiding else R.string.measure_confirm_body, g.routes, g.routes * 15),
             stringResource(R.string.measure_confirm_yes), { vm.confirmMeasure() },
             cancel = stringResource(R.string.cancel), onCancel = vm::dismissGuide,
         )

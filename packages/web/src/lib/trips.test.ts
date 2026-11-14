@@ -79,6 +79,15 @@ describe('revision and consent', () => {
     expect(changed.revision).toBe(doc.revision + 1);
   });
 
+  it('autosaves of one sitting share a revision: the content hash moves, the number does not', async () => {
+    const doc = await newDoc(sampleTrip());
+    const first = await savePlan(doc, { ...doc.plan, name: '강릉 바다 여행' }, null);
+    const second = await savePlan(first, { ...first.plan, name: '강릉 바다 여행 2' }, null, { sameRevision: true });
+    expect(second.revision).toBe(first.revision);
+    expect(second.plan.revision).toBe(first.revision);
+    expect(second.planHash).not.toBe(first.planHash);
+  });
+
   it('home address leaves the phone only with consent', async () => {
     const doc = await newDoc(sampleTrip(), home);
     expect((await toTransfer(doc, false)).trip.home).toBeNull();

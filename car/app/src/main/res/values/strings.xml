@@ -222,7 +222,7 @@
     <string name="skip">건너뛰기</string>
     <string name="undo_arrival">도착 되돌리기</string>
     <string name="unskip">%1$s 되돌리기</string>
-    <string name="undo_depart">출발지 되돌리기</string>
+    <string name="undo_depart">출발지를 계획대로</string>
     <string name="depart_here">여기서 출발</string>
     <string name="nearby_chargers">근처 충전소</string>
     <string name="here_checking">현재 위치와 내비 예상 시간을 확인하는 중</string>
@@ -274,7 +274,7 @@
     <string name="sum_drive">운전 %1$s</string>
     <string name="sum_lodging">숙소 도착 %1$s</string>
     <string name="sum_home">귀가 %1$s</string>
-    <string name="sum_unknown">이동시간 %1$d구간 미확인</string>
+    <string name="sum_unknown">%1$d구간은 내비가 재요</string>
     <string name="tl_start">출발</string>
     <string name="tl_lodging">숙소</string>
     <string name="tl_return">귀가</string>
@@ -285,7 +285,7 @@
     <string name="tl_range">%1$s ~ %2$s</string>
     <string name="tl_leg">↓ %1$s</string>
     <string name="tl_leg_navi">↓ %1$s · 내비</string>
-    <string name="tl_leg_unknown">이동시간 미확인</string>
+    <string name="tl_leg_unknown">↓ 내비가 재요</string>
     <string name="dur_m">%1$d분</string>
     <string name="dur_h">%1$d시간</string>
     <string name="dur_hm">%1$d시간 %2$d분</string>
@@ -359,8 +359,7 @@
     <string name="measure_working">%2$s구간 중 %1$s구간을 쟀어요 · 내비에 경로가 잠깐 나타나요</string>
     <string name="measure_stop">중지</string>
     <string name="measure_confirm_title">내비로 측정할까요?</string>
-    <string name="measure_confirm_body">내비 화면으로 바뀌고 경로가 %1$d번 나타났다 사라져요(약 %2$d초). 경로가 사라지면 떠날지도로 돌아와 결과를 확인하세요.</string>
-    <string name="measure_confirm_ends">지금 \'%1$s\' 안내는 끝나요.</string>
+    <string name="measure_confirm_body">내비 화면으로 바뀌고 경로가 %1$d번 나타났다 사라져요(약 %2$d초). 끝나면 앱 목록에서 떠날지도를 눌러 돌아오세요.</string>
     <string name="measure_confirm_yes">측정</string>
     <string name="measure_done">내비로 %1$s구간을 쟀어요</string>
     <string name="measure_partial">%2$s구간 중 %1$s구간만 쟀어요 · 다시 시도해 주세요</string>
@@ -382,4 +381,16 @@
     <string name="order_reset">%1$s일차를 계획 순서로 되돌렸어요</string>
     <string name="tl_leg_navi_km">↓ %1$s · %2$skm · 내비</string>
     <string name="sum_drive_km">운전 %1$s · %2$skm</string>
+    <!-- M66: findings split by who settles them, why a button is off, the next-trip card's open row -->
+    <string name="navi_fills_title">내비가 채워요</string>
+    <string name="navi_fills_legs">이동시간 %1$d구간은 내비가 재요</string>
+    <string name="navi_fills_home_both">출발·귀가 \'집\'은 차량 내비의 집을 써요</string>
+    <string name="navi_fills_home_origin">출발 \'집\'은 차량 내비의 집을 써요</string>
+    <string name="navi_fills_home_return">귀가 \'집\'은 차량 내비의 집을 써요</string>
+    <string name="why_no_target">이 날은 안내할 곳이 남아 있지 않아요</string>
+    <string name="why_other_day_both">도착 처리와 여기서 출발은 오늘 일정(%1$d일차)에서 쓸 수 있어요</string>
+    <string name="why_other_day_depart">여기서 출발은 오늘 일정(%1$d일차)에서 쓸 수 있어요</string>
+    <string name="why_not_travelling_both">도착 처리와 여기서 출발은 여행하는 날에 쓸 수 있어요</string>
+    <string name="why_not_travelling_depart">여기서 출발은 여행하는 날에 쓸 수 있어요</string>
+    <string name="measure_confirm_body_guiding">지금 안내는 끝나고, 내비 화면에 경로가 %1$d번 나타났다 사라져요(약 %2$d초). 끝나면 앱 목록에서 떠날지도를 눌러 돌아오세요.</string>
 </resources>

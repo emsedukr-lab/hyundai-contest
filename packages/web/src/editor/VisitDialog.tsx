@@ -1,4 +1,5 @@
 import { Button } from '@astryxdesign/core/Button';
+import { Collapsible } from '@astryxdesign/core/Collapsible';
 import type { ISODateString } from '@astryxdesign/core/Calendar';
 import { DateInput } from '@astryxdesign/core/DateInput';
 import { SegmentedControl, SegmentedControlItem } from '@astryxdesign/core/SegmentedControl';
@@ -11,7 +12,7 @@ import { dateLabel, minutesLabel, shortDate } from '../lib/format';
 import { hoursLines, isSimpleHours } from '../lib/hours';
 import { t } from '../lib/i18n';
 import { REASON_LABEL, changeCategory, moveToDay, removePlace, suggestVisitTime, updatePlace, updateVisit } from '../lib/trips';
-import { LodgingNoteFields, PlaceMemoField } from './NotesContext';
+import { LodgingNoteFields, PlaceMemoField, useNotes } from './NotesContext';
 import { CATEGORY_LABEL, CATEGORY_OPTIONS } from './PlaceSearch';
 import { Sheet } from './Sheet';
 import './visitSheet.css';
@@ -37,6 +38,27 @@ function Group({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
+/**
+ * A block that changes least, folded to one row (M66): its title and the current value ("영업시간 · 모름"), opening in
+ * place. Astryx Collapsible carries the button, aria-expanded and the chevron.
+ */
+function Fold({ title, value, children }: { title: string; value: string; children: ReactNode }) {
+  return (
+    <section className="vd-fold">
+      <Collapsible
+        defaultIsOpen={false}
+        trigger={
+          <span className="vd-fold-row">
+            <span className="vd-fold-title">{title}</span>
+            <span className="vd-fold-value">{value}</span>
+          </span>
+        }>
+        <div className="vd-fold-body">{children}</div>
+      </Collapsible>
+    </section>
+  );
+}
+
 /** A labelled row: the label on the left, the control taking the rest. */
 function Row({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -54,8 +76,10 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
  *          choice (자유 / 희망 / 고정 — the desired and fixed times used to be two inputs showing the same time), and the
  *          flexibility that goes with it.
  *   머무는 시간 — in hours and minutes with presets and ±15, not a raw minute count.
- *   중요도 · 메모 · 영업시간 (Kakao Map link, or typed hours) · 장소 정보 (type, the 보관함 reason) last, as they change least.
- * Edits apply live; 장소 삭제 asks once. Choosing 전체 일정 takes a stop off its day (the keyboard way to swipe it off).
+ *   중요도 · 메모 · 영업시간 (Kakao Map link, or typed hours) · 장소 정보 (type, why it is on no day) change least: each is
+ *   one folded row showing its current value (M66), so the sheet opens on the two things people come to set.
+ * Edits apply live, so the one button is 완료; 장소 삭제 is a quiet text button at the end of the sheet and asks once (the
+ * confirm carries the negative fill). Choosing 전체 일정 takes a stop off its day (the keyboard way to swipe it off).
  */
 export function VisitDialog({
   plan,
@@ -77,6 +101,7 @@ export function VisitDialog({
   const [pickDate, setPickDate] = useState<ISODateString | undefined>(undefined);
   // The last arrival time while the sheet is open, so 고정 → 자유 → 고정 comes back to the same time.
   const [lastTime, setLastTime] = useState<string | null>(null);
+  const { notes } = useNotes();
   useEffect(() => {
     setConfirmDelete(false);
     setPickDate(undefined);
@@ -142,6 +167,19 @@ export function VisitDialog({
     if (next.length > 0) setHours(daily.open, daily.close, next); // at least one open day
   };
 
+  // One-line values for the folded rows.
+  const note = notes[place.placeRef];
+  const memoValue =
+    [place.category === 'LODGING' && note?.checkIn ? t('tl.checkInAt', { time: note.checkIn }) : '', place.category === 'LODGING' && note?.checkOut ? t('tl.checkOutAt', { time: note.checkOut }) : '', note?.memo?.split('\n')[0] ?? '']
+      .filter(Boolean)
+      .join(' · ') || t('visit.fold.none');
+  const hoursValue =
+    hours.status === 'UNKNOWN' ? t('visit.hours.unknown')
+    : hours.status === 'ALWAYS_OPEN' ? t('visit.hours.none')
+    : daily && !grouped ? `${openDays.length === 7 ? t('visit.hours.everyDay') : daysLabel(openDays.map(Number))} ${daily.open}–${daily.close}`
+    : t('visit.hours.enter');
+  const importanceValue = visit?.importance === 'MUST' ? t('common.mustAria') : visit?.importance === 'OPTIONAL' ? t('visit.importance.optional') : t('visit.importance.normal');
+
   const footer = confirmDelete ? (
     <div className="vd-foot">
       <p className="vd-confirm">{visit?.fixed ? t('visit.delete.confirmFixed', { time: visit.fixed.time }) : t('visit.delete.confirm')}</p>
@@ -160,11 +198,7 @@ export function VisitDialog({
       </div>
     </div>
   ) : (
-    <div className="vd-foot-row">
-      {/* A quiet first step: the negative fill only on the confirm, so the rare delete doesn't shout on every place. */}
-      <Button label={t('visit.delete')} variant="secondary" size="lg" onClick={() => setConfirmDelete(true)} />
-      <Button label={t('common.close')} variant="primary" size="lg" width="100%" onClick={onClose} />
-    </div>
+    <Button label={t('tl.done')} variant="primary" size="lg" width="100%" onClick={onClose} />
   );
 
   return (
@@ -249,19 +283,21 @@ export function VisitDialog({
         )}
 
         {visit && (
-          <Group title={t('visit.importance')}>
+          <Fold title={t('visit.importance')} value={importanceValue}>
             <SegmentedControl label={t('visit.importance')} value={visit.importance} onChange={(v) => setVisit({ importance: v as Visit['importance'] })}>
               <SegmentedControlItem value="MUST" label={t('common.must')} />
               <SegmentedControlItem value="NORMAL" label={t('visit.importance.normal')} />
               <SegmentedControlItem value="OPTIONAL" label={t('visit.importance.optional')} />
             </SegmentedControl>
-          </Group>
+          </Fold>
         )}
 
         {/* Phone-only notes: lodging gets check-in/out and a memo, any other place a memo. */}
-        <Group title={t('tl.memo')}>{place.category === 'LODGING' ? <LodgingNoteFields placeRef={place.placeRef} /> : <PlaceMemoField placeRef={place.placeRef} />}</Group>
+        <Fold title={t('tl.memo')} value={memoValue}>
+          {place.category === 'LODGING' ? <LodgingNoteFields placeRef={place.placeRef} /> : <PlaceMemoField placeRef={place.placeRef} />}
+        </Fold>
 
-        <Group title={t('visit.hoursTitle')}>
+        <Fold title={t('visit.hoursTitle')} value={hoursValue}>
           {/* 모름 · 따로 없음 (a lake, a beach, a street: nothing to check) · 직접 입력 */}
           <SegmentedControl
             label={t('visit.hoursTitle')}
@@ -339,14 +375,14 @@ export function VisitDialog({
               )}
             </>
           )}
-        </Group>
+        </Fold>
 
-        <Group title={t('visit.section.place')}>
+        <Fold title={t('visit.section.place')} value={CATEGORY_LABEL[place.category]}>
           <Row label={t('common.type')}>
             <Selector label={t('common.type')} isLabelHidden placement="above" options={CATEGORY_OPTIONS} value={place.category} onChange={(v) => onChange(changeCategory(plan, place.placeRef, v as Place['category']))} />
           </Row>
           {visit && visit.unassignedReason !== null && (
-            // On no day yet (보관함): why, as the car shows it.
+            // On no day yet (담아 둔 곳): why, as the car shows it.
             <Row label={t('editor.unassigned.reason')}>
               <Selector
                 label={t('editor.unassigned.reason')}
@@ -358,7 +394,14 @@ export function VisitDialog({
               />
             </Row>
           )}
-        </Group>
+        </Fold>
+
+        {/* The rare, destructive action: last in the scroll and quiet. Its confirm takes over the footer. */}
+        {!confirmDelete && (
+          <button type="button" className="tl-textbtn vd-delete" onClick={() => setConfirmDelete(true)}>
+            {t('visit.delete')}
+          </button>
+        )}
       </div>
     </Sheet>
   );

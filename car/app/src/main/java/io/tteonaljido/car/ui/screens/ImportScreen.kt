@@ -60,6 +60,7 @@ import io.tteonaljido.trip.FirstDay
 import io.tteonaljido.trip.ImportCase
 import io.tteonaljido.trip.ImportChoice
 import io.tteonaljido.trip.Severity
+import io.tteonaljido.trip.TripFindings
 
 private val CHOICE_LABEL = mapOf(
     ImportChoice.IMPORT_NEW to R.string.choice_import,
@@ -221,6 +222,33 @@ fun SeverityLine(severity: Severity, text: String) {
     }
 }
 
+/**
+ * 내비가 채워요 (M66): what the car's navigation settles by itself — legs it has yet to time, a home it supplies — as
+ * quiet lines under a small heading. Nothing here asks the person for anything, so there is no orange and no count.
+ */
+@Composable
+fun NaviFills(f: TripFindings.View) {
+    if (!f.naviFills) return
+    val secondary = colorResource(R.color.tn_text_secondary)
+    Column(verticalArrangement = Arrangement.spacedBy(Space.x8)) {
+        PleosText(stringResource(R.string.navi_fills_title), Pleos.type.bodySmallStrong, secondary, maxLines = 1)
+        if (f.untimedLegs > 0) NaviFillLine(stringResource(R.string.navi_fills_legs, f.untimedLegs))
+        when {
+            f.homeOrigin && f.homeReturn -> NaviFillLine(stringResource(R.string.navi_fills_home_both))
+            f.homeOrigin -> NaviFillLine(stringResource(R.string.navi_fills_home_origin))
+            f.homeReturn -> NaviFillLine(stringResource(R.string.navi_fills_home_return))
+        }
+    }
+}
+
+@Composable
+private fun NaviFillLine(text: String) {
+    Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(Space.x16)) {
+        Box(Modifier.padding(top = Space.x12)) { Dot(Tone.NEUTRAL) }
+        PleosText(text, Pleos.type.bodyMediumNormal, colorResource(R.color.tn_text_secondary), maxLines = 2)
+    }
+}
+
 @Composable
 private fun ReviewCard(r: ReviewData, code: String, vm: ImportViewModel) {
     val t = r.transfer.trip
@@ -235,6 +263,7 @@ private fun ReviewCard(r: ReviewData, code: String, vm: ImportViewModel) {
     val origin = stringResource(when (t.origin) { is Endpoint.Home -> R.string.home; is Endpoint.Current -> R.string.origin_here; is Endpoint.AtPlace -> R.string.place })
     val back = stringResource(if (t.finalDestination is Endpoint.Home) R.string.home else R.string.place)
     val existing = r.decision.existing?.meta?.revision ?: 0
+    val found = remember(r) { TripFindings.of(r.report) }
     val caseText = when (r.decision.case) {
         ImportCase.NEW -> stringResource(R.string.case_new)
         ImportCase.SAME -> stringResource(R.string.case_same)
@@ -256,12 +285,15 @@ private fun ReviewCard(r: ReviewData, code: String, vm: ImportViewModel) {
         val recheck: @Composable () -> Unit = {
             PleosCard(gap = Space.x16) {
                 PleosText(stringResource(R.string.recheck_title), Pleos.type.titleSmall)
+                // Counted: only what a person has to settle. What the navigation fills in follows as quiet lines.
                 Row(horizontalArrangement = Arrangement.spacedBy(Space.x12)) {
-                    Tag(stringResource(R.string.count_conflicts, r.report.conflicts), if (r.report.conflicts > 0) Tone.ERROR else Tone.NEUTRAL)
-                    Tag(stringResource(R.string.count_uncertain, r.report.uncertain), if (r.report.uncertain > 0) Tone.CAUTION else Tone.NEUTRAL)
+                    if (found.clear) Tag(stringResource(R.string.all_clear), Tone.OK)
+                    if (found.conflicts > 0) Tag(stringResource(R.string.count_conflicts, found.conflicts), Tone.ERROR)
+                    if (found.toCheck > 0) Tag(stringResource(R.string.count_uncertain, found.toCheck), Tone.CAUTION)
                 }
                 PleosText(stringResource(R.string.recheck_unchanged), body, secondary, maxLines = 1)
-                r.report.issues.filter { it.severity != Severity.INFO }.take(4).forEach { SeverityLine(it.severity, issueText(it)) }
+                found.person.take(4).forEach { SeverityLine(it.severity, issueText(it)) }
+                NaviFills(found)
             }
         }
         val decide: @Composable () -> Unit = {

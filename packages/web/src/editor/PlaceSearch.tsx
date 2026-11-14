@@ -143,10 +143,14 @@ export function PlaceSearch({
       setUnavailable(false);
     } catch (e) {
       setHits(null);
+      // Three different troubles, three answers (M66): search is switched off here (503), the request never left the
+      // phone (no status: the network), or the server or Kakao could not answer just now. A search that worked and
+      // found nothing is not an error at all — that is the 'no results' line below.
       const off = e instanceof ApiError && e.status === 503;
+      const offline = !(e instanceof ApiError) || e.status === 0;
       setUnavailable(off);
       setSearchError(true);
-      setNote(off ? t('place.search.unavailable') : t('place.search.failed'));
+      setNote(off ? t('place.search.unavailable') : offline ? t('place.search.failed') : t('place.search.busy'));
     } finally {
       setBusy(false);
     }

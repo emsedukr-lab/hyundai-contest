@@ -222,7 +222,7 @@
     <string name="skip">Skip</string>
     <string name="undo_arrival">Undo arrival</string>
     <string name="unskip">Restore %1$s</string>
-    <string name="undo_depart">Reset start point</string>
+    <string name="undo_depart">Start as planned</string>
     <string name="depart_here">Start from here</string>
     <string name="nearby_chargers">Nearby chargers</string>
     <string name="here_checking">Checking your location and the navigation estimate</string>
@@ -274,7 +274,7 @@
     <string name="sum_drive">Driving %1$s</string>
     <string name="sum_lodging">At lodging %1$s</string>
     <string name="sum_home">Home by %1$s</string>
-    <string name="sum_unknown">%1$d legs without a time</string>
+    <string name="sum_unknown">%1$d legs for the navigation to measure</string>
     <string name="tl_start">Start</string>
     <string name="tl_lodging">Lodging</string>
     <string name="tl_return">Return</string>
@@ -285,7 +285,7 @@
     <string name="tl_range">%1$s – %2$s</string>
     <string name="tl_leg">↓ %1$s</string>
     <string name="tl_leg_navi">↓ %1$s · navigation</string>
-    <string name="tl_leg_unknown">Travel time unknown</string>
+    <string name="tl_leg_unknown">↓ Measured by the navigation</string>
     <string name="dur_m">%1$d min</string>
     <string name="dur_h">%1$d h</string>
     <string name="dur_hm">%1$d h %2$d min</string>
@@ -359,8 +359,7 @@
     <string name="measure_working">%1$s of %2$s legs measured · a route briefly appears in the navigation</string>
     <string name="measure_stop">Stop</string>
     <string name="measure_confirm_title">Measure with the navigation?</string>
-    <string name="measure_confirm_body">The navigation comes to the front and shows %1$d routes one after another (about %2$d s). When the route is gone, come back to this app for the result.</string>
-    <string name="measure_confirm_ends">Guidance to \'%1$s\' ends.</string>
+    <string name="measure_confirm_body">The navigation comes to the front and shows %1$d routes briefly (about %2$d s). When it finishes, open 떠날지도 from the app list to come back.</string>
     <string name="measure_confirm_yes">Measure</string>
     <string name="measure_done">%1$s legs measured by the navigation</string>
     <string name="measure_partial">Only %1$s of %2$s legs were measured · please try again</string>
@@ -382,4 +381,16 @@
     <string name="order_reset">Day %1$s is back in the planned order</string>
     <string name="tl_leg_navi_km">↓ %1$s · %2$s km · navigation</string>
     <string name="sum_drive_km">Driving %1$s · %2$s km</string>
+    <!-- M66: findings split by who settles them, why a button is off, the next-trip card's open row -->
+    <string name="navi_fills_title">Filled in by the navigation</string>
+    <string name="navi_fills_legs">Legs without a drive time: %1$d · the navigation measures them</string>
+    <string name="navi_fills_home_both">Start and return \'Home\' use the navigation\'s Home</string>
+    <string name="navi_fills_home_origin">The start \'Home\' uses the navigation\'s Home</string>
+    <string name="navi_fills_home_return">The return \'Home\' uses the navigation\'s Home</string>
+    <string name="why_no_target">No stop left to guide to on this day</string>
+    <string name="why_other_day_both">Mark arrived and Start from here work on today\'s schedule (day %1$d)</string>
+    <string name="why_other_day_depart">Start from here works on today\'s schedule (day %1$d)</string>
+    <string name="why_not_travelling_both">Mark arrived and Start from here work on the days of the trip</string>
+    <string name="why_not_travelling_depart">Start from here works on the days of the trip</string>
+    <string name="measure_confirm_body_guiding">Current guidance ends, and the navigation shows %1$d routes briefly (about %2$d s). When it finishes, open 떠날지도 from the app list to come back.</string>
 </resources>

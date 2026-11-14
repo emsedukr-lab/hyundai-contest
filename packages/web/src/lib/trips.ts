@@ -92,12 +92,19 @@ export async function newDoc(plan: Trip, home: Home | null = null): Promise<Trip
   return { tripId: plan.tripId, revision: plan.revision, updatedAt: plan.updatedAt, planHash: await planHash(clean), plan: clean, home };
 }
 
-/** Saves an edited plan: the revision goes up only when the plan's content actually changed. */
-export async function savePlan(doc: TripDoc, plan: Trip, home: Home | null): Promise<TripDoc> {
+/**
+ * Saves an edited plan: the revision goes up only when the plan's content actually changed.
+ *
+ * The revision is what the car compares (newer, older, or the same number with other content = diverged), so it must
+ * go up whenever content changes after a version may have left the phone. The editor saves on its own every few
+ * hundred milliseconds; `sameRevision` lets those saves share one number — the first change after a version could have
+ * left bumps it, the saves that follow in the same sitting keep it (new hash and time, same number).
+ */
+export async function savePlan(doc: TripDoc, plan: Trip, home: Home | null, opts: { sameRevision?: boolean } = {}): Promise<TripDoc> {
   const clean = { ...plan, tripId: doc.tripId, home: null };
   const hash = await planHash(clean);
   if (hash === doc.planHash) return { ...doc, home, plan: { ...clean, revision: doc.revision, updatedAt: doc.updatedAt } };
-  const revision = doc.revision + 1;
+  const revision = opts.sameRevision ? doc.revision : doc.revision + 1;
   const updatedAt = nowIso();
   return { tripId: doc.tripId, revision, updatedAt, planHash: hash, plan: { ...clean, revision, updatedAt }, home };
 }

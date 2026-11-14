@@ -137,8 +137,8 @@
   flex: 1 1 auto;
   min-width: 0;
   margin: 0;
-  font-size: 18px;
-  line-height: 26px;
+  font-size: 17px;
+  line-height: 25px;
   font-weight: 600;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -148,8 +148,8 @@
   min-height: 64px;
 }
 .tn-topbar.is-large h1 {
-  font-size: 24px;
-  line-height: 31px;
+  font-size: 22px;
+  line-height: 29px;
   font-weight: 700;
 }
 .tn-actions {
@@ -302,8 +302,8 @@
 }
 .tn-section h2 {
   margin: 0;
-  font-size: 17px;
-  line-height: 25px;
+  font-size: 15px;
+  line-height: 23px;
   font-weight: 600;
 }
 
@@ -368,9 +368,9 @@
   overflow-wrap: anywhere;
 }
 .tn-row-title {
-  font-size: 17px;
-  line-height: 25px;
-  font-weight: 500;
+  font-size: 15px;
+  line-height: 23px;
+  font-weight: 600;
 }
 .tn-row-sub {
   font-size: 13px;
@@ -476,9 +476,9 @@
  * paints hover and press as an image over the face (the theme's overlay tokens); each variant sets its own.
  */
 .astryx-button {
-  font-size: 17px;
-  line-height: 21px;
-  font-weight: 700;
+  font-size: 15px;
+  line-height: 19px;
+  font-weight: 600;
   --_button-radius: 14px;
 }
 .astryx-button[data-size='sm'] {
@@ -488,6 +488,9 @@
   font-weight: 600;
 }
 .astryx-button[data-size='lg'] {
+  font-size: 17px;
+  line-height: 21px;
+  font-weight: 700;
   --_button-radius: 16px;
 }
 .astryx-button[data-variant='primary'] {
@@ -738,8 +741,8 @@ div:has(> .astryx-switch) {
 }
 .tn-scan-title {
   flex: 1 1 auto;
-  font-size: 17px;
-  line-height: 25px;
+  font-size: 15px;
+  line-height: 23px;
   font-weight: 600;
 }
 .tn-scan-close {
@@ -950,4 +953,31 @@ div:has(> .astryx-switch) {
   clip-path: inset(50%);
   white-space: nowrap;
   border: 0;
+}
+
+/* ---------- M66: UX fixes ---------- */
+
+/* The 40px header action (새 여행) is 44 to the touch. */
+.tn-headbtn {
+  position: relative;
+}
+.tn-headbtn::after {
+  content: '';
+  position: absolute;
+  inset: -2px 0;
+}
+/* Two actions that sit side by side where both labels fit and stack at full width where they do not (320px). */
+.tn-btnrow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.tn-btnrow > * {
+  flex: 1 1 auto;
+}
+/* A pushed screen whose code is still arriving: the canvas, nothing else. */
+.tn-route-wait {
+  display: block;
+  min-height: 100dvh;
+  background: var(--tn-canvas);
 }

@@ -82,3 +82,10 @@ export const chipLabel = (hhmm: string) => {
   const [h, m] = hhmm.split(':').map(Number);
   return `${clockHour(h)}:${String(m).padStart(2, '0')}`;
 };
+
+/**
+ * "마지막 전송 11월 14일 (토)" for a trip row — and, when the trip was changed since (its revision moved on), that it
+ * was. The version numbers themselves stay out of the lists (M66); the pairing page shows them where two versions meet.
+ */
+export const sentLabel = (sent: { revision: number; at: number }, currentRevision: number) =>
+  t(sent.revision === currentRevision ? 'home.lastSend' : 'home.lastSendChanged', { date: dateLabel(dayOf(sent.at)) });

@@ -300,15 +300,14 @@ private fun Bar(tag: String, name: String, time: String?, quietTime: Boolean = f
     }
 }
 
-/** '↓ 15분' between two places (the phone's value); '↓ 15분 · 6.3km · 내비' when the car's navigation measured it; an orange dot when nobody has. */
+/** '↓ 15분' between two places (the phone's value); '↓ 15분 · 6.3km · 내비' when the car's navigation measured it; a quiet '내비가 재요' when nobody has yet (the navigation fills it — TripFindings). */
 @Composable
 private fun LegRow(t: LocalTrip, day: Int, k: Int) {
     val leg = TripValidator.leg(t.view, t.overlay, day, k)
     RailRow(marker = null) {
         Row(Modifier.heightIn(min = Space.x48).padding(start = Space.x16), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.x12)) {
             if (leg == null) {
-                Dot(Tone.CAUTION, Space.x12)
-                PleosText(stringResource(R.string.tl_leg_unknown), Pleos.type.bodySmallStrong, maxLines = 1)
+                PleosText(stringResource(R.string.tl_leg_unknown), Pleos.type.bodySmall, colorResource(R.color.tn_text_secondary), maxLines = 1)
             } else {
                 val metres = leg.metres
                 PleosText(

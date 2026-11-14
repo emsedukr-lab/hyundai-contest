@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { AlertDialog } from '@astryxdesign/core/AlertDialog';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
@@ -14,8 +14,6 @@ import { DayTimeline } from '../editor/DayTimeline';
 import { FasterOrderCard } from '../editor/FasterOrderCard';
 import { LaterStartCard } from '../editor/LaterStartCard';
 import { NotesContext } from '../editor/NotesContext';
-import { RecommendDialog } from '../editor/RecommendDialog';
-import { ShareDialog } from '../editor/ShareDialog';
 import { EndSheet } from '../editor/sheets/EndSheet';
 import { LegSheet } from '../editor/sheets/LegSheet';
 import { PlaceSheet, type Notice } from '../editor/sheets/PlaceSheet';
@@ -25,10 +23,14 @@ import { TripInfoPanel } from '../editor/TripInfoPanel';
 import { TripSetup } from '../editor/TripSetup';
 import { VisitDialog } from '../editor/VisitDialog';
 import { TRIPS_CHANGED, trips } from '../lib/db';
+import { dayTimeGap, type TimeGap } from '../lib/dayNote';
 import { minutesLabel, shortDate } from '../lib/format';
 import { t } from '../lib/i18n';
 import { getHere, locate, locateIfAllowed, onHere } from '../lib/here';
+import { SERVER_ORIGIN } from '../lib/platform';
+import { carQrTarget } from '../lib/qrLink';
 import { navigate } from '../lib/router';
+import { sendIntent } from '../lib/sendIntent';
 import { applyFaster, daySig, dismiss, findFaster, isDismissed, type FasterOrder } from '../lib/fasterOrder';
 import { laterSig, laterStart, withDeparture } from '../lib/laterStart';
 import { cleanNotes, setNote, type TripNotes } from '../lib/notes';
@@ -36,6 +38,11 @@ import { allRuns, applyRun, cleanLegMeters, daySummary, emptyRuns, fetchRun, kmL
 import { defaultHome } from '../lib/settings';
 import { cleanLodgingTbd, cleanSetup, emptyPlan, legKeys, newDoc, nightsLabel, nowIso, placeOf, relinkLegs, rememberLegs, savePlan, unassign, unassignedVisits, visitOf, type LegBook, type TripDoc, type TripSetupState } from '../lib/trips';
 import '../editor/timeline.css';
+
+// Opened from the ⋯ menu, rarely and never first: each loads when asked for (the route engine comes with 경로 추천).
+const RecommendDialog = lazy(() => import('../editor/RecommendDialog').then((m) => ({ default: m.RecommendDialog })));
+const QrScanner = lazy(() => import('../components/QrScanner').then((m) => ({ default: m.QrScanner })));
+const ShareDialog = lazy(() => import('../editor/ShareDialog').then((m) => ({ default: m.ShareDialog })));
 
 /** Which bottom sheet is open (one at a time; dialogs such as place details may stack above it). */
 type SheetState =
@@ -61,12 +68,16 @@ const STUCK_AT = 56 + 56 + 8;
 /** The plan as stored and shared: a blank name becomes the default one (the transfer needs a name). */
 const named = (p: Trip): Trip => (p.name.trim() ? p : { ...p, name: t('trip.defaultName') });
 
-/** Writes the trip to this phone (a new revision only when its content changed) and tells listening lists. */
-async function persist(doc: TripDoc, plan: Trip, home: Home | null, notes: TripNotes, legMeters: Record<string, number>, lodgingTbd: number[], setup: TripSetupState | null, fresh = false): Promise<TripDoc> {
+/**
+ * Writes the trip to this phone and tells listening lists. The revision goes up only when the plan's content changed,
+ * and — the editor saves on its own — at most once per sitting: `sameRevision` keeps the number for a save that follows
+ * a bump no one else has seen yet (see `published` in the editor).
+ */
+async function persist(doc: TripDoc, plan: Trip, home: Home | null, notes: TripNotes, legMeters: Record<string, number>, lodgingTbd: number[], setup: TripSetupState | null, fresh = false, sameRevision = false): Promise<TripDoc> {
   // Notes and distances are phone-only and outside the plan's hash: changing only those keeps the version the car knows.
   // A trip saved for the first time is v1, whatever was typed before (its blank starting doc was never stored).
   const next: TripDoc = {
-    ...(fresh ? await newDoc({ ...named(plan), tripId: doc.tripId, revision: 1, updatedAt: nowIso() }, home) : await savePlan(doc, named(plan), home)),
+    ...(fresh ? await newDoc({ ...named(plan), tripId: doc.tripId, revision: 1, updatedAt: nowIso() }, home) : await savePlan(doc, named(plan), home, { sameRevision })),
     notes: cleanNotes(notes, new Set(plan.places.map((p) => p.placeRef))),
     legMeters: cleanLegMeters(legMeters, plan),
     lodgingTbd: cleanLodgingTbd(lodgingTbd, plan),
@@ -86,9 +97,10 @@ const shortPeriod = (start: string, end: string) => {
 /**
  * The trip editor as one page (M30): 여행 정보, then every day as a route from 출발 to 숙소/귀가, one after another in a
  * single scroll. Each section's header sticks under the top bar while its section is on screen, so you always see which
- * part you are in. Places are added with the floating + button to the whole trip (M40: a day is set in the place's details;
- * its badge counts the places on no day yet). Every input opens in a bottom sheet; problems show on the node they concern. Below: one action — 저장 while
- * there are unsaved edits, then 경로 보고 차로 보내기. Leaving saves on its own (M29).
+ * part you are in. Places are added with the + button in the bottom bar to the whole trip (M40: a day is set in the place's details;
+ * its badge counts the places on no day yet). Every input opens in a bottom sheet; problems show on the node they concern. Below: one action,
+ * 경로 보고 차로 보내기. Edits save on their own (M66): shortly after each change, at once when the setup finishes, and on
+ * the way out; the top bar says 저장 중 / 저장됨.
  */
 export function TripEditorPage({ tripId }: { tripId: string | null }) {
   const [doc, setDoc] = useState<TripDoc | null>(null);
@@ -99,6 +111,9 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
   const [here, setHereState] = useState(getHere);
   const [locating, setLocating] = useState(false);
   const [dirty, setDirty] = useState(false);
+  /** On this phone already (an opened trip, or a new one after its first save): decides what the menu offers. */
+  const [stored, setStored] = useState(!!tripId);
+  const [saveFailed, setSaveFailed] = useState(false);
   /** Phone-only memos and lodging check-in/out, by place (saved with the trip, never sent to the car). */
   const [notes, setNotes] = useState<TripNotes>({});
   // Closing a 늦게 출발하기 card is remembered outside React (like 더 빠른 순서); this only makes the screen look again.
@@ -128,6 +143,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [recommending, setRecommending] = useState(false);
   const [sharing, setSharing] = useState(false);
+  const [scanning, setScanning] = useState(false);
   /** Travel times typed this session by pair of places, so reordering does not throw them away. */
   const book = useRef<LegBook>(new Map());
   /** M54 더 빠른 순서: a confirmed shorter order per day; each shape of a day is checked once per session. */
@@ -148,6 +164,15 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
   const lastSaved = useRef<{ plan: Trip | null; notes: TripNotes | null; legMeters: Record<string, number> | null; lodgingTbd: number[] | null }>({ plan: null, notes: null, legMeters: null, lodgingTbd: null });
   const unchangedSinceSave = () =>
     latest.current.plan === lastSaved.current.plan && latest.current.notes === lastSaved.current.notes && latest.current.legMeters === lastSaved.current.legMeters && latest.current.lodgingTbd === lastSaved.current.lodgingTbd;
+  /**
+   * The newest revision something outside this editor may hold: what was stored when the trip was opened, and again
+   * whenever the trip can leave (the page is hidden — another tab can send it — or 공유 / 차로 보내기 opens). The car tells
+   * versions apart by this number, so the first change after such a moment takes a new one; autosaves in between share it.
+   */
+  const published = useRef(0);
+  const sealRevision = () => {
+    if (!fresh.current) published.current = latest.current.doc?.revision ?? published.current;
+  };
   /** Saves run one after another so two of them never race on the same revision. */
   const queue = useRef<Promise<unknown>>(Promise.resolve());
   const saveNow = (): Promise<TripDoc | null> => {
@@ -156,13 +181,32 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
       if (deleting.current || !now.dirty || !now.doc || !now.plan) return null;
       now.dirty = false;
       lastSaved.current = { plan: now.plan, notes: now.notes, legMeters: now.legMeters, lodgingTbd: now.lodgingTbd };
-      const next = await persist(now.doc, now.plan, home, now.notes, now.legMeters, now.lodgingTbd, now.setup, fresh.current);
+      // One revision per sitting: once this editor has bumped it past the last number that may have left the phone, the saves that follow keep it.
+      const next = await persist(now.doc, now.plan, home, now.notes, now.legMeters, now.lodgingTbd, now.setup, fresh.current, now.doc.revision > published.current);
       fresh.current = false;
       latest.current.doc = next; // edits made while saving stay marked as unsaved
       return next;
     });
     queue.current = run.catch(() => undefined);
     return run;
+  };
+  /** Saves what is unsaved and brings the screen in line: the stored doc, the 저장됨 state, the new trip's own address. */
+  const flush = async (): Promise<TripDoc | null> => {
+    let next: TripDoc | null;
+    try {
+      next = await saveNow();
+    } catch {
+      setSaveFailed(true); // storage refused (full, or a private window): the next edit tries again
+      return null;
+    }
+    if (!next) return null;
+    setSaveFailed(false);
+    setDoc(next);
+    setStored(true);
+    if (unchangedSinceSave()) setDirty(false); // an edit or a Kakao fill that landed meanwhile is still unsaved
+    // A new trip now has an address; keep it on this history entry without re-mounting the editor.
+    if (location.pathname === '/trips/new') history.replaceState(null, '', `/trips/${next.tripId}`);
+    return next;
   };
 
   useEffect(() => {
@@ -176,6 +220,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
       setLodgingTbdState(cleanLodgingTbd(d.lodgingTbd, d.plan));
       // A brand-new trip starts its step-by-step setup; a saved one resumes where it was (or is done).
       setSetup(tripId ? cleanSetup(d.setup) : { done: false, step: 1 });
+      published.current = tripId ? d.revision : 0;
       book.current = new Map();
       rememberLegs(d.plan, book.current);
       setPlan(d.plan);
@@ -205,17 +250,20 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
     };
   }, [dayCount]);
 
-  // Auto-save: leaving by browser back unmounts the editor; closing or switching away hides the page.
+  // Auto-save (M66): a moment after the last change, so nothing waits for a button. `urgent` skips the wait — the
+  // setup's last step sets it, so a trip is on the phone the instant 이 일정으로 시작 is pressed.
+  const urgent = useRef(false);
   useEffect(() => {
-    const hide = () => {
-      void saveNow().then((next) => {
-        if (!next) return;
-        setDoc(next);
-        if (unchangedSinceSave()) setDirty(false); // a fill that landed meanwhile is still unsaved
-        // A new trip now has an address; keep it without re-mounting the editor while the user is away.
-        if (location.pathname === '/trips/new') history.replaceState(null, '', `/trips/${next.tripId}`);
-      });
-    };
+    if (!dirty || !plan) return;
+    const timer = setTimeout(() => void flush(), urgent.current ? 0 : 600);
+    urgent.current = false;
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dirty, plan, notes, legMeters, lodgingTbd, setup]);
+
+  // …and on the way out: leaving by browser back unmounts the editor; closing or switching away hides the page.
+  useEffect(() => {
+    const hide = () => void flush().then(sealRevision); // while hidden, another tab may send this trip
     const onVisibility = () => document.visibilityState === 'hidden' && hide();
     document.addEventListener('visibilitychange', onVisibility);
     window.addEventListener('pagehide', hide);
@@ -493,23 +541,9 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
     },
   };
 
-  const save = async () => {
-    const wasDirty = dirty;
-    latest.current = { doc, plan, notes, legMeters, lodgingTbd, setup, dirty: true };
-    const next = (await saveNow()) ?? doc;
-    setDoc(next);
-    if (unchangedSinceSave()) {
-      setPlan(next.plan);
-      setDirty(false);
-    }
-    // A memo or distance change keeps the version (phone-only) but was still saved.
-    setNotice({ tone: 'success', text: !wasDirty && tripId ? t('editor.noChanges') : t('editor.saved', { revision: next.revision }) });
-    if (!tripId) navigate(`/trips/${next.tripId}`, true);
-  };
-
   /** Makes a copy of the current trip (places, days, home and all) as a new trip and opens it. The original is untouched. */
   const duplicate = async () => {
-    if (dirty) await save(); // keep unsaved edits in the original too, not only in the copy
+    await flush(); // keep unsaved edits in the original too, not only in the copy
     const clone: Trip = { ...structuredClone(plan), tripId: crypto.randomUUID(), name: t('trip.copyName', { name: named(plan).name }).slice(0, 60), revision: 1, updatedAt: nowIso() };
     // The copy keeps its memos and distances (same places, same legs).
     const nd: TripDoc = { ...(await newDoc(clone, home)), notes: cleanNotes(notes), legMeters: cleanLegMeters(legMeters, clone), lodgingTbd: cleanLodgingTbd(lodgingTbd, clone) };
@@ -519,19 +553,23 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
 
   /** Leave the editor (back to the trips tab, or to 설정 to change a start place); unsaved edits are saved first. */
   const leave = async (to = '/') => {
-    const next = await saveNow();
-    // A new trip now exists under its own address: put that on this history entry so Back reopens it, not a blank trip.
-    if (next && location.pathname === '/trips/new') history.replaceState(null, '', `/trips/${next.tripId}`);
+    await flush(); // a new trip now exists under its own address, so Back reopens it, not a blank trip
     navigate(to);
   };
   const close = () => setSheet(null);
+  /** 공유 and 차로 보내기 hand the trip out: what is on the phone must be what is on screen, under a number of its own. */
+  const handOut = async (open: () => void) => {
+    await flush();
+    sealRevision();
+    open();
+  };
 
   const menuItems = [
     { label: t('recommend.button'), onClick: () => setRecommending(true) },
     { label: t('tl.recalc'), onClick: () => void refreshAll() },
-    ...(tripId ? [{ label: t('trip.duplicate'), onClick: () => void duplicate() }] : []),
-    { label: t('share.button'), onClick: () => setSharing(true) },
-    ...(tripId ? [{ type: 'divider' as const }, { label: t('editor.delete'), onClick: () => setConfirmDelete(true) }] : []),
+    ...(stored ? [{ label: t('trip.duplicate'), onClick: () => void duplicate() }] : []),
+    { label: t('share.button'), onClick: () => void handOut(() => setSharing(true)) },
+    ...(stored ? [{ type: 'divider' as const }, { label: t('editor.delete'), onClick: () => setConfirmDelete(true) }] : []),
   ];
 
   // Top bar (M53): only the dates and n박 n일. The name lives in the 여행 정보 card; tapping the dates still goes to it.
@@ -549,12 +587,49 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
     </button>
   );
 
-  const cta =
-    dirty || !tripId ? (
-      <Button label={t('editor.save')} variant="primary" size="lg" width="100%" onClick={save} />
-    ) : (
-      <Button label={t('tl.send')} variant="primary" size="lg" width="100%" onClick={() => setSheet({ kind: 'send' })} />
-    );
+  // One action below, always the same (M66): the trip saves on its own, so there is no 저장 to press first.
+  // Beside it, 장소 추가 (the + that used to float over the cards): to the whole trip — a place's day is set in its details.
+  // The badge counts the places on no day yet.
+  const cta = (
+    <>
+      <button
+        type="button"
+        className="tl-fab is-secondary"
+        onClick={() => setSheet({ kind: 'place' })}
+        aria-label={`${t('tl.placeSheet')}${pool.length ? ` · ${t('tl.pool', { n: pool.length })}` : ''}${poolNeedsCare ? ` · ${t('tl.fixedPool')}` : ''}`}>
+        <PlusIcon />
+        {pool.length > 0 && (
+          <span className={`tl-fab-badge${poolNeedsCare ? ' is-warn' : ''}`} aria-hidden="true">
+            {pool.length}
+          </span>
+        )}
+      </button>
+      <Button label={t('tl.send')} variant="primary" size="lg" width="100%" onClick={() => void handOut(() => setSheet({ kind: 'send' }))} />
+    </>
+  );
+  // The quiet save state beside the menu: 저장 중 while a change waits for its save, 저장됨 once it is on the phone.
+  const saveState = saveFailed ? t('editor.saveFailed') : dirty ? t('editor.saving') : stored ? t('editor.savedState') : '';
+
+  /**
+   * What would give a day its missing times, with the action that does it — one note at the top of the day, and the
+   * same words in the sheet of the leg concerned. Nothing is guessed: a leg no one on the phone can time waits for the car.
+   */
+  const timeHelp = (dayIndex: number): (TimeGap & { text: string; action?: string; busy?: boolean; onAction?: () => void }) | null => {
+    const gap = dayTimeGap(plan, home, dayIndex, askableLegs, liveFrom?.dayIndex === dayIndex ? liveFrom.minute : undefined);
+    if (!gap) return null;
+    switch (gap.kind) {
+      case 'home':
+        return { ...gap, text: t('tl.note.home'), action: t('tl.legSetHome'), onAction: () => void leave('/settings/place/home') };
+      case 'here':
+        return { ...gap, text: t('tl.note.here'), action: t('tl.legLocate'), busy: locating, onAction: () => void locateNow() };
+      case 'depart':
+        return { ...gap, text: t('tl.note.depart'), action: t('tl.note.departAction'), onAction: () => setSheet({ kind: 'start', day: dayIndex }) };
+      case 'pending':
+        return { ...gap, text: t('tl.note.pending'), action: t('tl.recalcShort'), busy: refreshing, onAction: () => void refreshAll() };
+      default:
+        return { ...gap, text: t('tl.note.car') };
+    }
+  };
 
   return (
     <NotesContext.Provider value={notesApi}>
@@ -563,6 +638,9 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
       onBack={() => leave()}
       actions={
         <>
+          <span className="tl-savestate" role="status" aria-live="polite">
+            {saveState}
+          </span>
           <DropdownMenu
             items={menuItems}
             presentation="popover"
@@ -634,6 +712,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
               setLegMeters(merged);
             }
             setSetup(null); // done: from here the trip shows its days
+            urgent.current = true; // on the phone at once, not after the usual pause
             setDirty(true);
             setInfoOpen(false);
             window.scrollTo({ top: 0 });
@@ -690,7 +769,6 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
                       ) : (
                         <span>{tbdNights > 0 ? t('tl.lodgingCountTbd', { set: nightCount - tbdNights, nights: nightCount, tbd: tbdNights }) : t('tl.lodgingCount', { set: nightCount, nights: nightCount })}</span>
                       ))}
-                    {tripId && <span className="tl-infosum-rev">{`v${doc.revision}`}</span>}
                   </span>
                 </button>
               </div>
@@ -743,8 +821,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
                 />
               );
             })()}
-            {/* The last day leaves room so its end card can scroll clear of the floating + button. */}
-            <div style={{ paddingTop: 4, paddingBottom: d.dayIndex === plan.days[plan.days.length - 1].dayIndex ? 88 : 8 }}>
+            <div style={{ paddingTop: 4, paddingBottom: 8 }}>
               <DayTimeline
                 plan={plan}
                 home={home}
@@ -758,25 +835,13 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
                 onRemoveStop={removeStop}
                 legMeters={legMeters}
                 startAt={liveFrom?.dayIndex === d.dayIndex ? liveFrom.minute : undefined}
-              askable={askableLegs}
+                askable={askableLegs}
+                note={timeHelp(d.dayIndex)}
               />
             </div>
           </section>
         ))}
 
-        {/* Add a place: to the whole trip (its day is set in the place's details). The badge counts places on no day yet. */}
-        <button
-          type="button"
-          className={`tl-fab${notice?.undo ? ' is-raised' : ''}`}
-          onClick={() => setSheet({ kind: 'place' })}
-          aria-label={`${t('tl.placeSheet')}${pool.length ? ` · ${t('tl.pool', { n: pool.length })}` : ''}${poolNeedsCare ? ` · ${t('tl.fixedPool')}` : ''}`}>
-          <PlusIcon />
-          {pool.length > 0 && (
-            <span className={`tl-fab-badge${poolNeedsCare ? ' is-warn' : ''}`} aria-hidden="true">
-              {pool.length}
-            </span>
-          )}
-        </button>
         </>
       )}
 
@@ -794,12 +859,14 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
           refreshing={refreshing}
           onRecalc={() => void refreshAll()}
           // The trip's first leg, when its start is not a point yet: say what would time it and offer that.
-          help={
-            sheet.day !== 1 || sheet.k !== 0 || askableLegs.has(legKeys(plan, 1)[0] ?? '') ? undefined
-            : plan.origin.kind === 'CURRENT' ? { text: t('tl.legFromHere'), action: t('tl.legLocate'), busy: locating, onAction: () => void locateNow() }
-            : plan.origin.kind === 'HOME' && !home ? { text: t('tl.legNeedsHome'), action: t('tl.legSetHome'), onAction: () => void leave('/settings/place/home') }
-            : undefined
-          }
+          help={(() => {
+            const h = sheet.day === 1 && sheet.k === 0 ? timeHelp(1) : null;
+            const { action, onAction } = h ?? {};
+            if (!h || h.k !== 0 || !action || !onAction) return undefined;
+            if (h.kind === 'here') return { text: t('tl.legFromHere'), action, busy: h.busy, onAction };
+            if (h.kind === 'home') return { text: t('tl.legNeedsHome'), action, onAction };
+            return undefined;
+          })()}
         />
       )}
       {sheet?.kind === 'end' && <EndSheet isOpen onClose={close} plan={plan} home={home} dayIndex={sheet.day} onChange={edit} onOpenPlace={setOpenPlace} onOpenSettings={() => leave('/settings')} />}
@@ -807,11 +874,37 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
         <PlaceSheet isOpen onClose={close} plan={plan} onChange={edit} onOpenPlace={setOpenPlace} onNotice={setNotice} />
       )}
       {sheet?.kind === 'map' && <SendSheet key={`map${sheet.day}`} isOpen onClose={close} plan={plan} home={home} dayIndex={sheet.day} mode="map" />}
-      {sheet?.kind === 'send' && <SendSheet key={`send${targetDay}`} isOpen onClose={close} plan={plan} home={home} dayIndex={targetDay} mode="send" />}
+      {sheet?.kind === 'send' && (
+        <SendSheet key={`send${targetDay}`} isOpen onClose={close} plan={plan} home={home} dayIndex={targetDay}
+          mode="send"
+          onScan={() => {
+            sendIntent.set(doc.tripId); // the pairing page opens with this trip chosen
+            setSheet(null);
+            setScanning(true);
+          }}
+        />
+      )}
+      {scanning && (
+        <Suspense fallback={null}>
+          <QrScanner
+            onClose={() => setScanning(false)}
+            onResult={(text) => {
+              const target = carQrTarget(text, SERVER_ORIGIN);
+              if (!target) return false;
+              setScanning(false);
+              navigate(target); // leaving saves once more; the pairing page reads the trip from this phone
+              return true;
+            }}
+          />
+        </Suspense>
+      )}
 
       <VisitDialog plan={plan} placeRef={openPlace} onChange={edit} onUnassign={removeStop} onError={fail} onClose={() => setOpenPlace(null)} />
-      <RecommendDialog isOpen={recommending} plan={plan} home={home} book={book.current} onApply={edit} onClose={() => setRecommending(false)} />
-      <ShareDialog isOpen={sharing} doc={{ ...doc, plan: named(plan), home }} onClose={() => setSharing(false)} />
+      {/* Loaded when first opened; nothing stands in while the few KB arrive (design/TOSS.md: no skeleton). */}
+      <Suspense fallback={null}>
+        {recommending && <RecommendDialog isOpen plan={plan} home={home} book={book.current} onApply={edit} onClose={() => setRecommending(false)} />}
+        {sharing && <ShareDialog isOpen doc={{ ...doc, plan: named(plan), home }} onClose={() => setSharing(false)} />}
+      </Suspense>
       <AlertDialog
         isOpen={confirmDelete}
         onOpenChange={setConfirmDelete}

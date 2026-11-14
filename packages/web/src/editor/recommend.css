@@ -92,3 +92,10 @@
   line-height: 20px;
   color: var(--color-text-secondary);
 }
+/* Why some stops of a day have no time (M66): one quiet line under the day's title. */
+.rc-why {
+  margin: -4px 0 0;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--color-text-secondary);
+}

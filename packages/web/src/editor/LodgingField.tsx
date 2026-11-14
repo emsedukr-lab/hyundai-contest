@@ -14,7 +14,23 @@ import { PlaceSearch } from './PlaceSearch';
  * opened on demand, and a chip to put it on the empty nights after (M49). Empty: a search field ("1일차 숙소"), 미정, and
  * the trip's lodgings as chips, the previous night's first (M49).
  */
-export function LodgingField({ plan, dayIndex, onChange, showNotes = true }: { plan: Trip; dayIndex: number; onChange: (p: Trip) => void; showNotes?: boolean }) {
+export function LodgingField({
+  plan,
+  dayIndex,
+  onChange,
+  showNotes = true,
+  isError = true,
+  onLeave,
+}: {
+  plan: Trip;
+  dayIndex: number;
+  onChange: (p: Trip) => void;
+  showNotes?: boolean;
+  /** An empty night reads as an error (red helper); false = the same words as a neutral hint (a new trip not yet tried, M66). */
+  isError?: boolean;
+  /** The empty field lost the focus: from now on it may show as an error. */
+  onLeave?: () => void;
+}) {
   const { notes, lodgingTbd, setLodgingTbd } = useNotes();
   const tbd = lodgingTbd.includes(dayIndex);
   /** Choosing a lodging ends 미정 for that night. */
@@ -59,7 +75,11 @@ export function LodgingField({ plan, dayIndex, onChange, showNotes = true }: { p
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
       {/* One line: the search, and 미정 right beside it (M43). */}
-      <div className="tl-lodging-line">
+      <div
+        className="tl-lodging-line"
+        onBlur={(e) => {
+          if (!e.currentTarget.contains(e.relatedTarget)) onLeave?.();
+        }}>
         <div className="tl-lodging-search">
           <PlaceSearch
             compact
@@ -80,8 +100,8 @@ export function LodgingField({ plan, dayIndex, onChange, showNotes = true }: { p
       </div>
       {/* 이어서 묵기 (M49): the trip's lodgings as chips, the previous night's first. */}
       <LodgingSuggest plan={plan} dayIndex={dayIndex} onChange={onChange} />
-      {/* toss text-field error: the helper line in red under the field, until a lodging or 미정 is chosen. */}
-      {!tbd && <span className="tl-required-text">{t('tl.lodgingRequired')}</span>}
+      {/* toss text-field helper under the field until a lodging or 미정 is chosen: red once it is an error, neutral before. */}
+      {!tbd && <span className={isError ? 'tl-required-text' : 'tl-meta'}>{t('tl.lodgingRequired')}</span>}
     </div>
   );
 }

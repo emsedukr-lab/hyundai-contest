@@ -4,22 +4,19 @@ import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { HStack, StackItem, VStack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
 import { useEffect, useMemo, useState } from 'react';
-import { hhmm, timeline, type Home, type Trip } from '@tteonaljido/shared';
+import type { Home, Trip } from '@tteonaljido/shared';
 import { t } from '../lib/i18n';
-import { Tag } from '../components/shell/Tag';
-import './recommend.css';
-import { placeOf, relinkLegs, visitOf, type LegBook } from '../lib/trips';
+import { relinkLegs, type LegBook } from '../lib/trips';
 import { favorites } from '../lib/db';
 import type { FavoritePlace } from '../lib/favorites';
-import { dateLabel, minutesLabel, timeLabel } from '../lib/format';
-import { laterStart } from '../lib/laterStart';
-import { missingLodgingDays, recommend, summarizeRecommendation, type RecommendInsights, type RecommendationDiff } from '../lib/recommend';
+import { missingLodgingDays, recommend, summarizeRecommendation } from '../lib/recommend';
+import { RecommendPreview } from './RecommendPreview';
 import { useNotes } from './NotesContext';
 
 /**
  * Previews an auto route recommendation and lets the user apply or cancel (요청: "확인·수정 여지"). If a night has no
  * lodging it first offers to set it, so the day can be arranged to end near the stay. Applying hands the proposed plan
- * to the editor's `edit()`, which re-links travel times and marks the plan dirty — nothing is saved until Save.
+ * to the editor's `edit()`, which re-links travel times; the editor then saves it like any other edit.
  */
 export function RecommendDialog({
   isOpen,
@@ -81,7 +78,7 @@ export function RecommendDialog({
             </Text>
           )}
 
-          <RecommendPreview display={display} diff={diff} insights={found?.insights} />
+          <RecommendPreview display={display} home={home} diff={diff} insights={found?.insights} />
 
           <HStack gap={2}>
             <Button label={t('common.cancel')} variant="secondary" onClick={close} />
@@ -101,81 +98,5 @@ export function RecommendDialog({
         </VStack>
       )}
     </Dialog>
-  );
-}
-
-/**
- * The proposed days, stop by stop with their times and what changed — shared by this dialog and the new-trip setup (M43).
- * One list per day (rows on hairlines, not a card per stop). A time is shown where it is known; how many are not is
- * said once under the day's title. `showNew` marks the places a recommendation placed — off in the new-trip setup,
- * where every place is new. What the engine noticed (long gaps, check-in and check-out) follows as plain lines.
- */
-export function RecommendPreview({ display, diff, insights, showNew = true }: { display: Trip; diff: RecommendationDiff; insights?: RecommendInsights; showNew?: boolean }) {
-  const clock = (m: number) => (m < 0 ? t('days.prevDay') : hhmm(m));
-  const { notes: tripNotes } = useNotes();
-  const notes = [
-    // Another way to use a long wait before a booking: leave later (the day view offers it as a card once this is applied).
-    ...display.days.flatMap((d) => {
-      const s = laterStart(display, d.dayIndex, tripNotes);
-      return s ? [{ key: `later-${d.dayIndex}`, text: t('recommend.later', { day: d.dayIndex, time: timeLabel(s.to), name: placeOf(display, visitOf(display, s.visitId)?.placeRef ?? '')?.name ?? '', fixed: timeLabel(s.fixedTime) }) }] : [];
-    }),
-    ...(insights?.gaps ?? []).map((g) => ({
-      key: `gap-${g.dayIndex}-${g.beforeVisitId}`,
-      text: t('recommend.gap', { day: g.dayIndex, name: g.beforeName, duration: minutesLabel(g.minutes) }) + (g.suggestion ? ` · ${t('recommend.gap.suggest', { name: g.suggestion.name })}` : ''),
-    })),
-    ...(insights?.lodgingNotes ?? []).map((n) => ({
-      key: `lodging-${n.dayIndex}-${n.kind}`,
-      text: t(n.kind === 'ARRIVES_BEFORE_CHECKIN' ? 'recommend.checkin' : 'recommend.checkout', { day: n.dayIndex, time: n.time ? timeLabel(n.time) : '', duration: minutesLabel(n.minutes) }),
-    })),
-  ];
-  return (
-    <VStack gap={4}>
-      {insights && insights.hardViolations > 0 && <Banner status="warning" title={t('recommend.hard', { n: insights.hardViolations })} />}
-      {display.days.map((d) => {
-        const times = timeline(display, d.dayIndex);
-        const untimed = times.filter((st) => st.arrive === null).length;
-        return (
-          <section className="rc-day" key={d.dayIndex}>
-            <header className="rc-head">
-              <Text type="label">{`${t('common.day', { day: d.dayIndex })} · ${dateLabel(d.date)}`}</Text>
-              {untimed > 0 && <span className="rc-meta">{t('recommend.untimed', { n: untimed })}</span>}
-            </header>
-            {d.visitOrder.length === 0 ? (
-              <p className="rc-empty">{t('days.empty')}</p>
-            ) : (
-              <ol className="rc-list">
-                {d.visitOrder.map((id, k) => {
-                  const v = visitOf(display, id)!;
-                  const p = placeOf(display, v.placeRef);
-                  const ch = diff.changes.find((c) => c.visitId === id);
-                  const st = times[k];
-                  const time = st?.arrive === null || st?.arrive === undefined ? null : st.arrive === st.start ? clock(st.arrive) : t('days.times', { arrive: clock(st.arrive), start: clock(st.start!) });
-                  return (
-                    <li className="rc-row" key={id}>
-                      <span className="rc-n">{k + 1}</span>
-                      <span className="rc-name">{p?.name ?? id}</span>
-                      <span className="rc-tags">
-                        {showNew && ch?.newlyAssigned && <Tag tone="accent">{t('recommend.newBadge')}</Tag>}
-                        {ch?.moved && ch.fromDay !== null && ch.fromDay !== d.dayIndex && <Tag>{t('recommend.movedFrom', { from: ch.fromDay })}</Tag>}
-                        {v.importance === 'MUST' && <Tag tone="must">{t('common.mustAria')}</Tag>}
-                        {v.fixed && <Tag tone="accent">{t('common.fixedAt', { time: v.fixed.time })}</Tag>}
-                      </span>
-                      {time && <span className="rc-time">{time}</span>}
-                    </li>
-                  );
-                })}
-              </ol>
-            )}
-          </section>
-        );
-      })}
-      {notes.length > 0 && (
-        <ul className="rc-notes">
-          {notes.map((n) => (
-            <li key={n.key}>{n.text}</li>
-          ))}
-        </ul>
-      )}
-    </VStack>
   );
 }

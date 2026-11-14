@@ -60,12 +60,13 @@ export function TimeSelect({
   return (
     <>
       <span className={`ts${current ? '' : ' is-empty'}`}>
-        <button type="button" className="ts-field" aria-haspopup="dialog" aria-expanded={open} aria-label={current ? `${label} · ${timeLabel(current)}` : label} onClick={openPicker}>
+        <button type="button" className="ts-field" aria-haspopup="dialog" aria-expanded={open} aria-label={current ? `${label} · ${current}` : label} onClick={openPicker}>
           <svg className="ts-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
             <circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" strokeWidth="1.5" />
             <path d="M12 7.5V12l3 2" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          <span className="ts-value">{current ? timeLabel(current) : (placeholder ?? label)}</span>
+          {/* The chosen time reads as on the day's cards — 24-hour "14:30" (M66); the picker below keeps 오전/오후. */}
+          <span className="ts-value">{current ?? placeholder ?? label}</span>
           <svg className="ts-chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
             <path d="m6 9 6 6 6-6" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>

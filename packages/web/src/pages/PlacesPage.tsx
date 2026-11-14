@@ -51,11 +51,10 @@ export function PlacesPage() {
         <div className="tn-panel">
           <TextArea label={t('place.paste.label')} isLabelHidden value={paste} onChange={setPaste} placeholder={t('place.paste.placeholder')} description={t('places.paste.hint')} rows={3} />
           {note && <Banner status="info" title={note} isDismissable onDismiss={() => setNote(null)} />}
-          <div style={{ display: 'flex', gap: 8 }}>
+          {/* Side by side where both labels fit; on a narrow phone (320) they stack at full width instead of clipping (M66). */}
+          <div className="tn-btnrow">
             <Button label={t('place.paste.fromClipboard')} variant="secondary" size="lg" onClick={() => void readClipboard()} />
-            <div style={{ flex: '1 1 0', minWidth: 0 }}>
-              <Button label={t('places.paste.action')} variant="primary" size="lg" width="100%" isDisabled={!paste.trim()} onClick={() => navigate(`/add?text=${encodeURIComponent(paste.trim())}`)} />
-            </div>
+            <Button label={t('places.paste.action')} variant="primary" size="lg" isDisabled={!paste.trim()} onClick={() => navigate(`/add?text=${encodeURIComponent(paste.trim())}`)} />
           </div>
         </div>
       </Section>

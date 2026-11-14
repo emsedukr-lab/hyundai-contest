@@ -18,7 +18,9 @@ import { codeLabel, periodLabel } from '../lib/format';
 import { t } from '../lib/i18n';
 import { Tag } from '../components/shell/Tag';
 import { ApiError, cancel, claim, confirmCode, finish, openPairing, seal, status, supportsWebCrypto, upload } from '../lib/pairing';
+import { takeQrHash } from '../lib/qrArrival';
 import { navigate } from '../lib/router';
+import { sendIntent } from '../lib/sendIntent';
 import { defaultHome } from '../lib/settings';
 import { newDoc, nightsLabel, nowIso, planWarnings, unassignedVisits, type TripDoc } from '../lib/trips';
 
@@ -141,13 +143,15 @@ export function ConnectPage() {
 
   // Read the QR fragment once, then remove it from the address bar and history.
   useEffect(() => {
-    // The secret leaves the address bar first, synchronously: before any await and before any early return.
-    const link = parseQrFragment(location.hash);
-    if (location.hash) history.replaceState(null, '', '/c');
+    // The secret has left the address bar already — the app shell took it out synchronously when it routed here, before
+    // this page's code was even loaded (lib/qrArrival.ts); taking it also clears a fragment that arrived since.
+    const link = parseQrFragment(takeQrHash());
     void (async () => {
+      let all: TripDoc[] = [];
       try {
         await pairings.prune();
-        setDocs(await trips.all());
+        all = await trips.all();
+        setDocs(all);
       } catch {
         return setStage('invalid'); // storage unavailable (some private modes); the secret is already gone from the URL
       }
@@ -167,7 +171,9 @@ export function ConnectPage() {
       if (!r) return setStage('invalid');
       lastSid.set(r.sid);
       setRec(r);
-      setPicked(r.tripId);
+      // Started from a trip's 차로 보내기 sheet (M66): that trip is already chosen here; any other can still be picked.
+      const wanted = sendIntent.get();
+      setPicked(r.tripId ?? (wanted && all.some((d) => d.tripId === wanted) ? wanted : null));
       setIncludeHome(r.includeHome);
       if (r.sealed) setStage('status');
       else if (r.codeConfirmed) setStage('pick');
@@ -263,6 +269,7 @@ export function ConnectPage() {
       const v = await upload(next);
       setRec(next);
       setSent(true); // an accepted PUT means the server has (or had) exactly this body
+      sendIntent.clear(); // the choice has been used
       setStage('status');
       await observe(next, v);
     } catch (e) {

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@astryxdesign/core/Button';
 import { Card } from '@astryxdesign/core/Card';
 import { Selector } from '@astryxdesign/core/Selector';
@@ -9,14 +9,14 @@ import { CheckIcon, PushPinIcon } from '../components/shell/icons';
 import { shortDate } from '../lib/format';
 import { t } from '../lib/i18n';
 import { favorites } from '../lib/db';
-import { recommend, summarizeRecommendation, type RecommendInsights } from '../lib/recommend';
+import { recommend, summarizeRecommendation, type RecommendInsights, type RecommendationDiff } from '../lib/recommend';
 import { getHere, locate } from '../lib/here';
 import { allRuns, applyRun, fetchRun } from '../lib/routeTimes';
 import { placeOf, relinkLegs, rememberLegs, removePlace, setReservation, setupReady, suggestVisitTime, updateVisit, type LegBook, type SetupStep } from '../lib/trips';
 import { useNotes } from './NotesContext';
 import { PlaceCollector } from './sheets/PlaceSheet';
 import type { Notice } from './sheets/PlaceSheet';
-import { RecommendPreview } from './RecommendDialog';
+import { RecommendPreview } from './RecommendPreview';
 import { CATEGORY_LABEL } from './PlaceSearch';
 import { TripInfoPanel } from './TripInfoPanel';
 import './timeline.css';
@@ -57,8 +57,11 @@ export function TripSetup({
   const { lodgingTbd, notes } = useNotes();
   const [phase, setPhase] = useState<'idle' | 'running' | 'preview'>('idle');
   const [stage, setStage] = useState(0);
-  const [result, setResult] = useState<{ plan: Trip; meters: Record<string, number>; insights: RecommendInsights } | null>(null);
+  const [result, setResult] = useState<{ plan: Trip; meters: Record<string, number>; insights: RecommendInsights; diff: RecommendationDiff } | null>(null);
   const ready = setupReady(plan, lodgingTbd, step);
+  // What a step still needs reads as a hint until 다음 was tried (M66): only then is it an error (red, and announced).
+  const [tried, setTried] = useState(false);
+  useEffect(() => setTried(false), [step]);
 
   /** 경로 추천: the real work runs between the progress lines, so what the user watches is what happens. */
   const run = async () => {
@@ -94,7 +97,7 @@ export function TripSetup({
     if (again.plan !== next && summarizeRecommendation(next, again.plan).changed) next = await timed(relinkLegs(next, again.plan, book));
     found = { plan: next, insights: again.insights };
     await wait(300);
-    setResult({ plan: next, meters, insights: found.insights });
+    setResult({ plan: next, meters, insights: found.insights, diff: summarizeRecommendation(plan, next) });
     setPhase('preview');
   };
 
@@ -120,7 +123,7 @@ export function TripSetup({
         </div>
       </div>
 
-      {step === 1 && <TripInfoPanel plan={plan} home={home} onChange={onChange} onOpenSettings={onOpenSettings} />}
+      {step === 1 && <TripInfoPanel plan={plan} home={home} onChange={onChange} onOpenSettings={onOpenSettings} isNew showRequired={tried} />}
 
       {step === 2 && (
         <div className="tn-pad tl-setup-body">
@@ -152,15 +155,15 @@ export function TripSetup({
                       <span className="tl-name">{p?.name}</span>
                       <span className="tl-meta">{p ? CATEGORY_LABEL[p.category] : ''}</span>
                     </div>
-                    {/* The same outline pin that marks a must-see in the day plan: off it is a quiet control, on it takes the pin's color. */}
+                    {/* The same outline pin that marks a must-see in the day plan, with its words beside it (M66): off it is a quiet control, on it takes the pin's color. */}
                     <button
                       type="button"
                       className={`tl-pin${must ? ' is-on' : ''}`}
                       aria-pressed={must}
                       aria-label={t('setup.mustAria', { name: p?.name ?? '' })}
-                      title={t('common.mustAria')}
                       onClick={() => onChange(updateVisit(plan, v.visitId, { importance: must ? 'NORMAL' : 'MUST' }))}>
                       <PushPinIcon />
+                      {t('setup.must')}
                     </button>
                   </div>
                   <Switch label={t('setup.reserved')} value={booked} onChange={(on) => (on ? reserve(day, v.fixed?.time ?? suggestVisitTime(plan, v.visitId, day)) : onChange(setReservation(plan, v.visitId, null, null)))} />
@@ -206,7 +209,7 @@ export function TripSetup({
           {phase === 'preview' && result && (
             <>
               <p className="tl-setup-hint">{t('recommend.rules')}</p>
-              <RecommendPreview display={result.plan} diff={summarizeRecommendation(plan, result.plan)} insights={result.insights} showNew={false} />
+              <RecommendPreview display={result.plan} home={home} diff={result.diff} insights={result.insights} showNew={false} />
             </>
           )}
           <button type="button" className="tl-textbtn tl-setup-skip" onClick={() => onFinish(null)}>
@@ -218,14 +221,17 @@ export function TripSetup({
       {/* room so the last card clears the fixed buttons */}
       <div style={{ height: 112 }} />
       <div className="tn-cta">
-        <div className="tn-cta-inner">
+        {/* A dimmed 다음 still takes the tap (aria-disabled): that tap is the attempt that turns the hint below into an error. */}
+        <div className="tn-cta-inner" onClickCapture={() => !ready.ok && step < 4 && setTried(true)}>
           {step > 1 && phase !== 'running' && <Button label={t('setup.prev')} variant="secondary" size="lg" onClick={() => go((step - 1) as SetupStep)} />}
           {step < 4 && <Button label={t('setup.next')} variant="primary" size="lg" isDisabled={!ready.ok} onClick={() => go((step + 1) as SetupStep)} />}
           {step === 4 && phase === 'idle' && <Button label={t('setup.run')} variant="primary" size="lg" onClick={() => void run()} />}
           {step === 4 && phase === 'running' && <Button label={t('setup.run')} variant="primary" size="lg" isLoading onClick={() => undefined} />}
           {step === 4 && phase === 'preview' && result && <Button label={t('setup.start')} variant="primary" size="lg" onClick={() => onFinish(result)} />}
         </div>
-        {!ready.ok && step < 4 && <p className="tl-setup-need">{ready.reason}</p>}
+        <p className={`tl-setup-need${tried ? ' is-error' : ''}`} role={tried ? 'alert' : undefined}>
+          {!ready.ok && step < 4 ? ready.reason : ''}
+        </p>
       </div>
     </div>
   );

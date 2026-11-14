@@ -17,11 +17,11 @@ const ROWS: Array<[string, string]> = [
   [t('privacy.ongoing.label'), t('privacy.ongoing.text')],
 ];
 
-/** 개인정보 안내 — opened from the 설정 tab, so back returns there. Plain, full-bleed rows (read-only facts). */
+/** 개인정보 안내 — opened from the 설정 tab, so back returns there. Read-only facts in one white container, like 설정 (M66: the grey captions need the white face for 4.5:1). */
 export function PrivacyPage() {
   return (
     <PushScreen title={t('privacy.title')} onBack={() => navigate('/settings')}>
-      <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+      <ul className="tn-cards">
         {ROWS.map(([label, description]) => (
           <li key={label}>
             <Row title={label} subtitle={description} />

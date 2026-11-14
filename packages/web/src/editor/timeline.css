@@ -123,8 +123,8 @@
   color: var(--tn-text-secondary);
 }
 .tl-name {
-  font-size: 17px;
-  line-height: 25px;
+  font-size: 15px;
+  line-height: 23px;
   font-weight: 600;
 }
 .tl-name-row {
@@ -272,9 +272,9 @@
   gap: 8px;
   min-width: 0;
   margin: 0;
-  font-size: 20px;
-  line-height: 27px;
-  font-weight: 700;
+  font-size: 18px;
+  line-height: 26px;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
 
@@ -346,9 +346,9 @@
 }
 .tl-sheet-head h2 {
   margin: 0;
-  font-size: 20px;
-  line-height: 27px;
-  font-weight: 700;
+  font-size: 18px;
+  line-height: 26px;
+  font-weight: 600;
 }
 .tl-sheet-body {
   display: flex;
@@ -365,8 +365,8 @@
 }
 .tl-sheet-section {
   margin: 0;
-  font-size: 17px;
-  line-height: 25px;
+  font-size: 15px;
+  line-height: 23px;
   font-weight: 600;
 }
 .tl-steps {
@@ -418,8 +418,8 @@
   display: flex;
   align-items: baseline;
   gap: 8px;
-  font-size: 17px;
-  line-height: 26px;
+  font-size: 15px;
+  line-height: 23px;
   overflow: hidden;
 }
 .tl-lodging-text > span:last-child {
@@ -447,8 +447,8 @@
   background: transparent;
   color: var(--tn-text-primary);
   font: inherit;
-  font-size: 22px;
-  line-height: 29px;
+  font-size: 20px;
+  line-height: 27px;
   font-weight: 700;
   outline: none;
 }
@@ -661,9 +661,9 @@
 }
 /* The read-only travel time in its sheet (M43): the minutes as the main fact (h4, tabular). */
 .tl-leg-value {
-  font-size: 20px;
-  line-height: 27px;
-  font-weight: 700;
+  font-size: 18px;
+  line-height: 26px;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
 .tl-leg-value.is-empty {
@@ -682,8 +682,8 @@
 }
 .tl-setup-title {
   margin: 0;
-  font-size: 24px;
-  line-height: 31px;
+  font-size: 22px;
+  line-height: 29px;
   font-weight: 700;
 }
 .tl-setup-dots {
@@ -1104,8 +1104,8 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 17px;
-  line-height: 25px;
+  font-size: 15px;
+  line-height: 23px;
   font-weight: 600;
 }
 .tl-infosum-top .tl-chev {
@@ -1150,8 +1150,8 @@
 }
 .tl-faster-title {
   margin: 0;
-  font-size: 17px;
-  line-height: 25px;
+  font-size: 15px;
+  line-height: 23px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
@@ -1174,4 +1174,183 @@
   justify-content: flex-end;
   gap: 8px;
   margin-top: 8px;
+}
+
+/* ---------- M66: UX fixes ---------- */
+
+/* Save state in the editor's top bar, left of the menu: a caption on the canvas (secondary), nothing when there is nothing to say. */
+.tl-savestate {
+  flex: none;
+  padding: 0 4px;
+  font-size: 12px;
+  line-height: 17px;
+  font-weight: 500;
+  color: var(--tn-text-secondary);
+  white-space: nowrap;
+}
+.tl-savestate:empty {
+  display: none;
+}
+
+/* The editor's title keeps its look and gets a 44px tap height (the bar is 56). */
+.tl-title {
+  padding: 9px 4px;
+}
+
+/*
+ * A day's heading row: the 지도 button never shrinks or wraps — the summary line beside it wraps instead — and sits on
+ * the title's line rather than the block's middle.
+ */
+.tl-sechead {
+  align-items: flex-start;
+}
+.tl-sechead > .astryx-button {
+  flex: none;
+  white-space: nowrap;
+}
+.tl-sechead-title {
+  flex-wrap: wrap;
+}
+
+/*
+ * Why a day's times are not known, once, at the top of the day: a quiet line on the canvas (secondary) with the one
+ * action that would fix it as a text button. Not a warning — no dot, no tint.
+ */
+.tl-daynote {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 4px;
+  margin: 0 0 8px;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--tn-text-secondary);
+}
+.tl-daynote-text {
+  flex: 1 1 200px;
+  min-width: 0;
+  padding: 6px 0;
+}
+.tl-daynote .astryx-button {
+  flex: none;
+  margin-right: -8px;
+}
+
+/* A travel leg keeps its quiet 32px look inside a 44px row: the hit area reaches the row's edges, never a neighbour. */
+.tl-legrow {
+  min-height: 44px;
+}
+.tl-leg {
+  position: relative;
+}
+.tl-leg::before {
+  content: '';
+  position: absolute;
+  inset: -6px 0;
+}
+/* A day tab is 40 tall in a 48 track: its hit area takes the track's 4px above and below. */
+.tl-daytab {
+  position: relative;
+}
+.tl-daytab::after {
+  content: '';
+  position: absolute;
+  inset: -4px 0;
+}
+/* The 34px 미정 chip beside the lodging search: 44 to the touch. */
+.tl-chip.tl-lodging-tbd {
+  position: relative;
+}
+.tl-chip.tl-lodging-tbd::after {
+  content: '';
+  position: absolute;
+  inset: -5px -4px;
+}
+/* The dates field of 여행 정보: the whole field opens the calendar, not only its text. */
+.tl-datefield {
+  position: relative;
+}
+.tl-datefield button[aria-haspopup='dialog']::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+/*
+ * 장소 추가 sits in the bottom bar, left of the main action (it floated over the cards before and covered drag handles
+ * and the lodging card's end). A 56 square secondary button on the canvas; the badge still counts 담아 둔 곳.
+ */
+.tl-fab,
+.tl-fab.is-raised {
+  position: relative;
+  right: auto;
+  bottom: auto;
+  z-index: auto;
+  flex: none;
+  border-radius: 16px;
+  background: var(--tn-fill-weak-on-canvas);
+  color: var(--tn-text-primary);
+  box-shadow: none;
+  transition: background-color 120ms var(--tn-ease);
+}
+
+/* 여행 이름: a field that looks like one at rest (fill-weak, radius 12, 48 tall) and takes the accent edge on focus. */
+.tl-name-input {
+  min-height: 48px;
+  padding: 8px 14px;
+  border: 1.5px solid transparent;
+  border-radius: var(--radius-element);
+  background: var(--tn-fill-weak);
+  transition: background-color 120ms var(--tn-ease);
+}
+.tl-name-input:focus-visible {
+  border-color: var(--tn-accent);
+  background: var(--tn-surface);
+}
+
+/* What a setup step still needs: a hint (secondary, on the canvas) until 다음 was tried, then the error color. */
+.tl-setup-need {
+  color: var(--tn-text-secondary);
+}
+.tl-setup-need.is-error {
+  color: var(--tn-negative-text);
+}
+.tl-setup-need:empty {
+  display: none;
+}
+
+/* 꼭 갈 곳 in step 3 says what it is: the pin and its words in one 44px toggle. */
+.tl-pin {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  width: auto;
+  padding: 0 12px 0 10px;
+  font: inherit;
+  font-size: 13px;
+  line-height: 16px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* A quiet footnote inside a sheet (what the handover does with the data). */
+.tl-sheet-note {
+  margin: 0;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--color-text-secondary);
+}
+/* The map's place in a sheet while its code loads. */
+.tl-map-wait {
+  display: block;
+  height: 240px;
+  border-radius: var(--radius-element);
+  background: var(--color-neutral);
+}
+@media (prefers-reduced-motion: reduce) {
+  .tl-name-input,
+  .tl-fab,
+  .tl-fab.is-raised {
+    transition: none;
+  }
 }

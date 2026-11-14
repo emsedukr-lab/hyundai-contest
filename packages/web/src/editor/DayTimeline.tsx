@@ -3,6 +3,7 @@ import { DndContext, KeyboardSensor, PointerSensor, closestCenter, useSensor, us
 import { SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Banner } from '@astryxdesign/core/Banner';
+import { Button } from '@astryxdesign/core/Button';
 import { dayEnd, hhmm, timeline, type DayIssue, type Home, type Trip } from '@tteonaljido/shared';
 import { BedIcon, FlagIcon, GripIcon, LockIcon } from '../components/shell/icons';
 import { minutesLabel, shortDate } from '../lib/format';
@@ -33,6 +34,11 @@ interface Props {
   startAt?: number;
   /** Leg keys Kakao can measure; the others are timed by the car's navigation (no typing since M43). */
   askable?: ReadonlySet<string>;
+  /**
+   * Why this day's times are not known yet, said once at the top of the day (M66) with the action that would fix it —
+   * instead of the same '시각 확인 필요' on every card. No action = the car's navigation times it (a neutral state).
+   */
+  note?: { text: string; action?: string; busy?: boolean; onAction?: () => void } | null;
 }
 
 /**
@@ -42,7 +48,7 @@ interface Props {
  * Stops reorder by dragging their handle (pointer or keyboard); swiping a stop to the left takes it off the day. Fixed
  * visits never move on their own.
  */
-export function DayTimeline({ plan, home, dayIndex, onChange, onError, onOpenPlace, onOpenStart, onOpenLeg, onOpenEnd, onRemoveStop, legMeters, startAt, askable }: Props) {
+export function DayTimeline({ plan, home, dayIndex, onChange, onError, onOpenPlace, onOpenStart, onOpenLeg, onOpenEnd, onRemoveStop, legMeters, startAt, askable, note }: Props) {
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }));
   const { day, i, isFirst, isLast, startName, endName } = dayEnds(plan, dayIndex);
   const { lodgingTbd } = useNotes();
@@ -139,6 +145,12 @@ export function DayTimeline({ plan, home, dayIndex, onChange, onError, onOpenPla
           <Banner status="error" title={issueText(x)} />
         </div>
       ))}
+      {note && (
+        <p className="tl-daynote">
+          <span className="tl-daynote-text">{note.text}</span>
+          {note.action && note.onAction && <Button label={note.action} variant="ghost" size="sm" isLoading={note.busy} onClick={note.onAction} />}
+        </p>
+      )}
 
       <div className="tl-row is-first">
         <div className="tl-rail">
@@ -250,8 +262,8 @@ function StopCard({
   const conflict = issues.length > 0;
   // M51 — line 2: 'start ~ end · stay' (no 도착/머무는 시간 labels). A fixed time leads with a blue lock (the time it is
   // held to); a stop whose date or time is only held, not set, a grey one. Desired time and memo trail and truncate.
-  const known = stopRangeText(time);
-  const range = known ?? t('days.timeCheck');
+  // A time that is not known is not shown at all here (M66): the day says why, once, at its top.
+  const range = stopRangeText(time);
   const lock = v.fixed ? 'fixed' : !v.timeFlexible || !v.dateFlexible ? 'firm' : null;
   const lockLabel = [v.fixed ? t('common.fixedAt', { time: v.fixed.time }) : !v.timeFlexible ? t('days.timeFirm') : '', !v.dateFlexible ? t('days.dateFirm') : '']
     .filter(Boolean)
@@ -290,8 +302,8 @@ function StopCard({
                 <LockIcon />
               </span>
             )}
-            <span className={`tl-range${lock === 'fixed' ? ' is-fixed' : ''}${known ? '' : ' is-unknown'}`}>{range}</span>
-            <span className="tl-rest">{` · ${rest}`}</span>
+            {range && <span className={`tl-range${lock === 'fixed' ? ' is-fixed' : ''}`}>{range}</span>}
+            <span className="tl-rest">{range ? ` · ${rest}` : rest}</span>
           </span>
           {issues.map((x, n) => (
             <span key={n} className="tl-error-text">

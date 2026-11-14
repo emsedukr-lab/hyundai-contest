@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Banner } from '@astryxdesign/core/Banner';
+import { Button } from '@astryxdesign/core/Button';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { sampleTrip, type Trip } from '@tteonaljido/shared';
 import { InstallHint } from '../components/InstallHint';
@@ -12,7 +13,7 @@ import { Row, Section } from '../components/shell/rows';
 import { Tag } from '../components/shell/Tag';
 import { TabScreen } from '../components/shell/Screens';
 import { TRIPS_CHANGED, sendLog, trips, type SendLogEntry } from '../lib/db';
-import { dateLabel, dayOf, periodLabel } from '../lib/format';
+import { periodLabel, sentLabel } from '../lib/format';
 import { t } from '../lib/i18n';
 import { navigate } from '../lib/router';
 import { defaultHome } from '../lib/settings';
@@ -104,7 +105,10 @@ export function HomePage() {
       </div>
       {docs !== null && docs.length === 0 && (
         <div className="tn-panel" style={{ marginTop: 16 }}>
-          <EmptyState title={t('common.noTrips')} description={t('home.empty.head')} />
+          {/* First visit (M66): the way forward is right here — make a trip, or look at the sample first. */}
+          <EmptyState title={t('common.noTrips')} description={t('home.empty.description')} />
+          <Button label={t('trips.create')} variant="primary" size="lg" width="100%" onClick={() => navigate('/trips/new')} />
+          <Button label={t('home.empty.sample')} variant="ghost" size="md" width="100%" onClick={() => void addSample()} />
         </div>
       )}
       {next && (
@@ -134,10 +138,7 @@ export function HomePage() {
                           // still in its step-by-step setup (M43)
                           <Tag tone="accent">{t('setup.homeBadge', { step: d.setup.step })}</Tag>
                         ) : (
-                          <>
-                            <span className="tn-rev">{`v${d.revision}`}</span>
-                            {unassigned > 0 && <Tag tone="warn">{t('home.unassignedBadge', { n: unassigned })}</Tag>}
-                          </>
+                          unassigned > 0 && <Tag tone="warn">{t('home.unassignedBadge', { n: unassigned })}</Tag>
                         )}
                         {overlaps.has(d.tripId) && <Tag tone="warn">{t('home.overlap', { n: overlaps.get(d.tripId)!.length })}</Tag>}
                       </span>
@@ -145,7 +146,7 @@ export function HomePage() {
                     // '3박 4일' keeps its space unbroken so the nights never split across lines
                     subtitle={
                       t('common.tripSummary', { period: periodLabel(d.plan.startDate, d.plan.endDate), nights: nightsLabel(d.plan).replace(/ /g, '\u00a0'), places: d.plan.places.length }) +
-                      (sent ? ` · ${t('home.lastSend', { version: sent.revision, date: dateLabel(dayOf(sent.at)) })}` : '') +
+                      (sent ? ` · ${sentLabel(sent, d.revision)}` : '') +
                       overlapLine(d.tripId)
                     }
                     chevron

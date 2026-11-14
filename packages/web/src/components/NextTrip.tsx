@@ -1,5 +1,5 @@
 import type { SendLogEntry } from '../lib/db';
-import { dateLabel, dayOf, periodLabel } from '../lib/format';
+import { periodLabel, sentLabel } from '../lib/format';
 import { t } from '../lib/i18n';
 import { navigate } from '../lib/router';
 import { tripSketch, type TripSketch } from '../lib/routeSketch';
@@ -54,9 +54,8 @@ export function NextTrip({ doc, sent, overlaps = 0 }: { doc: TripDoc; sent?: Sen
             <span className="tn-next-todo">{todo.join(' · ')}</span>
           </>
         ) : (
-          <span className="tn-next-done">{sent ? t('home.lastSend', { version: sent.revision, date: dateLabel(dayOf(sent.at)) }) : inSetup ? '' : t('home.next.ready')}</span>
+          <span className="tn-next-done">{sent ? sentLabel(sent, doc.revision) : inSetup ? '' : t('home.next.ready')}</span>
         )}
-        <span className="tn-next-rev">{`v${doc.revision}`}</span>
         <ChevronIcon />
       </span>
     </a>
