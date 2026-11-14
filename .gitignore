@@ -29,3 +29,6 @@ generated-images/
 # AI 작업 도구 설정 (로컬 전용)
 .claude/
 CLAUDE.md
+
+# Pleos 공식 디자인 원본 (Pleos 개발자 사이트에서 받아 design/source/에 둠)
+design/source/*.fig
