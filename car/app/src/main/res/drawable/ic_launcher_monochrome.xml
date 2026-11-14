@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Adaptive icon foreground (108dp canvas): the folded map + pin of ic_app, scaled into the 66dp safe zone. -->
+<!-- Themed (monochrome) layer of the launcher icon (108dp canvas): the folded map + pin, scaled into the 66dp safe zone. The colored foreground is the PNG drawable-nodpi/ic_launcher_foreground.png. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
     <group android:scaleX="1.25" android:scaleY="1.25" android:translateX="24" android:translateY="24">
