@@ -32,3 +32,6 @@ CLAUDE.md
 
 # Pleos 공식 디자인 원본 (Pleos 개발자 사이트에서 받아 design/source/에 둠)
 design/source/*.fig
+
+# 커밋 검사 로컬 설정
+lefthook-local.yml

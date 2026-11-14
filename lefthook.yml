@@ -1,0 +1,6 @@
+# 커밋 메시지 검사: "영역: 무엇을 (왜)" 한 줄 + 본문 3줄 이내, 마일스톤 번호 금지.
+# 영역은 차량·휴대폰·서버·공통·문서·제출. 처음 한 번 `lefthook install`.
+commit-msg:
+  commands:
+    message:
+      run: node tools/check-commit-msg.mjs {1}
