@@ -30,7 +30,28 @@ sealed interface TripWhen {
 /** `driveMetres` is set only when the navigation measured every leg of the day (the phone's plan carries no distances). */
 data class DaySummary(val driveMinutes: Int, val unknownLegs: Int, val endAt: Int?, val lastDay: Boolean, val driveMetres: Int? = null)
 
+/** A map marker: coordinates in 1e-7 degrees. */
+data class MapMarker(val latE7: Int, val lonE7: Int)
+
 object TripOverview {
+    /**
+     * The places to mark on the next-trip card's real map: the trip's stops and lodgings in travel order, at most [max]
+     * (Kakao's static map takes five), always the first and the last and the rest spread evenly between them. Places at
+     * the same spot count once. Pure; the picture itself is fetched by the app.
+     */
+    fun mapMarkers(trip: Trip, max: Int = 5): List<MapMarker> {
+        val place = trip.places.associateBy { it.placeRef }
+        val visit = trip.visits.associateBy { it.visitId }
+        val all = buildList {
+            for (day in trip.days) {
+                day.visitOrder.forEach { id -> visit[id]?.placeRef?.let(place::get)?.let { p -> if (p.latE7 != null && p.lonE7 != null) add(MapMarker(p.latE7!!, p.lonE7!!)) } }
+                if (day.dayIndex < trip.days.size) day.lodgingPlaceRef?.let(place::get)?.let { p -> if (p.latE7 != null && p.lonE7 != null) add(MapMarker(p.latE7!!, p.lonE7!!)) }
+            }
+        }.distinct()
+        if (all.size <= max) return all
+        return (0 until max).map { all[Math.round(it * (all.size - 1).toDouble() / (max - 1)).toInt()] }.distinct()
+    }
+
     /**
      * Every day's stops and lodgings on one sketch, north up, keeping the map's proportions (longitude scaled by
      * cos(latitude)) and centred in the box. Home is left out so a far-away start does not shrink the trip to a dot.

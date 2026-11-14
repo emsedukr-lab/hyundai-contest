@@ -168,6 +168,7 @@ private fun NextTripCard(t: LocalTrip, today: java.time.LocalDate, onClick: () -
     val report = remember(t, today) { TripValidator.validate(t.view, t.overlay, today) }
     val found = remember(report) { TripFindings.of(report) }
     val sketch = remember(t) { TripOverview.sketch(t.view, 300.0, 240.0, 18.0) }
+    val mapMarkers = remember(t) { TripOverview.mapMarkers(t.view) }
     val secondary = colorResource(R.color.tn_text_secondary)
     PleosCard(onClick = onClick, padding = Space.x32, gap = Space.x24) {
         BoxWithConstraints(Modifier.fillMaxWidth()) {
@@ -213,7 +214,11 @@ private fun NextTripCard(t: LocalTrip, today: java.time.LocalDate, onClick: () -
                 }
             }
             val drawing: @Composable (Modifier) -> Unit = { m ->
-                if (sketch.plotted >= 2) RouteSketch(sketch, w.focusDay, stringResource(R.string.sketch_desc, t.view.name), m)
+                if (sketch.plotted >= 2) {
+                    val desc = stringResource(R.string.sketch_desc, t.view.name)
+                    // A real map when the network answers; the drawn sketch before that and whenever it does not.
+                    TripMapPreview(mapMarkers, desc, m) { fm -> RouteSketch(sketch, w.focusDay, desc, fm) }
+                }
                 else Box(m.padding(vertical = Space.x24)) { PleosText(stringResource(R.string.no_route), Pleos.type.bodySmall, secondary, maxLines = 2) }
             }
             // Wide: the text starts level with the sketch's top and the open row ends level with its bottom.

@@ -36,6 +36,17 @@ class TripOverviewTest {
         assertTrue(s.days.last().points.none { it.lodging })                // the last day has no lodging
     }
 
+    @Test fun mapMarkersKeepFirstAndLastAndSpreadTheRest() {
+        val m = TripOverview.mapMarkers(sample)
+        assertTrue(m.size in 2..5)
+        assertEquals(m.size, m.distinct().size)
+        val all = TripOverview.mapMarkers(sample, max = 100)
+        assertEquals(all.first(), m.first())
+        assertEquals(all.last(), m.last())
+        // Never more than asked for.
+        assertTrue(TripOverview.mapMarkers(sample, max = 3).size <= 3)
+    }
+
     @Test fun sketchIsNorthUp() {
         val s = TripOverview.sketch(sample)
         val pts = sample.days.flatMap { d -> d.visitOrder.map { id -> sample.places.first { it.placeRef == sample.visits.first { v -> v.visitId == id }.placeRef } } }

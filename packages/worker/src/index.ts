@@ -1,6 +1,7 @@
 import { randomId } from '@tteonaljido/shared';
 import { fleet } from './fleet';
 import { error, json, readJson } from './http';
+import { staticMap } from './staticMap';
 import { searchPlaces } from './kakao';
 import { routeDurations, routePaths } from './route';
 import { resolveShare } from './resolve';
@@ -104,6 +105,15 @@ async function api(req: Request, env: Env, url: URL): Promise<Response> {
     const body = await readJson<Record<string, unknown>>(req, 4096);
     if (!body || body === 'TOO_LARGE') return error('BAD_REQUEST');
     return parts[3] === 'paths' ? routePaths(body, env.KAKAO_REST_KEY) : routeDurations(body, env.KAKAO_REST_KEY);
+  }
+
+  if (parts[2] === 'maps' && parts[3] === 'static') {
+    if (req.method !== 'POST') return error('NOT_FOUND');
+    if (await limited(env.RL_ROUTE, ip)) return error('RATE_LIMITED');
+    // The stops to mark travel in the body; the image goes straight back (not stored, not logged, no-store).
+    const body = await readJson<Record<string, unknown>>(req, 1024);
+    if (!body || body === 'TOO_LARGE') return error('BAD_REQUEST');
+    return staticMap(body, env.KAKAO_REST_KEY);
   }
 
   if (parts[2] === 'places' && parts[3] === 'resolve') {
