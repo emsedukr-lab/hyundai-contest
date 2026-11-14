@@ -25,5 +25,7 @@ test-results/
 submission/figures/*.raw.png
 generated-images/
 
-# impeccable: engine binary is re-downloaded on first run; critique run files stay local
-.claude/skills/impeccable/scripts/bin/
+
+# AI 작업 도구 설정 (로컬 전용)
+.claude/
+CLAUDE.md
