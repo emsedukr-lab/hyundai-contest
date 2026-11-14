@@ -283,9 +283,9 @@
     <string name="tl_arrive_at">Arrive %1$s</string>
     <string name="tl_must">Must-visit</string>
     <string name="tl_range">%1$s – %2$s</string>
-    <string name="tl_leg">↓ %1$s</string>
-    <string name="tl_leg_navi">↓ %1$s</string>
-    <string name="tl_leg_unknown">↓ Measured by the navigation</string>
+    <string name="tl_leg">%1$s</string>
+    <string name="tl_leg_navi">%1$s</string>
+    <string name="tl_leg_unknown">Navigation will time it</string>
     <string name="dur_m">%1$d min</string>
     <string name="dur_h">%1$d h</string>
     <string name="dur_hm">%1$d h %2$d min</string>
@@ -379,7 +379,7 @@
     <string name="order_reset_btn">Restore visit order</string>
     <string name="order_applied">Day %1$s now follows the navigation\'s faster order</string>
     <string name="order_reset">Day %1$s is back in the planned order</string>
-    <string name="tl_leg_navi_km">↓ %1$s · %2$s km</string>
+    <string name="tl_leg_navi_km">%2$s km · %1$s</string>
     <string name="sum_drive_km">Driving %1$s · %2$s km</string>
     <!-- M66: findings split by who settles them, why a button is off, the next-trip card's open row -->
     <string name="navi_fills_title">Filled in by the navigation</string>

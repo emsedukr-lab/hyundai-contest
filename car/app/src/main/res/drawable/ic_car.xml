@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- Outline car on the 24 grid, round stroke like the other icons; marks a leg the car's navigation measured. -->
-<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
-    <path android:pathData="M4,16.5v-4.2l1.8,-4.6a1.6,1.6 0,0 1,1.5 -1h9.4a1.6,1.6 0,0 1,1.5 1L20,12.3v4.2M4,12.3h16M4,16.5h16M6,16.5v1.8M18,16.5v1.8M7.3,14.4h0.01M16.7,14.4h0.01" android:strokeColor="#FF131417" android:strokeWidth="1.6" android:strokeLineCap="round" android:strokeLineJoin="round" android:fillColor="#00000000" />
-</vector>

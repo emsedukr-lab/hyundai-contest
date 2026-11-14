@@ -283,9 +283,9 @@
     <string name="tl_arrive_at">%1$s 도착</string>
     <string name="tl_must">꼭 가야 할 곳</string>
     <string name="tl_range">%1$s ~ %2$s</string>
-    <string name="tl_leg">↓ %1$s</string>
-    <string name="tl_leg_navi">↓ %1$s</string>
-    <string name="tl_leg_unknown">↓ 내비가 재요</string>
+    <string name="tl_leg">%1$s</string>
+    <string name="tl_leg_navi">%1$s</string>
+    <string name="tl_leg_unknown">내비가 재요</string>
     <string name="dur_m">%1$d분</string>
     <string name="dur_h">%1$d시간</string>
     <string name="dur_hm">%1$d시간 %2$d분</string>
@@ -379,7 +379,7 @@
     <string name="order_reset_btn">방문 순서 되돌리기</string>
     <string name="order_applied">%1$s일차를 내비 기준 빠른 순서로 바꿨어요</string>
     <string name="order_reset">%1$s일차를 계획 순서로 되돌렸어요</string>
-    <string name="tl_leg_navi_km">↓ %1$s · %2$skm</string>
+    <string name="tl_leg_navi_km">%2$skm · %1$s</string>
     <string name="sum_drive_km">운전 %1$s · %2$skm</string>
     <!-- M66: findings split by who settles them, why a button is off, the next-trip card's open row -->
     <string name="navi_fills_title">내비가 채워요</string>
