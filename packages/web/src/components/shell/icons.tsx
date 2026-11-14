@@ -170,6 +170,8 @@ export const GripIcon = () => (
   </svg>
 );
 /** Add (a plus). */
+export const ClipboardIcon = () => <Outline d="M9 4.5H7.5A1.5 1.5 0 0 0 6 6v13a1.5 1.5 0 0 0 1.5 1.5h9A1.5 1.5 0 0 0 18 19V6a1.5 1.5 0 0 0-1.5-1.5H15M9.5 3.5h5a.5.5 0 0 1 .5.5v1.5a.5.5 0 0 1-.5.5h-5a.5.5 0 0 1-.5-.5V4a.5.5 0 0 1 .5-.5ZM9 11h6M9 15h4" />;
+
 export const PlusIcon = () => <Outline d="M12 5v14M5 12h14" />;
 /** The day's end at home on the last day: a flag. */
 export const FlagIcon = () => <Outline d="M5.5 20.5V4.5m0 0h11l-2.5 4 2.5 4h-11" />;

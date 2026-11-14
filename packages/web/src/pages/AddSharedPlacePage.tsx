@@ -14,6 +14,7 @@ import { byName, CATEGORY_LABEL, fromHit, PlaceSearch, type NewPlace } from '../
 import { trips } from '../lib/db';
 import { t } from '../lib/i18n';
 import { ApiError, resolvePlace, searchPlaces, type PlaceHit } from '../lib/pairing';
+import { handOffPaste, sameAsShared } from '../lib/pasteImport';
 import { sharedParamsFromSearch, sharedPlaceTerm, sharedUrl } from '../lib/placeShare';
 import { navigate } from '../lib/router';
 import { defaultHome } from '../lib/settings';
@@ -34,7 +35,7 @@ interface AddState {
   place: NewPlace;
 }
 
-type Status = 'resolving' | 'added' | 'undone' | 'noTerm' | 'failed' | 'restored';
+type Status = 'resolving' | 'added' | 'undone' | 'noTerm' | 'failed' | 'restored' | 'exists' | 'kakaoFolder';
 
 /**
  * The outcome, stored on this /add history entry. The share query stays in the URL, so without it, coming Back from the
@@ -72,6 +73,7 @@ export function AddSharedPlacePage() {
   const [restored, setRestored] = useState<AddMarker | null>(null); // result of an earlier visit to this entry
   const [note, setNote] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [exists, setExists] = useState<{ tripId: string; tripName: string } | null>(null); // the place was already there
   const ran = useRef(false); // guard the one-time auto-add (React StrictMode runs effects twice in dev)
   // Still on this page? Leaving while the link resolves must not add the place later and mark the wrong history entry
   // (Back to this page would then add it a second time).
@@ -141,7 +143,20 @@ export function AddSharedPlacePage() {
           const u = sharedUrl(params);
           if (u) {
             try {
-              name = (await resolvePlace(u)).name;
+              const r = await resolvePlace(u);
+              if (r.kind === 'list') {
+                // A whole saved list: the 장소 tab shows it to pick from (handed over in memory, never in the URL).
+                if (alive.current) {
+                  handOffPaste(u);
+                  navigate('/places', true);
+                }
+                return;
+              }
+              if (r.kind === 'unsupported') {
+                setStatus('kakaoFolder');
+                return;
+              }
+              name = r.name;
             } catch {
               /* resolve failed → fall through to noTerm */
             }
@@ -163,6 +178,12 @@ export function AddSharedPlacePage() {
         setHits(found);
         const place = found[0] ? fromHit(found[0]) : byName(name);
         const intent: Intent = all[0] ? { existingId: all[0].tripId } : { collection: true };
+        // Shared twice (or already collected): don't put a second copy in the trip.
+        if (all[0] && sameAsShared(all[0].plan.places, place)) {
+          setExists({ tripId: all[0].tripId, tripName: all[0].plan.name });
+          setStatus('exists');
+          return;
+        }
         const added = await doAdd(intent, place);
         if (!alive.current) return;
         setAdd(added);
@@ -268,7 +289,12 @@ export function AddSharedPlacePage() {
         {goHome(false)}
         {openTrip(restored.tripId)}
       </>
-    ) : status === 'undone' || status === 'failed' || status === 'noTerm' ? (
+    ) : status === 'exists' && exists ? (
+      <>
+        {goHome(false)}
+        {openTrip(exists.tripId)}
+      </>
+    ) : status === 'undone' || status === 'failed' || status === 'noTerm' || status === 'kakaoFolder' ? (
       goHome(true)
     ) : undefined;
 
@@ -286,6 +312,8 @@ export function AddSharedPlacePage() {
         )}
 
         {status === 'failed' && <Banner status="error" title={t('add.failed')} />}
+        {status === 'exists' && exists && <Banner status="info" title={t('add.already', { trip: exists.tripName })} />}
+        {status === 'kakaoFolder' && <Banner status="info" title={t('place.paste.kakaoFolder')} />}
         {status === 'undone' && <Banner status="info" title={t('add.undone')} />}
         {status === 'restored' && restored && <Banner status="success" title={t('add.added', { name: restored.placeName, trip: restored.tripName })} />}
 

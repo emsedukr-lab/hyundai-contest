@@ -672,7 +672,25 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
       )}
       {notice && !notice.undo && (
         <div className="tn-pad" style={{ paddingTop: 12 }}>
-          <Banner status={notice.tone} title={notice.text} isDismissable onDismiss={() => setNotice(null)} />
+          <Banner
+            status={notice.tone}
+            title={notice.text}
+            isDismissable
+            onDismiss={() => setNotice(null)}
+            endContent={
+              notice.action ? (
+                <Button
+                  label={notice.action.label}
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    notice.action?.onClick();
+                    setNotice(null);
+                  }}
+                />
+              ) : undefined
+            }
+          />
         </div>
       )}
       {/* A notice with 되돌리기 floats above the bottom bar, so it is seen wherever the stop was swiped away. */}
@@ -871,7 +889,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
       )}
       {sheet?.kind === 'end' && <EndSheet isOpen onClose={close} plan={plan} home={home} dayIndex={sheet.day} onChange={edit} onOpenPlace={setOpenPlace} onOpenSettings={() => leave('/settings')} />}
       {sheet?.kind === 'place' && (
-        <PlaceSheet isOpen onClose={close} plan={plan} onChange={edit} onOpenPlace={setOpenPlace} onNotice={setNotice} />
+        <PlaceSheet isOpen onClose={close} plan={plan} onChange={edit} onOpenPlace={setOpenPlace} onNotice={setNotice} onRecommend={() => setRecommending(true)} />
       )}
       {sheet?.kind === 'map' && <SendSheet key={`map${sheet.day}`} isOpen onClose={close} plan={plan} home={home} dayIndex={sheet.day} mode="map" />}
       {sheet?.kind === 'send' && (

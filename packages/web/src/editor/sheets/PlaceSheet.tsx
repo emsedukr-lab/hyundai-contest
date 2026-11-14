@@ -1,19 +1,26 @@
-import { useEffect, useState } from 'react';
+import { Suspense, lazy, useEffect, useState } from 'react';
 import { Button } from '@astryxdesign/core/Button';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { List, ListItem } from '@astryxdesign/core/List';
+import { SegmentedControl, SegmentedControlItem } from '@astryxdesign/core/SegmentedControl';
 import { Text } from '@astryxdesign/core/Text';
 import { TRANSFER_LIMITS, type Trip } from '@tteonaljido/shared';
 import { Card } from '../../components/toss/Card';
 import { favorites } from '../../lib/db';
 import { asNewPlace, favoriteId, type FavoritePlace } from '../../lib/favorites';
 import { t } from '../../lib/i18n';
-import { REASON_LABEL, addPlace, placeOf, placeRoom, unassignedVisits } from '../../lib/trips';
+import { JS_KEY } from '../../lib/kakaoSdk';
+import { lastMode, rememberMode, type CollectMode } from '../../lib/mapPick';
+import { REASON_LABEL, addPlace, placeOf, placeRoom, removePlace, unassignedVisits } from '../../lib/trips';
 import { CATEGORY_LABEL, PlaceSearch, type NewPlace } from '../PlaceSearch';
 import { Sheet } from '../Sheet';
 
+const PlaceMapPicker = lazy(() => import('../PlaceMapPicker').then((m) => ({ default: m.PlaceMapPicker })));
+/** The map SDK failed to load in this tab (offline, blocked): the 지도 toggle stays hidden until a reload. */
+let mapBroken = false;
+
 /** A banner message; `undo` adds a 되돌리기 button (e.g. after a stop was swiped off a day). */
-export type Notice = { tone: 'success' | 'error' | 'info'; text: string; undo?: () => void };
+export type Notice = { tone: 'success' | 'error' | 'info'; text: string; undo?: () => void; action?: { label: string; onClick: () => void } };
 
 /**
  * Collecting places for a trip (M40/M43) — the body of the + sheet and of the new-trip setup's step 2. Every place goes
@@ -27,6 +34,7 @@ export function PlaceCollector({
   onOpenPlace,
   onNotice,
   onBulkDone,
+  onRecommend,
   onRemovePlace,
 }: {
   plan: Trip;
@@ -35,6 +43,8 @@ export function PlaceCollector({
   onNotice: (n: Notice) => void;
   /** After a pasted batch was saved (the sheet closes). */
   onBulkDone?: () => void;
+  /** Editor: the batch's notice offers 경로 추천으로 날짜 나누기 (setup recommends in its own step 4). */
+  onRecommend?: () => void;
   /** Setup: each saved place gets 빼기 to drop it from the trip. */
   onRemovePlace?: (placeRef: string) => void;
 }) {
@@ -60,7 +70,7 @@ export function PlaceCollector({
     if (!fit.length) return full();
     onChange(fit.reduce((pl, p) => addPlace(pl, p), plan));
     if (fit.length < places.length) full();
-    else onNotice({ tone: 'success', text: t('tl.addedMany', { n: fit.length }) });
+    else onNotice({ tone: 'success', text: t('tl.addedMany', { n: fit.length }), action: onRecommend ? { label: t('tl.recommendSplit'), onClick: onRecommend } : undefined });
     onBulkDone?.();
   };
   const unfavorite = async (id: string) => {
@@ -68,14 +78,69 @@ export function PlaceCollector({
     setFavVersion((v) => v + 1);
   };
 
+  // 목록 | 지도 (지도에서 보고 담기): only offered where the Kakao map can load; the last choice holds for this tab.
+  const [mode, setModeState] = useState<CollectMode>(() => (JS_KEY && !mapBroken ? lastMode() : 'list'));
+  const canMap = !!JS_KEY && !mapBroken;
+  const setMode = (m: CollectMode) => {
+    setModeState(m);
+    rememberMode(m);
+  };
+  /** 담기 on the map: saved like a search pick; returns the new placeRef so the map can offer 되돌리기. */
+  const saveFromMap = (p: NewPlace): string | null => {
+    if (placeRoom(plan) <= 0) return (full(), null);
+    const next = addPlace(plan, p);
+    onChange(next);
+    setAdded(p.category === 'LODGING' ? t('tl.addedKept', { name: p.name }) : t('tl.addedSaved', { name: p.name }));
+    return next.places[next.places.length - 1].placeRef;
+  };
+  const toggle = canMap ? (
+    <SegmentedControl label={t('mapPick.view')} value={mode} onChange={(v) => setMode(v as CollectMode)}>
+      <SegmentedControlItem value="list" label={t('mapPick.list')} />
+      <SegmentedControlItem value="map" label={t('mapPick.map')} />
+    </SegmentedControl>
+  ) : null;
+  if (canMap && mode === 'map')
+    return (
+      <>
+        {toggle}
+        <Suspense fallback={<span className="tl-map-wait" />}>
+          <PlaceMapPicker
+            plan={plan}
+            onAdd={saveFromMap}
+            onUndo={(ref) => {
+              onChange(removePlace(plan, ref));
+              setAdded(null);
+            }}
+            onUnavailable={() => {
+              onNotice({ tone: 'info', text: t('mapPick.off') });
+              setMode('list');
+            }}
+            onMapFailed={() => {
+              mapBroken = true;
+              onNotice({ tone: 'info', text: t('mapPick.mapFailed') });
+              setModeState('list');
+            }}
+            // In new-trip setup the page's 다음 is already the blue button; the map's 담기 is then the grey one.
+            primary={!onRemovePlace}
+          />
+        </Suspense>
+        <div role="status" className="tl-added-line">
+          {added}
+        </div>
+      </>
+    );
+
   return (
     <>
+      {toggle}
       <h3 className="tl-sheet-section">{t('tl.searchNew')}</h3>
       <PlaceSearch
         isLabelHidden
         placeholder={t('place.search')}
         onPick={save}
         onPickMany={pickMany}
+        tripPlaces={plan.places}
+        room={placeRoom(plan)}
         hideFavorites
         favoritesVersion={favVersion}
         onFavoritesChange={() => setFavVersion((v) => v + 1)}
@@ -172,6 +237,7 @@ export function PlaceSheet({
   onChange,
   onOpenPlace,
   onNotice,
+  onRecommend,
 }: {
   isOpen: boolean;
   onClose: () => void;
@@ -179,10 +245,12 @@ export function PlaceSheet({
   onChange: (p: Trip) => void;
   onOpenPlace: (ref: string) => void;
   onNotice: (n: Notice) => void;
+  /** Opens 경로 추천 (offered after a pasted batch). */
+  onRecommend?: () => void;
 }) {
   return (
     <Sheet isOpen={isOpen} onClose={onClose} title={t('tl.placeSheet')} height="tall">
-      <PlaceCollector plan={plan} onChange={onChange} onOpenPlace={onOpenPlace} onNotice={onNotice} onBulkDone={onClose} />
+      <PlaceCollector plan={plan} onChange={onChange} onOpenPlace={onOpenPlace} onNotice={onNotice} onBulkDone={onClose} onRecommend={onRecommend} />
     </Sheet>
   );
 }

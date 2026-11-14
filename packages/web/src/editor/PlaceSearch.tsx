@@ -6,6 +6,7 @@ import { IconButton } from '@astryxdesign/core/IconButton';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
 import { List, ListItem } from '@astryxdesign/core/List';
 import { Selector } from '@astryxdesign/core/Selector';
+import { Spinner } from '@astryxdesign/core/Spinner';
 import { HStack, StackItem, VStack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
 import { TextArea } from '@astryxdesign/core/TextArea';
@@ -16,10 +17,11 @@ import { Card } from '../components/toss/Card';
 import { favorites } from '../lib/db';
 import { asNewPlace, favoriteId, toFavorite } from '../lib/favorites';
 import type { FavoritePlace } from '../lib/favorites';
-import { SearchIcon } from '../components/shell/icons';
+import { ClipboardIcon, SearchIcon } from '../components/shell/icons';
+import { Row } from '../components/shell/rows';
 import { t } from '../lib/i18n';
-import { ApiError, resolvePlace, searchPlaces, type PlaceHit } from '../lib/pairing';
-import { parsePastedPlace, parsePastedPlaces } from '../lib/placeShare';
+import { ApiError, searchPlaces, type PlaceHit, type ResolvedList } from '../lib/pairing';
+import { readPaste } from '../lib/pasteImport';
 import { BulkAddDialog } from './BulkAddDialog';
 import './searchBar.css';
 
@@ -74,6 +76,8 @@ export function PlaceSearch({
   hideFavorites = false,
   favoritesVersion = 0,
   onFavoritesChange,
+  tripPlaces,
+  room,
 }: {
   onPick: (p: NewPlace) => void;
   onPickMany?: (places: NewPlace[]) => void;
@@ -92,6 +96,10 @@ export function PlaceSearch({
   favoritesVersion?: number;
   /** A result's ☆/★ was toggled: lets the place sheet refresh its favorites list. */
   onFavoritesChange?: () => void;
+  /** The trip's places (a pasted saved list marks those already in it 담김). */
+  tripPlaces?: readonly Place[];
+  /** How many more places the trip can take. */
+  room?: number;
 }) {
   const [q, setQ] = useState('');
   const [hits, setHits] = useState<PlaceHit[] | null>(null);
@@ -105,6 +113,8 @@ export function PlaceSearch({
   const [showPaste, setShowPaste] = useState(false);
   const [paste, setPaste] = useState('');
   const [bulkTerms, setBulkTerms] = useState<string[] | null>(null);
+  const [bulkList, setBulkList] = useState<ResolvedList | null>(null);
+  const [reading, setReading] = useState(false);
 
   useEffect(() => {
     void favorites.all().then(setFavs);
@@ -168,33 +178,56 @@ export function PlaceSearch({
   };
 
   /**
-   * Turn pasted map text into a search. Several lines (and onPickMany available) → open the bulk review dialog to pick
-   * an address per name and add them all at once. A single line → the normal single search.
+   * The top row (복사한 링크·장소 붙여넣기): read the clipboard and run the paste at once. When the browser won't hand
+   * the clipboard over (permission denied, or an empty clipboard), the paste box opens instead.
    */
-  const runPaste = async () => {
-    const terms = parsePastedPlaces(paste);
-    if (terms.length === 0) {
-      // No name in the text, but a share link? Ask the server to read the place name from it, then search.
-      const u = parsePastedPlace(paste).url;
-      if (u) {
-        setNote(null);
-        setBusy(true);
-        try {
-          const name = (await resolvePlace(u)).name;
-          setShowPaste(false);
-          setPaste('');
-          setQ(name);
-          await run(name);
-        } catch {
-          setNote(t('place.resolve.failed'));
-        } finally {
-          setBusy(false);
-        }
-        return;
-      }
-      setNote(t('place.paste.noName'));
+  const pasteFromClipboard = async () => {
+    let txt = '';
+    try {
+      txt = await navigator.clipboard.readText();
+    } catch {
+      setShowPaste(true);
+      setNote(t('place.paste.clipboardFail'));
       return;
     }
+    if (!txt.trim()) {
+      setShowPaste(true);
+      setNote(t('place.paste.clipboardEmpty'));
+      return;
+    }
+    await runPaste(txt);
+  };
+
+  /**
+   * Turn pasted map text into places. A link is read by the server first: a Naver 저장 목록 opens the list dialog (no
+   * searches), a Kakao favorites folder gets a clear message, a single place is searched by its name. Several lines (and
+   * onPickMany available) → the bulk dialog searches each name. A single name → the normal single search.
+   */
+  const runPaste = async (text = paste) => {
+    setNote(null);
+    setReading(true);
+    let out;
+    try {
+      out = await readPaste(text);
+    } finally {
+      setReading(false);
+    }
+    if (out.kind === 'empty') return setNote(t('place.paste.noName'));
+    if (out.kind === 'failed') return setNote(t('place.resolve.failed'));
+    if (out.kind === 'unsupported') {
+      // Keep the paste box open: names copied from the folder can still be pasted (one per line).
+      setShowPaste(true);
+      setPaste('');
+      return setNote(t('place.paste.kakaoFolder'));
+    }
+    if (out.kind === 'list') {
+      if (!onPickMany) return setNote(t('place.paste.listHere'));
+      setBulkList(out.list);
+      setShowPaste(false);
+      setPaste('');
+      return;
+    }
+    const terms = out.terms;
     if (onPickMany && terms.length > 1) {
       setBulkTerms(terms);
       setShowPaste(false);
@@ -234,6 +267,18 @@ export function PlaceSearch({
             )}
           </HStack>
         </VStack>
+      )}
+      {!compact && onPickMany && (
+        <Card pad={0}>
+          <Row
+            lead={<ClipboardIcon />}
+            title={t('place.paste.quick')}
+            subtitle={t('place.paste.quickHint')}
+            end={reading ? <Spinner size="sm" /> : undefined}
+            chevron={!reading}
+            onClick={reading ? undefined : () => void pasteFromClipboard()}
+          />
+        </Card>
       )}
       {/* The search bar (SOCAR Frame input-filled: grey field, blue border on focus): the magnifier sits inside, and the
           keyboard's search/enter key runs it — no separate button, so even a narrow card keeps the full width to type. */}
@@ -288,7 +333,8 @@ export function PlaceSearch({
       {!compact && (
       <HStack gap={2} wrap="wrap">
         {!requireCoords && <Button label={unavailable ? t('place.manual.searchOff') : t('place.manual.open')} variant="ghost" size="sm" onClick={() => setManual(true)} />}
-        <Button label={t('place.paste.open')} variant="ghost" size="sm" onClick={() => setShowPaste((v) => !v)} />
+        {/* With the paste row on top, the box opens from there (or by itself when the clipboard can't be read). */}
+        {!onPickMany && <Button label={t('place.paste.open')} variant="ghost" size="sm" onClick={() => setShowPaste((v) => !v)} />}
       </HStack>
       )}
       {!compact && showPaste && (
@@ -301,13 +347,16 @@ export function PlaceSearch({
           )}
           <HStack gap={2}>
             <Button label={t('place.paste.fromClipboard')} variant="ghost" size="sm" onClick={() => void readClipboard()} />
-            <Button label={t('place.paste.find')} variant="primary" size="sm" isDisabled={!paste.trim()} onClick={() => void runPaste()} />
+            <Button label={t('place.paste.find')} variant="primary" size="sm" isDisabled={!paste.trim()} isLoading={reading} onClick={() => void runPaste()} />
           </HStack>
         </VStack>
       )}
       <ManualPlaceDialog isOpen={manual} lodgingOnly={lodgingOnly} onClose={() => setManual(false)} onSave={(p) => (onPick(p), setManual(false))} />
       {onPickMany && bulkTerms && (
         <BulkAddDialog isOpen terms={bulkTerms} lodgingOnly={lodgingOnly} onClose={() => setBulkTerms(null)} onAdd={(places) => onPickMany(places)} />
+      )}
+      {onPickMany && bulkList && (
+        <BulkAddDialog isOpen list={bulkList} existing={tripPlaces} room={room} lodgingOnly={lodgingOnly} onClose={() => setBulkList(null)} onAdd={(places) => onPickMany(places)} />
       )}
     </VStack>
   );

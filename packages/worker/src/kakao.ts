@@ -32,24 +32,71 @@ export function categoryOf(group: string, path: string): string {
 
 const str = (v: unknown) => (typeof v === 'string' ? v : '');
 
-/** `body` is the POST JSON `{ q, x?, y? }`; the term never appears in a URL on our side. */
-export async function searchPlaces(body: Record<string, unknown>, key: string | undefined): Promise<Response> {
+/** The map-search kinds the phone offers as chips, and Kakao's group code for each. */
+export const GROUP_OF: Record<string, string> = { FOOD: 'FD6', CAFE: 'CE7', LODGING: 'AD5', SIGHT: 'AT4' };
+
+/**
+ * Korea and its seas, a little wide: the only area a map search may cover. A rect is the part of the map the user is
+ * looking at (never their own location), as [minLon, minLat, maxLon, maxLat].
+ */
+const KOREA = { minLon: 124, maxLon: 132, minLat: 33, maxLat: 39.5 };
+
+export type Rect = [number, number, number, number];
+
+/** A valid map rect, or null: four finite numbers, min below max, inside {@link KOREA}. */
+export function parseRect(v: unknown): Rect | null {
+  if (!Array.isArray(v) || v.length !== 4 || !v.every((n) => typeof n === 'number' && Number.isFinite(n))) return null;
+  const [minLon, minLat, maxLon, maxLat] = v as Rect;
+  if (!(minLon < maxLon && minLat < maxLat)) return null;
+  if (minLon < KOREA.minLon || maxLon > KOREA.maxLon || minLat < KOREA.minLat || maxLat > KOREA.maxLat) return null;
+  return [minLon, minLat, maxLon, maxLat];
+}
+
+const fixed = (n: number) => String(Math.round(n * 1e6) / 1e6);
+
+/**
+ * `body` is the POST JSON `{ q?, rect?, category?, x?, y? }`; the term never appears in a URL on our side.
+ * - `q` alone: keyword search, as before (10 results).
+ * - `q` + `rect`: keyword search inside the part of the map on screen (15 results); with `category` too, only that kind.
+ * - `category` + `rect` (no `q`): that kind of place inside the rect, nearest the rect's centre first (15 results).
+ * Anything else — a bad rect, an unknown category, a category without a rect — is a 400.
+ */
+export async function searchPlaces(body: Record<string, unknown>, key: string | undefined, fetcher: typeof fetch = fetch): Promise<Response> {
   const q = str(body.q).trim();
-  if (q.length < 1 || q.length > 60) return error('BAD_REQUEST');
+  const hasRect = body.rect !== undefined && body.rect !== null;
+  const rect = hasRect ? parseRect(body.rect) : null;
+  if (hasRect && !rect) return error('BAD_REQUEST');
+  const hasCategory = body.category !== undefined && body.category !== null;
+  const group = hasCategory ? (typeof body.category === 'string' && Object.hasOwn(GROUP_OF, body.category) ? GROUP_OF[body.category] : null) : null;
+  if (hasCategory && (!group || !rect)) return error('BAD_REQUEST');
+  if (q.length > 60 || (q.length < 1 && !group)) return error('BAD_REQUEST');
   if (!key) return json({ error: 'SEARCH_UNAVAILABLE' }, 503);
 
-  const upstream = new URL('https://dapi.kakao.com/v2/local/search/keyword.json');
-  upstream.searchParams.set('query', q);
-  upstream.searchParams.set('size', '10');
-  const x = str(body.x);
-  const y = str(body.y);
-  if (x && y && /^-?\d+(\.\d+)?$/.test(x) && /^-?\d+(\.\d+)?$/.test(y)) {
-    upstream.searchParams.set('x', x);
-    upstream.searchParams.set('y', y);
+  const byCategory = !q && !!group;
+  const upstream = new URL(`https://dapi.kakao.com/v2/local/search/${byCategory ? 'category' : 'keyword'}.json`);
+  if (q) upstream.searchParams.set('query', q);
+  if (group) upstream.searchParams.set('category_group_code', group);
+  upstream.searchParams.set('page', '1');
+  upstream.searchParams.set('size', rect ? '15' : '10');
+  if (rect) {
+    upstream.searchParams.set('rect', rect.map(fixed).join(','));
+    if (byCategory) {
+      // No term to rank by: the places nearest the middle of the map come first.
+      upstream.searchParams.set('x', fixed((rect[0] + rect[2]) / 2));
+      upstream.searchParams.set('y', fixed((rect[1] + rect[3]) / 2));
+      upstream.searchParams.set('sort', 'distance');
+    } else upstream.searchParams.set('sort', 'accuracy');
+  } else {
+    const x = str(body.x);
+    const y = str(body.y);
+    if (x && y && /^-?\d+(\.\d+)?$/.test(x) && /^-?\d+(\.\d+)?$/.test(y)) {
+      upstream.searchParams.set('x', x);
+      upstream.searchParams.set('y', y);
+    }
   }
   // Any upstream trouble (timeout, non-JSON, odd document) is one JSON answer, never a bare 500.
   try {
-    const res = await fetch(upstream, { headers: { Authorization: `KakaoAK ${key}` }, signal: AbortSignal.timeout(5_000) });
+    const res = await fetcher(upstream, { headers: { Authorization: `KakaoAK ${key}` }, signal: AbortSignal.timeout(5_000) });
     if (!res.ok) return json({ error: 'SEARCH_UNAVAILABLE' }, 502);
     const data = (await res.json()) as { documents?: Partial<KakaoDoc>[] };
     const results = (data.documents ?? [])

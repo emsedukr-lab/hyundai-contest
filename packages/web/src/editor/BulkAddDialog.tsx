@@ -2,20 +2,25 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
+import { CheckboxList, CheckboxListItem } from '@astryxdesign/core/CheckboxList';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Selector } from '@astryxdesign/core/Selector';
 import { Spinner } from '@astryxdesign/core/Spinner';
 import { HStack, StackItem, VStack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
+import { TRANSFER_LIMITS, type Place } from '@tteonaljido/shared';
+import { Tag } from '../components/shell/Tag';
 import { Card } from '../components/toss/Card';
 import { JS_KEY, loadKakao, numberPin } from '../lib/kakaoSdk';
 import { t } from '../lib/i18n';
-import { ApiError, searchPlaces, type PlaceHit } from '../lib/pairing';
-import { byName, fromHit, type NewPlace } from './PlaceSearch';
+import { ApiError, searchPlaces, type PlaceHit, type ResolvedList } from '../lib/pairing';
+import { fromListPlace, inTrip } from '../lib/pasteImport';
+import { byName, CATEGORY_LABEL, fromHit, type NewPlace } from './PlaceSearch';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 const NAME = '__name__';
+const NONE: readonly Place[] = [];
 const SKIP = '__skip__';
 type Choice = number | typeof NAME | typeof SKIP;
 
@@ -41,11 +46,133 @@ async function pool<T>(items: T[], limit: number, fn: (item: T, i: number) => Pr
  * 여러 곳 한번에 추가 (bulk add): searches each pasted name, lets the user pick an address per name, shows the chosen
  * set on a Kakao map, then adds them all in one go. Only clean `NewPlace` objects reach the trip (fromHit/byName).
  */
-export function BulkAddDialog({ isOpen, terms, lodgingOnly, onClose, onAdd }: { isOpen: boolean; terms: string[]; lodgingOnly: boolean; onClose: () => void; onAdd: (places: NewPlace[]) => void }) {
+export function BulkAddDialog({
+  isOpen,
+  terms = [],
+  list,
+  existing = NONE,
+  room = Infinity,
+  lodgingOnly,
+  onClose,
+  onAdd,
+}: {
+  isOpen: boolean;
+  /** Search mode: pasted names, each searched. */
+  terms?: string[];
+  /** List mode: a Naver 저장 목록 the server already read — no searches, the rows are the list. */
+  list?: ResolvedList;
+  /** The trip's places, so list rows already in it show 담김. */
+  existing?: readonly Place[];
+  /** How many more places the trip can take (placeRoom). */
+  room?: number;
+  lodgingOnly: boolean;
+  onClose: () => void;
+  onAdd: (places: NewPlace[]) => void;
+}) {
+  if (list) return <ListAddDialog isOpen={isOpen} list={list} existing={existing} room={room} onClose={onClose} onAdd={onAdd} />;
+  return <SearchAddDialog isOpen={isOpen} terms={terms} lodgingOnly={lodgingOnly} onClose={onClose} onAdd={onAdd} />;
+}
+
+/**
+ * A numbered overview map of the given places (only with the Kakao map key). The box appears only once the map SDK has
+ * loaded, so a phone that can't load it (offline, a blocked script) never shows an empty 200px gap.
+ */
+function useOverviewMap(isOpen: boolean, coords: readonly (NewPlace & { latE7: number; lonE7: number; n?: number })[]) {
+  const mapRef = useRef<HTMLDivElement>(null);
+  const [kakao, setKakao] = useState<any>(null);
+  const wanted = !!JS_KEY && isOpen && coords.length > 0;
+  useEffect(() => {
+    if (!wanted || kakao) return;
+    let cancelled = false;
+    loadKakao(JS_KEY!)
+      .then((k) => {
+        if (!cancelled) setKakao(k);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [wanted, kakao]);
+  useEffect(() => {
+    if (!kakao || !mapRef.current || coords.length === 0) return;
+    mapRef.current.innerHTML = '';
+    const map = new kakao.maps.Map(mapRef.current, { center: new kakao.maps.LatLng(coords[0].latE7 / 1e7, coords[0].lonE7 / 1e7), level: 7 });
+    const bounds = new kakao.maps.LatLngBounds();
+    coords.forEach((p, i) => {
+      const ll = new kakao.maps.LatLng(p.latE7 / 1e7, p.lonE7 / 1e7);
+      bounds.extend(ll);
+      new kakao.maps.CustomOverlay({ position: ll, content: numberPin(p.n ?? i + 1, p.name), xAnchor: 0.5, yAnchor: 0.5, map, zIndex: 3 });
+    });
+    if (coords.length > 1) map.setBounds(bounds);
+  }, [kakao, coords]);
+  return { mapRef, showMap: wanted && !!kakao };
+}
+
+/**
+ * 저장 목록 가져오기 (list mode): the rows are the shared list itself, already located, so nothing is searched (the 30 a
+ * minute search budget stays untouched). Every row starts checked except those already in the trip (담김, disabled),
+ * and no more than the trip has room for.
+ */
+function ListAddDialog({ isOpen, list, existing, room, onClose, onAdd }: { isOpen: boolean; list: ResolvedList; existing: readonly Place[]; room: number; onClose: () => void; onAdd: (places: NewPlace[]) => void }) {
+  const rows = useMemo(() => list.places.map((lp, i) => ({ key: String(i), place: fromListPlace(lp), already: inTrip(existing, fromListPlace(lp)) })), [list, existing]);
+  const fresh = useMemo(() => rows.filter((r) => !r.already), [rows]);
+  const [checked, setChecked] = useState<string[]>([]);
+  useEffect(() => {
+    if (isOpen) setChecked(fresh.slice(0, Math.max(0, room)).map((r) => r.key));
+  }, [isOpen, fresh, room]);
+  const chosen = useMemo(() => rows.filter((r) => checked.includes(r.key)), [rows, checked]);
+  const over = chosen.length > room;
+  // Pins keep the row's number, so "3" on the map is the third row whatever is ticked.
+  const coords = useMemo(() => rows.filter((r) => checked.includes(r.key)).map((r) => ({ ...(r.place as NewPlace & { latE7: number; lonE7: number }), n: Number(r.key) + 1 })), [rows, checked]);
+  const { mapRef, showMap } = useOverviewMap(isOpen, coords);
+  const skipped = list.total - list.places.length;
+
+  return (
+    <Dialog isOpen={isOpen} onOpenChange={(o) => !o && onClose()} width={640}>
+      <DialogHeader title={t('bulk.list.title', { title: list.title || t('bulk.list.untitled'), n: list.places.length })} subtitle={t('bulk.list.source')} onOpenChange={(o) => !o && onClose()} />
+      <VStack gap={4}>
+        {skipped > 0 && <Banner status="info" title={t('bulk.list.skipped', { n: skipped })} />}
+        {fresh.length === 0 && <Banner status="info" title={t('bulk.list.allIn')} />}
+        {fresh.length > room && <Banner status="warning" title={room > 0 ? t('bulk.list.room', { n: room }) : t('trip.placeLimit', { n: TRANSFER_LIMITS.maxPlaces })} />}
+        {showMap && <div ref={mapRef} style={{ width: '100%', height: 200 }} role="img" aria-label={t('map.bulkAria')} />}
+        <Card pad={0}>
+          <CheckboxList label={t('bulk.list.pick')} isLabelHidden value={checked} onChange={setChecked} hasDividers>
+            {rows.map((r, i) => (
+              <CheckboxListItem
+                key={r.key}
+                value={r.key}
+                label={`${i + 1}. ${r.place.name}`}
+                description={[CATEGORY_LABEL[r.place.category], r.place.address].filter(Boolean).join(' · ')}
+                isDisabled={r.already}
+                endContent={r.already ? <Tag>{t('tl.inTrip')}</Tag> : undefined}
+              />
+            ))}
+          </CheckboxList>
+        </Card>
+        <HStack gap={2} className="tn-dialog-foot">
+          <Button label={t('common.cancel')} variant="secondary" onClick={onClose} />
+          <StackItem size="fill">
+            <Button
+              label={t('bulk.list.addN', { n: chosen.length })}
+              variant="primary"
+              width="100%"
+              isDisabled={chosen.length === 0 || over}
+              onClick={() => {
+                onAdd(chosen.map((r) => r.place));
+                onClose();
+              }}
+            />
+          </StackItem>
+        </HStack>
+      </VStack>
+    </Dialog>
+  );
+}
+
+function SearchAddDialog({ isOpen, terms, lodgingOnly, onClose, onAdd }: { isOpen: boolean; terms: string[]; lodgingOnly: boolean; onClose: () => void; onAdd: (places: NewPlace[]) => void }) {
   const [rows, setRows] = useState<Row[] | null>(null);
   const [searchOff, setSearchOff] = useState(false);
   const [failed, setFailed] = useState(0); // searches that errored (e.g. rate-limited) — not the same as "no match"
-  const mapRef = useRef<HTMLDivElement>(null);
 
   // Search every term when the dialog opens (concurrency-limited).
   useEffect(() => {
@@ -98,27 +225,7 @@ export function BulkAddDialog({ isOpen, terms, lodgingOnly, onClose, onAdd }: { 
   const coords = useMemo(() => located, [sig]);
 
   // Overview map: a numbered pin for each selected place that has coordinates.
-  useEffect(() => {
-    if (!JS_KEY || !isOpen || !mapRef.current || coords.length === 0) return;
-    let cancelled = false;
-    loadKakao(JS_KEY)
-      .then((kakao) => {
-        if (cancelled || !mapRef.current) return;
-        mapRef.current.innerHTML = '';
-        const map = new kakao.maps.Map(mapRef.current, { center: new kakao.maps.LatLng(coords[0].latE7 / 1e7, coords[0].lonE7 / 1e7), level: 7 });
-        const bounds = new kakao.maps.LatLngBounds();
-        coords.forEach((p, i) => {
-          const ll = new kakao.maps.LatLng(p.latE7 / 1e7, p.lonE7 / 1e7);
-          bounds.extend(ll);
-          new kakao.maps.CustomOverlay({ position: ll, content: numberPin(i + 1, p.name), xAnchor: 0.5, yAnchor: 0.5, map, zIndex: 3 });
-        });
-        if (coords.length > 1) map.setBounds(bounds);
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-  }, [isOpen, coords]);
+  const { mapRef, showMap } = useOverviewMap(isOpen, coords);
 
   return (
     <Dialog isOpen={isOpen} onOpenChange={(o) => !o && onClose()} width={640}>
@@ -133,7 +240,7 @@ export function BulkAddDialog({ isOpen, terms, lodgingOnly, onClose, onAdd }: { 
           <>
             {searchOff && <Banner status="info" title={t('bulk.searchOff')} />}
             {!searchOff && failed > 0 && <Banner status="warning" title={t('bulk.someFailed')} />}
-            {JS_KEY && coords.length > 0 && <div ref={mapRef} style={{ width: '100%', height: 220 }} role="img" aria-label={t('map.bulkAria')} />}
+            {showMap && <div ref={mapRef} style={{ width: '100%', height: 220 }} role="img" aria-label={t('map.bulkAria')} />}
             <Card>
               <VStack gap={3}>
                 {rows.map((r, i) => (

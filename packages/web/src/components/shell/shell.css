@@ -975,6 +975,16 @@ div:has(> .astryx-switch) {
 .tn-btnrow > * {
   flex: 1 1 auto;
 }
+/* A long dialog's actions (the 저장 목록 review): pinned to the bottom of the dialog's scroll, on the dialog's own face. */
+.tn-dialog-foot {
+  position: sticky;
+  /* sticks over the dialog's own 16px bottom padding too, so no row shows through under the buttons */
+  bottom: -16px;
+  z-index: 2;
+  margin-top: -8px;
+  padding: 12px 0 16px;
+  background: var(--tn-surface-float);
+}
 /* A pushed screen whose code is still arriving: the canvas, nothing else. */
 .tn-route-wait {
   display: block;

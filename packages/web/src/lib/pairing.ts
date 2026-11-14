@@ -162,18 +162,60 @@ export interface PlaceHit {
   category: 'SIGHT' | 'FOOD' | 'CAFE' | 'LODGING' | 'OTHER';
 }
 
-/** The term goes in the request body, not the URL, so no request log can carry it. */
-export async function searchPlaces(q: string): Promise<PlaceHit[]> {
-  const res = await api<{ results: PlaceHit[] }>('POST', '/places/search', null, { q });
+/** The part of the map on screen, `[minLon, minLat, maxLon, maxLat]` — never the user's own location. */
+export type MapRect = [number, number, number, number];
+/** The kinds a map search can look for (the map picker's chips). */
+export type MapCategory = 'SIGHT' | 'FOOD' | 'CAFE' | 'LODGING';
+
+/**
+ * The term goes in the request body, not the URL, so no request log can carry it. With `rect` the search keeps to that
+ * part of the map; with `category` (and `rect`) the term may be empty: every place of that kind in the rect.
+ */
+export async function searchPlaces(q: string, opts: { rect?: MapRect; category?: MapCategory } = {}): Promise<PlaceHit[]> {
+  const body: { q: string; rect?: MapRect; category?: MapCategory } = { q };
+  if (opts.rect) body.rect = opts.rect;
+  if (opts.category) body.category = opts.category;
+  const res = await api<{ results: PlaceHit[] }>('POST', '/places/search', null, body);
   return res.results;
 }
 
 export interface ResolvedPlace {
+  /** Older servers answered without `kind`; that is a single place too. */
+  kind?: 'place';
   name: string;
   address: string;
 }
 
-/** Asks the server to follow a Naver/Kakao share link and read the place name/address from it (throws ApiError on failure). */
-export async function resolvePlace(url: string): Promise<ResolvedPlace> {
-  return api<ResolvedPlace>('POST', '/places/resolve', null, { url });
+/** One place of a shared saved list, already located (the server read it from the list itself). */
+export interface ListPlace {
+  name: string;
+  address: string;
+  latE7: number;
+  lonE7: number;
+  category: PlaceHit['category'];
 }
+
+/** A Naver "저장 목록" link: the list's name, how many it holds, and its places (at most 100). No owner details. */
+export interface ResolvedList {
+  kind: 'list';
+  source: 'naver';
+  title: string;
+  total: number;
+  places: ListPlace[];
+}
+
+/** A link the server knows but can't read (a Kakao Map favorites folder: Kakao blocks automated access). */
+export interface ResolvedUnsupported {
+  kind: 'unsupported';
+  source: 'kakao';
+}
+
+export type Resolved = ResolvedPlace | ResolvedList | ResolvedUnsupported;
+
+/** Asks the server to follow a Naver/Kakao share link and read the place (or saved list) from it (throws ApiError on failure). */
+export async function resolvePlace(url: string): Promise<Resolved> {
+  return api<Resolved>('POST', '/places/resolve', null, { url });
+}
+
+/** A single place's name from a resolve answer, or null when the link was a list or an unsupported folder. */
+export const resolvedName = (r: Resolved): string | null => (r.kind === 'list' || r.kind === 'unsupported' ? null : r.name || null);
