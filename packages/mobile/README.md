@@ -3,7 +3,7 @@
 모바일 웹(`packages/web`)의 화면을 그대로 담은 휴대폰 앱입니다. [Capacitor](https://capacitorjs.com) 8.6으로 포장하며, 화면 코드는 하나이고 모바일 웹도 그대로 유지합니다(앱이 없으면 차량 QR은 지금처럼 브라우저에서 열립니다).
 
 - 앱 ID `io.tteonaljido.mobile` (차량 앱은 `io.tteonaljido.car`), 버전 0.2.0
-- 2026-11-15: 지금 웹 화면 그대로의 서명 release APK 0.2.0을 `apk/떠날지도_모바일_release.apk`에 두고, Android 휴대폰 에뮬레이터에서 실행해 확인했습니다(아래 '확인한 것'). **iOS 빌드와 실제 휴대폰 동작은 아직 확인하지 못했습니다.**
+- 2026-11-15: 지금 웹 화면 그대로의 서명 release APK 0.2.0을 저장소 최상위 [`apk/mobile/`](../../apk/mobile/)에 두고, Android 휴대폰 에뮬레이터에서 실행해 확인했습니다(아래 '확인한 것'). **iOS 빌드와 실제 휴대폰 동작은 아직 확인하지 못했습니다.**
 
 ## 구조
 
@@ -19,6 +19,7 @@ packages/web  ──(vite build --mode app)──▶  packages/mobile/www  ─�
 | `ios/` | Xcode 프로젝트 (iOS 15 이상, Swift Package Manager) |
 | `scripts/make-icons.py` | 앱 아이콘·시작 화면 그림 생성(차량 앱과 같은 표식). `rsvg-convert`·Pillow 필요 |
 | `apk/` | 빌드해 둔 시험용 APK (git 제외) |
+| [`../../apk/mobile/`](../../apk/mobile/) | 배포용 모바일 release APK (git 포함) |
 
 중계 서버 주소는 한 곳(`car/gradle.properties`의 `tteonaljido.prodOrigin`)에만 있습니다. 웹의 앱용 빌드(`packages/web/vite.config.ts`)와 Android App Link 호스트(`android/app/build.gradle`)가 모두 이 값을 읽습니다. 시험 서버로 빌드하려면 `TTEONALJIDO_ORIGIN=https://… npm run build:app` (https만).
 
@@ -44,10 +45,10 @@ npm run run:ios -w @tteonaljido/mobile
 
 | 파일 | 내용 |
 |---|---|
-| `apk/떠날지도_모바일_release.apk` | 서명된 release, 버전 0.2.0(2), 6.9MB, 2026-11-15. sha256 `d97f6993…` |
+| [`../../apk/mobile/떠날지도_모바일_release.apk`](../../apk/mobile/떠날지도_모바일_release.apk) | 서명된 release, 버전 0.2.0(2), 6.9MB, 2026-11-15. sha256 `d97f6993…` |
 | `apk/떠날지도_모바일_debug.apk` | 예전(0.1.0) debug 빌드(임시 debug 키). release와 서명이 달라 서로 덮어 설치되지 않음 |
 
-Android 7(API 24) 이상 휴대폰에 `adb install -r apk/떠날지도_모바일_release.apk`로 넣거나 파일을 옮겨 설치합니다.
+저장소 루트에서 `adb install -r apk/mobile/떠날지도_모바일_release.apk`로 Android 7(API 24) 이상 휴대폰에 넣거나 파일을 옮겨 설치합니다.
 
 - **서명**: 차량 앱과 같은 키(`.secrets/tteonaljido.jks`, 별칭 `tteonaljido`), APK 서명 v2 + v3. 인증서 SHA-256 지문은 `8F:E7:CC:E9:A3:62:10:A5:48:54:0B:2D:03:48:DB:89:DF:88:51:1F:55:3F:39:23:58:B4:52:C6:5D:0D:ED:99`이고 차량 APK와 같은 것을 확인했습니다. 이 지문이 App Link 검증 파일(남은 일 2)에 들어갑니다.
 - **다시 만들기**: `.secrets/`가 있는 Mac에서 `npm run app:sync` 후 `cd android && ANDROID_HOME=~/Library/Android/sdk JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home" ./gradlew :app:assembleRelease` → `app/build/outputs/apk/release/app-release.apk`. `android/app/build.gradle`이 차량 앱과 같은 `.secrets/signing.properties`를 읽고, 키가 없으면 서명 없이 만듭니다. (2026-11-11의 파일은 서명 없는 release를 따로 빌드한 뒤, 키가 있는 Mac 안에서 `apksigner`로 서명했습니다. 키와 비밀번호는 Mac 밖으로 나가지 않았습니다.)

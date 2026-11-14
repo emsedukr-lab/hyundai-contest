@@ -6,7 +6,9 @@
 |---|---|
 | 앱 이름 | 떠날지도 (`io.tteonaljido.car`) |
 | 한 줄 소개 | 장소만 담으면 날짜별 동선을 짜 주고, 차에서 QR로 불러와 내비가 순서대로 안내하는 여행 앱 |
-| APK | [`apk/이충지_떠날지도_release.apk`](apk/이충지_떠날지도_release.apk) · release 0.9.0 (versionCode 9) · 서명 v2+v3 · SHA-256은 [`apk/SHA256SUMS.txt`](apk/SHA256SUMS.txt) |
+| 차량 APK | [`apk/car/이충지_떠날지도_release.apk`](apk/car/이충지_떠날지도_release.apk) · release 0.9.0 (versionCode 9) · 서명 v2+v3 |
+| 모바일 APK | [`apk/mobile/떠날지도_모바일_release.apk`](apk/mobile/떠날지도_모바일_release.apk) · release 0.2.0 (versionCode 2) · 서명 v2+v3 |
+| APK SHA-256 | [`apk/SHA256SUMS.txt`](apk/SHA256SUMS.txt) |
 | 개발 에뮬레이터 | Pleos Connect Emulator 2.1.0 (Android 14, API 34, arm64) |
 | 화면 규격 | 2560×1440, 160dpi (Connect-S-17 기본) |
 | 휴대폰 웹 | https://tteonaljido.tteonaljido-worker.workers.dev (설치 없이 브라우저에서 사용) |
@@ -21,7 +23,7 @@ release APK는 배포된 서버에 연결되어 있어 서버를 따로 띄울 �
 1. Pleos Connect Emulator 2.1.0 AVD를 cold boot로 켭니다 (RAM 4GB, `-gpu host` 권장).
 2. APK를 설치합니다.
    ```sh
-   adb install -r apk/이충지_떠날지도_release.apk
+   adb install -r apk/car/이충지_떠날지도_release.apk
    ```
 3. 차량(기어 P): 떠날지도 실행 → **모바일 여행 불러오기** → QR 표시
 4. 휴대폰: 위 휴대폰 웹 첫 화면 오른쪽 위의 **QR 아이콘(연결)**에서 차량 QR을 스캔 → 차량과 같은 6자리 확인 코드 확인 → **샘플 여행 추가** → **차량으로 보내기**
@@ -92,7 +94,8 @@ adb shell am start --user 10 -n io.tteonaljido.car/.MainActivity
 | `design/` | Pleos Connect 디자인 기준과 토큰 |
 | `docs/` | 설계 문서, 화면 기록, 조사 자료 |
 | `tools/` | E2E·스모크 시험, 시연 녹화 도구 |
-| `apk/` · `media/demo/` | 서명된 release APK, 시연 영상 |
+| `apk/mobile/` · `apk/car/` | 모바일·차량용 서명된 release APK |
+| `media/demo/` | 시연 영상 |
 
 ## 시험
 
