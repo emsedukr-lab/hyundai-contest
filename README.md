@@ -93,7 +93,6 @@ adb shell am start --user 10 -n io.tteonaljido.car/.MainActivity
 | `docs/` | 설계 문서, 화면 기록, 조사 자료 |
 | `tools/` | E2E·스모크 시험, 시연 녹화 도구 |
 | `apk/` · `media/demo/` | 서명된 release APK, 시연 영상 |
-| `submission/` | 접수양식, 소개서 |
 
 ## 시험
 

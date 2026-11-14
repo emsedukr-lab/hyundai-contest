@@ -22,7 +22,6 @@ packages/*/dist/
 playwright-report/
 test-results/
 .work/
-submission/figures/*.raw.png
 generated-images/
 
 
@@ -35,3 +34,6 @@ design/source/*.fig
 
 # 커밋 검사 로컬 설정
 lefthook-local.yml
+
+# 제출 자료(접수양식·소개서 등)는 저장소에 두지 않음
+submission/
