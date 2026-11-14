@@ -9,14 +9,12 @@ import { Selector } from '@astryxdesign/core/Selector';
 import { Spinner } from '@astryxdesign/core/Spinner';
 import { HStack, StackItem, VStack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
-import { TextInput } from '@astryxdesign/core/TextInput';
 import { TRANSFER_LIMITS, type Place } from '@tteonaljido/shared';
 import { Tag } from '../components/shell/Tag';
 import { Card } from '../components/toss/Card';
 import { JS_KEY, loadKakao, numberPin } from '../lib/kakaoSdk';
 import { t } from '../lib/i18n';
-import { ApiError, searchPlaces, type MapCategory, type MapRect, type PlaceHit, type ResolvedList } from '../lib/pairing';
-import { SearchIcon } from '../components/shell/icons';
+import { ApiError, searchPlaces, type PlaceHit, type ResolvedList } from '../lib/pairing';
 import { fromListPlace, inTrip } from '../lib/pasteImport';
 import { byName, CATEGORY_LABEL, fromHit, type NewPlace } from './PlaceSearch';
 
@@ -120,129 +118,31 @@ function useOverviewMap(isOpen: boolean, coords: readonly (NewPlace & { latE7: n
  * minute search budget stays untouched). Every row starts checked except those already in the trip (담김, disabled),
  * and no more than the trip has room for.
  */
-/** About 150 m each way around a point: where 이름 확인 looks for the shop a Kakao folder's marker stands on. */
-const around = (p: { latE7: number; lonE7: number }): MapRect => {
-  const lat = p.latE7 / 1e7;
-  const lon = p.lonE7 / 1e7;
-  return [lon - 0.0019, lat - 0.0014, lon + 0.0019, lat + 0.0014];
-};
-const FIX_CHIPS: MapCategory[] = ['FOOD', 'CAFE', 'SIGHT', 'LODGING'];
-
-/**
- * 이름 확인: a Kakao folder's place was named by what stands at its point, which can be the wrong shop. This looks
- * around that point (the map search, kept to a small rect — never the user's own location) so the right one can be
- * picked; the pick replaces the row with a real Kakao place.
- */
-function FixName({ n, place, onPick, onBack }: { n: number; place: NewPlace & { latE7: number; lonE7: number }; onPick: (p: NewPlace) => void; onBack: () => void }) {
-  const [q, setQ] = useState('');
-  const [hits, setHits] = useState<PlaceHit[] | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [note, setNote] = useState<string | null>(null);
-  const rect = useMemo(() => around(place), [place]);
-  const run = async (query: string, category?: MapCategory) => {
-    setBusy(true);
-    setNote(null);
-    try {
-      setHits(await searchPlaces(query, { rect, category }));
-    } catch (e) {
-      setHits(null);
-      setNote(e instanceof ApiError && e.status === 503 ? t('place.search.unavailable') : t('place.search.busy'));
-    } finally {
-      setBusy(false);
-    }
-  };
-  useEffect(() => {
-    const c = place.category;
-    if (c === 'FOOD' || c === 'CAFE' || c === 'SIGHT' || c === 'LODGING') void run('', c);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  return (
-    <VStack gap={3}>
-      <Text type="label">{t('bulk.fix.title', { n })}</Text>
-      <Text type="supporting" color="secondary">
-        {t('bulk.fix.hint', { name: place.name })}
-      </Text>
-      <div role="search">
-        <TextInput label={t('bulk.fix.search')} isLabelHidden value={q} onChange={setQ} onEnter={() => q.trim() && void run(q.trim())} enterKeyHint="search" placeholder={t('bulk.fix.search')} startIcon={<SearchIcon />} isLoading={busy} hasClear controlClassName="tn-searchbar" />
-      </div>
-      <HStack gap={2} wrap="wrap">
-        {FIX_CHIPS.map((c) => (
-          <Button key={c} label={CATEGORY_LABEL[c]} variant="secondary" size="sm" isDisabled={busy} onClick={() => void run(q.trim(), c)} />
-        ))}
-      </HStack>
-      {note && <Banner status="info" title={note} />}
-      {hits && hits.length === 0 && <Banner status="info" title={t('bulk.fix.none')} />}
-      {hits && hits.length > 0 && (
-        <Card pad={0}>
-          <List hasDividers>
-            {hits.map((h) => (
-              <ListItem key={h.externalId} label={h.name} description={`${CATEGORY_LABEL[h.category]} · ${h.address}`} onClick={() => onPick(fromHit(h))} />
-            ))}
-          </List>
-        </Card>
-      )}
-      <HStack gap={2} className="tn-dialog-foot">
-        <StackItem size="fill">
-          <Button label={t('bulk.fix.back')} variant="secondary" width="100%" onClick={onBack} />
-        </StackItem>
-      </HStack>
-    </VStack>
-  );
-}
-
 function ListAddDialog({ isOpen, list, existing, room, onClose, onAdd }: { isOpen: boolean; list: ResolvedList; existing: readonly Place[]; room: number; onClose: () => void; onAdd: (places: NewPlace[]) => void }) {
-  const kakao = list.source === 'kakao';
-  // A Kakao folder's names come from the location (or are missing without the server's key): say which row it is.
-  const base = useMemo(() => list.places.map((lp, i) => fromListPlace({ ...lp, name: lp.name || t('bulk.kakao.unnamed', { n: i + 1 }) })), [list]);
-  const [fixed, setFixed] = useState<Record<string, NewPlace>>({}); // rows renamed through 이름 확인
-  const [fixing, setFixing] = useState<string | null>(null);
-  const rows = useMemo(
-    () =>
-      base.map((p0, i) => {
-        const place = fixed[String(i)] ?? p0;
-        return { key: String(i), place, already: inTrip(existing, place), guessed: kakao && !fixed[String(i)] };
-      }),
-    [base, fixed, existing, kakao],
-  );
+  const base = useMemo(() => list.places.map((lp) => fromListPlace(lp)), [list]);
+  const rows = useMemo(() => base.map((place, i) => ({ key: String(i), place, already: inTrip(existing, place) })), [base, existing]);
   const fresh = useMemo(() => rows.filter((r) => !r.already), [rows]);
   const [checked, setChecked] = useState<string[]>([]);
   useEffect(() => {
     if (!isOpen) return;
-    setFixed({});
-    setFixing(null);
     setChecked(base.filter((p) => !inTrip(existing, p)).slice(0, Math.max(0, room)).map((p) => String(base.indexOf(p))));
-  }, [isOpen, base]); // eslint-disable-line react-hooks/exhaustive-deps -- only on opening, not on every rename
-  // A row renamed into a place that is already in the trip can't stay ticked.
+  }, [isOpen, base]); // eslint-disable-line react-hooks/exhaustive-deps -- only on opening
   const chosen = useMemo(() => rows.filter((r) => checked.includes(r.key) && !r.already), [rows, checked]);
   const over = chosen.length > room;
   // Pins keep the row's number, so "3" on the map is the third row whatever is ticked.
   const coords = useMemo(() => chosen.map((r) => ({ ...(r.place as NewPlace & { latE7: number; lonE7: number }), n: Number(r.key) + 1 })), [chosen]);
-  const { mapRef, showMap } = useOverviewMap(isOpen && fixing === null, coords);
+  const { mapRef, showMap } = useOverviewMap(isOpen, coords);
   const skipped = list.total - list.places.length;
-  const fixRow = fixing === null ? null : rows.find((r) => r.key === fixing) ?? null;
 
   return (
     <Dialog isOpen={isOpen} onOpenChange={(o) => !o && onClose()} width={640}>
       <DialogHeader
         title={t('bulk.list.title', { title: list.title || t('bulk.list.untitled'), n: list.places.length })}
-        subtitle={kakao ? t('bulk.list.sourceKakao') : t('bulk.list.source')}
+        subtitle={t('bulk.list.source')}
         onOpenChange={(o) => !o && onClose()}
       />
-      {fixRow ? (
-        <FixName
-          n={Number(fixRow.key) + 1}
-          place={base[Number(fixRow.key)] as NewPlace & { latE7: number; lonE7: number }}
-          onBack={() => setFixing(null)}
-          onPick={(p) => {
-            setFixed((f) => ({ ...f, [fixRow.key]: p }));
-            setChecked((c) => (c.includes(fixRow.key) ? c : [...c, fixRow.key]));
-            setFixing(null);
-          }}
-        />
-      ) : (
       <VStack gap={4}>
-        {skipped > 0 && <Banner status="info" title={kakao ? t('bulk.list.kakaoCapped', { n: list.total }) : t('bulk.list.skipped', { n: skipped })} />}
-        {kakao && <Text type="supporting" color="secondary">{t('bulk.list.kakaoNote', { n: list.places.length })}</Text>}
+        {skipped > 0 && <Banner status="info" title={t('bulk.list.skipped', { n: skipped })} />}
         {fresh.length === 0 && <Banner status="info" title={t('bulk.list.allIn')} />}
         {fresh.length > room && <Banner status="warning" title={room > 0 ? t('bulk.list.room', { n: room }) : t('trip.placeLimit', { n: TRANSFER_LIMITS.maxPlaces })} />}
         {showMap && <div ref={mapRef} style={{ width: '100%', height: 200 }} role="img" aria-label={t('map.bulkAria')} />}
@@ -255,22 +155,7 @@ function ListAddDialog({ isOpen, list, existing, room, onClose, onAdd }: { isOpe
                 label={`${i + 1}. ${r.place.name}`}
                 description={[CATEGORY_LABEL[r.place.category], r.place.address].filter(Boolean).join(' · ')}
                 isDisabled={r.already}
-                endContent={
-                  r.already ? (
-                    <Tag>{t('tl.inTrip')}</Tag>
-                  ) : kakao ? (
-                    <Button
-                      label={t('bulk.fix.open')}
-                      aria-label={`${r.place.name} · ${t('bulk.fix.open')}`}
-                      variant="ghost"
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setFixing(r.key);
-                      }}
-                    />
-                  ) : undefined
-                }
+                endContent={r.already ? <Tag>{t('tl.inTrip')}</Tag> : undefined}
               />
             ))}
           </CheckboxList>
@@ -291,7 +176,6 @@ function ListAddDialog({ isOpen, list, existing, room, onClose, onAdd }: { isOpe
           </StackItem>
         </HStack>
       </VStack>
-      )}
     </Dialog>
   );
 }

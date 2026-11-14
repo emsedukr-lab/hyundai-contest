@@ -193,23 +193,18 @@ export interface ListPlace {
   latE7: number;
   lonE7: number;
   category: PlaceHit['category'];
-  /** A Kakao folder's place: named by what stands at its point (may be wrong), or '' when it could not be named. */
-  guessed?: boolean;
 }
 
-/**
- * A Naver "저장 목록" or a Kakao Map favorites folder: the list's name, how many it holds (for Kakao: how many points the
- * link preview showed), and its places (at most 100). No owner details.
- */
+/** A Naver "저장 목록": the list's name, how many it holds, and its places (at most 100). No owner details. */
 export interface ResolvedList {
   kind: 'list';
-  source: 'naver' | 'kakao';
+  source: 'naver';
   title: string;
   total: number;
   places: ListPlace[];
 }
 
-/** A link the server knows but can't read (a Kakao Map favorites folder: Kakao blocks automated access). */
+/** A link the server recognises but does not read: a Kakao Map favorites folder (only Naver saved lists are imported). */
 export interface ResolvedUnsupported {
   kind: 'unsupported';
   source: 'kakao';

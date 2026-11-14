@@ -122,8 +122,7 @@ async function api(req: Request, env: Env, url: URL): Promise<Response> {
     // The shared URL travels in the body; the Worker fetches it (allow-listed hosts only) and reads the place name.
     const body = await readJson<Record<string, unknown>>(req, 2048);
     if (!body || body === 'TOO_LARGE') return error('BAD_REQUEST');
-    // One RL_SEARCH hit per link, even when a Kakao folder's points are then named with several Local API calls.
-    return resolveShare(body, fetch, env.KAKAO_REST_KEY);
+    return resolveShare(body);
   }
 
   if (parts[2] === 'fleet') return fleet(req, env, url, parts);
