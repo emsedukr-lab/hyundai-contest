@@ -10,6 +10,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -59,6 +60,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.DialogWindowProvider
@@ -574,11 +576,15 @@ fun StatusLine(text: String, tone: Tone = Tone.NEUTRAL, style: TextStyle = Pleos
 fun ActionGrid(build: MutableList<@Composable (Modifier) -> Unit>.() -> Unit) {
     val items = buildList(build)
     if (items.isEmpty()) return
-    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Space.x12)) {
-        items.chunked(2).forEach { row ->
-            if (row.size == 1) row[0](Modifier.fillMaxWidth())
-            else Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(Space.x12)) {
-                row.forEach { it(Modifier.weight(1f).fillMaxHeight()) }
+    // A narrow container (the third of the screen) takes one button per row, so no label breaks inside a word.
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        val columns = if (maxWidth < 500.dp) 1 else 2
+        Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Space.x12)) {
+            items.chunked(columns).forEach { row ->
+                if (row.size == 1) row[0](Modifier.fillMaxWidth())
+                else Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(Space.x12)) {
+                    row.forEach { it(Modifier.weight(1f).fillMaxHeight()) }
+                }
             }
         }
     }

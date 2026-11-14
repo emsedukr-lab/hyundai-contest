@@ -305,8 +305,8 @@ fun TripDetailScreen(vm: TripsViewModel, localId: String, drive: DriveState, dem
                 }
             }
             if (wide) Row(horizontalArrangement = Arrangement.spacedBy(Space.x40)) {
-                Column(Modifier.weight(0.55f).verticalScroll(rememberScrollState())) { route(); Spacer(Modifier.height(Space.x32)) }
-                Column(Modifier.weight(0.45f).verticalScroll(rememberScrollState())) { side(); Spacer(Modifier.height(Space.x32)) }
+                Column(Modifier.weight(2f).verticalScroll(rememberScrollState())) { route(); Spacer(Modifier.height(Space.x32)) }
+                Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) { side(); Spacer(Modifier.height(Space.x32)) }
             } else Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(Space.x32)) {
                 // Half screen (840dp): what to do next first, then the day.
                 NextPanel(vm, t, day, live, vm.hereFor(t, day, now, here), arrival?.takeIf { it.localId == t.localId }, naviLive, rest.takeIf { isToday })

@@ -399,4 +399,9 @@
     <string name="badge_closed_weekday">이 요일 휴무</string>
     <string name="badge_outside_hours">영업시간 밖</string>
     <string name="order_apply_saves">더 빠른 순서로 · %1$s 단축</string>
+    <string name="cat_sight">명소</string>
+    <string name="cat_food">식당</string>
+    <string name="cat_cafe">카페</string>
+    <string name="cat_lodging">숙소</string>
+    <string name="cat_other">기타</string>
 </resources>

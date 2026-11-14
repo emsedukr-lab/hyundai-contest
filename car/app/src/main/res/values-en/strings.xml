@@ -399,4 +399,9 @@
     <string name="badge_closed_weekday">Closed today</string>
     <string name="badge_outside_hours">Outside hours</string>
     <string name="order_apply_saves">Faster order · %1$s less</string>
+    <string name="cat_sight">Sight</string>
+    <string name="cat_food">Food</string>
+    <string name="cat_cafe">Cafe</string>
+    <string name="cat_lodging">Stay</string>
+    <string name="cat_other">Other</string>
 </resources>

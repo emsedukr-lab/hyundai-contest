@@ -52,6 +52,7 @@ import io.tteonaljido.car.ui.theme.Pleos
 import io.tteonaljido.trip.Endpoint
 import io.tteonaljido.trip.Importance
 import io.tteonaljido.trip.Issue
+import io.tteonaljido.trip.PlaceCategory
 import io.tteonaljido.trip.Severity
 import io.tteonaljido.car.ui.badgeText
 import io.tteonaljido.trip.LegFrom
@@ -164,6 +165,8 @@ fun DayTimeline(t: LocalTrip, day: Int, live: LiveView?, issues: List<Issue> = e
                     // One line per stop: name (꼭), the time and stay, then what needs a look (status, closed / late badges).
                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.x16)) {
                         Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.x12)) {
+                            // The kind of place, like the 출발 / 숙소 tag of the bars: 명소 · 식당 · 카페 · 숙소 · 기타.
+                            plan.places.firstOrNull { it.placeRef == v.placeRef }?.category?.let { Tag(stringResource(categoryLabel(it))) }
                             PleosText(
                                 TripValidator.placeName(plan, v.placeRef), Pleos.type.bodyLargeStrong,
                                 colorResource(if (done) R.color.tn_text_secondary else R.color.tn_text_primary),
@@ -176,14 +179,13 @@ fun DayTimeline(t: LocalTrip, day: Int, live: LiveView?, issues: List<Issue> = e
                         if (v.fixed != null) Icon(R.drawable.ic_lock, Space.x32, fixedColor)
                         val start = time?.start
                         val end = time?.end
-                        val flagged = issues.any { it.visitId == id }
                         if (start != null) {
                             val range = if (end != null) stringResource(R.string.tl_range, TripValidator.hhmm(start), TripValidator.hhmm(end)) else TripValidator.hhmm(start)
                             val ink = if (v.fixed != null) fixedColor else colorResource(R.color.tn_text_primary)
                             BasicText(
                                 buildAnnotatedString {
                                     withStyle(SpanStyle(fontWeight = FontWeight.Bold, color = ink)) { append(range) }
-                                    if (!flagged) { append(" · "); append(durationLabel(v.stayMinutes)) }
+                                    append(" · "); append(durationLabel(v.stayMinutes))
                                 },
                                 style = Pleos.type.bodyMedium.copy(fontWeight = FontWeight.Normal, color = colorResource(R.color.tn_text_secondary)),
                                 maxLines = 1, softWrap = false,
@@ -326,4 +328,12 @@ private fun LegRow(t: LocalTrip, day: Int, k: Int) {
             }
         }
     }
+}
+
+private fun categoryLabel(c: PlaceCategory): Int = when (c) {
+    PlaceCategory.SIGHT -> R.string.cat_sight
+    PlaceCategory.FOOD -> R.string.cat_food
+    PlaceCategory.CAFE -> R.string.cat_cafe
+    PlaceCategory.LODGING -> R.string.cat_lodging
+    PlaceCategory.OTHER -> R.string.cat_other
 }
