@@ -1,6 +1,6 @@
 /*
  * 장소 상세 sheet (M46): labelled groups separated by hairlines, rows with the label on the left (body-3, secondary)
- * and the control on the right, stay time as a big figure (h3, tabular) with − / + and preset chips.
+ * and the control on the right, stay time as a big figure (h3, tabular) with − / + and preset segments (M69).
  */
 .vd {
   display: flex;
@@ -84,11 +84,6 @@
   font-size: 13px;
   line-height: 20px;
   color: var(--color-text-secondary);
-}
-.vd-switches {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
 }
 .vd-stay {
   display: flex;
@@ -238,10 +233,52 @@
   border-top: 0;
 }
 
-/* 식사 (M67): the chips beside their label where the four fit on one line, under it on a narrow phone. */
+/*
+ * 세그먼트 (M69): each choice sits in a sideways scroller. The track hugs its cells and never shrinks, so a cell's
+ * label is never cut short or wrapped; when the row is wider than the space (the trip's days, the stay presets on a
+ * 320 phone) it scrolls, with no scrollbar drawn. One height for all: Astryx md — a 48 track, 40 cells, each cell's
+ * tap band reaching 44 (Astryx's touch hit area). The 4px of padding keeps the focus ring and shadow-1 unclipped.
+ */
+.vd-seg {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  /* reaches the sheet's right edge (its 20 padding), so a row that scrolls is cut by the screen edge, not mid-sheet */
+  margin: -4px -20px -4px -4px;
+  padding: 4px 20px 4px 4px;
+  scroll-padding-inline: 4px 20px;
+}
+.vd-seg::-webkit-scrollbar {
+  display: none;
+}
+.vd-seg > .astryx-segmented-control {
+  max-width: none;
+  width: max-content;
+}
+.vd-seg .astryx-segmented-control-item {
+  flex: none;
+  white-space: nowrap;
+}
+.vd-seg .astryx-segmented-control-item > span {
+  overflow: visible;
+  text-overflow: clip;
+}
+/* The chosen day's date, under the day control. */
+.vd-caption {
+  margin: 4px 0 0;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Under 380 every row puts its label above the control, so each control has the sheet's full width. */
 @media (max-width: 379px) {
-  .vd-row-meal {
+  .vd-row {
     grid-template-columns: minmax(0, 1fr);
     row-gap: 8px;
+  }
+  .vd-row > .vd-label:empty {
+    display: none;
   }
 }

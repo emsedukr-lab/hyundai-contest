@@ -15,7 +15,8 @@ let sdk: Promise<any> | null = null;
  * which the deployed CSP allows. Rejects if it can't load (callers fall back to the no-map UI).
  */
 export function loadKakao(key: string): Promise<any> {
-  if (window.kakao?.maps) return Promise.resolve(window.kakao);
+  // `kakao.maps` exists as soon as sdk.js runs; only `maps.LatLng` says the map code itself has loaded.
+  if (window.kakao?.maps?.LatLng) return Promise.resolve(window.kakao);
   sdk ??= new Promise<any>((resolve, reject) => {
     const s = document.createElement('script');
     s.async = true;

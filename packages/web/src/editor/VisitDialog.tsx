@@ -4,16 +4,15 @@ import type { ISODateString } from '@astryxdesign/core/Calendar';
 import { DateInput } from '@astryxdesign/core/DateInput';
 import { SegmentedControl, SegmentedControlItem } from '@astryxdesign/core/SegmentedControl';
 import { Selector } from '@astryxdesign/core/Selector';
-import { Switch } from '@astryxdesign/core/Switch';
 import { Token } from '@astryxdesign/core/Token';
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { OpeningHours, Place, Trip, Visit } from '@tteonaljido/shared';
 import { dateLabel, minutesLabel, shortDate } from '../lib/format';
 import { hoursLines, isSimpleHours } from '../lib/hours';
 import { t } from '../lib/i18n';
 import { REASON_LABEL, changeCategory, moveToDay, removePlace, suggestVisitTime, updatePlace, updateVisit } from '../lib/trips';
-import { mealChoiceLabel, mealRange, mealTimes, slotOf } from '../lib/meals';
-import { LodgingNoteFields, MealChips, PlaceMemoField, useNotes } from './NotesContext';
+import { MEAL_CHOICES, isMealChoice, mealChoiceLabel, mealRange, mealTimes, slotOf } from '../lib/meals';
+import { LodgingNoteFields, PlaceMemoField, useNotes } from './NotesContext';
 import { CATEGORY_LABEL, CATEGORY_OPTIONS } from './PlaceSearch';
 import { Sheet } from './Sheet';
 import './visitSheet.css';
@@ -60,7 +59,37 @@ function Fold({ title, value, children }: { title: string; value: string; childr
   );
 }
 
-/** A labelled row: the label on the left, the control taking the rest. */
+/**
+ * 세그먼트 (M69): every single choice in the sheet is an Astryx SegmentedControl (track fill-weak, the chosen cell on the
+ * surface with shadow-1 and primary text at 600 — shell.css) of one height (48), inside a sideways scroller so a long
+ * row (the trip's days, the stay presets on a 320 phone) scrolls instead of wrapping or truncating. The chosen cell is
+ * kept in view. A value that matches no item (a stay that is not a preset) leaves every cell unchosen.
+ */
+function Segments({ label, value, onChange, items }: { label: string; value: string; onChange: (v: string) => void; items: { value: string; label: string }[] }) {
+  const scroller = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const id = window.requestAnimationFrame(() => {
+      const sc = scroller.current;
+      const on = sc?.querySelector<HTMLElement>('[role="radio"][aria-checked="true"]');
+      if (!sc || !on || sc.scrollWidth <= sc.clientWidth) return;
+      const box = sc.getBoundingClientRect();
+      const cell = on.getBoundingClientRect();
+      sc.scrollLeft += cell.left - box.left - (box.width - cell.width) / 2; // centred, clamped by the browser
+    });
+    return () => window.cancelAnimationFrame(id);
+  }, [value]);
+  return (
+    <div className="vd-seg" ref={scroller}>
+      <SegmentedControl label={label} value={value} onChange={onChange}>
+        {items.map((i) => (
+          <SegmentedControlItem key={i.value} value={i.value} label={i.label} />
+        ))}
+      </SegmentedControl>
+    </div>
+  );
+}
+
+/** A labelled row: the label on the left, the control taking the rest (the label above it on a phone under 380). */
 function Row({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="vd-row">
@@ -181,6 +210,11 @@ export function VisitDialog({
     : t('visit.hours.enter');
   const importanceValue = visit?.importance === 'MUST' ? t('common.mustAria') : visit?.importance === 'OPTIONAL' ? t('visit.importance.optional') : t('visit.importance.normal');
 
+  const flexItems = [
+    { value: 'no', label: t('visit.flex.keep') },
+    { value: 'yes', label: t('visit.flex.change') },
+  ];
+
   const footer = confirmDelete ? (
     <div className="vd-foot">
       <p className="vd-confirm">{visit?.fixed ? t('visit.delete.confirmFixed', { time: visit.fixed.time }) : t('visit.delete.confirm')}</p>
@@ -218,21 +252,28 @@ export function VisitDialog({
         {visit && (
           <Group title={t('visit.section.schedule')}>
             <Row label={t('visit.day')}>
-              <Selector
+              <Segments
                 label={t('visit.day')}
-                isLabelHidden
-                placement="below"
-                options={[{ value: 'all', label: t('visit.dayAll') }, ...plan.days.map((d) => ({ value: String(d.dayIndex), label: `${t('common.day', { day: d.dayIndex })} · ${shortDate(d.date)}` }))]}
                 value={onDay === null ? 'all' : String(onDay)}
                 onChange={setDay}
+                items={[{ value: 'all', label: t('visit.dayAllShort') }, ...plan.days.map((d) => ({ value: String(d.dayIndex), label: t('common.day', { day: d.dayIndex }) }))]}
               />
+              {/* The chosen day's date under the control (the cells carry only 1일차 · 2일차 …). */}
+              <p className="vd-caption" aria-live="polite">
+                {onDay === null ? t('visit.dayNone') : shortDate(plan.days.find((d) => d.dayIndex === onDay)!.date)}
+              </p>
             </Row>
             <Row label={t('visit.timeMode')}>
-              <SegmentedControl label={t('visit.timeMode')} value={mode} onChange={(v) => setMode(v as TimeMode)}>
-                <SegmentedControlItem value="free" label={t('visit.timeMode.free')} />
-                <SegmentedControlItem value="desired" label={t('visit.timeMode.desired')} />
-                <SegmentedControlItem value="fixed" label={t('visit.timeMode.fixed')} />
-              </SegmentedControl>
+              <Segments
+                label={t('visit.timeMode')}
+                value={mode}
+                onChange={(v) => setMode(v as TimeMode)}
+                items={[
+                  { value: 'free', label: t('visit.timeMode.free') },
+                  { value: 'desired', label: t('visit.timeMode.desired') },
+                  { value: 'fixed', label: t('visit.timeMode.fixed') },
+                ]}
+              />
             </Row>
             {mode !== 'free' && (
               <Row label="">
@@ -254,19 +295,26 @@ export function VisitDialog({
             {/* 식사 (M67): a restaurant's meal, for the route recommendation; the hint names the time it is held to. */}
             {place.category === 'FOOD' && (
               <>
-                <div className="vd-row vd-row-meal">
-                  <span className="vd-label">{t('meal.title')}</span>
-                  <div className="vd-control">
-                    <MealChips placeRef={place.placeRef} label={t('meal.title')} />
-                  </div>
-                </div>
+                <Row label={t('meal.title')}>
+                  <Segments
+                    label={t('meal.title')}
+                    value={note?.meal ?? 'auto'}
+                    onChange={(v) => setNote(place.placeRef, { meal: isMealChoice(v) ? v : null })}
+                    items={[{ value: 'auto', label: t('meal.auto') }, ...MEAL_CHOICES.map((m) => ({ value: m, label: mealChoiceLabel(m) }))]}
+                  />
+                </Row>
                 <p className="vd-hint">{note?.meal ? t('meal.hint', { meal: mealChoiceLabel(note.meal), range: mealRange(mealTimes(), slotOf(note.meal)) }) : t('meal.autoHint')}</p>
               </>
             )}
-            <div className="vd-switches">
-              <Switch label={t('visit.dateFlexible')} labelPosition="start" labelSpacing="spread" value={visit.dateFlexible} onChange={(v) => setVisit({ dateFlexible: v })} />
-              {mode !== 'fixed' && <Switch label={t('visit.timeFlexible')} labelPosition="start" labelSpacing="spread" value={visit.timeFlexible} onChange={(v) => setVisit({ timeFlexible: v })} />}
-            </div>
+            {/* 날짜 · 시간 바꿔도 됨 (the visit's dateFlexible / timeFlexible): 그대로 | 바꿔도 돼요. A fixed time cannot move. */}
+            <Row label={t('visit.flex.date')}>
+              <Segments label={t('visit.dateFlexible')} value={visit.dateFlexible ? 'yes' : 'no'} onChange={(v) => setVisit({ dateFlexible: v === 'yes' })} items={flexItems} />
+            </Row>
+            {mode !== 'fixed' && (
+              <Row label={t('visit.flex.time')}>
+                <Segments label={t('visit.timeFlexible')} value={visit.timeFlexible ? 'yes' : 'no'} onChange={(v) => setVisit({ timeFlexible: v === 'yes' })} items={flexItems} />
+              </Row>
+            )}
           </Group>
         )}
 
@@ -285,23 +333,27 @@ export function VisitDialog({
                 </button>
               </div>
             </div>
-            <div className="vd-chips" role="group" aria-label={t('visit.stayTitle')}>
-              {STAY_PRESETS.map((m) => (
-                <button key={m} type="button" className={`tl-chip${visit.stayMinutes === m ? ' is-on' : ''}`} aria-pressed={visit.stayMinutes === m} onClick={() => setStay(m)}>
-                  {minutesLabel(m)}
-                </button>
-              ))}
-            </div>
+            <Segments
+              label={t('visit.stayTitle')}
+              value={STAY_PRESETS.includes(visit.stayMinutes) ? String(visit.stayMinutes) : ''}
+              onChange={(v) => setStay(Number(v))}
+              items={STAY_PRESETS.map((m) => ({ value: String(m), label: minutesLabel(m) }))}
+            />
           </Group>
         )}
 
         {visit && (
           <Fold title={t('visit.importance')} value={importanceValue}>
-            <SegmentedControl label={t('visit.importance')} value={visit.importance} onChange={(v) => setVisit({ importance: v as Visit['importance'] })}>
-              <SegmentedControlItem value="MUST" label={t('common.must')} />
-              <SegmentedControlItem value="NORMAL" label={t('visit.importance.normal')} />
-              <SegmentedControlItem value="OPTIONAL" label={t('visit.importance.optional')} />
-            </SegmentedControl>
+            <Segments
+              label={t('visit.importance')}
+              value={visit.importance}
+              onChange={(v) => setVisit({ importance: v as Visit['importance'] })}
+              items={[
+                { value: 'MUST', label: t('common.must') },
+                { value: 'NORMAL', label: t('visit.importance.normal') },
+                { value: 'OPTIONAL', label: t('visit.importance.optional') },
+              ]}
+            />
           </Fold>
         )}
 
@@ -312,18 +364,20 @@ export function VisitDialog({
 
         <Fold title={t('visit.hoursTitle')} value={hoursValue}>
           {/* 모름 · 따로 없음 (a lake, a beach, a street: nothing to check) · 직접 입력 */}
-          <SegmentedControl
+          <Segments
             label={t('visit.hoursTitle')}
             value={hours.status}
             onChange={(v) => {
               if (v === hours.status) return;
               if (v === 'USER_ENTERED') setDaily('09:00', '21:00');
               else setPlace({ hours: { status: v === 'ALWAYS_OPEN' ? 'ALWAYS_OPEN' : 'UNKNOWN' } });
-            }}>
-            <SegmentedControlItem value="UNKNOWN" label={t('visit.hours.unknown')} />
-            <SegmentedControlItem value="ALWAYS_OPEN" label={t('visit.hours.none')} />
-            <SegmentedControlItem value="USER_ENTERED" label={t('visit.hours.enter')} />
-          </SegmentedControl>
+            }}
+            items={[
+              { value: 'UNKNOWN', label: t('visit.hours.unknown') },
+              { value: 'ALWAYS_OPEN', label: t('visit.hours.none') },
+              { value: 'USER_ENTERED', label: t('visit.hours.enter') },
+            ]}
+          />
           {hours.status === 'UNKNOWN' && <p className="vd-hint">{t('visit.hours.detail')}</p>}
           {hours.status === 'ALWAYS_OPEN' && <p className="vd-hint">{t('visit.hours.noneDetail')}</p>}
           {daily && grouped && (
@@ -392,7 +446,10 @@ export function VisitDialog({
 
         <Fold title={t('visit.section.place')} value={CATEGORY_LABEL[place.category]}>
           <Row label={t('common.type')}>
-            <Selector label={t('common.type')} isLabelHidden placement="above" options={CATEGORY_OPTIONS} value={place.category}
+            <Segments
+              label={t('common.type')}
+              items={CATEGORY_OPTIONS}
+              value={place.category}
               onChange={(v) => {
                 onChange(changeCategory(plan, place.placeRef, v as Place['category']));
                 if (v !== 'FOOD' && note?.meal) setNote(place.placeRef, { meal: null }); // a meal belongs to a restaurant only

@@ -1,6 +1,7 @@
 import { SELF } from 'cloudflare:test';
 import { describe, expect, it } from 'vitest';
-import { allowedHost, isKakaoFolder, naverCategory, naverFolderApi, naverPlacePage, parseOg, resolveShare } from '../src/resolve';
+import { allowedHost, isKakaoFolder, kakaoFolderId, kakaoMarkers, naverCategory, naverFolderApi, naverPlacePage, parseOg, resolveShare } from '../src/resolve';
+import { wcongToWgs84 } from '../src/wcong';
 
 const page = (head: string) => `<!doctype html><html><head>${head}</head><body></body></html>`;
 
@@ -175,20 +176,101 @@ describe('네이버 저장 목록 링크', () => {
   });
 });
 
-describe('카카오맵 즐겨찾기 폴더', () => {
-  it('폴더 링크는 알아보되 열지 않는다 (카카오가 자동 접근을 막음)', async () => {
-    expect(isKakaoFolder(new URL('https://applink.map.kakao.com/collection?folderid=24854214&share_code=abc'))).toBe(true);
-    expect(isKakaoFolder(new URL('https://map.kakao.com/?map_type=TYPE_SKYVIEW&folderid=24854214&page=bookmark'))).toBe(true);
+describe('카카오맵 즐겨찾기 폴더 (공유 페이지의 링크 미리보기만)', () => {
+  // The real share page's tags (folder "test", 3 places in 대전 대덕구), og:image exactly as Kakao writes it.
+  const IMG =
+    'https://ssl.kakaocdn.net/map3/staticmap/image?srs=WCONGNAMUL&amp;size=744x406&amp;scale=2&amp;logo=kakao_logo&amp;service=pcmap' +
+    '&amp;markers=symbol:default_marker%7Clocation:592500,820348&amp;markers=symbol:default_marker%7Clocation:593237,819733&amp;markers=symbol:default_marker%7Clocation:592289,819161';
+  const folderPage = page(`<meta property="og:site_name" content="카카오맵"><meta property="og:title" content="test"><meta property="og:description" content=""><meta property="og:image" content="${IMG}">`);
+  const genericPage = page('<meta property="og:title" content="카카오맵"><meta property="og:image" content="https://t1.daumcdn.net/localimg/localimages/07/2018/pc/common/img_kakaomap.png">');
+  const PAGE = 'https://map.kakao.com/?folderid=24854214&target=other&page=bookmark';
+
+  it('og:image의 표시점을 읽는다 (WCONGNAMUL, 100개까지는 호출 쪽에서)', () => {
+    expect(kakaoMarkers(folderPage)).toEqual([
+      { x: 592500, y: 820348 },
+      { x: 593237, y: 819733 },
+      { x: 592289, y: 819161 },
+    ]);
+    expect(kakaoMarkers(page('<meta property="og:image" content="https://x/image?srs=EPSG4326&markers=location:1,2">'))).toEqual([]);
+    expect(kakaoMarkers(genericPage)).toEqual([]);
+  });
+
+  it('폴더 id: 두 링크 모양 모두, 장소 링크는 아님', () => {
+    expect(kakaoFolderId(new URL('https://applink.map.kakao.com/collection?folderid=24854214&share_code=abc'))).toBe('24854214');
+    expect(kakaoFolderId(new URL('https://map.kakao.com/?map_type=TYPE_SKYVIEW&folderid=24854214&page=bookmark'))).toBe('24854214');
+    expect(kakaoFolderId(new URL('https://map.kakao.com/?folderid=1;evil'))).toBeNull();
     expect(isKakaoFolder(new URL('https://place.map.kakao.com/8654759'))).toBe(false);
+  });
 
-    const direct = upstream({});
-    const res = await resolveShare({ url: 'https://applink.map.kakao.com/collection?folderid=24854214&share_code=abc' }, direct.fetcher);
-    expect(await res.json()).toEqual({ kind: 'unsupported', source: 'kakao' });
-    expect(direct.seen).toEqual([]);
+  function kakaoUpstream(pageAnswer: () => Response) {
+    const seen: string[] = [];
+    const fetcher = (async (input: URL | string, init?: RequestInit) => {
+      const u = new URL(String(input));
+      seen.push(u.toString());
+      if (u.toString().startsWith('https://kko.to/')) return new Response(null, { status: 301, headers: { Location: 'https://map.kakao.com/?map_type=TYPE_SKYVIEW&map_hybrid=true&folderid=24854214&target=other&page=bookmark' } });
+      if (u.hostname === 'map.kakao.com') return pageAnswer();
+      expect(new Headers(init?.headers).get('Authorization')).toBe('KakaoAK key');
+      const near = Number(u.searchParams.get('y')) > 36.453;
+      if (u.pathname.endsWith('/category.json'))
+        return Response.json({
+          documents:
+            near && u.searchParams.get('category_group_code') === 'FD6'
+              ? [{ id: '99999', place_name: '신탄진 칼국수', category_group_code: 'FD6', category_name: '음식점 > 한식 > 국수', road_address_name: '대전 대덕구 신탄진로 1', address_name: '대전 대덕구 신탄진동 1', x: '127.41360', y: '36.45345', distance: '12' }]
+              : [],
+        });
+      if (u.pathname.endsWith('/coord2address.json')) return Response.json({ documents: [{ road_address: { address_name: '대전 대덕구 신탄진로 2', building_name: '' }, address: { address_name: '대전 대덕구 신탄진동 2' } }] });
+      return new Response('nope', { status: 404 });
+    }) as unknown as typeof fetch;
+    return { seen, fetcher };
+  }
 
-    const short = upstream({ 'https://kko.to/': () => new Response(null, { status: 301, headers: { Location: 'https://map.kakao.com/?folderid=24854214&share_code=x' } }) });
-    expect(await (await resolveShare({ url: 'https://kko.to/gAVlmNOVJR' }, short.fetcher)).json()).toEqual({ kind: 'unsupported', source: 'kakao' });
-    expect(short.seen).toEqual(['https://kko.to/gAVlmNOVJR']);
+  it('kko.to → 공유 페이지 한 번 → 좌표 → 이름은 위치로 (곳마다 호출 3번 이하, 카카오 id 없음)', async () => {
+    const up = kakaoUpstream(() => new Response(folderPage));
+    const res = await resolveShare({ url: 'https://kko.to/FLZWE-vJ0Z' }, up.fetcher, 'key');
+    const body = (await res.json()) as { kind: string; source: string; title: string; total: number; places: Record<string, unknown>[] };
+    expect(body.kind).toBe('list');
+    expect(body.source).toBe('kakao');
+    expect(body.title).toBe('test');
+    expect(body.total).toBe(3);
+    expect(body.places[0]).toEqual({ name: '신탄진 칼국수', address: '대전 대덕구 신탄진로 1', latE7: 364534500, lonE7: 1274136000, category: 'FOOD', guessed: true });
+    expect(body.places[1]).toMatchObject({ name: '대전 대덕구 신탄진로 2', address: '대전 대덕구 신탄진로 2', category: 'OTHER', guessed: true });
+    expect(JSON.stringify(body)).not.toContain('99999');
+    const pages = up.seen.filter((u) => new URL(u).hostname === 'map.kakao.com');
+    expect(pages).toEqual([PAGE]);
+    const api = up.seen.filter((u) => new URL(u).hostname === 'dapi.kakao.com');
+    expect(api.length).toBeLessThanOrEqual(3 * 3);
+    expect(api.filter((u) => u.includes('coord2address')).length).toBe(2); // only where nothing was within 30 m
+    for (const u of api) expect(new URL(u).pathname).toMatch(/^\/v2\/local\/(search\/category|geo\/coord2address)\.json$/);
+  });
+
+  it('REST 키가 없으면 이름 없이 좌표만 (휴대폰이 이름을 붙임)', async () => {
+    const up = kakaoUpstream(() => new Response(folderPage));
+    const body = (await (await resolveShare({ url: PAGE }, up.fetcher)).json()) as { places: { name: string; latE7: number; lonE7: number }[] };
+    // to the user's checked values (6 decimals)
+    expect(body.places.map((p) => [p.name, Math.round(p.latE7 / 10), Math.round(p.lonE7 / 10)])).toEqual([
+      ['', 36453499, 127413535],
+      ['', 36451271, 127416812],
+      ['', 36449224, 127412571],
+    ]);
+    expect(up.seen.some((u) => u.includes('dapi.kakao.com'))).toBe(false);
+  });
+
+  it('앱 링크 모양: 그 폴더의 공유 페이지를 한 번 읽고, 일반 페이지거나 403이면 unsupported (다시 시도 안 함)', async () => {
+    const generic = kakaoUpstream(() => new Response(genericPage));
+    expect(await (await resolveShare({ url: 'https://applink.map.kakao.com/collection?folderid=24854214&share_code=abc' }, generic.fetcher, 'key')).json()).toEqual({ kind: 'unsupported', source: 'kakao' });
+    expect(generic.seen).toEqual([PAGE]);
+
+    const blocked = kakaoUpstream(() => Response.json({ gw_error_code: 403004 }, { status: 403 }));
+    expect(await (await resolveShare({ url: 'https://applink.map.kakao.com/collection?folderid=24854214&share_code=abc' }, blocked.fetcher, 'key')).json()).toEqual({ kind: 'unsupported', source: 'kakao' });
+    expect(blocked.seen).toEqual([PAGE]);
+
+    const noId = kakaoUpstream(() => new Response(folderPage));
+    expect(await (await resolveShare({ url: 'https://applink.map.kakao.com/collection?share_code=abc' }, noId.fetcher, 'key')).json()).toEqual({ kind: 'unsupported', source: 'kakao' });
+    expect(noId.seen).toEqual([]);
+
+    const ok = kakaoUpstream(() => new Response(folderPage));
+    const body = (await (await resolveShare({ url: 'https://applink.map.kakao.com/collection?folderid=24854214&share_code=abc' }, ok.fetcher)).json()) as { kind: string; total: number };
+    expect([body.kind, body.total]).toEqual(['list', 3]);
   });
 });
 
@@ -199,5 +281,24 @@ describe('한 장소 링크', () => {
       'https://m.place.naver.com/place/10968214/home': () => new Response(page('<meta property="og:title" content="경포호 : 네이버"><meta property="og:description" content="강원 강릉시 운정동">')),
     });
     expect(await (await resolveShare({ url: 'https://naver.me/abc' }, up.fetcher)).json()).toEqual({ kind: 'place', name: '경포호', address: '강원 강릉시 운정동' });
+  });
+});
+
+describe('WCONGNAMUL → WGS84', () => {
+  it('대전 대덕구(신탄진) 세 점이 사용자가 확인한 좌표와 맞는다', () => {
+    const got = [
+      [592500, 820348],
+      [593237, 819733],
+      [592289, 819161],
+    ].map(([x, y]) => wcongToWgs84(x, y));
+    const want = [
+      [36.453499, 127.413535],
+      [36.451271, 127.416812],
+      [36.449224, 127.412571],
+    ];
+    got.forEach((g, i) => {
+      expect(g.lat).toBeCloseTo(want[i][0], 5);
+      expect(g.lon).toBeCloseTo(want[i][1], 5);
+    });
   });
 });
