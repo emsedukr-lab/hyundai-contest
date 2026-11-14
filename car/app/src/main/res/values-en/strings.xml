@@ -395,8 +395,8 @@
     <string name="measure_confirm_body_guiding">Current guidance ends, and the navigation shows %1$d routes briefly (about %2$d s). When it finishes, open 떠날지도 from the app list to come back.</string>
     <string name="badge_late">Late for fixed %1$s · expected %2$s</string>
     <string name="badge_unchecked">Fixed %1$s · cannot check, no travel time</string>
-    <string name="badge_closed_date">Closed that day</string>
-    <string name="badge_closed_weekday">Closed on this weekday</string>
-    <string name="badge_outside_hours">Outside opening hours</string>
+    <string name="badge_closed_date">Closed</string>
+    <string name="badge_closed_weekday">Closed today</string>
+    <string name="badge_outside_hours">Outside hours</string>
     <string name="order_apply_saves">Faster order · %1$s less</string>
 </resources>

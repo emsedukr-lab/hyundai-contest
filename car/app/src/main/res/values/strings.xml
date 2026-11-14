@@ -395,8 +395,8 @@
     <string name="measure_confirm_body_guiding">지금 안내는 끝나고, 내비 화면에 경로가 %1$d번 나타났다 사라져요(약 %2$d초). 끝나면 앱 목록에서 떠날지도를 눌러 돌아오세요.</string>
     <string name="badge_late">고정 %1$s에 늦어요 · 예상 %2$s</string>
     <string name="badge_unchecked">고정 %1$s · 이동시간 없어 확인 불가</string>
-    <string name="badge_closed_date">휴무일이에요</string>
-    <string name="badge_closed_weekday">이 요일은 영업하지 않아요</string>
-    <string name="badge_outside_hours">영업시간 밖이에요</string>
+    <string name="badge_closed_date">휴무일</string>
+    <string name="badge_closed_weekday">이 요일 휴무</string>
+    <string name="badge_outside_hours">영업시간 밖</string>
     <string name="order_apply_saves">더 빠른 순서로 · %1$s 단축</string>
 </resources>

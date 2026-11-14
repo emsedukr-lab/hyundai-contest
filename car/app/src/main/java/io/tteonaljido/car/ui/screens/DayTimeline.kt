@@ -161,7 +161,8 @@ fun DayTimeline(t: LocalTrip, day: Int, live: LiveView?, issues: List<Issue> = e
             val done = id in t.overlay.visited || id in t.overlay.skipped
             RailRow(marker = { NumberMarker(k + 1, done) }) {
                 PleosCard(Modifier.padding(vertical = Space.x8), padding = Space.x24, gap = Space.x8) {
-                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.x12)) {
+                    // One line per stop: name (꼭), the time and stay, then what needs a look (status, closed / late badges).
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.x16)) {
                         Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.x12)) {
                             PleosText(
                                 TripValidator.placeName(plan, v.placeRef), Pleos.type.bodyLargeStrong,
@@ -170,31 +171,30 @@ fun DayTimeline(t: LocalTrip, day: Int, live: LiveView?, issues: List<Issue> = e
                             )
                             if (v.importance == Importance.MUST) MustTag(stringResource(R.string.tl_must))
                         }
-                        status?.let { (text, tone) -> Tag(text, tone) }
-                    }
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Space.x8)) {
                         // A fixed time is marked by the lock and the bold time in `accent-text` (TOSS.md §5 타임라인).
                         val fixedColor = colorResource(R.color.tn_accent_text)
                         if (v.fixed != null) Icon(R.drawable.ic_lock, Space.x32, fixedColor)
                         val start = time?.start
                         val end = time?.end
+                        val flagged = issues.any { it.visitId == id }
                         if (start != null) {
                             val range = if (end != null) stringResource(R.string.tl_range, TripValidator.hhmm(start), TripValidator.hhmm(end)) else TripValidator.hhmm(start)
                             val ink = if (v.fixed != null) fixedColor else colorResource(R.color.tn_text_primary)
                             BasicText(
                                 buildAnnotatedString {
                                     withStyle(SpanStyle(fontWeight = FontWeight.Bold, color = ink)) { append(range) }
-                                    append(" · "); append(durationLabel(v.stayMinutes))
+                                    if (!flagged) { append(" · "); append(durationLabel(v.stayMinutes)) }
                                 },
                                 style = Pleos.type.bodyMedium.copy(fontWeight = FontWeight.Normal, color = colorResource(R.color.tn_text_secondary)),
-                                maxLines = 1, overflow = TextOverflow.Ellipsis,
+                                maxLines = 1, softWrap = false,
                             )
                         } else {
                             PleosText(stringResource(R.string.time_check) + " · " + durationLabel(v.stayMinutes), Pleos.type.bodyMediumNormal, colorResource(R.color.tn_text_secondary), maxLines = 1)
                         }
+                        status?.let { (text, tone) -> Tag(text, tone) }
+                        // What needs a look at this stop (closed, late for a fixed time): a badge on the line, severity in the words and the colour.
+                        issues.filter { it.visitId == id }.forEach { Tag(badgeText(it), if (it.severity == Severity.CONFLICT) Tone.ERROR else Tone.CAUTION) }
                     }
-                    // What needs a look at this stop (closed, late for a fixed time): a badge on the card, with its severity in the words and the colour.
-                    issues.filter { it.visitId == id }.forEach { Tag(badgeText(it), if (it.severity == Severity.CONFLICT) Tone.ERROR else Tone.CAUTION, maxLines = 2) }
                     // Only when the live time differs from the plan: the same number twice is noise.
                     projArrive[id]?.takeIf { it != time?.arrive }?.let { now ->
                         val planned = time?.arrive
