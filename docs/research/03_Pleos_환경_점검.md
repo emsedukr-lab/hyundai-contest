@@ -49,4 +49,4 @@
 
 - `privacy.processors`가 처리 위탁에 Cloudflare·카카오(장소 검색)만 적고 카카오모빌리티(길찾기·도로 경로)·카카오 지도를 빠뜨림.
 - `privacy.phone.text`는 집 주소가 IndexedDB에 있다고 하지만 실제는 localStorage(`lib/settings.ts`).
-- 전송 동의 문구 `connect.consent.days.detail`의 '입력한 이동시간'은 M43 이후 사실과 다름(카카오가 채움).
+- 전송 동의 문구 `connect.consent.days.detail`의 '입력한 이동시간'은 2026-11-09 이후 사실과 다름(카카오가 채움).

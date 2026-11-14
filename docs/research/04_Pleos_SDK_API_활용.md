@@ -1,4 +1,4 @@
-# 04 Pleos SDK·API 활용 (M57, 2026-11-12)
+# 04 Pleos SDK·API 활용 (2026-11-12)
 
 Pleos 문서 세 곳을 다시 읽고, 값 하나만 쓰던 곳을 **두세 값을 함께 쓰는 기능**으로 넓힌 기록입니다. 무엇을 써서 무엇을 만들었는지, 에뮬레이터에서 무엇을 확인했는지, 무엇을 쓰지 않았는지와 그 이유를 적습니다.
 
@@ -30,7 +30,7 @@ Pleos 문서 세 곳을 다시 읽고, 값 하나만 쓰던 곳을 **두세 값�
 
 ### NaviHelper 3.0.5
 
-| 권한 | 전부터 쓰던 것 | M57에서 더한 것 |
+| 권한 | 전부터 쓰던 것 | 2026-11-12에 더한 것 |
 |---|---|---|
 | `NAVI_ROUTE` | `getDestinationInfo`, `getCurrentLocationInfo`, `getBookmarkInfo`, `requestTrip`, `onRouteStarted`, `onDrivingInfo`, `onNavigationStatus`, `onDestinationArrived`, `onRoutingCompleted`, `onRouteCancelled`, `onDestinationChanged`, `onError` | `getRouteStateInfo`(정체·사고), `getTBTInfo`(휴게소), `getWaypointInfo`(경유지 반영·남은 시간), `onWayPointArrived`, `onWayPointInfo`, `onRouteStateInfo`, `onTBTInfo`, `onDrivingInfo.waypoints`, `RouteStartInfo.tollFare` |
 | `NAVI_ROUTE_SEARCH` | `requestRoute`, `requestRouteWithWaypoints` | `RouteInfo.routeOption`(`SHORT_TIME`) |
@@ -66,7 +66,7 @@ Pleos 문서 세 곳을 다시 읽고, 값 하나만 쓰던 곳을 **두세 값�
 | `Safety.getTelltalesInfo` | SDK 어노테이션은 `CAR_SAFETY`인데, 권한이 허용돼 있어도 **"getTelltalesInfo need Permission"**으로 거절 | 경고등은 쓰지 않음(§5) |
 | `RouteStartInfo.tollFare` | 9,170 / 6,860 → 원. 경유지가 있으면 같은 콜백의 시간·거리처럼 첫 구간 값으로 보임 | 경유지 없는 경로에서만 표시 |
 | `DrivingInfo.waypoints[]`, `WaypointInfo` | `8220s/198000m, 8460s/201000m` → 현재 위치에서 각 경유지까지 남은 초·미터. 둘이 같은 값 | 다음 장소의 도착 예정·남은 거리 |
-| 경유지 값의 차이 = 구간 값 (2026-11-13) | 경유지 3·5·9곳이 순서 그대로 실리고(SDK 이름은 FIRST·SECOND뿐), 이웃한 누적값의 차이로 '집 대역 → 숙소 209분·223km'(카카오 201분·220km), 시내 구간 3·7·13·7·9분을 얻음. 요청마다 실제 안내가 시작되고(9~11초) 한 번에 하나, 값은 분·km 단위 | M63에서 반영: 전 구간 측정·순서 최적화(`NaviMeasure`·`RouteOptimizer`), '오늘 경로 전송'은 남은 장소 모두 |
+| 경유지 값의 차이 = 구간 값 (2026-11-13) | 경유지 3·5·9곳이 순서 그대로 실리고(SDK 이름은 FIRST·SECOND뿐), 이웃한 누적값의 차이로 '집 대역 → 숙소 209분·223km'(카카오 201분·220km), 시내 구간 3·7·13·7·9분을 얻음. 요청마다 실제 안내가 시작되고(9~11초) 한 번에 하나, 값은 분·km 단위 | 2026-11-13에 반영: 전 구간 측정·순서 최적화(`NaviMeasure`·`RouteOptimizer`), '오늘 경로 전송'은 남은 장소 모두 |
 | 경유지 좌표·앞으로 나오는 내비·취소 (2026-11-13) | `WaypointInfo`의 위도·경도는 0으로 옴(이름은 보낸 그대로). 경로를 걸면 내비 앱이 앞에 나오고 뒤에 있는 앱은 약 10초 뒤 정지됨(`isFrozen=true`). 경로가 없을 때 `cancelRoute`를 보내면 내비가 `NOT_CANCEL_ABLE_TRIP`으로 실패한 뒤 이후 취소를 모두 'already working'으로 무시(내비 앱을 다시 시작해야 풀림) | 경유지는 이름·순서로 확인, 측정 중 짧은 포그라운드 서비스, 목적지가 있을 때만 취소 |
 | `TrafficCongestionSummary` | `totalCongestionDist=6800.0`(273km 경로) → 미터. `totalCongestionTime=240`은 구간 시간의 합도 평균 속도 환산값도 아니라 의미를 확정하지 못함 | 길이만 표시, 시간은 쓰지 않음 |
 | `TBTInfo.distance` | 51개 합 266,590 ≈ 경로 273,000m → 직전 턴부터의 구간 거리. `TURN_ENTER_SERVICEAREA`·`TURN_RESTAREA`가 목록에 있음 | 휴게소까지 = 누적 합. 목록 합이 남은 거리와 15% 넘게 다르면 거리를 표시하지 않음 |
