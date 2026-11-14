@@ -14,6 +14,7 @@ import type { FavoritePlace } from '../lib/favorites';
 import { t } from '../lib/i18n';
 import type { ResolvedList } from '../lib/pairing';
 import { readPaste, takeHandOff } from '../lib/pasteImport';
+import { isNativeApp } from '../lib/platform';
 import { navigate } from '../lib/router';
 import { defaultHome } from '../lib/settings';
 import { addPlace, emptyPlan, newDoc, placeRoom, savePlan, type TripDoc } from '../lib/trips';
@@ -152,13 +153,16 @@ export function PlacesPage() {
         />
       )}
 
-      <Section title={t('places.howTo')}>
-        <ul className="tn-cards">
-          <li>
-            <Row lead={<ShareIcon />} title={t('places.share.title')} subtitle={t('places.share.detail')} />
-          </li>
-        </ul>
-      </Section>
+      {/* Receiving a share works for the home-screen web app only; the phone app does not take Android/iOS shares yet. */}
+      {!isNativeApp && (
+        <Section title={t('places.howTo')}>
+          <ul className="tn-cards">
+            <li>
+              <Row lead={<ShareIcon />} title={t('places.share.title')} subtitle={t('places.share.detail')} />
+            </li>
+          </ul>
+        </Section>
+      )}
 
       <Section
         title={t('favorites.title')}
