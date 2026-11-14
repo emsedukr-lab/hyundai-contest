@@ -274,7 +274,7 @@ fun TripDetailScreen(vm: TripsViewModel, localId: String, drive: DriveState, dem
     // The day switch sits in the header only when the window has room for it beside the title and the menu; a narrower window
     // (half screen, more days) puts it on its own row under the header instead of cutting its last day off.
     BoxWithConstraints(Modifier.fillMaxSize()) {
-    val narrowHeader = t.view.days.size > 1 && maxWidth < (750 + 125 * t.view.days.size).dp
+    val narrowHeader = t.view.days.size > 1 && maxWidth < (800 + 125 * t.view.days.size).dp
     Screen(header = {
         // While driving the card below is the whole screen; Back still works, there is nothing to tap.
         PleosHeader(
@@ -286,7 +286,7 @@ fun TripDetailScreen(vm: TripsViewModel, localId: String, drive: DriveState, dem
             // The day switch sits at the top right of the header; one day has nothing to switch between.
             if (drive.parked && t.view.days.size > 1 && !narrowHeader) {
                 val chipLabels = t.view.days.associate { it.dayIndex to stringResource(R.string.day_n, it.dayIndex) }
-                SegmentedControl(t.view.days.map { it.dayIndex }, day, { chipLabels.getValue(it) }, { "day$it" }, Modifier.widthIn(max = 640.dp)) { day = it }
+                SegmentedControl(t.view.days.map { it.dayIndex }, day, { chipLabels.getValue(it) }, { "day$it" }, Modifier, scroll = false) { day = it }
             }
             // 더보기: what is rarely needed sits in a menu at the far right, apart from the day switch — putting the start or
             // the visit order back, and removing the trip (the popup that follows asks before anything is deleted).
@@ -302,7 +302,7 @@ fun TripDetailScreen(vm: TripsViewModel, localId: String, drive: DriveState, dem
                     add(MenuItem(deleteTrip, deleteTrip, destructive = true) { confirmDelete = true })
                 })
                 // Keep clear of the window's right edge, so the day switch and the menu are never cut off there.
-                Spacer(Modifier.width(Space.x48))
+                Spacer(Modifier.width(80.dp))
             }
         }
     }) {

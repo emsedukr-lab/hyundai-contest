@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -495,12 +496,13 @@ fun SwitchRow(title: String, body: String? = null, checked: Boolean, onToggle: (
  * Body/Large/Strong in `text-primary`, the others in `text-secondary`. More segments than fit scroll sideways.
  */
 @Composable
-fun <K> SegmentedControl(items: List<K>, selected: K, label: (K) -> String, tag: (K) -> String, modifier: Modifier = Modifier.fillMaxWidth(), onPick: (K) -> Unit) {
+fun <K> SegmentedControl(items: List<K>, selected: K, label: (K) -> String, tag: (K) -> String, modifier: Modifier = Modifier.fillMaxWidth(), scroll: Boolean = true, onPick: (K) -> Unit) {
     val pad = dimensionResource(R.dimen.pleos_tabs_solid_padding)
     val segRadius = dimensionResource(R.dimen.pleos_tabs_solid_medium_button_radius_top_left)
     val segShape = RoundedCornerShape(segRadius)
     val track = weakFace()
-    Row(modifier.horizontalScroll(rememberScrollState())) {
+    // [scroll] off: the track is drawn at its own width with nothing around it to clip its rounded ends (a header that has room for it).
+    Row(if (scroll) modifier.horizontalScroll(rememberScrollState()) else modifier) {
         Row(
             Modifier
                 .clip(RoundedCornerShape(dimensionResource(R.dimen.pleos_tabs_solid_medium_radius_top_left)))
