@@ -439,12 +439,12 @@ fun SwitchRow(title: String, body: String? = null, checked: Boolean, onToggle: (
  * Body/Large/Strong in `text-primary`, the others in `text-secondary`. More segments than fit scroll sideways.
  */
 @Composable
-fun <K> SegmentedControl(items: List<K>, selected: K, label: (K) -> String, tag: (K) -> String, onPick: (K) -> Unit) {
+fun <K> SegmentedControl(items: List<K>, selected: K, label: (K) -> String, tag: (K) -> String, modifier: Modifier = Modifier.fillMaxWidth(), onPick: (K) -> Unit) {
     val pad = dimensionResource(R.dimen.pleos_tabs_solid_padding)
     val segRadius = dimensionResource(R.dimen.pleos_tabs_solid_medium_button_radius_top_left)
     val segShape = RoundedCornerShape(segRadius)
     val track = weakFace()
-    Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())) {
+    Row(modifier.horizontalScroll(rememberScrollState())) {
         Row(
             Modifier
                 .clip(RoundedCornerShape(dimensionResource(R.dimen.pleos_tabs_solid_medium_radius_top_left)))

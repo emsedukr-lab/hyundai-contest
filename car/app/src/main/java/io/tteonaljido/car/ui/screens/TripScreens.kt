@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -252,6 +253,9 @@ fun TripDetailScreen(vm: TripsViewModel, localId: String, drive: DriveState, dem
     LaunchedEffect(localId, drive.parked, naviStatus, resumed) { if (drive.parked) vm.measureFirstLeg(localId) }
     val t = trips.firstOrNull { it.localId == localId } ?: return onBack()
     var day by remember(localId) { mutableIntStateOf(vm.todayIndex(t) ?: 1) }
+    // The schedule follows the calendar: on the trip's 2nd date it shows day 2, and moves on by itself when midnight passes while the screen is open.
+    val calendarDay = vm.todayIndex(t, now)
+    LaunchedEffect(calendarDay) { if (calendarDay != null) day = calendarDay }
     var confirmDelete by remember { mutableStateOf(false) }
     val todayDate = vm.today(t, now)
     val report = remember(t, todayDate) { TripValidator.validate(t.view, t.overlay, todayDate) }
@@ -267,7 +271,13 @@ fun TripDetailScreen(vm: TripsViewModel, localId: String, drive: DriveState, dem
             tripTitle(t),
             stringResource(R.string.detail_subtitle, periodLabel(t.view), nightsLabel(t.view), t.meta.revision),
             onBack = if (drive.parked) onBack else null,
-        )
+        ) {
+            // The day switch sits at the top right of the header; one day has nothing to switch between.
+            if (drive.parked && t.view.days.size > 1) {
+                val chipLabels = t.view.days.associate { it.dayIndex to stringResource(R.string.day_n, it.dayIndex) }
+                SegmentedControl(t.view.days.map { it.dayIndex }, day, { chipLabels.getValue(it) }, { "day$it" }, Modifier.widthIn(max = 640.dp)) { day = it }
+            }
+        }
     }) {
         if (demoClock) DemoClockLine(now)
         if (!drive.parked) {
@@ -281,9 +291,6 @@ fun TripDetailScreen(vm: TripsViewModel, localId: String, drive: DriveState, dem
                 PleosButton(stringResource(R.string.delete_trip), { confirmDelete = true }, type = ButtonType.BASIC, size = ButtonSize.SMALL, tag = "pastDelete")
             }
         }
-        val chipLabels = t.view.days.associate { it.dayIndex to stringResource(R.string.day_n, it.dayIndex) }
-        // One day has nothing to switch between.
-        if (t.view.days.size > 1) SegmentedControl(t.view.days.map { it.dayIndex }, day, { chipLabels.getValue(it) }, { "day$it" }) { day = it }
         val found = remember(report, day) { TripFindings.of(report, day) }
         BoxWithConstraints(Modifier.fillMaxWidth().weight(1f)) {
             val wide = maxWidth > dimensionResource(R.dimen.pleos_window_apps_portrait_width)
