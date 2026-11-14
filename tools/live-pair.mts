@@ -7,7 +7,7 @@
  *   LIVE_START=2026-11-13 … sends it moved to start on that day.
  *   LIVE_DAY1=v3,v1,v2 … sends it with day 1 in that order and its legs untimed (M63: a day the car's navigation can reorder).
  *   LIVE_DEMO=1 … pairs into the emulator's demo store (설정 → 시연 모드), for the demo clock and driving switch.
- * Needs: the emulator running with apk/떠날지도_release.apk installed fresh (empty trip list).
+ * Needs: the emulator running with apk/이충지_떠날지도_release.apk installed fresh (empty trip list).
  */
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, writeFileSync } from 'node:fs';

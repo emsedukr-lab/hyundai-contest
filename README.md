@@ -6,7 +6,7 @@
 |---|---|
 | 앱 이름 | 떠날지도 (`io.tteonaljido.car`) |
 | 한 줄 소개 | 장소만 담으면 날짜별 동선을 짜 주고, 차에서 QR로 불러와 내비가 순서대로 안내하는 여행 앱 |
-| APK | [`apk/떠날지도_release.apk`](apk/떠날지도_release.apk) · release 0.8.0 (versionCode 8) · 서명 v2+v3 · SHA-256은 [`apk/SHA256SUMS.txt`](apk/SHA256SUMS.txt) |
+| APK | [`apk/이충지_떠날지도_release.apk`](apk/이충지_떠날지도_release.apk) · release 0.8.0 (versionCode 8) · 서명 v2+v3 · SHA-256은 [`apk/SHA256SUMS.txt`](apk/SHA256SUMS.txt) |
 | 개발 에뮬레이터 | Pleos Connect Emulator 2.1.0 (Android 14, API 34, arm64) |
 | 화면 규격 | 2560×1440, 160dpi (Connect-S-17 기본) |
 | 휴대폰 웹 | https://tteonaljido.tteonaljido-worker.workers.dev (설치 없이 브라우저에서 사용) |
@@ -21,7 +21,7 @@ release APK는 배포된 서버에 연결되어 있어 서버를 따로 띄울 �
 1. Pleos Connect Emulator 2.1.0 AVD를 cold boot로 켭니다 (RAM 4GB, `-gpu host` 권장).
 2. APK를 설치합니다.
    ```sh
-   adb install -r apk/떠날지도_release.apk
+   adb install -r apk/이충지_떠날지도_release.apk
    ```
 3. 차량(기어 P): 떠날지도 실행 → **모바일 여행 불러오기** → QR 표시
 4. 휴대폰: 위 휴대폰 웹의 **연결** 탭에서 차량 QR을 스캔 → 차량과 같은 6자리 확인 코드 확인 → **샘플 여행 추가** → **차량으로 보내기**
