@@ -11,7 +11,7 @@ import kotlin.math.roundToInt
  * The actual station list, fuel price and 급속/완속 type come from the Hyundai navigation's own screen (the app opens it),
  * so no external data or key is used here. Pure and deterministic — testable without any live vehicle signal.
  *
- * M57 adds [EnergyOutlook]: the battery expected at the end of today's route, from three readings together (the car's
+ * It also adds [EnergyOutlook]: the battery expected at the end of today's route, from three readings together (the car's
  * SOC, its range, and the navigation's own estimate for the next leg). A day that ends too low is advised earlier than
  * the plain SOC thresholds would, and a SPORT drive mode is pointed out when energy is the constraint.
  */

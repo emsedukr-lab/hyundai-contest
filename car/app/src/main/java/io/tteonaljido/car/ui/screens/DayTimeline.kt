@@ -64,7 +64,7 @@ import io.tteonaljido.trip.zoneOrUtc
 import java.util.Locale
 
 /*
- * One day of the trip in the car (M55), drawn like the phone's editor timeline (M51): a dashed `hairline` route rail
+ * One day of the trip in the car, drawn like the phone's editor timeline: a dashed `hairline` route rail
  * with markers (ink start dot, numbered stops and bed or flag on faint circles), slim one-line bars for where the day
  * starts and ends, two-line stop cards (name and 꼭 / time range and stay), and '↓ 15분' between them (TOSS.md §5
  * 타임라인). Read-only here: the plan is edited on the phone.
@@ -87,7 +87,7 @@ internal fun durationLabel(min: Int): String = when {
     else -> stringResource(R.string.dur_m, min)
 }
 
-/** '2일차 · 11월 21일 (토)' over '운전 55분 · 숙소 도착 16:10' — only the driving time in bold (phone M54). */
+/** '2일차 · 11월 21일 (토)' over '운전 55분 · 숙소 도착 16:10' — only the driving time in bold (phone). */
 @Composable
 fun DayHeading(t: LocalTrip, day: Int) {
     val d = t.view.days[day - 1]
@@ -133,7 +133,7 @@ fun DayTimeline(t: LocalTrip, day: Int, live: LiveView?, issues: List<Issue> = e
         day == 1 -> when (val o = plan.origin) {
             is Endpoint.Home -> home
             is Endpoint.AtPlace -> TripValidator.placeName(plan, o.placeRef)
-            is Endpoint.Current -> stringResource(R.string.origin_here) // no saved place chosen: the car's position when it leaves (M59)
+            is Endpoint.Current -> stringResource(R.string.origin_here) // no saved place chosen: the car's position when it leaves
         }
         else -> plan.days[day - 2].lodgingPlaceRef?.let { TripValidator.placeName(plan, it) } ?: undecided
     }
@@ -289,7 +289,7 @@ private fun NumberMarker(n: Int, done: Boolean) {
     }
 }
 
-/** [출발]/[숙소]/[귀가] name … 09:30 출발 — one slim line (phone M51). */
+/** [출발]/[숙소]/[귀가] name … 09:30 출발 — one slim line (phone). */
 @Composable
 private fun Bar(tag: String, name: String, time: String?, quietTime: Boolean = false, quietName: Boolean = false) {
     val secondary = colorResource(R.color.tn_text_secondary)

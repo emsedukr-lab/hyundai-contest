@@ -14,7 +14,7 @@ enum class DeadlineKind { FIXED, END_BY, NONE }
 enum class Basis { NAVI_LIVE, FROM_HERE, PLAN, NONE }
 
 /**
- * The next fixed stop: `ready` = arrival (no parking time, M42); `slack` = fixed − ready (negative = late). Null values:
+ * The next fixed stop: `ready` = arrival (no parking time); `slack` = fixed − ready (negative = late). Null values:
  * chain broken.
  */
 data class FixedCheck(val visitId: String, val fixed: Int, val ready: Int?, val slack: Int?)
@@ -125,7 +125,7 @@ object LiveProjection {
         // This day's own stops (plan legs) followed by any injected cross-day stops (unknown legs, at the tail).
         val items = remaining.mapIndexed { i, idx -> visits.getValue(order[idx]) to (if (i == 0) first else legs(remaining[i - 1], idx)) } +
             injected.map { it to null as Int? }
-        // Same rule as the plan check: a stop starts on arrival (no parking time, M42). Measured visit records
+        // Same rule as the plan check: a stop starts on arrival (no parking time). Measured visit records
         // (overlay.visitRecords) are not applied — they are groundwork for estimating real parking time later.
         val places = trip.places.associateBy { it.placeRef }
         val stops = TripValidator.walk(now, items)

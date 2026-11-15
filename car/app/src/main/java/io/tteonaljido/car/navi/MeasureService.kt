@@ -14,7 +14,7 @@ import io.tteonaljido.car.MainActivity
 import io.tteonaljido.car.R
 
 /**
- * Keeps this app's process running while the navigation measures the trip's legs (M63).
+ * Keeps this app's process running while the navigation measures the trip's legs.
  *
  * A measuring route really starts in the navigation, and the navigation comes to the front when it does. An app behind
  * it is frozen by the system about ten seconds later — before the route's numbers have arrived, and with more routes

@@ -31,7 +31,7 @@ export function shortDate(date: string) {
   return t('date.short', { month: lang === 'en' ? MONTH_EN[m - 1] : m, day: d, weekday });
 }
 
-/** 12-hour clock, but midnight reads 0 (오전 0:30), so it never looks like noon's 12:30 in the 오후 tab (M50). */
+/** 12-hour clock, but midnight reads 0 (오전 0:30), so it never looks like noon's 12:30 in the 오후 tab. */
 const clockHour = (h: number) => (h === 0 ? 0 : h % 12 || 12);
 
 /** "오후 1:30" / "1:30 PM" for an "HH:MM" time — the same reading the time picker and the cards use. */
@@ -41,7 +41,7 @@ export function timeLabel(hhmm: string) {
 }
 
 /**
- * The choices of a time picker (M47): every `step` minutes through the day (00:00 … 23:30 by default), plus the current
+ * The choices of a time picker: every `step` minutes through the day (00:00 … 23:30 by default), plus the current
  * value when it is off that grid (an older typed 10:15 still shows and stays chosen).
  */
 export function timeOptions(step = 30, current?: string | null): string[] {
@@ -60,7 +60,7 @@ export const periodOf = (hhmm: string): DayPeriod => (Number(hhmm.slice(0, 2)) <
 const hhmmOf = (m: number) => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
 
 /**
- * The chips of one tab of the time picker (M50): 오전 shows 06:00–11:30 (the dawn hours 00:00–05:30 only when `dawn`),
+ * The chips of one tab of the time picker: 오전 shows 06:00–11:30 (the dawn hours 00:00–05:30 only when `dawn`),
  * 오후 12:00–23:30, every `step` minutes. The current value is added when it is off that grid and in this tab, so an older
  * typed 10:15 still shows chosen.
  */
@@ -86,7 +86,7 @@ export const chipLabel = (hhmm: string) => {
 
 /**
  * "마지막 전송 11월 14일 (토)" for a trip row — and, when the trip was changed since (its revision moved on), that it
- * was. The version numbers themselves stay out of the lists (M66); the pairing page shows them where two versions meet.
+ * was. The version numbers themselves stay out of the lists; the pairing page shows them where two versions meet.
  */
 export const sentLabel = (sent: { revision: number; at: number }, currentRevision: number) =>
   t(sent.revision === currentRevision ? 'home.lastSend' : 'home.lastSendChanged', { date: dateLabel(dayOf(sent.at)) });

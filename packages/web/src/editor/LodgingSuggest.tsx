@@ -5,7 +5,7 @@ import { fillNights, laterEmptyNights, lodgingSuggestions, setLodging } from '..
 import { useNotes } from './NotesContext';
 
 /**
- * 이어서 묵기 (M49): one hotel is often booked for several nights. An empty night offers the trip's lodgings as chips —
+ * 이어서 묵기: one hotel is often booked for several nights. An empty night offers the trip's lodgings as chips —
  * the nearest earlier night's first — and a chosen night offers to fill the empty nights after it in one tap. Nights
  * left 미정 on purpose are not filled. Used on the 여행 정보 rail (LodgingField) and in the day's lodging sheet.
  */

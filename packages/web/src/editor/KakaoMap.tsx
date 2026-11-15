@@ -27,7 +27,7 @@ const token = (el: Element, name: string) => {
 
 /**
  * 경로 미리보기 (real map): a day's stops as numbered markers with the route drawn between them, on a Kakao map — the
- * roads Kakao's directions take (M54), a faint dashed straight line only where no road is known. The tiles and the
+ * roads Kakao's directions take, a faint dashed straight line only where no road is known. The tiles and the
  * plain start/end pins are Kakao's own; what we draw on top — the day's route and its numbered pins — is the accent
  * line on a white casing with accent number circles (design/TOSS.md §5 지도), and a road not known yet is a
  * text-disabled dash; all in the light values in both themes because the tiles are always light. Needs a
@@ -79,7 +79,7 @@ export function KakaoMap({ plan, home, dayIndex }: { plan: Trip; home: Home | nu
             kakao.maps.event.addListener(marker, 'click', () => info.open(map, marker));
           }
         }
-        // A light dashed straight line right away; replaced by the roads as soon as Kakao's directions answer (M54).
+        // A light dashed straight line right away; replaced by the roads as soon as Kakao's directions answer.
         const dashed = (p: any[]) => new kakao.maps.Polyline({ path: p, strokeWeight: 3, strokeColor: unknown, strokeOpacity: 1, strokeStyle: 'shortdash', map, zIndex: 1 });
         const sketch = path.length > 1 ? dashed(path) : null;
         if (runs.length > 0)

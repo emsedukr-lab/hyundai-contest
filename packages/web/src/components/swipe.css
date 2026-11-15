@@ -1,5 +1,5 @@
 /*
- * Swipe to remove (M36, shared M52): the card slides left over the action it reveals. The revealed face is the
+ * Swipe to remove (shared): the card slides left over the action it reveals. The revealed face is the
  * destructive fill of design/TOSS.md §5 — negative with white text — the same as a destructive confirm.
  */
 .tl-swipe {
@@ -47,7 +47,7 @@
 }
 
 
-/* The trip list (M52): the next-trip card keeps its gutter; a list row swipes inside its grouped container. */
+/* The trip list: the next-trip card keeps its gutter; a list row swipes inside its grouped container. */
 .tl-swipe.tn-next-swipe {
   margin: 0 20px;
 }

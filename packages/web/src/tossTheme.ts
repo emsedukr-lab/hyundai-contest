@@ -119,7 +119,7 @@ export const tossTheme = defineTheme({
     '--font-size-xl': '1.25rem',
     '--font-size-2xl': '1.375rem',
     '--font-size-3xl': '1.5rem',
-    // Heading 1~6, one step down the toss ladder (M66: 휴대폰은 클 필요 없음): h3 22/29/700 · h4 20/27/700 ·
+    // Heading 1~6, one step down the toss ladder (휴대폰은 클 필요 없음): h3 22/29/700 · h4 20/27/700 ·
     // title-1 18/26/600 · title-2 17/25/600 · label-m 15/23/600 · label-m 15/19/600.
     '--text-heading-1-size': 'var(--font-size-2xl)',
     '--text-heading-1-leading': '1.3182',

@@ -48,7 +48,7 @@ export function departure(trip: Trip, dayIndex: number): number | null {
   const day = trip.days[dayIndex - 1];
   if (dayIndex > 1) return day.departTime ? minutes(day.departTime) : null;
   const f = trip.firstDay;
-  if (f.basis === 'DEPART_ORIGIN') return f.departTime ? minutes(f.departTime) : null; // optional (M48)
+  if (f.basis === 'DEPART_ORIGIN') return f.departTime ? minutes(f.departTime) : null; // optional
   // Arrival basis: leave `leg` minutes before the target arrival; getting ready (prepMinutes) comes before that.
   const leg = day.legs[0];
   return leg ? minutes(f.arriveTime) - leg.minutes : null;
@@ -56,7 +56,7 @@ export function departure(trip: Trip, dayIndex: number): number | null {
 
 /**
  * Arrival = clock + leg; a visit starts on arrival and not before its fixed time, which also restores the chain.
- * Parking time (`prepMinutes`) is NOT counted (M42): it stays in the transfer for compatibility, and real parking time
+ * Parking time (`prepMinutes`) is NOT counted: it stays in the transfer for compatibility, and real parking time
  * will later come from the car's own data (navigation ended → ignition off + belt released + doors locked).
  */
 function walk(start: number | null, items: [Visit, number | null][]): StopTime[] {
@@ -73,7 +73,7 @@ function walk(start: number | null, items: [Visit, number | null][]): StopTime[]
 
 /**
  * The day's stop times. `startAt` (minute of the day) replaces the planned departure — the phone uses it to recompute
- * today "from now" on pull-to-refresh (M43); without it this is the shared rule the car mirrors.
+ * today "from now" on pull-to-refresh; without it this is the shared rule the car mirrors.
  */
 export function timeline(trip: Trip, dayIndex: number, startAt?: number): StopTime[] {
   const day = trip.days[dayIndex - 1];
@@ -125,7 +125,7 @@ export function dayIssues(trip: Trip, dayIndex: number): DayIssue[] {
   const d = trip.days[n - 1];
   const dep = departure(trip, n);
   if (dep === null) {
-    // A first day with no departure time chosen reads like any other day without one (M48); FIRST_DEPARTURE_UNKNOWN
+    // A first day with no departure time chosen reads like any other day without one; FIRST_DEPARTURE_UNKNOWN
     // stays for the arrival basis whose first travel time is missing.
     const freeFirst = n === 1 && trip.firstDay.basis === 'DEPART_ORIGIN' && trip.firstDay.departTime === null;
     if (n === 1 && !freeFirst) add('UNCERTAIN', 'FIRST_DEPARTURE_UNKNOWN', []);
@@ -138,7 +138,7 @@ export function dayIssues(trip: Trip, dayIndex: number): DayIssue[] {
     const v = visitOf(trip, st.visitId);
     const name = placeName(trip, v.placeRef);
     const fixed = v.fixed ? minutes(v.fixed.time) : null;
-    if (fixed !== null && st.arrive !== null && st.arrive > fixed) add('CONFLICT', 'LATE_FOR_FIXED', [n, name, v.fixed!.time, hhmm(st.arrive)], v.visitId); // no parking time (M42)
+    if (fixed !== null && st.arrive !== null && st.arrive > fixed) add('CONFLICT', 'LATE_FOR_FIXED', [n, name, v.fixed!.time, hhmm(st.arrive)], v.visitId); // no parking time
     if (fixed !== null && st.arrive === null) add('UNCERTAIN', 'FIXED_UNCHECKED', [n, name, v.fixed!.time], v.visitId);
     const h = hoursIssue(trip, v.placeRef, date, st);
     if (h) add('CONFLICT', h.code, [n, name, ...h.extra], v.visitId);

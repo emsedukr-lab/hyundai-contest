@@ -42,7 +42,7 @@ export function RecommendDialog({
   useEffect(() => {
     if (isOpen) void favorites.all().then(setPool, () => undefined);
   }, [isOpen]);
-  // The whole trip is arranged at once (M64), which takes a moment: only while the dialog is open, never on every edit behind it.
+  // The whole trip is arranged at once, which takes a moment: only while the dialog is open, never on every edit behind it.
   const found = useMemo(() => (isOpen ? recommend(plan, home, { book, notes, pool, mealTimes: mealTimes() }) : null), [isOpen, plan, home, book, notes, pool]);
   const proposed = found?.plan ?? plan;
   // Display copy with travel times re-linked exactly as edit() will, over a throwaway book so the real one is untouched.

@@ -17,14 +17,14 @@ describe('timetable (same rules as the car)', () => {
     expect(dayEnd(sample, 2)).toBe(minutes('16:10'));
   });
 
-  it('does not count parking time: a visit starts on arrival even when prepMinutes is set (M42)', () => {
+  it('does not count parking time: a visit starts on arrival even when prepMinutes is set', () => {
     const withPrep: Trip = { ...sample, visits: sample.visits.map((v) => ({ ...v, prepMinutes: 30 })) };
     const t = Object.fromEntries(timeline(withPrep, 2).map((s) => [s.visitId, s]));
     expect(t.v4.start).toBe(t.v4.arrive);
     expect(dayEnd(withPrep, 2)).toBe(dayEnd(sample, 2));
   });
 
-  it('recomputes a day from another start (the phone "from now" view), still waiting for fixed times (M43)', () => {
+  it('recomputes a day from another start (the phone "from now" view), still waiting for fixed times', () => {
     const base = Object.fromEntries(timeline(sample, 2).map((s) => [s.visitId, s]));
     const later = Object.fromEntries(timeline(sample, 2, minutes('10:00')).map((s) => [s.visitId, s]));
     expect(later.v4.arrive! - base.v4.arrive!).toBe(minutes('10:00') - minutes('09:30'));

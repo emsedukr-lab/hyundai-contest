@@ -1,7 +1,7 @@
 package io.tteonaljido.trip
 
 /**
- * 차량 신호 조합 (M57): read-only facts from the Pleos Vehicle SDK, already reduced to what the trip logic needs.
+ * 차량 신호 조합: read-only facts from the Pleos Vehicle SDK, already reduced to what the trip logic needs.
  * Every field is nullable — null means "the car did not report it" (unsupported domain, permission not granted, no
  * answer in time). An unknown is never counted as fine and never as a problem; it is simply left out.
  * Raw signal values are not stored anywhere: a snapshot lives in memory only and is replaced by the next reading.

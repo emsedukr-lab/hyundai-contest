@@ -6,7 +6,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/** 출발 전 점검 (M57): vehicle readings combined with today's remaining distance; unknowns are left out, never guessed. */
+/** 출발 전 점검: vehicle readings combined with today's remaining distance; unknowns are left out, never guessed. */
 class DepartureCheckTest {
     private val clear = VehicleSnapshot(
         powerLimited = false, washerLow = false, engineOil = FluidLevel.OK, brakeFluid = FluidLevel.OK,

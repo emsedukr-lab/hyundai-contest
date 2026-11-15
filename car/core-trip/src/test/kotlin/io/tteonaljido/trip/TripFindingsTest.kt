@@ -6,7 +6,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.File
 
-/** M66: findings sorted by who settles them — a person (shown as 충돌 / 확인 필요) or the car's navigation (quiet lines). */
+/** findings sorted by who settles them — a person (shown as 충돌 / 확인 필요) or the car's navigation (quiet lines). */
 class TripFindingsTest {
     private val schemaDir = File(System.getProperty("schemaDir"))
     private val sample = (TransferParser.parse(File(schemaDir, "fixtures/valid/sample.json").readText()) as ParseResult.Ok).transfer.trip

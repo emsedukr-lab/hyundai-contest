@@ -40,7 +40,7 @@ describe('이동시간 경로 요청 (route)', () => {
     expect((await routeDurations({ points: [gyeongpo, { latE7: 1.5, lonE7: 2 }] }, 'key', kakao({}))).status).toBe(400);
   });
 
-  it('road lines per leg (M54): roads joined, same spot = [], no route = null', async () => {
+  it('road lines per leg: roads joined, same spot = [], no route = null', async () => {
     // section 0 bends through a corner; its two roads share an end point
     const road = (pairs: number[][]) => ({ vertexes: pairs.flat() });
     const sec0 = { duration: 610, roads: [road([[128.8965, 37.7953], [128.91, 37.7953]]), road([[128.91, 37.7953], [128.948, 37.7717]])] };

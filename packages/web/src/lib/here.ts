@@ -1,5 +1,5 @@
 /**
- * The phone's own position, for timing a trip that starts "where I am" (출발 장소 '현재 위치', M61).
+ * The phone's own position, for timing a trip that starts "where I am" (출발 장소 '현재 위치').
  *
  * Asked only when the user starts something that needs it — choosing 현재 위치, 경로 추천, 현재 위치로 계산 — or
  * silently when the browser already holds the permission. Kept in memory for this session only: never stored, never

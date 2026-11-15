@@ -1,7 +1,7 @@
 package io.tteonaljido.trip
 
 /**
- * 출발 전 점검 (M57): before the day's drive, several read-only vehicle readings are combined with today's plan into
+ * 출발 전 점검: before the day's drive, several read-only vehicle readings are combined with today's plan into
  * one short list — "can this car do today's route as it stands?". It never blocks anything and never edits the plan;
  * the driver sees what to look at before leaving. The item codes are shared with the server-side Fleet readiness check
  * (packages/shared/src/fleet.ts), which has more of them because a Fleet webhook also carries the warning lamps.

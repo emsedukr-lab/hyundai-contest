@@ -9,7 +9,7 @@ import { dayEnds, legEnds } from '../dayInfo';
 import { Sheet } from '../Sheet';
 
 /**
- * 이동 시간 between two neighbours on the timeline — read-only (M43): times come from Kakao directions (the
+ * 이동 시간 between two neighbours on the timeline — read-only: times come from Kakao directions (the
  * navigation route search), never typed. A leg Kakao can't measure (a place without a location, or home without an
  * address in 설정) stays empty and the car's navigation times it on the road.
  */
@@ -38,7 +38,7 @@ export function LegSheet({
   routeAt: Date | null;
   refreshing: boolean;
   onRecalc: () => void;
-  /** For a leg that cannot be asked yet: what would make it askable, and the button that does it (M61). */
+  /** For a leg that cannot be asked yet: what would make it askable, and the button that does it. */
   help?: { text: string; action: string; busy?: boolean; onAction: () => void };
 }) {
   const { day } = dayEnds(plan, dayIndex);

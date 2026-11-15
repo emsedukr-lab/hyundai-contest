@@ -30,7 +30,7 @@ import io.tteonaljido.trip.SketchDay
 import io.tteonaljido.trip.TripSketch
 
 /**
- * The whole trip's route on the next-trip card (M55, the phone's M45 drawing), TOSS.md §5 지도·동선 스케치: the day ahead
+ * The whole trip's route on the next-trip card (the phone's drawing), TOSS.md §5 지도·동선 스케치: the day ahead
  * as a solid `accent` line edged in white with numbered stops, the other days as a `text-disabled` dashed line with
  * dots, lodgings as rings, on a faint inset. No map tiles, nothing leaves the car.
  */

@@ -1,12 +1,12 @@
 package io.tteonaljido.trip
 
 /**
- * M63: in the car, the Hyundai navigation is what times, measures and orders the trip.
+ * in the car, the Hyundai navigation is what times, measures and orders the trip.
  *
  * The navigation has no "from A to B" query: `requestTrip` only answers from where the car stands. A route with
  * waypoints does carry more: once it has started, the navigation reports what is left to every waypoint and to the
  * destination, counted from the car, and the difference of two neighbours is the leg between them
- * (docs/evidence/navi-waypoints). So a leg the car is nowhere near (home → the first night's lodging, stop → stop on
+ * (docs/evidence/2026-11-13_navi-waypoints). So a leg the car is nowhere near (home → the first night's lodging, stop → stop on
  * day 3) is measured by laying its two ends next to each other on a route, reading the numbers and cancelling the route.
  *
  *  - [NaviMeasure] plans those routes and turns the readings into leg times and distances ([CarOverlay.legEstimates]).
@@ -114,7 +114,7 @@ object NaviMeasure {
      * Routes that between them drive every edge once: each is the points in driving order, at most `maxWaypoints`
      * waypoints and the destination. Edges that continue where the route stands are strung together; when none does,
      * the route hops to the next wanted edge's start — that hop costs one leg of this route, a new route costs a whole
-     * request (about ten seconds, docs/evidence/navi-waypoints).
+     * request (about ten seconds, docs/evidence/2026-11-13_navi-waypoints).
      * `atCar` marks a point where the car stands: every route starts from the car anyway, so an edge leaving such a
      * point opens a route (it then costs no waypoint) and is never hopped to (the route would drive back to where it began).
      */
@@ -170,7 +170,7 @@ object NaviMeasure {
 }
 
 /**
- * The day's fastest order by the navigation's own times (M63). Same bar as the phone's 더 빠른 순서: it has to save at
+ * The day's fastest order by the navigation's own times. Same bar as the phone's 더 빠른 순서: it has to save at
  * least [MIN_SAVED] minutes of driving, add no timetable conflict and leave no more fixed times short of their margin.
  */
 object RouteOptimizer {

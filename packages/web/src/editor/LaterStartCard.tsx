@@ -9,7 +9,7 @@ import type { LaterStart } from '../lib/laterStart';
  * said to be the usual time when the traveller has not entered one) — and the same two actions as 더 빠른 순서.
  */
 export function LaterStartCard({ s, name, onApply, onDismiss }: { s: LaterStart; name: string; onApply: () => void; onDismiss: () => void }) {
-  // Times read as on the day's cards: 24-hour "11:00" (M66).
+  // Times read as on the day's cards: 24-hour "11:00".
   const title = t('tl.later.title', { time: s.to });
   const why = t('tl.later.detail', { name, fixed: s.fixedTime, spare: minutesLabel(s.spareBefore) });
   const bound = s.checkOut ? t(s.checkOut.assumed ? 'tl.later.checkoutAssumed' : 'tl.later.checkout', { time: s.checkOut.time }) : null;

@@ -10,7 +10,7 @@ import { usePath } from './lib/router';
 import { isPresetSlot } from './lib/settings';
 
 // The four tab roots are in the first download, so switching tabs is instant. The screens pushed from them load when
-// first opened (M66): the editor (timeline, sheets, drag and drop, the route engine), the pairing flow (crypto,
+// first opened: the editor (timeline, sheets, drag and drop, the route engine), the pairing flow (crypto,
 // schema checks) and the smaller landings. No service worker caches the app, so each is one more same-origin request
 // under the existing CSP (`script-src 'self'`).
 const editor = () => import('./pages/TripEditorPage');

@@ -9,7 +9,7 @@ const doc = (id: string, start: string, end: string, updatedAt = nowIso()): Trip
   return { tripId: id, plan, revision: 1, updatedAt, hash: '', home: null } as unknown as TripDoc;
 };
 
-describe('다음 여행 (M45)', () => {
+describe('다음 여행', () => {
   it('says how far away a trip is, which day of it today is, or that it is over', () => {
     expect(tripWhen('2026-11-20', '2026-11-23', '2026-11-09')).toEqual({ label: t('home.next.inDays', { n: 11 }), focusDay: 1 });
     expect(tripWhen('2026-11-20', '2026-11-23', '2026-11-19').label).toBe(t('home.next.tomorrow'));
@@ -32,7 +32,7 @@ describe('다음 여행 (M45)', () => {
   });
 });
 
-describe('다른 여행 order and date overlaps (M49)', () => {
+describe('다른 여행 order and date overlaps', () => {
   const today = todayIn('Asia/Seoul');
   const shift = (n: number) => new Date(Date.parse(`${today}T00:00:00Z`) + n * 86_400_000).toISOString().slice(0, 10);
   const named = (id: string, name: string, s: number, e: number) => {

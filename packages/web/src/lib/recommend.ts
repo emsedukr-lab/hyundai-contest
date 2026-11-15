@@ -6,7 +6,7 @@ import type { TripNotes } from './notes';
 import { assign, move, moveToDay, placeOf, rememberLegs, unassign, visitOf, type LegBook } from './trips';
 
 /**
- * 이동경로 자동 추천 (route recommendation). {@link recommend} arranges the whole trip with the shared optimizer (M64);
+ * 이동경로 자동 추천 (route recommendation). {@link recommend} arranges the whole trip with the shared optimizer;
  * the straight-line helpers below it (`orderDay`, `shorterDayOrder`) stay for the editor's 더 빠른 순서 card.
  * Everything here is pure and deterministic, never edits the schema shape, and changes order through the same pure
  * ops (assign/move) the editor uses, so travel-time bookkeeping (LegBook/relinkLegs) keeps working.
@@ -69,9 +69,9 @@ export function estimateDriveMinutes(metres: number): number {
 export interface RecommendOptions {
   /** Driving times already measured for a pair of places (the editor's leg book); the plan's own legs are used as well. */
   book?: LegBook;
-  /** The trip's phone-only notes: a lodging's check-in and check-out times and a restaurant's meal (M67) are read from them. */
+  /** The trip's phone-only notes: a lodging's check-in and check-out times and a restaurant's meal are read from them. */
   notes?: TripNotes;
-  /** When each meal is eaten (설정 › 식사 시간, M67); the usual times when not given. */
+  /** When each meal is eaten (설정 › 식사 시간); the usual times when not given. */
   mealTimes?: MealTimes;
   /** Favorite places outside the trip that may be offered for a gap of two hours or more. */
   pool?: (NewPlace & { id: string })[];
@@ -91,7 +91,7 @@ export interface Recommendation {
 }
 
 /**
- * 경로 추천 (M64): the whole trip arranged at once by the shared optimizer — which day each place goes on, and in what
+ * 경로 추천: the whole trip arranged at once by the shared optimizer — which day each place goes on, and in what
  * order — under the planning rules it documents (parking and booking lead times, opening hours, meal times, cafes after
  * meals, check-in and check-out). Driving times come from what has been measured (the plan's own legs, the leg book)
  * and, for pairs nobody has measured yet, from the straight-line distance; the caller then asks for real times along
@@ -107,7 +107,7 @@ export function recommend(plan: Trip, home: Home | null, opts: RecommendOptions 
   const lodging = Object.fromEntries(
     Object.entries(opts.notes ?? {}).flatMap(([ref, n]) => (n.checkIn || n.checkOut ? [[ref, { ...(n.checkIn ? { checkIn: minutes(n.checkIn) } : {}), ...(n.checkOut ? { checkOut: minutes(n.checkOut) } : {}) }]] : [])),
   );
-  // The meal a restaurant was set to (phone only, M67). A choice left on a place that is no longer a restaurant is not passed.
+  // The meal a restaurant was set to (phone only). A choice left on a place that is no longer a restaurant is not passed.
   const meals: Record<string, MealSlot> = Object.fromEntries(Object.entries(mealsOf(opts.notes)).filter(([ref]) => placeOf(plan, ref)?.category === 'FOOD'));
   // Estimates are brought in line with this trip's measured legs (their median ratio), so that a pair nobody has
   // measured is not preferred — or avoided — just because the estimate runs fast or slow in this region.
@@ -272,7 +272,7 @@ export function summarizeRecommendation(before: Trip, after: Trip): Recommendati
   return { changes, addedCount, movedCount, overflowCount, noCoordsCount, changed: orderChanged };
 }
 
-/* ---------- M54: a faster order for one day (the editor's '더 빠른 순서' card) ---------- */
+/* ---------- a faster order for one day (the editor's '더 빠른 순서' card) ---------- */
 
 /** Straight-line metres of a day's chain start → stops (in `order`) → end; Infinity when a stop has no coordinates. */
 export function chainMetres(plan: Trip, home: Home | null, dayIndex: number, order: string[]): number {
@@ -323,7 +323,7 @@ function twoOpt(plan: Trip, home: Home | null, dayIndex: number, start: string[]
 }
 
 /**
- * A shorter visiting order for one day by straight-line distance — the cheap first check before asking Kakao (M54).
+ * A shorter visiting order for one day by straight-line distance — the cheap first check before asking Kakao.
  * Tries the recommender's own order and a 2-opt of the current one; timed stops (fixed or 희망) keep their time order.
  * null when the day has fewer than 2 stops, a stop without coordinates, or nothing at least `minGain` shorter.
  */

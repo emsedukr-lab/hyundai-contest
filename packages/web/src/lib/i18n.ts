@@ -392,7 +392,7 @@ const ko = {
   'recommend.noChanges': '변경 사항이 없어요',
   'recommend.rules': '예약·영업시간·식사 시간을 따져 날짜와 순서를 정했어요',
 
-  // 식사 (M67): a restaurant's meal and the meal times in 설정
+  // 식사: a restaurant's meal and the meal times in 설정
   'meal.title': '식사 때',
   'meal.aria': '{name} 식사',
   'meal.auto': '상관없음',
@@ -452,7 +452,7 @@ const ko = {
   'add.addByName': "'{name}' 이름으로 추가",
   'add.refine': '못 찾으면 직접 찾거나 좌표를 입력하세요',
   'add.refine.search': '장소 검색',
-  // M15 자동 추가
+  // 자동 추가
   'add.saving': '담는 중…',
   'add.added': "'{name}'을(를) '{trip}'에 담았어요",
   'add.added.nameOnly': '위치는 차량 내비에서 확인돼요',
@@ -465,14 +465,14 @@ const ko = {
   'add.changeTrip': '다른 여행으로',
   'add.otherPlace': '다른 장소였나요?',
   'add.manualFind': '직접 찾기',
-  // M15 설치 안내 · 공유 안내
+  // 설치 안내 · 공유 안내
   'install.title': '홈 화면에 추가하면 더 편해요',
   'install.benefit': "네이버 지도에서 '공유 → 떠날지도'로 장소를 바로 담을 수 있어요",
   'install.cta': '홈 화면에 추가',
   'install.ios': "iPhone은 Safari 공유 → '홈 화면에 추가'를 누르세요 · 공유로 장소 담기는 현재 Android에서 지원해요",
   'home.shareHint': "네이버 지도에서 '공유 → 떠날지도'로 장소를 담을 수 있어요",
   'editor.firstPlace': '장소를 검색해 추가하거나, 네이버 지도에서 공유해 담아 보세요',
-  // M16 복제·즐겨찾기
+  // 복제·즐겨찾기
   'trip.duplicate': '여행 복제',
   'trip.copyName': '{name} (복사본)',
   'favorites.title': '즐겨찾는 장소',
@@ -487,7 +487,7 @@ const ko = {
   'sketch.aria': '{day}일차 경로 스케치',
   'map.aria': '{day}일차 경로 지도',
   'map.bulkAria': '선택한 장소 지도',
-  // M19 여러 곳 붙여넣기
+  // 여러 곳 붙여넣기
   'bulk.title': '여러 곳 추가',
   'bulk.searching': '검색 중…',
   'bulk.pickAddress': '주소 선택',
@@ -1398,7 +1398,7 @@ const en: Record<Key, string> = {
   'add.addByName': "Add '{name}' by name",
   'add.refine': "Can't find it? Search or enter coordinates",
   'add.refine.search': 'Search a place',
-  // M15 auto-add
+  // auto-add
   'add.saving': 'Adding…',
   'add.added': "Added '{name}' to '{trip}'",
   'add.added.nameOnly': 'The car pins the exact spot in navigation',
@@ -1411,14 +1411,14 @@ const en: Record<Key, string> = {
   'add.changeTrip': 'Add to another trip',
   'add.otherPlace': 'Was it a different place?',
   'add.manualFind': 'Find it myself',
-  // M15 install · share guidance
+  // install · share guidance
   'install.title': 'Add it to your home screen',
   'install.benefit': "Then you can add places straight from Naver Map via 'Share → The Naljido'",
   'install.cta': 'Add to Home Screen',
   'install.ios': "On iPhone, use Safari Share → 'Add to Home Screen' · adding places by share is Android-only for now",
   'home.shareHint': "Add places from Naver Map via 'Share → The Naljido'",
   'editor.firstPlace': 'Search to add a place, or share one from Naver Map',
-  // M16 duplicate·favorites
+  // duplicate·favorites
   'trip.duplicate': 'Duplicate trip',
   'trip.copyName': '{name} (copy)',
   'favorites.title': 'Saved places',
@@ -1433,7 +1433,7 @@ const en: Record<Key, string> = {
   'sketch.aria': 'Day {day} route sketch',
   'map.aria': 'Day {day} route map',
   'map.bulkAria': 'Map of selected places',
-  // M19 bulk paste
+  // bulk paste
   'bulk.title': 'Add several places',
   'bulk.searching': 'Searching…',
   'bulk.pickAddress': 'Pick an address',

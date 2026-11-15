@@ -3,8 +3,8 @@ import { error, json } from './http';
 /**
  * Driving times between consecutive stops for the trip editor, from Kakao Mobility directions, proxied so the Kakao
  * REST key never reaches the browser. Only the coordinates of the stops in question are sent (home too, when the phone
- * has a home address in 설정 — M39); nothing is stored or logged. The same request also returns each leg's road line for
- * the day map (M54, {@link routePaths}).
+ * has a home address in 설정); nothing is stored or logged. The same request also returns each leg's road line for
+ * the day map ({@link routePaths}).
  */
 export interface Point {
   latE7: number;
@@ -160,7 +160,7 @@ export function sectionPath(sec: Section | undefined): [number, number][] | null
 }
 
 /**
- * The road each leg actually takes (M54), for drawing the day's route on the map like a navigation app. Same body as
+ * The road each leg actually takes, for drawing the day's route on the map like a navigation app. Same body as
  * durations; the answer is `{ paths }`, one per leg: `[latE5, lonE5, …]` integers, `[]` for a same-spot leg, null when
  * Kakao has no road for it.
  */

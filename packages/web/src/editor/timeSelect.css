@@ -1,5 +1,5 @@
 /*
- * 시각 선택 (M50). The field: a Toss field (48 tall, radius 12, fill-weak with no visible border at rest; focused or
+ * 시각 선택. The field: a Toss field (48 tall, radius 12, fill-weak with no visible border at rest; focused or
  * open = the surface with a 1.5px accent border) that opens the picker sheet. The picker: [오전 | 오후], then a
  * 4-column grid of 44px half-hour chips — the chip of design/TOSS.md §5 (the surface with a hairline; the chosen one a
  * text-primary fill with the surface's color for its text), the suggestion at 600 behind an accent dot (the same dot

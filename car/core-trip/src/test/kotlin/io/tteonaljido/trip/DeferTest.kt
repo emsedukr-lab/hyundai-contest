@@ -34,7 +34,7 @@ class DeferTest {
     @Test fun lateOffersBothSkipAndDeferForTheSameStop() {
         val p = LiveProjection.project(lakeOptional, CarOverlay(), 2, m("09:20"), naviRemaining = 134)
         assertEquals(Punctuality.LATE, p.status)
-        assertEquals(SkipSuggestion("v4", 90), p.skip)   // its planned stay only (no parking time, M42)
+        assertEquals(SkipSuggestion("v4", 90), p.skip)   // its planned stay only (no parking time)
         assertEquals(DeferSuggestion("v4", 90), p.defer) // same candidate, offered as "do it later"
     }
 

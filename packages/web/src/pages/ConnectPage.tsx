@@ -171,7 +171,7 @@ export function ConnectPage() {
       if (!r) return setStage('invalid');
       lastSid.set(r.sid);
       setRec(r);
-      // Started from a trip's 차로 보내기 sheet (M66): that trip is already chosen here; any other can still be picked.
+      // Started from a trip's 차로 보내기 sheet: that trip is already chosen here; any other can still be picked.
       const wanted = sendIntent.get();
       setPicked(r.tripId ?? (wanted && all.some((d) => d.tripId === wanted) ? wanted : null));
       setIncludeHome(r.includeHome);

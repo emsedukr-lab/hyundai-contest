@@ -38,7 +38,7 @@ const visit = (visitId: string, placeRef: string, stayMinutes: number, extra: Pa
   visitId,
   placeRef,
   stayMinutes,
-  prepMinutes: 0, // parking time is not counted for now (M42)
+  prepMinutes: 0, // parking time is not counted for now
   importance: 'NORMAL',
   desiredTime: null,
   fixed: null,

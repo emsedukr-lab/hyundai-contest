@@ -23,7 +23,7 @@ const MealTimeSheet = lazy(() => import('../editor/MealTimeSheet').then((m) => (
 const TripDefaultsSheet = lazy(() => import('../editor/TripDefaultsSheet').then((m) => ({ default: m.TripDefaultsSheet })));
 
 /**
- * 설정 tab: named endpoint shortcuts, meal times for the route recommendation (M67), trip data (backup out, backup or a friend's share file in) and
+ * 설정 tab: named endpoint shortcuts, meal times for the route recommendation, trip data (backup out, backup or a friend's share file in) and
  * the app (install, privacy, about). The import logic is the one that used to sit on the trips screen, moved as-is.
  */
 export function SettingsPage() {
@@ -37,7 +37,7 @@ export function SettingsPage() {
   const presets = presetSlots().map((slot) => ({ slot, place: presetPlace(slot) }));
   const [tripDefaultsOpen, setTripDefaultsOpen] = useState(false);
 
-  // 식사 시간 (M67): one meal is edited in a sheet as a draft and kept on 저장, only while it stays in order with the others.
+  // 식사 시간: one meal is edited in a sheet as a draft and kept on 저장, only while it stays in order with the others.
   const [meals, setMeals] = useState<MealTimes>(mealTimes);
   const [mealSlot, setMealSlot] = useState<MealSlot>('lunch');
   const [mealDraft, setMealDraft] = useState<[string, string] | null>(null);
@@ -149,7 +149,7 @@ export function SettingsPage() {
         <TripDefaultsSheet onClose={() => setTripDefaultsOpen(false)} onSaved={() => { setTripDefaultsOpen(false); setMessage(t('settings.tripDefaults.saved')); }} />
       </Suspense>}
 
-      {/* 식사 시간 (M67): when each meal is eaten — what the route recommendation places restaurants by. Phone only. */}
+      {/* 식사 시간: when each meal is eaten — what the route recommendation places restaurants by. Phone only. */}
       <Section
         title={t('settings.meals')}
         action={

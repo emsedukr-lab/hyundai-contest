@@ -18,7 +18,7 @@ class TodayRouteTest {
         assertEquals(listOf<Any>("서울역"), g.msg.args)
     }
 
-    /** M57: the navigation's own waypoint list is checked; fewer waypoints than sent is reported as such. */
+    /** the navigation's own waypoint list is checked; fewer waypoints than sent is reported as such. */
     @Test fun fewerWaypointsThanSentIsSaidNotHidden() {
         val g = todayRouteGuide(RouteOutcome.Confirmed(elsewhere), 3, acceptedWaypoints = 1)
         assertEquals(Guide.Done(io.tteonaljido.car.ui.Msg(R.string.guide_today_partial, "3", "2")), g)

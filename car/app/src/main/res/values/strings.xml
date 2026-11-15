@@ -267,7 +267,7 @@
     <string name="presend_demo">사전 전송 (시연)</string>
     <string name="presend_demo_title">사전 전송 (시연)</string>
     <string name="presend_demo_body">휴대폰에서 미리 짠 하루 경로를 차량 내비에 올리는 동작을 시연해요. 실제 계정 기반 \'다음 시동 때 자동 전송\'은 인프라가 없어 구현하지 않았고, 차량의 \'오늘 경로 전송\'이 실제 묶음 전송입니다.</string>
-    <!-- M55: car screens in the phone app's layout -->
+    <!-- car screens in the phone app's layout -->
     <string name="when_in_days">%1$d일 뒤 출발</string>
     <string name="when_tomorrow">내일 출발</string>
     <string name="when_today">오늘 출발</string>
@@ -322,7 +322,7 @@
     <string name="demo_clock">시연 시각 2일차 09:00</string>
     <string name="demo_clock_body">끄면 실제 시각으로 돌아가요</string>
     <string name="recheck_unchanged">계획은 그대로예요 · 차에서는 고치지 않아요</string>
-    <!-- M57: vehicle signals combined with the plan (departure check, energy outlook, rest advice, route extras) -->
+    <!-- vehicle signals combined with the plan (departure check, energy outlook, rest advice, route extras) -->
     <string name="departure_title">출발 전 점검</string>
     <string name="departure_ready">출발 준비됐어요</string>
     <string name="departure_count">확인 %1$d가지</string>
@@ -357,7 +357,7 @@
     <string name="demo_vehicle">차량 점검 예시</string>
     <string name="demo_vehicle_ok">점검 이상 없음 예시</string>
     <string name="demo_drive">2시간 운전 예시</string>
-    <!-- M63: the Hyundai navigation measures every leg and orders the day -->
+    <!-- the Hyundai navigation measures every leg and orders the day -->
     <string name="navi_plan_title">현대차 내비로 계산</string>
     <string name="navi_plan_none">내비로 잴 수 있는 구간이 없어요</string>
     <string name="navi_plan_phone">지금 이동시간은 휴대폰에서 보낸 예상값이에요. 내비로 재면 내비가 잰 시간과 거리로 바뀌어요.</string>
@@ -392,7 +392,7 @@
     <string name="order_reset">%1$s일차를 계획 순서로 되돌렸어요</string>
     <string name="tl_leg_navi_km">%2$skm · %1$s</string>
     <string name="sum_drive_km">운전 %1$s · %2$skm</string>
-    <!-- M66: findings split by who settles them, why a button is off, the next-trip card's open row -->
+    <!-- findings split by who settles them, why a button is off, the next-trip card's open row -->
     <string name="navi_fills_title">내비가 채워요</string>
     <string name="navi_fills_legs">이동시간 %1$d구간은 내비가 재요</string>
     <string name="navi_fills_home_both">출발·귀가 \'집\'은 차량 내비의 집을 써요</string>

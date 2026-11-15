@@ -26,7 +26,7 @@ async function zigzag(perKm = 2): Promise<Trip> {
   return p;
 }
 
-describe('더 빠른 순서 (M54)', () => {
+describe('더 빠른 순서', () => {
   beforeEach(() => localStorage.clear());
 
   it('finds the straight-line shortcut and confirms it with driving times', async () => {

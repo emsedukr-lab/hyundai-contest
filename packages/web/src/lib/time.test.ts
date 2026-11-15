@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { chipLabel, periodOf, pickerTimes, timeLabel, timeOptions } from './format';
 import { t } from './i18n';
 
-describe('time picker choices (M47)', () => {
+describe('time picker choices', () => {
   it('lists the whole day on the grid, in order', () => {
     const half = timeOptions(30);
     expect(half).toHaveLength(48);
@@ -21,14 +21,14 @@ describe('time picker choices (M47)', () => {
   });
 
   it('reads as morning/afternoon with a 12-hour clock', () => {
-    expect(timeLabel('00:00')).toBe(t('time.label', { ampm: t('time.am'), h: 0, m: '00' })); // midnight reads 0, never 12 (M50)
+    expect(timeLabel('00:00')).toBe(t('time.label', { ampm: t('time.am'), h: 0, m: '00' })); // midnight reads 0, never 12
     expect(timeLabel('09:30')).toBe(t('time.label', { ampm: t('time.am'), h: 9, m: '30' }));
     expect(timeLabel('12:00')).toBe(t('time.label', { ampm: t('time.pm'), h: 12, m: '00' }));
     expect(timeLabel('13:05')).toBe(t('time.label', { ampm: t('time.pm'), h: 1, m: '05' }));
   });
 });
 
-describe('grid time picker (M50)', () => {
+describe('grid time picker', () => {
   it('오전 shows 06:00–11:30 (12 chips), dawn adds 00:00–05:30; 오후 is 12:00–23:30 (24 chips)', () => {
     const am = pickerTimes('am');
     expect(am).toHaveLength(12);

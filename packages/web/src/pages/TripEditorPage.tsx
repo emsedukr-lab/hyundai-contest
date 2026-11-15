@@ -81,7 +81,7 @@ async function persist(doc: TripDoc, plan: Trip, home: Home | null, notes: TripN
     notes: cleanNotes(notes, new Set(plan.places.map((p) => p.placeRef))),
     legMeters: cleanLegMeters(legMeters, plan),
     lodgingTbd: cleanLodgingTbd(lodgingTbd, plan),
-    setup: setup ?? undefined, // phone-only: where a new trip is in its step-by-step setup (M43)
+    setup: setup ?? undefined, // phone-only: where a new trip is in its step-by-step setup
   };
   await trips.put(next);
   window.dispatchEvent(new Event(TRIPS_CHANGED));
@@ -95,11 +95,11 @@ const shortPeriod = (start: string, end: string) => {
 };
 
 /**
- * The trip editor as one page (M30): 여행 정보, then every day as a route from 출발 to 숙소/귀가, one after another in a
+ * The trip editor as one page: 여행 정보, then every day as a route from 출발 to 숙소/귀가, one after another in a
  * single scroll. Each section's header sticks under the top bar while its section is on screen, so you always see which
- * part you are in. Places are added with the + button in the bottom bar to the whole trip (M40: a day is set in the place's details;
+ * part you are in. Places are added with the + button in the bottom bar to the whole trip (a day is set in the place's details;
  * its badge counts the places on no day yet). Every input opens in a bottom sheet; problems show on the node they concern. Below: one action,
- * 확인 후 차로 보내기. Edits save on their own (M66): shortly after each change, at once when the setup finishes, and on
+ * 확인 후 차로 보내기. Edits save on their own: shortly after each change, at once when the setup finishes, and on
  * the way out; the top bar says 저장 중 / 저장됨.
  */
 export function TripEditorPage({ tripId }: { tripId: string | null }) {
@@ -107,7 +107,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
   const [plan, setPlan] = useState<Trip | null>(null);
   // The one home address, set in 설정 and shared by every trip (route checks, map, recommend, what the car may get).
   const [home] = useState(defaultHome);
-  // The phone's own position, for a trip that starts from 현재 위치 (M61): session-only, see lib/here.ts.
+  // The phone's own position, for a trip that starts from 현재 위치: session-only, see lib/here.ts.
   const [here, setHereState] = useState(getHere);
   const [locating, setLocating] = useState(false);
   const [dirty, setDirty] = useState(false);
@@ -122,7 +122,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
   const [legMeters, setLegMeters] = useState<Record<string, number>>({});
   /** Phone-only: nights marked 미정 (no lodging needed yet, so no warning). */
   const [lodgingTbd, setLodgingTbdState] = useState<number[]>([]);
-  /** A new trip's step-by-step setup (M43); null once done (and for trips made before it). */
+  /** A new trip's step-by-step setup; null once done (and for trips made before it). */
   const [setup, setSetup] = useState<TripSetupState | null>(null);
   const inSetupRef = useRef(false);
   inSetupRef.current = !!setup && !setup.done; // pull-to-refresh has nothing to recalculate during setup
@@ -131,7 +131,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
   const [refreshing, setRefreshing] = useState(false);
   /** When Kakao last answered (shown as "as of HH:MM" in the travel-time sheet). */
   const [routeAt, setRouteAt] = useState<Date | null>(null);
-  /** Pull-to-refresh during the trip (M43): today's day recomputed from this minute — screen only, never saved. */
+  /** Pull-to-refresh during the trip: today's day recomputed from this minute — screen only, never saved. */
   const [liveFrom, setLiveFrom] = useState<{ dayIndex: number; minute: number } | null>(null);
   /** 여행 정보 open for editing: a new trip starts open; a saved one shows its summary until expanded. */
   const [infoOpen, setInfoOpen] = useState(!tripId);
@@ -146,7 +146,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
   const [scanning, setScanning] = useState(false);
   /** Travel times typed this session by pair of places, so reordering does not throw them away. */
   const book = useRef<LegBook>(new Map());
-  /** M54 더 빠른 순서: a confirmed shorter order per day; each shape of a day is checked once per session. */
+  /** 더 빠른 순서: a confirmed shorter order per day; each shape of a day is checked once per session. */
   const [faster, setFaster] = useState<Record<number, FasterOrder>>({});
   const fasterAsked = useRef(new Set<string>());
   const fasterRun = useRef<'idle' | 'busy' | 'again'>('idle');
@@ -253,7 +253,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
     };
   }, [dayCount]);
 
-  // Auto-save (M66): a moment after the last change, so nothing waits for a button. `urgent` skips the wait — the
+  // Auto-save: a moment after the last change, so nothing waits for a button. `urgent` skips the wait — the
   // setup's last step sets it, so a trip is on the phone the instant 이 일정으로 시작 is pressed.
   const urgent = useRef(false);
   useEffect(() => {
@@ -282,7 +282,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
    * Asks Kakao directions for travel times and distances. 'auto' runs after a route change: only empty legs, each stretch
    * once, silent. 'refresh' (pull to refresh, or 이동시간·거리 다시 계산) re-asks every leg between known places and
    * replaces its time — the way to bring typed or old estimates in line with the real route. Answers land only on legs
-   * still between the same two places. Legs from or to home are asked too when 설정 has the home address (M39).
+   * still between the same two places. Legs from or to home are asked too when 설정 has the home address.
    */
   const askKakao = async (mode: 'auto' | 'refresh'): Promise<number | null> => {
     const cur = latest.current.plan;
@@ -324,7 +324,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
     const n = await askKakao('refresh');
     setRefreshing(false);
     if (n === null) return setNotice({ tone: 'error', text: t('tl.autoLegsOff') });
-    // M43: during the trip, today is recomputed as if leaving now — on this screen only (the plan keeps its times).
+    // during the trip, today is recomputed as if leaving now — on this screen only (the plan keeps its times).
     const at = new Date();
     const clock = `${String(at.getHours()).padStart(2, '0')}:${String(at.getMinutes()).padStart(2, '0')}`;
     const cur = latest.current.plan;
@@ -385,7 +385,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
     };
   }, []);
   // After an edit that left legs empty (a stop moved, added or removed; lodging or an end changed), fill them shortly after.
-  // Opening a trip fills its empty legs once too (e.g. the legs to and from home in a trip made before M39); a time the
+  // Opening a trip fills its empty legs once too (e.g. the legs to and from home in an older trip); a time the
   // user typed is never replaced here.
   const opened = useRef(false);
   useEffect(() => {
@@ -397,7 +397,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [plan]);
 
-  // A trip that starts from 현재 위치 (M61): its first leg is timed from where this phone is. The position is asked
+  // A trip that starts from 현재 위치: its first leg is timed from where this phone is. The position is asked
   // without a prompt when the browser already allows it; otherwise the first leg's sheet offers [현재 위치로 계산].
   // When the position arrives, the leg it unlocks is filled like any other empty leg.
   const startsHere = plan?.origin.kind === 'CURRENT';
@@ -418,7 +418,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
     if (!r.ok) setNotice({ tone: 'error', text: t(r.reason === 'denied' ? 'tl.locateDenied' : 'tl.locateFailed') });
   };
 
-  // M54: once a day's legs are timed, look for a faster order (straight lines first; Kakao only for a real candidate).
+  // once a day's legs are timed, look for a faster order (straight lines first; Kakao only for a real candidate).
   const checkFaster = async () => {
     if (fasterRun.current !== 'idle') return void (fasterRun.current = 'again');
     fasterRun.current = 'busy';
@@ -459,14 +459,14 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
   const nightCount = plan.days.length - 1;
   const missingNights = plan.days.slice(0, -1).filter((d) => !d.lodgingPlaceRef && !lodgingTbd.includes(d.dayIndex)).length; // 미정 nights are fine
   const tbdNights = plan.days.slice(0, -1).filter((d) => !d.lodgingPlaceRef && lodgingTbd.includes(d.dayIndex)).length;
-  /** A new trip still in its step-by-step setup (M43): the days stay hidden until the route plan is applied. */
+  /** A new trip still in its step-by-step setup: the days stay hidden until the route plan is applied. */
   const inSetup = !!setup && !setup.done;
   const pool = unassignedVisits(plan);
   /** Legs Kakao can measure (both ends located; home only with an address in 설정) — the rest the car's navigation times. */
   const askableLegs = new Set(allRuns(plan, home).flatMap((r) => r.keys));
   const poolNeedsCare = pool.some((v) => v.fixed);
   const targetDay = plan.days.some((d) => d.dayIndex === focusDay) ? focusDay : plan.days[0].dayIndex;
-  // A day at a glance under its heading (M45): driving total · Kakao km · when the day ends · legs still without a time.
+  // A day at a glance under its heading: driving total · Kakao km · when the day ends · legs still without a time.
   const summaryLine = (dayIndex: number) => {
     const s = daySummary(plan, dayIndex, legMeters, liveFrom?.dayIndex === dayIndex ? liveFrom.minute : undefined);
     const last = dayIndex === plan.days[plan.days.length - 1].dayIndex;
@@ -475,7 +475,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
       s.endAt !== null ? t(last ? 'tl.daySummary.home' : 'tl.daySummary.lodging', { time: hhmm(s.endAt) }) : '',
       s.unknownLegs > 0 ? t('tl.daySummary.unknown', { n: s.unknownLegs }) : '',
     ].filter(Boolean);
-    // M54: the day's driving time leads, in bold; the rest stays quiet.
+    // the day's driving time leads, in bold; the rest stays quiet.
     const drive = s.driveMinutes > 0 ? <strong className="tl-sum-drive">{t('tl.daySummary.drive', { time: minutesLabel(s.driveMinutes) })}</strong> : null;
     if (!drive) return rest.join(' · ');
     return (
@@ -575,7 +575,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
     ...(stored ? [{ type: 'divider' as const }, { label: t('editor.delete'), onClick: () => setConfirmDelete(true) }] : []),
   ];
 
-  // Top bar (M53): only the dates and n박 n일. The name lives in the 여행 정보 card; tapping the dates still goes to it.
+  // Top bar: only the dates and n박 n일. The name lives in the 여행 정보 card; tapping the dates still goes to it.
   const period = t('tl.summary', { period: shortPeriod(plan.startDate, plan.endDate), nights: nightsLabel(plan) });
   const title = (
     <button
@@ -590,7 +590,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
     </button>
   );
 
-  // One action below, always the same (M66): the trip saves on its own, so there is no 저장 to press first.
+  // One action below, always the same: the trip saves on its own, so there is no 저장 to press first.
   const cta = <Button label={t('tl.send')} variant="primary" size="lg" width="100%" onClick={() => void handOut(() => setSheet({ kind: 'send' }))} />;
   // The quiet save state beside the menu: 저장 중 while a change waits for its save, 저장됨 once it is on the phone.
   const saveState = saveFailed ? t('editor.saveFailed') : dirty ? t('editor.saving') : stored ? t('editor.savedState') : '';
@@ -736,7 +736,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
               </button>
             </div>
           ) : (
-            // Collapsed (M53): no heading row — the chip bar names this section. One two-line card is the toggle.
+            // Collapsed: no heading row — the chip bar names this section. One two-line card is the toggle.
             <h2 id="trip-info-h" className="tn-sr-only">
               {t('tl.basicsTitle')}
             </h2>
@@ -779,7 +779,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
 
         {plan.days.map((d) => (
           <section key={d.dayIndex} id={`day-${d.dayIndex}`} data-day={d.dayIndex} aria-labelledby={`day-${d.dayIndex}-h`} className="tl-section">
-            {/* Day heading (M45): the day, its summary line from the Kakao times, and the map. Not sticky — the chip bar is. */}
+            {/* Day heading: the day, its summary line from the Kakao times, and the map. Not sticky — the chip bar is. */}
             <div className="tl-sechead">
               <div className="tl-sechead-text">
                 <h2 id={`day-${d.dayIndex}-h`} className="tl-sechead-title">

@@ -46,7 +46,7 @@ class TripRulesTest {
         assertFalse("LATE_FOR_FIXED" in codes(withDay(sample, 4) { it.copy(departTime = "09:45") }))
     }
 
-    /** M42: parking time (`prepMinutes`) is not counted anywhere — a stop starts the minute the car arrives. */
+    /** parking time (`prepMinutes`) is not counted anywhere — a stop starts the minute the car arrives. */
     @Test fun aVisitWithPrepMinutes30StartsExactlyAtItsArrival() {
         val withPrep = sample.copy(visits = sample.visits.map { if (it.visitId == "v4" || it.visitId == "v10") it.copy(prepMinutes = 30) else it })
         val lake = TripValidator.timeline(withPrep, 2).first { it.visitId == "v4" }

@@ -54,7 +54,7 @@ sealed interface RouteOutcome {
 
 /**
  * What the navigation is doing right now (pushed by its callbacks, refreshed by `getDestinationInfo`).
- * Units checked on the emulator (docs/evidence/m9): seconds and metres.
+ * Units checked on the emulator (docs/evidence/2026-11-06_trip-progress): seconds and metres.
  */
 data class NaviLive(
     val guiding: Boolean,
@@ -102,7 +102,7 @@ data class NaviEstimate(val seconds: Int, val metres: Int, val socAtDest: Int?) 
 data class HereLocation(val latE7: Int, val lonE7: Int, val address: String)
 
 /**
- * What a measuring route gave back (M63, [NaviGateway.measure]): the navigation's remaining time and distance to every
+ * What a measuring route gave back ([NaviGateway.measure]): the navigation's remaining time and distance to every
  * point sent, in order — or how many waypoints it kept when that was fewer than sent, so the caller can plan shorter routes.
  */
 sealed interface MeasureOutcome {
@@ -126,7 +126,7 @@ interface NaviGateway {
     /** Load the day's route in one request: the final stop is the destination, earlier stops are waypoints in order. Confirmation matches the final destination, like [route]. Explicit parked tap only. */
     suspend fun routeTrip(dest: RouteTarget, waypoints: List<RouteTarget>, previous: NaviBinding? = null): RouteOutcome
     /**
-     * Measures the legs between `points` (M63): starts a route through them in order, reads what the navigation says is
+     * Measures the legs between `points`: starts a route through them in order, reads what the navigation says is
      * left to each from the car, and leaves the route up — the caller sends the next one or ends with [cancelRoute].
      * This is a real route start (the navigation has no query for a leg the car is not on), so it replaces whatever
      * the navigation was guiding to: explicit parked tap only.
@@ -349,7 +349,7 @@ class PleosNaviGateway(context: Context) : NaviGateway {
 
     /**
      * A route through `waypoints` to `dest`, in the order given. The SDK names two waypoints (FIRST, SECOND); the rest go
-     * out as SECOND, which the emulator's navigation appended in order up to nine (docs/evidence/navi-waypoints). What a
+     * out as SECOND, which the emulator's navigation appended in order up to nine (docs/evidence/2026-11-13_navi-waypoints). What a
      * real car's navigation keeps is read back by the caller ([waypointCount], [measure]).
      */
     private fun waypointRoute(dest: RouteTarget, lat: Int, lon: Int, waypoints: List<RouteTarget>) = RouteWithWaypointsRequest(
@@ -417,7 +417,7 @@ class PleosNaviGateway(context: Context) : NaviGateway {
 
     /**
      * Whether a waypoint the navigation lists is the one sent at that position. The emulator's navigation returns
-     * waypoints without coordinates (0, 0) but with the name they were sent under (docs/evidence/navi-waypoints), so:
+     * waypoints without coordinates (0, 0) but with the name they were sent under (docs/evidence/2026-11-13_navi-waypoints), so:
      * by position where it gives one, else by name, else by its place in the list alone.
      */
     private fun sameWaypoint(w: WaypointInfo, sent: RouteTarget): Boolean = when {
@@ -429,7 +429,7 @@ class PleosNaviGateway(context: Context) : NaviGateway {
     /**
      * Ends the navigation's route — only when the navigation itself says it has one. A cancel sent with no route
      * fails inside the emulator's navigation ("NOT_CANCEL_ABLE_TRIP") and leaves it refusing every later cancel as
-     * "already working" until its app restarts (docs/evidence/navi-waypoints), so one is never sent on a guess: no
+     * "already working" until its app restarts (docs/evidence/2026-11-13_navi-waypoints), so one is never sent on a guess: no
      * answer about the destination counts as "do not cancel".
      */
     override suspend fun cancelRoute() {

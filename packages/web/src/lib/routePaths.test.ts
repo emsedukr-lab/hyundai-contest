@@ -9,7 +9,7 @@ const run: LegRun = { dayIndex: 1, fromK: 0, points: [a, b, c], keys: ['p1>p2', 
 
 const answer = (body: unknown, status = 200) => vi.fn(async () => new Response(JSON.stringify(body), { status })) as unknown as typeof fetch & ReturnType<typeof vi.fn>;
 
-describe('road lines for the day map (M54)', () => {
+describe('road lines for the day map', () => {
   beforeEach(() => clearRoadLines());
 
   it('decodes E5 pairs into degrees', () => {

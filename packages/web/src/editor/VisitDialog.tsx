@@ -38,7 +38,7 @@ function Group({ title, children }: { title: string; children: ReactNode }) {
 }
 
 /**
- * 세그먼트 (M69): every single choice in the sheet is an Astryx SegmentedControl (track fill-weak, the chosen cell on the
+ * 세그먼트: every single choice in the sheet is an Astryx SegmentedControl (track fill-weak, the chosen cell on the
  * surface with shadow-1 and primary text at 600 — shell.css) of one height (48), inside a sideways scroller so a long
  * row (the trip's days, the stay presets on a 320 phone) scrolls instead of wrapping or truncating. The chosen cell is
  * kept in view. A value that matches no item (a stay that is not a preset) leaves every cell unchosen.
@@ -78,9 +78,9 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
 }
 
 /**
- * 장소 상세 (M46): one place and its visit, as a bottom sheet like the editor's other sheets — grouped and labelled
+ * 장소 상세: one place and its visit, as a bottom sheet like the editor's other sheets — grouped and labelled
  * instead of a dozen unlabelled fields in a centred dialog.
- *   일정 — the day (M40: places start on the whole trip and get a day here or from 경로 추천), the arrival time as one
+ *   일정 — the day (places start on the whole trip and get a day here or from 경로 추천), the arrival time as one
  *          choice (자유 / 희망 / 고정 — the desired and fixed times used to be two inputs showing the same time), and the
  *          flexibility that goes with it.
  *   머무는 시간 — in hours and minutes with presets and ±15, not a raw minute count.
@@ -140,7 +140,7 @@ export function VisitDialog({
   const setMode = (next: TimeMode) => {
     if (!visit || next === mode) return;
     if (shownTime) setLastTime(shownTime);
-    const base = shownTime ?? lastTime ?? suggestVisitTime(plan, visit.visitId); // M50: an hour after the stop before
+    const base = shownTime ?? lastTime ?? suggestVisitTime(plan, visit.visitId); // an hour after the stop before
     if (next === 'free') setVisit({ desiredTime: null, fixed: null });
     else if (next === 'desired') setVisit({ desiredTime: base, fixed: null });
     else setVisit({ fixed: { time: toHalfHour(base), kind: 'USER' }, desiredTime: null, timeFlexible: false });
@@ -258,7 +258,7 @@ export function VisitDialog({
               </Row>
             )}
             <p className="vd-hint">{mode === 'fixed' ? t('visit.fixed.detail') : mode === 'desired' ? t('visit.timeMode.desiredHint') : t('visit.timeMode.freeHint')}</p>
-            {/* 식사 (M67): a restaurant's meal, for the route recommendation; the hint names the time it is held to. */}
+            {/* 식사: a restaurant's meal, for the route recommendation; the hint names the time it is held to. */}
             {place.category === 'FOOD' && (
               <>
                 <Row label={t('meal.title')}>

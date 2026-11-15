@@ -24,7 +24,7 @@ Pleos 문서 세 곳을 다시 읽고, 값 하나만 쓰던 곳을 **두세 값�
 | **빠듯하면 빠른 길** | 시간 지킴이 판정(빠듯·늦음) → NaviHelper `RouteInfo.routeOption = SHORT_TIME` | 다음 고정 일정이 빠듯할 때 [다음 목적지 안내]는 최단 시간 경로로 요청하고 그렇게 했다고 알림 |
 | **Fleet 출고 전 준비 점검** (서버, 꺼져 있음) | Fleet 웹훅의 SOC·주행가능거리(DTE)·타이어 공기압 경고·경고등 12종·충전 플러그·문·트렁크 × 여행 거리 | 렌터카·카셰어링 운영사가 받은 차량 상태로 `READY`/`CAUTION`/`STOP`과 항목 목록을 돌려줌(차량의 출발 전 점검과 같은 항목 이름) |
 
-화면: `docs/evidence/m57/01`~`06`.
+화면: `docs/evidence/2026-11-12_vehicle-signals/01`~`06`.
 
 ## 3. API별 사용 목록
 
@@ -84,7 +84,7 @@ Pleos 문서 세 곳을 다시 읽고, 값 하나만 쓰던 곳을 **두세 값�
 | `Odometer.getTripCurrentDrivingTime` 등 트립 시간 | 단위가 문서에 없고 실측도 못 함 → 연속 운전 시간은 주행 상태 전환으로 직접 잼 |
 | NaviHelper `onCameraAlert`·`onCautionPointInfo`·`onCurrentRoadSpeedLimit` | 내비가 직접 안내하는 정보라 중복 |
 | NaviHelper `cancelRoute`·`addWaypoint`·`removeWaypoint`·`requestReRoute`·`changeRouteOption` | 안내 중인 경로를 앱이 바꾸는 동작. 지금은 사용자가 주차 중에 누른 요청만 내비로 보냄 |
-| `RouteStateInfo.remainDestinationChargingInt` 등 | 퍼센트가 아니라 Wh로 보임(`docs/evidence/m9`). 퍼센트는 `requestTrip`의 값을 씀 |
+| `RouteStateInfo.remainDestinationChargingInt` 등 | 퍼센트가 아니라 Wh로 보임(`docs/evidence/2026-11-06_trip-progress`). 퍼센트는 `requestTrip`의 값을 씀 |
 | Fleet REST API(차량·단말 등록·조회) | 계약 뒤에만 엔드포인트가 나오고, 응답 스키마가 문서 본문에 없음 |
 | Fleet 웹훅의 위도·경도·VIN | 준비 점검에 필요 없는 위치·식별 정보 |
 

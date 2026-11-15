@@ -4,7 +4,7 @@ import { t } from './i18n';
 import type { TripNotes } from './notes';
 
 /**
- * 식사 (M67): which meal a restaurant is for, and when each meal is eaten. Both live on this phone only — the choice in
+ * 식사: which meal a restaurant is for, and when each meal is eaten. Both live on this phone only — the choice in
  * the trip's notes (per place), the times in 설정 (one set for every trip, localStorage like the home address) — and are
  * read by the route recommendation alone. Neither is part of what the car receives (the transfer schema is unchanged).
  */

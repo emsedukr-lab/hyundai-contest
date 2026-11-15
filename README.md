@@ -15,6 +15,7 @@
 | APK (차량 · 출품작) | [`apk/이충지_떠날지도(차량)_release.apk`](<apk/이충지_떠날지도(차량)_release.apk>) · release 0.9.1 (versionCode 10) · 서명 v2+v3 |
 | APK (휴대폰 · 함께 쓰는 앱) | [`apk/이충지_떠날지도(휴대폰)_release.apk`](<apk/이충지_떠날지도(휴대폰)_release.apk>) · release 0.3.4 (versionCode 7) · 서명 v2+v3 |
 | APK SHA-256 | [`apk/SHA256SUMS.txt`](apk/SHA256SUMS.txt) |
+| 심사 기준 커밋 | [`da20356`](https://github.com/emsedukr-lab/hyundai-contest/tree/da203567f13fbec82970e550bd99f3f218ecd6b4) (접수 메일에 적은 커밋. 그 뒤 커밋은 문서 정리와 개선) |
 | 개발 에뮬레이터 | Pleos Connect Emulator 2.1.0 (Android 14, API 34, arm64) |
 | 화면 규격 | 2560×1440, 160dpi (Connect-S-17 기본) |
 | 휴대폰 웹 | https://tteonaljido.tteonaljido-worker.workers.dev (설치 없이 브라우저에서 사용, 휴대폰 APK와 같은 화면) |

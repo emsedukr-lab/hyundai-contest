@@ -3,17 +3,17 @@
     <uses-permission android:name="pleos.car.permission.NAVI_ROUTE" />
     <uses-permission android:name="pleos.car.permission.NAVI_ROUTE_SEARCH" />
     <uses-permission android:name="pleos.car.permission.NAVI_CUSTOM_MAP" />
-    <!-- 조회 전용: EV SOC·연료% 읽기(충전·주유 권장), 충전 포트 열림(M57 출발 전 점검). 제어 권한(CONTROL_CAR_*)은 선언하지 않음. -->
+    <!-- 조회 전용: EV SOC·연료% 읽기(충전·주유 권장), 충전 포트 열림(출발 전 점검). 제어 권한(CONTROL_CAR_*)은 선언하지 않음. -->
     <uses-permission android:name="pleos.car.permission.CAR_ENERGY" />
-    <!-- 조회 전용: 주행가능거리(Odometer.getRangeRemainingDistance는 CAR_DRIVE 필요, Vehicle 2.3.2), 그리고 M57의 기어(P)·주행 모드·누적 주행거리 조회. -->
+    <!-- 조회 전용: 주행가능거리(Odometer.getRangeRemainingDistance는 CAR_DRIVE 필요, Vehicle 2.3.2), 그리고 기어(P)·주행 모드·누적 주행거리 조회. -->
     <uses-permission android:name="pleos.car.permission.CAR_DRIVE" />
-    <!-- 조회 전용(M57): 출력 제한 경고·워셔액·엔진오일·브레이크액(Safety) → 출발 전 점검. PRIVATE_CAR_SAFETY가 필요한 API(경고등 getTelltalesInfo·공기압 값)는 쓰지 않음. -->
+    <!-- 조회 전용: 출력 제한 경고·워셔액·엔진오일·브레이크액(Safety) → 출발 전 점검. PRIVATE_CAR_SAFETY가 필요한 API(경고등 getTelltalesInfo·공기압 값)는 쓰지 않음. -->
     <uses-permission android:name="pleos.car.permission.CAR_SAFETY" />
-    <!-- 조회 전용(M57): 문 열림(Door.getCurrentDoorPosition) → 출발 전 점검. 잠금·개폐 제어는 하지 않음. -->
+    <!-- 조회 전용: 문 열림(Door.getCurrentDoorPosition) → 출발 전 점검. 잠금·개폐 제어는 하지 않음. -->
     <uses-permission android:name="pleos.car.permission.CAR_DOORS" />
-    <!-- 조회 전용(M57): 착좌·안전벨트(Seat) → 출발 전 점검의 '탑승 n명 중 m명 미착용'. 좌석 위치·열선 제어는 하지 않음. -->
+    <!-- 조회 전용: 착좌·안전벨트(Seat) → 출발 전 점검의 '탑승 n명 중 m명 미착용'. 좌석 위치·열선 제어는 하지 않음. -->
     <uses-permission android:name="pleos.car.permission.CAR_SEATS" />
-    <!-- M63: 내비로 구간을 재는 동안(사용자가 누른 뒤 1~2분)만 앱이 멈추지 않게 하는 짧은 포그라운드 서비스. 내비가 앞에 나오면 뒤에 있는 앱은 시스템이 정지시킴. -->
+    <!-- 내비로 구간을 재는 동안(사용자가 누른 뒤 1~2분)만 앱이 멈추지 않게 하는 짧은 포그라운드 서비스. 내비가 앞에 나오면 뒤에 있는 앱은 시스템이 정지시킴. -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-feature android:name="android.hardware.type.automotive" android:required="false" />
     <application

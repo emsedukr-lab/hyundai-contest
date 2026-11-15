@@ -1,7 +1,7 @@
 package io.tteonaljido.trip
 
 /**
- * 쉬어 가기 권고 (M57). How long the car has been driven without a real break is combined with what the navigation
+ * 쉬어 가기 권고. How long the car has been driven without a real break is combined with what the navigation
  * and the day's plan know, so the advice is one the driver can act on:
  *  - continuous driving time (driving state, with gear P from the Vehicle SDK) and distance (Odometer)
  *  - time left to the next stop (NaviHelper) — nearly there → rest on arrival instead

@@ -5,7 +5,7 @@ import { Sheet } from './Sheet';
 import { TimeSelect } from './TimeSelect';
 
 /**
- * 설정 › 식사 시간 › one meal (M67): its start and end, chosen on the half-hour grid like every other time. A draft until
+ * 설정 › 식사 시간 › one meal: its start and end, chosen on the half-hour grid like every other time. A draft until
  * 저장 — the times must stay in order with the other meals, so what is wrong is said in place and 저장 waits for it.
  */
 export function MealTimeSheet({

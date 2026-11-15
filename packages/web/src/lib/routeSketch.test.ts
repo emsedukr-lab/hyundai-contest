@@ -63,7 +63,7 @@ describe('경로 스케치 정규화', () => {
   });
 });
 
-describe('전체 동선 (tripSketch, M45)', () => {
+describe('전체 동선 (tripSketch)', () => {
   const trip = sampleTrip(nowIso());
 
   it('puts every day in order inside the box, joins each day to the previous one, and leaves home out', () => {

@@ -29,7 +29,7 @@ import kotlin.math.roundToInt
  * The only door to the Pleos Vehicle SDK, and it only reads. Two kinds of reading:
  *  - [readEnergy] (`CAR_ENERGY`, `CAR_DRIVE`): EV state-of-charge / fuel % / remaining range, with EV vs ICE vs PHEV
  *    inferred from which capability the car reports.
- *  - [readSnapshot] (M57; adds `CAR_SAFETY`, `CAR_DOORS`, `CAR_SEATS`): power-down warning, fluid levels, doors and
+ *  - [readSnapshot] (adds `CAR_SAFETY`, `CAR_DOORS`, `CAR_SEATS`): power-down warning, fluid levels, doors and
  *    trunk, charge port, seats and belts, gear, drive mode, odometer — reduced at once to a [VehicleSnapshot]; raw
  *    values are not kept. Warning lamps are not read: `getTelltalesInfo` is refused without a private permission
  *    (Vehicle Service 2.3.22, checked on the emulator), and private permissions are not for third-party apps.
@@ -77,7 +77,7 @@ class PleosVehicleReader(context: Context) {
     @Suppress("DEPRECATION") // getRangeRemainingDistance is the 2.3.2 read path; the Google RANGE_REMAINING property is a later migration.
     private suspend fun rangeKm(): Int? = ask<Float> { ok, err -> vehicle.getOdometer().getRangeRemainingDistance(ok, err) }?.let { (it / 1000f).roundToInt() }
 
-    /* ---------- snapshot (M57) ---------- */
+    /* ---------- snapshot ---------- */
 
     /** One reading of everything the trip logic combines. Groups are asked side by side, so a silent one costs one timeout, not many. */
     @Suppress("DEPRECATION") // isEvChargePortOpen / getCurrentGearSelectionState are the 2.3.2 read paths; their Google car properties are a later migration (like the range above).

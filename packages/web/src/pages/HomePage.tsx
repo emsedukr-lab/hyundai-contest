@@ -30,7 +30,7 @@ export function HomePage() {
   const [lastSends, setLastSends] = useState<Record<string, SendLogEntry>>({});
   const [message, setMessage] = useState<string | null>(null);
   const sampleAsked = useRef(false);
-  // M52: a trip swiped away is deleted at once and kept here for 되돌리기 (the whole saved doc goes back as it was).
+  // a trip swiped away is deleted at once and kept here for 되돌리기 (the whole saved doc goes back as it was).
   const [removed, setRemoved] = useState<TripDoc | null>(null);
   useEffect(() => {
     if (!removed) return;
@@ -89,7 +89,7 @@ export function HomePage() {
 
   const personal = (docs ?? []).filter((d) => d.tripId !== EXAMPLE_TRIP_ID);
   const next = docs ? pickNextTrip(personal.length ? personal : docs) : null;
-  // M49: a clear order below the next-trip card (by departure, past trips last) and a mark on trips whose dates overlap.
+  // a clear order below the next-trip card (by departure, past trips last) and a mark on trips whose dates overlap.
   const others = sortOtherTrips((docs ?? []).filter((d) => d !== next));
   const overlaps = dateOverlaps(personal);
 
@@ -113,7 +113,7 @@ export function HomePage() {
       </div>
       {docs !== null && docs.length === 0 && (
         <div className="tn-panel" style={{ marginTop: 16 }}>
-          {/* First visit (M66): the way forward is right here — make a trip, or look at the sample first. */}
+          {/* First visit: the way forward is right here — make a trip, or look at the sample first. */}
           <EmptyState title={t('common.noTrips')} description={t('home.empty.description')} />
           <Button label={t('home.empty.sample')} variant="ghost" size="md" width="100%" onClick={() => void addSample()} />
         </div>
@@ -142,7 +142,7 @@ export function HomePage() {
                         <span>{d.plan.name}</span>
                         {d.tripId === EXAMPLE_TRIP_ID && <Tag>{t('home.example')}</Tag>}
                         {d.setup && !d.setup.done ? (
-                          // still in its step-by-step setup (M43)
+                          // still in its step-by-step setup
                           <Tag tone="accent">{t('setup.homeBadge', { step: setupStepNumber(d.setup.step) })}</Tag>
                         ) : (
                           unassigned > 0 && <Tag tone="warn">{t('home.unassignedBadge', { n: unassigned })}</Tag>
@@ -163,7 +163,7 @@ export function HomePage() {
           </ul>
         </Section>
       )}
-      {/* M52: 되돌리기 for a trip swiped away, above the bottom action. */}
+      {/* 되돌리기 for a trip swiped away, above the bottom action. */}
       <div role="status">
         {removed && <UndoSnackbar above="tab" text={t('home.deleted', { name: removed.plan.name })} onUndo={() => void undoRemove()} onClose={() => setRemoved(null)} />}
       </div>

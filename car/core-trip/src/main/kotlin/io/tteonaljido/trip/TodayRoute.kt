@@ -1,7 +1,7 @@
 package io.tteonaljido.trip
 
 /**
- * '오늘 경로 전송' as a route the car keeps following (M57). The navigation gets up to three stops in one request
+ * '오늘 경로 전송' as a route the car keeps following. The navigation gets up to three stops in one request
  * (two waypoints + the destination); [CarOverlay.guidingStops] remembers them in driving order. Two navigation signals
  * are then read against that list:
  *  - `onWayPointArrived` → the matching stop is marked visited, like `onDestinationArrived` already does for the last one

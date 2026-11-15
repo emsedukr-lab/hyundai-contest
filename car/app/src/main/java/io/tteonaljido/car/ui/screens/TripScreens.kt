@@ -105,7 +105,7 @@ import io.tteonaljido.trip.originFor
 import io.tteonaljido.trip.zoneOrUtc
 import java.util.Locale
 
-/* ---------- trip list: the next trip, then the others (phone M45 여행 tab) ---------- */
+/* ---------- trip list: the next trip, then the others (phone 여행 tab) ---------- */
 
 @Composable
 fun TripsScreen(vm: TripsViewModel, drive: DriveState, demoClock: Boolean, onImport: () -> Unit, onOpen: (String) -> Unit, onSettings: () -> Unit) {
@@ -258,7 +258,7 @@ fun TripDetailScreen(vm: TripsViewModel, localId: String, drive: DriveState, dem
     val energy by vm.energy.collectAsState()
     val vehicle by vm.vehicle.collectAsState()
     val session by vm.drive.collectAsState()
-    // M60: a first leg nobody could time (the trip starts "where the car is") is asked from the navigation while parked.
+    // a first leg nobody could time (the trip starts "where the car is") is asked from the navigation while parked.
     val naviStatus by vm.naviStatus.collectAsState()
     val resumed by vm.resumed.collectAsState()
     LaunchedEffect(localId, drive.parked, naviStatus, resumed) { if (drive.parked) vm.measureFirstLeg(localId) }
@@ -271,7 +271,7 @@ fun TripDetailScreen(vm: TripsViewModel, localId: String, drive: DriveState, dem
     val todayDate = vm.today(t, now)
     val report = remember(t, todayDate) { TripValidator.validate(t.view, t.overlay, todayDate) }
     val live = remember(t, day, now, naviLive, here, energy, vehicle) { vm.live(t, day, now, naviLive, here) }
-    // M57: what the car reported, read against today's plan. Both exist only for the day the car is actually on.
+    // what the car reported, read against today's plan. Both exist only for the day the car is actually on.
     val isToday = vm.todayIndex(t, now) == day
     val rest = remember(now, live, naviLive, vehicle, session) { vm.rest(now, live, naviLive, session) }
     val departure = remember(live, vehicle, energy) { if (isToday) vm.departure(live) else null }
@@ -593,7 +593,7 @@ private fun NextPanel(vm: TripsViewModel, t: LocalTrip, day: Int, live: LiveView
 /** Our own threshold for a low battery at the destination (the navigation's estimate), stated as such in the docs. */
 private const val LOW_SOC = 20
 
-/** Emulator demo samples for the departure check (M57): one with things to look at, one all clear. */
+/** Emulator demo samples for the departure check: one with things to look at, one all clear. */
 private val DEMO_VEHICLE = VehicleSnapshot(
     powerLimited = false, washerLow = true, brakeFluid = FluidLevel.OK,
     doorsOpen = 0, trunkOpen = true, chargePortOpen = true, occupants = 3, unbuckled = 1, gearPark = true, driveMode = DriveMode.SPORT,
@@ -702,7 +702,7 @@ fun SettingsScreen(
                                 PleosButton(stringResource(R.string.presend_demo), { presend = true }, type = ButtonType.BASIC, size = ButtonSize.SMALL, tag = "presend")
                                 PleosButton(stringResource(R.string.demo_energy_ev, 18), { vm.seedDemoEnergy(io.tteonaljido.trip.VehicleKind.EV, 18, 250) }, type = ButtonType.BASIC, size = ButtonSize.SMALL, tag = "seedEvEnergy")
                                 PleosButton(stringResource(R.string.demo_energy_ice, 25), { vm.seedDemoEnergy(io.tteonaljido.trip.VehicleKind.ICE, 25, null) }, type = ButtonType.BASIC, size = ButtonSize.SMALL, tag = "seedIceEnergy")
-                                // M57: the emulator cannot inject vehicle signals, so labelled samples stand in for the departure check and the rest advice.
+                                // the emulator cannot inject vehicle signals, so labelled samples stand in for the departure check and the rest advice.
                                 PleosButton(stringResource(R.string.demo_vehicle), { vm.seedDemoVehicle(DEMO_VEHICLE) }, type = ButtonType.BASIC, size = ButtonSize.SMALL, tag = "seedVehicle")
                                 PleosButton(stringResource(R.string.demo_vehicle_ok), { vm.seedDemoVehicle(DEMO_VEHICLE_OK) }, type = ButtonType.BASIC, size = ButtonSize.SMALL, tag = "seedVehicleOk")
                                 PleosButton(stringResource(R.string.demo_drive), { vm.seedDemoDrive(130) }, type = ButtonType.BASIC, size = ButtonSize.SMALL, tag = "seedDrive")

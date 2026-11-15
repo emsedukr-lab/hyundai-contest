@@ -165,7 +165,7 @@ export function PlaceSearch({
     } catch (e) {
       if (id !== searchId.current) return;
       setHits(null);
-      // Three different troubles, three answers (M66): search is switched off here (503), the request never left the
+      // Three different troubles, three answers: search is switched off here (503), the request never left the
       // phone (no status: the network), or the server or Kakao could not answer just now. A search that worked and
       // found nothing is not an error at all — that is the 'no results' line below.
       const off = e instanceof ApiError && e.status === 503;

@@ -4,7 +4,7 @@ import { allRuns, applyRun, type LegRun, type RunResult } from './routeTimes';
 import { leaveFor, relinkLegs, setLeg, type LegBook } from './trips';
 
 /**
- * 더 빠른 순서 (M54): for one day, a visiting order that drives at least {@link MIN_SAVED} minutes less — first found on
+ * 더 빠른 순서: for one day, a visiting order that drives at least {@link MIN_SAVED} minutes less — first found on
  * straight lines ({@link shorterDayOrder}), then checked with Kakao's real driving times for that order. It is only
  * offered when it adds no timetable conflict and leaves no more fixed times short of their 15-minute margin.
  */

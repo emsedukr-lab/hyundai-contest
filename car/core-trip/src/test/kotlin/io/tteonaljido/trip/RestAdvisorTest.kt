@@ -5,7 +5,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/** 쉬어 가기 권고 (M57): continuous driving, read with the navigation and the day's deadline. */
+/** 쉬어 가기 권고: continuous driving, read with the navigation and the day's deadline. */
 class RestAdvisorTest {
     private val min = 60_000L
     private fun drivingFor(minutes: Int, now: Long = 1_000 * min) = DriveSession(since = now - minutes * min)

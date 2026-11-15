@@ -13,7 +13,7 @@ describe('backup import check (checkBackupTrip)', () => {
     expect(back?.setup).toEqual({ done: false, step: 1 });
     expect(back?.plan.places.length).toBe(S.places.length);
     expect(back?.notes?.[S.places[0].placeRef]?.memo).toBe('2층');
-    expect(back?.notes?.[S.places[0].placeRef]?.meal).toBe('DINNER'); // M67: a restaurant's meal travels with the backup
+    expect(back?.notes?.[S.places[0].placeRef]?.meal).toBe('DINNER'); // a restaurant's meal travels with the backup
   });
 
   it('refuses an entry that is not a valid trip instead of storing it', async () => {

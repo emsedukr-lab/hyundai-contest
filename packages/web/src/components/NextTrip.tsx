@@ -11,7 +11,7 @@ import { Tag } from './shell/Tag';
 import './nextTrip.css';
 
 /**
- * 다음 여행 (M45): the 여행 tab's lead card. Name, when it leaves (bold ink), and the whole route drawn on the same
+ * 다음 여행: the 여행 tab's lead card. Name, when it leaves (bold ink), and the whole route drawn on the same
  * dashed line with numbered stops as the editor — the day ahead in ink, the other days quiet, like the car's route
  * sketch. Below, what still needs doing (bold ink behind an ink dot) or the last version sent to the car. The whole
  * card opens the trip.

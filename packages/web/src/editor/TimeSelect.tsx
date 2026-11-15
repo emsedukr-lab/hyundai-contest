@@ -7,7 +7,7 @@ import { Sheet } from './Sheet';
 import './timeSelect.css';
 
 /**
- * 시각 선택 (M50, 과제 1 Option A): times are chosen, never typed — and never from a 48-row list. The field opens a small
+ * 시각 선택 (과제 1 Option A): times are chosen, never typed — and never from a 48-row list. The field opens a small
  * sheet over the current one: [오전 | 오후], then the half hours as a 4-column grid of 44px chips. 오전 shows 06:00–11:30;
  * the dawn hours (0:00–5:30) open on request. A tap saves and closes. With no value yet, the suggested time (a stop's
  * suggestion is one hour after the stop before it, else 오전 9:00) is outlined and focused, and its half of the day is the
@@ -67,7 +67,7 @@ export function TimeSelect({
             <circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" strokeWidth="1.5" />
             <path d="M12 7.5V12l3 2" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          {/* The chosen time reads as on the day's cards — 24-hour "14:30" (M66); the picker below keeps 오전/오후. */}
+          {/* The chosen time reads as on the day's cards — 24-hour "14:30"; the picker below keeps 오전/오후. */}
           <span className="ts-value">{current ?? placeholder ?? label}</span>
           <svg className="ts-chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
             <path d="m6 9 6 6 6-6" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />

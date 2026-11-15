@@ -1,7 +1,7 @@
 /**
  * "Send THIS trip": set when 카메라로 차량 QR 스캔 is pressed on a trip's send sheet, read once by the pairing page so
  * its 차량으로 보낼 여행 step opens with that trip chosen. Only the trip's id, only in this window's sessionStorage, and
- * only for a while — never in the address (CLAUDE.md: no trip data in a path, query or QR). A scan started from the
+ * only for a while — never in the address (docs/03_개인정보_설계.md: no trip data in a path, query or QR). A scan started from the
  * 연결 tab clears it, so an older choice never rides along.
  */
 const KEY = 'tteonaljido.sendTrip';

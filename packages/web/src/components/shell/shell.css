@@ -881,7 +881,7 @@ div:has(> .astryx-switch) {
   border: 0;
 }
 
-/* ---------- M66: UX fixes ---------- */
+/* ---------- UX fixes ---------- */
 
 /* Two actions that sit side by side where both labels fit and stack at full width where they do not (320px). */
 .tn-btnrow {
@@ -910,7 +910,7 @@ div:has(> .astryx-switch) {
 }
 
 /*
- * 설정 › 식사 시간 (M67). A row's value at its end (tabular, secondary ink), the section's quiet 기본값으로 text button
+ * 설정 › 식사 시간. A row's value at its end (tabular, secondary ink), the section's quiet 기본값으로 text button
  * (44 tall hit area, drawn inside the section header's own height), and the sheet's start – end pair with its message.
  */
 .tn-row-value {

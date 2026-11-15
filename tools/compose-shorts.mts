@@ -4,7 +4,7 @@
  *   npx tsx tools/compose-shorts.mts            → media/demo/떠날지도_숏폼.mp4
  * Structure follows the challenge guide: Spot (the moment) → Solve (app screens) → Scene (using it), then an end card.
  * The story starts where the project does: picking places is quick, building the day-by-day route is what takes long —
- * the phone builds it, the car takes it over with one QR. The cards are neutral (no hue), like the product (M58).
+ * the phone builds it, the car takes it over with one QR. The cards are neutral (no hue), like the product.
  * Scenes are anchored on the recorder's caption timestamps, network/page-load waits are trimmed, and each scene is
  * sped up so the whole short fits in TARGET seconds. Text stays inside the area Reels/Shorts leave uncovered
  * (top ~160 px, bottom ~370 px and the right-hand buttons are covered by the platform UI).

@@ -3,7 +3,7 @@ import { TRANSFER_LIMITS } from './tripTransfer';
 import { minutes } from './timeline';
 
 /**
- * 여행 동선 최적화 (M64): which day each place goes on and in what order, for the whole trip at once.
+ * 여행 동선 최적화: which day each place goes on and in what order, for the whole trip at once.
  *
  * An adaptive large-neighbourhood search under simulated annealing (ALNS-SA), in plain TypeScript with no dependency,
  * so the phone and the server can both run it and the car can port it. It starts from the plan as it stands, takes
@@ -46,7 +46,7 @@ export interface OptimizerConfig {
   defaultEndBy: number;
   iterations: number;
   seed: number;
-  /** Meal times a restaurant's start is judged against (M67: the traveller may move them). */
+  /** Meal times a restaurant's start is judged against (the traveller may move them). */
   mealWindows: MealWindows;
 }
 
@@ -158,7 +158,7 @@ const WAIT = 1.8;
 const LONG_WAIT = 3;
 const MEAL_OFF = { base: 40, perMinute: 1.5, most: 250 };
 /**
- * A meal the traveller named (M67) is priced by the same minute, but the price keeps growing for longer: a dinner
+ * A meal the traveller named is priced by the same minute, but the price keeps growing for longer: a dinner
  * place at lunchtime is five hours off, and under the usual cap 12:30 and 15:00 would cost the same — on a day that
  * ends mid-afternoon the search then had no reason to move it out of lunchtime (seen on the sample trip). The rate is
  * unchanged, so a detour is still weighed by the minute; only the furthest miss (dinner at noon) costs more, about two

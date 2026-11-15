@@ -119,7 +119,7 @@ Android 15 휴대폰 에뮬레이터(Pixel 7)에 release APK를 설치해 확인
 
 ## 남은 일 (2차 PT 전)
 
-- **위치 권한(M61)**: 웹은 출발 장소 '현재 위치'의 첫 구간을 휴대폰 위치로 계산합니다. 앱 포장에는 위치 권한(Android `ACCESS_COARSE_LOCATION`, iOS `NSLocationWhenInUseUsageDescription`)을 아직 선언하지 않아 앱에서는 그 구간이 비고 차량이 계산합니다. 권한을 선언하고 기기에서 확인해야 합니다.
+- **위치 권한**: 웹은 출발 장소 '현재 위치'의 첫 구간을 휴대폰 위치로 계산합니다. 앱 포장에는 위치 권한(Android `ACCESS_COARSE_LOCATION`, iOS `NSLocationWhenInUseUsageDescription`)을 아직 선언하지 않아 앱에서는 그 구간이 비고 차량이 계산합니다. 권한을 선언하고 기기에서 확인해야 합니다.
 
 1. **서버 배포**: `packages/worker` 재배포(CORS). 모바일 웹 동작은 바뀌지 않습니다.
 2. **휴대폰 카메라 → 앱 열기**

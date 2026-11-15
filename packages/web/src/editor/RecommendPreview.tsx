@@ -17,9 +17,9 @@ import './recommend.css';
 const WHY = { home: 'recommend.why.home', here: 'recommend.why.here', depart: 'recommend.why.depart', pending: 'recommend.why.pending', car: 'recommend.why.car' } as const;
 
 /**
- * The proposed days, stop by stop with their times and what changed — shared by this dialog and the new-trip setup (M43).
+ * The proposed days, stop by stop with their times and what changed — shared by this dialog and the new-trip setup.
  * One list per day (rows on hairlines, not a card per stop). A time is shown where it is known; how many are not, and
- * why (M66), is said once under the day's title — nothing is estimated in their place. `showNew` marks the places a recommendation placed — off in the new-trip setup,
+ * why, is said once under the day's title — nothing is estimated in their place. `showNew` marks the places a recommendation placed — off in the new-trip setup,
  * where every place is new. What the engine noticed (long gaps, check-in and check-out) follows as plain lines.
  */
 export function RecommendPreview({ display, home, diff, insights, showNew = true }: { display: Trip; home: Home | null; diff: RecommendationDiff; insights?: RecommendInsights; showNew?: boolean }) {

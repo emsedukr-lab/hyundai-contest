@@ -7,7 +7,7 @@ import org.junit.Test
 import java.io.File
 import java.time.LocalDate
 
-/** M55: the car's trip list card and day summary, same rules as the phone (routeSketch.ts, nextTrip.ts, M54 summary). */
+/** the car's trip list card and day summary, same rules as the phone (routeSketch.ts, nextTrip.ts, summary). */
 class TripOverviewTest {
     private val schemaDir = File(System.getProperty("schemaDir"))
     private val sample = (TransferParser.parse(File(schemaDir, "fixtures/valid/sample.json").readText()) as ParseResult.Ok).transfer.trip

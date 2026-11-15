@@ -143,7 +143,7 @@ describe('recommendRoute', () => {
   });
 });
 
-describe('recommend (M64): what the engine is told and what it reports back', () => {
+describe('recommend: what the engine is told and what it reports back', () => {
   it('estimates a drive from the straight line where nothing was measured: slower in town than between towns', () => {
     expect(estimateDriveMinutes(0)).toBe(3); // never less than a few minutes
     expect(estimateDriveMinutes(2_000)).toBe(6); // 2.7 km of road at town speed
@@ -224,7 +224,7 @@ describe('summarizeRecommendation', () => {
   });
 });
 
-describe('recommend: a restaurant\'s meal and the meal times (M67, phone only)', () => {
+describe('recommend: a restaurant\'s meal and the meal times (phone only)', () => {
   // One day from home at 10:00, everything within a kilometre or two: the restaurant can open the day (about 10:15) or
   // follow one sight (about 13:00), two (about 15:45) or all three (about 18:30), so only the meal decides where it goes.
   const t = trip({

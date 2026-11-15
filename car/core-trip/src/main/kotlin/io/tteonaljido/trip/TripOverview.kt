@@ -5,7 +5,7 @@ import java.time.temporal.ChronoUnit
 import kotlin.math.cos
 
 /**
- * What the car's trip list and day timeline show at a glance (M55), ported from the phone so both read the same:
+ * What the car's trip list and day timeline show at a glance, ported from the phone so both read the same:
  * the whole-trip route sketch (packages/web lib/routeSketch.ts `tripSketch`), where a trip stands today
  * (lib/nextTrip.ts `tripWhen`) and a day's summary line (운전 · 숙소 도착 · 미확인). Pure; nothing leaves the car.
  */

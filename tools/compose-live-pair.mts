@@ -1,14 +1,14 @@
 /**
  * Puts the screenshots of a live pairing run (tools/live-pair.mts) side by side: one long overview.png and one
  * pair-NN.png per step, car screen next to phone screen with a caption that says what the step proved.
- *   npx tsx tools/compose-live-pair.mts [dir]        (default docs/evidence/live-pair)
+ *   npx tsx tools/compose-live-pair.mts [dir]        (default docs/evidence/2026-11-10_live-pair)
  * Reads NN-car.png / NN-phone.png and results.json from the folder and writes overview.png and one pair-NN.png per step.
  * Optional 13-car.png / 14-car.png (the guidance popup and the navigation's route screen) add a last step.
  */
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { chromium } from 'playwright-core';
 
-const DIR = (process.argv[2] ?? 'docs/evidence/live-pair').replace(/\/?$/, '/');
+const DIR = (process.argv[2] ?? 'docs/evidence/2026-11-10_live-pair').replace(/\/?$/, '/');
 const CHROME = process.env.CHROME_PATH ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 
 const run = JSON.parse(readFileSync(`${DIR}results.json`, 'utf8'));

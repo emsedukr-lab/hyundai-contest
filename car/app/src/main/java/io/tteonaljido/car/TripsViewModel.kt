@@ -70,7 +70,7 @@ sealed interface Guide {
     /** Before a stop with a booking or a fixed time is skipped: it is named with its time, and nothing changes until the driver agrees. */
     data class ConfirmSkip(val name: String, val time: String, val booked: Boolean) : Guide
     /**
-     * Before a measurement (M63): the navigation comes to the front and shows `routes` routes one after another, and a
+     * Before a measurement: the navigation comes to the front and shows `routes` routes one after another, and a
      * route it is guiding on (`current`) ends. Nothing is sent until the driver agrees.
      */
     data class ConfirmMeasure(val current: String?, val routes: Int) : Guide
@@ -127,7 +127,7 @@ class TripsViewModel(
     private val driveSession: MutableStateFlow<DriveSession> = MutableStateFlow(DriveSession()),
     private val isDriving: () -> Boolean = { false },
     private val noteOdometer: (Double?) -> Unit = {},
-    /** M63: on while the navigation measures legs — it comes to the front, and an app behind it is frozen unless this holds it. */
+    /** on while the navigation measures legs — it comes to the front, and an app behind it is frozen unless this holds it. */
     private val keepRunning: (Boolean) -> Unit = {},
     /** Asks for this app's screen back after a measurement (the system may decline). */
     private val toFront: () -> Unit = {},
@@ -148,7 +148,7 @@ class TripsViewModel(
     /** Current energy reading driving charge/refuel advice. Null = unknown (no advisory). Phase-1 demo-seeded; phase-2 from the Vehicle SDK. */
     private val _energy = MutableStateFlow<EnergyState?>(null)
     val energy: StateFlow<EnergyState?> = _energy
-    /** Latest read-only vehicle snapshot (M57). Null = nothing reported (no departure check, no lamp-based advice). */
+    /** Latest read-only vehicle snapshot. Null = nothing reported (no departure check, no lamp-based advice). */
     private val _vehicle = MutableStateFlow<VehicleSnapshot?>(null)
     val vehicle: StateFlow<VehicleSnapshot?> = _vehicle
     val drive: StateFlow<DriveSession> = driveSession
@@ -159,7 +159,7 @@ class TripsViewModel(
     /** Trips whose automatic first-leg measurement the driver undid: left alone for the rest of this session. */
     private val autoOff = mutableSetOf<String>()
     private var autoJob: Job? = null
-    /** M63: the running measurement with the navigation, what it was asked to do, and how many waypoints this navigation has kept per route. */
+    /** the running measurement with the navigation, what it was asked to do, and how many waypoints this navigation has kept per route. */
     private var measureJob: Job? = null
     private var measureAsk: Pair<String, Int?>? = null
     private var naviWaypoints = NaviMeasure.MAX_WAYPOINTS
@@ -586,7 +586,7 @@ class TripsViewModel(
             _guide.value = Guide.Working(Msg(R.string.here_checking))
             val here = navi.currentLocation() ?: return@launch run { _guide.value = Guide.Failed(Msg(R.string.here_no_location), false) }
             // Re-setting the day's start point only makes sense before any of that day's stops are done — and only where
-            // the plan leaves the start open (M59): the first day, or a day after a night with no lodging. A later day
+            // the plan leaves the start open: the first day, or a day after a night with no lodging. A later day
             // keeps starting from the lodging of the night before; there this only asks for the estimate from here.
             val fresh = DayStart.canDepartHere(t0.view, day) && t0.view.days[day - 1].visitOrder.none { it in t0.overlay.visited }
             val origin = NaviBinding("", "", "", here.latE7, here.lonE7, here.address, here.address)
@@ -634,7 +634,7 @@ class TripsViewModel(
     }
 
     /**
-     * The first day's first leg, without a tap (M60). The phone cannot time a leg that starts "where the car is", nor
+     * The first day's first leg, without a tap. The phone cannot time a leg that starts "where the car is", nor
      * one from a home it has no address for, so the leg arrives empty and the whole first day reads as unknown. While
      * parked, before the trip or on its first day, the car asks the navigation where it is and how long the first stop
      * takes from there (`requestTrip`: a query, any route is untouched) and keeps that as the leg's time.
@@ -682,7 +682,7 @@ class TripsViewModel(
         }
     }
 
-    /* ---------- M63: the Hyundai navigation times, measures and orders the trip ---------- */
+    /* ---------- the Hyundai navigation times, measures and orders the trip ---------- */
 
     private fun pointTarget(t: LocalTrip, p: NaviMeasure.Point): RouteTarget = when (p.key) {
         LegKeys.HOME -> (homeTarget(t) ?: RouteTarget(homeLabel, "", null, null, null, null, null)).copy(latE7 = p.latE7, lonE7 = p.lonE7)

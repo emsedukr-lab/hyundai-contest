@@ -78,11 +78,11 @@ internal object SchemaRules {
         need(TZ.matches(trip.timezone) && trip.timezone.length <= 40 && runCatching { java.time.ZoneId.of(trip.timezone) }.isSuccess, "timezone")
         need(date(trip.startDate) && date(trip.endDate), "dates")
         when (val f = trip.firstDay) {
-            is FirstDay.DepartOrigin -> need(f.departTime?.let(TIME::matches) ?: true, "firstDay") // optional (M48)
+            is FirstDay.DepartOrigin -> need(f.departTime?.let(TIME::matches) ?: true, "firstDay") // optional
             is FirstDay.ArriveFirstStop -> need(TIME.matches(f.arriveTime) && f.prepMinutes in 0..240, "firstDay")
         }
         listOf(trip.origin, trip.finalDestination).forEach { if (it is Endpoint.AtPlace) need(REF.matches(it.placeRef), "endpoint") }
-        need(trip.finalDestination !is Endpoint.Current, "endpoint") // the current location is a place to start from, not one to return to (M59)
+        need(trip.finalDestination !is Endpoint.Current, "endpoint") // the current location is a place to start from, not one to return to
         trip.home?.let { need(it.address.length in 1..120 && lat(it.latE7) && lon(it.lonE7), "home") }
         need(trip.places.size <= 100 && trip.visits.size <= 100 && trip.days.size in 1..14, "sizes")
         trip.places.forEach { p ->

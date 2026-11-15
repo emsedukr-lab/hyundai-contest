@@ -4,7 +4,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
 
-/** SDK enum names → this app's terms (M57). Names, not SDK types, so an unknown future value is simply unknown. */
+/** SDK enum names → this app's terms. Names, not SDK types, so an unknown future value is simply unknown. */
 class VehicleTermsTest {
     @Test fun fluidLevels() {
         assertEquals(FluidLevel.OK, VehicleTerms.fluid("NORMAL"))

@@ -109,7 +109,7 @@ export interface TripSketch {
 }
 
 /**
- * 전체 동선 (M45, the 여행 tab's next-trip card): every day's stops and lodgings on one sketch. North up, and unlike the
+ * 전체 동선 (the 여행 tab's next-trip card): every day's stops and lodgings on one sketch. North up, and unlike the
  * day sketch it keeps the map's proportions (longitude scaled by cos(latitude)) so the trip's shape reads true. Home is
  * left out — a far-away start would shrink the trip itself to a dot. Pure; coordinates never leave the device.
  */

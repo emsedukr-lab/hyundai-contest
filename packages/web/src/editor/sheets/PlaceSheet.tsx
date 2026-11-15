@@ -23,7 +23,7 @@ const CollectedPlacesMap = lazy(() => import('../CollectedPlacesMap').then((m) =
 export type Notice = { tone: 'success' | 'error' | 'info'; text: string; undo?: () => void; action?: { label: string; onClick: () => void } };
 
 /**
- * Collecting places for a trip (M40/M43) — the body of the + sheet and of the new-trip setup's step 2. Every place goes
+ * Collecting places for a trip — the body of the + sheet and of the new-trip setup's step 2. Every place goes
  * to the whole trip first ("저장 목록", on no day yet); a day is chosen only in the place's details or by 경로 추천.
  * Top to bottom: a search for new places (several can be collected in a row), the places saved for this trip (tap →
  * details; in setup each has a remove icon), and favorites shared by every trip (tap → saved to this trip).

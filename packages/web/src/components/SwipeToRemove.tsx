@@ -5,7 +5,7 @@ import './swipe.css';
 const OPEN_AT = -88;
 
 /**
- * A card that slides left to reveal a filled action (빼기 / 삭제) behind it (M36; shared with the trip list, M52). Past 45% of its width (or a quick fling) it is removed on
+ * A card that slides left to reveal a filled action (빼기 / 삭제) behind it (shared with the trip list). Past 45% of its width (or a quick fling) it is removed on
  * release; a shorter swipe rests open so 빼기 can be tapped, and tapping the card or Esc closes it again. Only a sideways
  * gesture counts — vertical scrolling passes through (touch-action: pan-y) — and the drag handle is left to dnd-kit.
  * The tap that ends a swipe never opens the card's details.
@@ -115,7 +115,7 @@ export function SwipeToRemove({
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerCancel}
-        // A link inside (a trip row) would start the browser's own link drag on a mouse and cancel the swipe (M52).
+        // A link inside (a trip row) would start the browser's own link drag on a mouse and cancel the swipe.
         onDragStart={(e) => e.preventDefault()}
         onClickCapture={onClickCapture}>
         {children}

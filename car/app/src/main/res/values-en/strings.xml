@@ -267,7 +267,7 @@
     <string name="presend_demo">Pre-send (demo)</string>
     <string name="presend_demo_title">Pre-send (demo)</string>
     <string name="presend_demo_body">Demonstrates pushing a day\'s pre-planned route to the car navigation. Account-based "auto send on next start" isn\'t built (no infrastructure); the car\'s "Send today\'s route" is the real bundle send.</string>
-    <!-- M55: car screens in the phone app's layout -->
+    <!-- car screens in the phone app's layout -->
     <string name="when_in_days">Leaves in %1$d days</string>
     <string name="when_tomorrow">Leaves tomorrow</string>
     <string name="when_today">Leaves today</string>
@@ -322,7 +322,7 @@
     <string name="demo_clock">Demo time day 2 09:00</string>
     <string name="demo_clock_body">Turn it off to go back to the real time</string>
     <string name="recheck_unchanged">The plan is unchanged · the car does not edit it</string>
-    <!-- M57: vehicle signals combined with the plan (departure check, energy outlook, rest advice, route extras) -->
+    <!-- vehicle signals combined with the plan (departure check, energy outlook, rest advice, route extras) -->
     <string name="departure_title">Before you leave</string>
     <string name="departure_ready">Ready to go</string>
     <string name="departure_count">%1$d to check</string>
@@ -357,7 +357,7 @@
     <string name="demo_vehicle">Car check sample</string>
     <string name="demo_vehicle_ok">All-clear sample</string>
     <string name="demo_drive">2-hour drive sample</string>
-    <!-- M63: the Hyundai navigation measures every leg and orders the day -->
+    <!-- the Hyundai navigation measures every leg and orders the day -->
     <string name="navi_plan_title">Measured by the Hyundai navigation</string>
     <string name="navi_plan_none">No leg the navigation can measure</string>
     <string name="navi_plan_phone">Travel times are still the estimates sent from the phone. Measuring replaces them with the navigation\'s own times and distances.</string>
@@ -392,7 +392,7 @@
     <string name="order_reset">Day %1$s is back in the planned order</string>
     <string name="tl_leg_navi_km">%2$s km · %1$s</string>
     <string name="sum_drive_km">Driving %1$s · %2$s km</string>
-    <!-- M66: findings split by who settles them, why a button is off, the next-trip card's open row -->
+    <!-- findings split by who settles them, why a button is off, the next-trip card's open row -->
     <string name="navi_fills_title">Filled in by the navigation</string>
     <string name="navi_fills_legs">Legs without a drive time: %1$d · the navigation measures them</string>
     <string name="navi_fills_home_both">Start and return \'Home\' use the navigation\'s Home</string>

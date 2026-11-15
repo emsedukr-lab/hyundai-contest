@@ -22,7 +22,7 @@ class LiveProjectionTest {
 
     /*
      * ---------- punctuality against the 13:00 reservation (day 2, navigation says 134 min to 경포호) ----------
-     * No parking time is counted (M42): 경포호 90 min + 10 min drive, so the reservation's slack is 13:00 − (now + 234).
+     * No parking time is counted: 경포호 90 min + 10 min drive, so the reservation's slack is 13:00 − (now + 234).
      */
 
     @Test fun onTimeWithRoomToSpare() {
@@ -48,7 +48,7 @@ class LiveProjectionTest {
         val p = LiveProjection.project(lakeOptional, CarOverlay(), 2, m("09:20"), naviRemaining = 134)
         assertEquals(-14, p.fixed!!.slack)
         assertEquals(Punctuality.LATE, p.status)
-        assertEquals(SkipSuggestion("v4", 90), p.skip) // its planned stay only (no parking time, M42)
+        assertEquals(SkipSuggestion("v4", 90), p.skip) // its planned stay only (no parking time)
     }
 
     @Test fun mustAndNormalStopsAreNeverSuggested() {
@@ -96,7 +96,7 @@ class LiveProjectionTest {
         assertEquals(Punctuality.LATE, p.status)
     }
 
-    /** M42: measured visit records are groundwork only — no parking buffer and no stay tendency reach the projection. */
+    /** measured visit records are groundwork only — no parking buffer and no stay tendency reach the projection. */
     @Test fun visitRecordsDoNotChangeTheProjection() {
         fun rec(pid: String, parkMin: Int, actualStay: Int) = VisitRecord("t", 2, pid, PlaceCategory.FOOD, isWeekend = false, tArrive = 0, tParked = parkMin * 60_000L, tDepart = (parkMin + actualStay) * 60_000L)
         // Three FOOD visits parked ~8 min and stayed 1.5× their plan (donghwa 60, mandong 30, umji 60).
@@ -113,7 +113,7 @@ class LiveProjectionTest {
     }
 
     @Test fun noVisitRecordsLeavesTheProjectionUnchanged() {
-        // No records → the plain projection (records are never applied, M42).
+        // No records → the plain projection (records are never applied).
         val p = LiveProjection.project(lakeOptional, CarOverlay(), 2, m("08:00"), naviRemaining = 134)
         assertEquals(m("10:14"), p.arriveNext)
         assertEquals(66, p.fixed!!.slack)
@@ -122,7 +122,7 @@ class LiveProjectionTest {
     /* ---------- leg sources ---------- */
 
     @Test fun naviTimeWinsOverThePlanLegAndFillsGaps() {
-        // M63: where the navigation has timed a leg, that is the leg's time; the phone's value stands for the rest.
+        // where the navigation has timed a leg, that is the leg's time; the phone's value stands for the rest.
         val o = CarOverlay(legEstimates = mapOf("skybay>lake" to LegEstimate(30, 3_000, 0), "@home>cheolttuk" to LegEstimate(170, 230_000, 0)))
         assertEquals(LegValue(30, LegFrom.NAVI, 3_000), TripValidator.leg(sample, o, 2, 0))
         assertEquals(LegValue(10, LegFrom.USER), TripValidator.leg(sample, o, 2, 1))
@@ -151,7 +151,7 @@ class LiveProjectionTest {
     }
 
     @Test fun laterDaysStartFromTheLodgingOfTheNightBefore() {
-        // M59: "여기서 출발" re-sets the first day only. An override left on day 2 (an older version allowed it) no longer applies.
+        // "여기서 출발" re-sets the first day only. An override left on day 2 (an older version allowed it) no longer applies.
         val day2 = CarOverlay(originOverrides = mapOf(2 to here), legEstimates = mapOf("@origin>lake" to LegEstimate(40, 30_000, 0)))
         assertFalse(DayStart.canDepartHere(sample, 2))
         assertNull(day2.originFor(sample, 2))
@@ -183,14 +183,14 @@ class LiveProjectionTest {
     }
 
     @Test fun aFirstLegThePlanCouldNotTimeIsTheCarsToMeasure() {
-        // M60: the phone cannot time a first leg from "where the car is" or from a home it has no address for.
+        // the phone cannot time a first leg from "where the car is" or from a home it has no address for.
         val current = sample.copy(origin = Endpoint.Current)
         assertTrue(DayStart.untimed(current, CarOverlay()))
         assertTrue(DayStart.untimed(sample, CarOverlay()))                                  // from home, no time in the plan
         assertTrue(DayStart.untimed(sample, CarOverlay(home = here)))                       // knowing where home is does not time the leg
         val timed = withDay(sample, 1) { d -> d.copy(legs = listOf(Leg(150, Leg.LegSource.USER_ESTIMATE)) + d.legs.drop(1)) }
         assertFalse(DayStart.untimed(timed, CarOverlay()))                                  // the phone timed it from home: nothing to do
-        val timedFromPhone = timed.copy(origin = Endpoint.Current)                          // M61: timed from where the phone was
+        val timedFromPhone = timed.copy(origin = Endpoint.Current)                          // timed from where the phone was
         assertTrue(DayStart.untimed(timedFromPhone, CarOverlay()))                          // in the car, "here" is the car: measured again
         assertEquals(LegValue(150, LegFrom.USER), TripValidator.leg(timedFromPhone, CarOverlay(), 1, 0)) // until then the phone's time stands
         assertFalse(DayStart.untimed(current, CarOverlay(visited = setOf("v1"))))           // the first day is under way

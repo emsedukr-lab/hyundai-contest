@@ -7,7 +7,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.File
 
-/** M63: the navigation's waypoint routes time the legs, and the day's order follows the navigation's own times. */
+/** the navigation's waypoint routes time the legs, and the day's order follows the navigation's own times. */
 class NaviPlanTest {
     private val schemaDir = File(System.getProperty("schemaDir"))
     private val sample = (TransferParser.parse(File(schemaDir, "fixtures/valid/sample.json").readText()) as ParseResult.Ok).transfer.trip
@@ -85,7 +85,7 @@ class NaviPlanTest {
     /* ---------- readings → legs ---------- */
 
     @Test fun neighbouringReadingsGiveTheLegBetweenThem() {
-        // The emulator's numbers for 스카이베이 → 경포호 → 동화가든 → 만동제과 → 엄지네 → 신라모노그램, read from Seongnam (docs/evidence/navi-waypoints, T5).
+        // The emulator's numbers for 스카이베이 → 경포호 → 동화가든 → 만동제과 → 엄지네 → 신라모노그램, read from Seongnam (docs/evidence/2026-11-13_navi-waypoints, T5).
         val chain = NaviMeasure.chains(NaviMeasure.dayLegs(sample, CarOverlay(), 2)).single()
         val readings = listOf(9840 to 199_000, 10_020 to 201_000, 10_440 to 204_000, 11_220 to 209_000, 11_640 to 212_000, 12_180 to 216_000).map { NaviMeasure.Reading(it.first, it.second) }
         val legs = NaviMeasure.legs(chain, readings, at = 42)

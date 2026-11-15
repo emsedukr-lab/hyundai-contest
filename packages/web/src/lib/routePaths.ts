@@ -2,7 +2,7 @@ import { apiUrl } from './platform';
 import type { LegRun, Point } from './routeTimes';
 
 /**
- * The road each leg of a day actually takes (M54), for drawing the day map like a navigation app instead of straight
+ * The road each leg of a day actually takes, for drawing the day map like a navigation app instead of straight
  * lines. Same coordinates as the travel-time request (one Kakao directions call per run of the day), through the relay;
  * the lines are kept in memory for this session only, so reopening the map or switching days doesn't ask again.
  */

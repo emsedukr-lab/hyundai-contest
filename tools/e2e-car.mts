@@ -3,7 +3,7 @@
  * as the phone. Covers spec 24-1 steps 1–9, the decision table for a resend, QR scanability from the car's
  * own screen, and hiding the QR while driving (emulator demo gate). Needs the dev debug APK and `wrangler dev` on :8787.
  *   npx tsx tools/e2e-car.mts [emulator-serial]
- * Screenshots go to docs/evidence/m4/.
+ * Screenshots go to docs/evidence/2026-11-05_car-import-qr/.
  */
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, writeFileSync } from 'node:fs';
@@ -18,7 +18,7 @@ const ADB = process.env.ANDROID_ADB ?? `${homedir()}/Library/Android/sdk/platfor
 const PKG = 'io.tteonaljido.car';
 const USER = process.env.CAR_USER ?? '10';
 const CHROME = process.env.CHROME_PATH ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
-const shots = fileURLToPath(new URL('../docs/evidence/m4/', import.meta.url));
+const shots = fileURLToPath(new URL('../docs/evidence/2026-11-05_car-import-qr/', import.meta.url));
 mkdirSync(shots, { recursive: true });
 
 const adb = (...args: string[]) => execFileSync(ADB, ['-s', SERIAL, ...args], { maxBuffer: 64 << 20 });
@@ -172,7 +172,7 @@ try {
   await page3.getByText('이미 사용된 QR이에요', { exact: false }).waitFor();
   check(await page3.getByText('이미 사용된 QR이에요', { exact: false }).isVisible(), 'a used QR cannot be claimed again');
 
-  /* ---------- round 4: M12 — bundle send on the trip's own day (defer/pre-send are unit-tested + manual) ---------- */
+  /* ---------- round 4: bundle send on the trip's own day (defer/pre-send are unit-tested + manual) ---------- */
   // Put the demo clock on day 2 (2026-11-21) so the live "오늘 경로 전송" (multi-stop send) surfaces for that day.
   sh(`am start --user ${USER} -n ${PKG}/.MainActivity --ez demo true --ez demoDriving false --es demoNow 2026-11-21T09:00`);
   tap(await waitFor(byText('강릉 3박 4일'), 'open trip on day 2'));

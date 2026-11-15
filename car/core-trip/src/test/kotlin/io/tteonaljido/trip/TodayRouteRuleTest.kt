@@ -6,7 +6,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/** '오늘 경로 전송' followed stop by stop (M57): waypoint arrivals mark stops, waypoint times feed the next-stop estimate. */
+/** '오늘 경로 전송' followed stop by stop: waypoint arrivals mark stops, waypoint times feed the next-stop estimate. */
 class TodayRouteRuleTest {
     private fun stop(id: String?, name: String, lat: Int, lon: Int = 1_289_000_000) = GuidingTarget(2, id, id?.let { "p-$it" }, lat, lon, name, 1L)
     private val a = stop("v1", "경포호", 377_950_000)

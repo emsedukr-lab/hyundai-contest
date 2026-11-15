@@ -145,7 +145,7 @@ describe('optimizeTrip: what it arranges', () => {
   });
 });
 
-describe('optimizeTrip: meals the traveller named, and meal times they moved (M67)', () => {
+describe('optimizeTrip: meals the traveller named, and meal times they moved', () => {
   // One day, everything a few kilometres apart, three sights of two and a half hours: the restaurant can open the day
   // (about 09:25), or follow one sight (about 12:10), two (about 14:50) or all three (about 17:30).
   const day = (): Trip =>

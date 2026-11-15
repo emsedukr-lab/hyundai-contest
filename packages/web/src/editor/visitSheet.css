@@ -1,6 +1,6 @@
 /*
- * 장소 상세 sheet (M46): labelled groups separated by hairlines, rows with the label on the left (body-3, secondary)
- * and the control on the right, stay time as a big figure (h3, tabular) with − / + and preset segments (M69).
+ * 장소 상세 sheet: labelled groups separated by hairlines, rows with the label on the left (body-3, secondary)
+ * and the control on the right, stay time as a big figure (h3, tabular) with − / + and preset segments.
  */
 .vd {
   display: flex;
@@ -193,7 +193,7 @@
 }
 
 /*
- * 세그먼트 (M69): each choice sits in a sideways scroller. The track hugs its cells and never shrinks, so a cell's
+ * 세그먼트: each choice sits in a sideways scroller. The track hugs its cells and never shrinks, so a cell's
  * label is never cut short or wrapped; when the row is wider than the space (the trip's days, the stay presets on a
  * 320 phone) it scrolls, with no scrollbar drawn. One height for all: Astryx md — a 48 track, 40 cells, each cell's
  * tap band reaching 44 (Astryx's touch hit area). The 4px of padding keeps the focus ring and shadow-1 unclipped.

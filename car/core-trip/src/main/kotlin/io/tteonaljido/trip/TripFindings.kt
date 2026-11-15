@@ -1,7 +1,7 @@
 package io.tteonaljido.trip
 
 /**
- * How the re-check's findings are shown (M66). [TripValidator] and its severities are untouched; this only sorts what
+ * How the re-check's findings are shown. [TripValidator] and its severities are untouched; this only sorts what
  * it reported by who settles it, so a normal trip does not open with a column of orange "확인 필요" lines:
  *
  * - [Who.PERSON]: something a person has to do or decide — conflicts, a reservation that cannot be checked, missing

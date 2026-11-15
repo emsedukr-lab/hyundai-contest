@@ -223,7 +223,7 @@ fun SeverityLine(severity: Severity, text: String) {
 }
 
 /**
- * 내비가 채워요 (M66): what the car's navigation settles by itself — legs it has yet to time, a home it supplies — as
+ * 내비가 채워요: what the car's navigation settles by itself — legs it has yet to time, a home it supplies — as
  * quiet lines under a small heading. Nothing here asks the person for anything, so there is no orange and no count.
  */
 @Composable

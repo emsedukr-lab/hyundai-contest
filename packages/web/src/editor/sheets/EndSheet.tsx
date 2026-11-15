@@ -46,7 +46,7 @@ export function EndSheet({ isOpen, onClose, plan, home, dayIndex, onChange, onOp
             value={day.lodgingPlaceRef ?? ''}
             onChange={(ref) => onChange(setLodging(plan, day.dayIndex, ref || null))}
           />
-          {/* 이어서 묵기 (M49): empty → the trip's lodgings as chips (previous night first); chosen → fill the nights after. */}
+          {/* 이어서 묵기: empty → the trip's lodgings as chips (previous night first); chosen → fill the nights after. */}
           <LodgingSuggest plan={plan} dayIndex={day.dayIndex} onChange={onChange} />
           {day.lodgingPlaceRef && <LodgingNoteFields placeRef={day.lodgingPlaceRef} />}
           {day.lodgingPlaceRef && (

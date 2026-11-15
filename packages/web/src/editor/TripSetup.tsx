@@ -31,7 +31,7 @@ const TITLE: Record<SetupStep, 'setup.step1' | 'setup.step2' | 'setup.step3' | '
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 /**
- * A new trip, step by step (M43): ① 일정·장소 (optional name, dates, start/home, collected places)
+ * A new trip, step by step: ① 일정·장소 (optional name, dates, start/home, collected places)
  * → ② 숙소·예약 (lodging or 미정, booked places get their day and time, must-sees a pin) → ③ 경로 추천, which shows its work —
  * locations, days and order, Kakao travel times — and then the proposed days. Only after 이 일정으로 시작 does the
  * editor show the day-by-day itinerary. Every step is saved as it goes, so leaving and coming back resumes here.
@@ -63,7 +63,7 @@ export function TripSetup({
   const [stage, setStage] = useState(0);
   const [result, setResult] = useState<{ plan: Trip; meters: Record<string, number>; insights: RecommendInsights; diff: RecommendationDiff } | null>(null);
   const ready = setupReady(plan, lodgingTbd, step);
-  // What a step still needs reads as a hint until 다음 was tried (M66): only then is it an error (red, and announced).
+  // What a step still needs reads as a hint until 다음 was tried: only then is it an error (red, and announced).
   const [clipboardUrl, setClipboardUrl] = useState<string | null>(null);
   const [checkingClipboard, setCheckingClipboard] = useState(false);
   const [importingClipboard, setImportingClipboard] = useState(false);
@@ -75,12 +75,12 @@ export function TripSetup({
   const run = async () => {
     setPhase('running');
     setStage(1);
-    // A trip that starts from 현재 위치 is timed from where this phone is (M61): asked here, on the user's tap. Without
+    // A trip that starts from 현재 위치 is timed from where this phone is: asked here, on the user's tap. Without
     // it the first leg simply stays for the car to time.
     if (plan.origin.kind === 'CURRENT' && !getHere()) await locate(8_000);
     await wait(500);
     const pool = await favorites.all().catch(() => []);
-    // The whole trip is arranged at once (M64): first on straight-line estimates of the driving times…
+    // The whole trip is arranged at once: first on straight-line estimates of the driving times…
     const mealTimes = storedMealTimes();
     let found = recommend(plan, home, { notes, pool, mealTimes });
     setStage(2);
@@ -219,7 +219,7 @@ export function TripSetup({
                       <CloseIcon />
                     </button>
                   </div>
-                  {/* A restaurant's meal (M67), set before the first recommendation: 상관없음 unless chosen. A booked
+                  {/* A restaurant's meal, set before the first recommendation: 상관없음 unless chosen. A booked
                       time already says which meal it is, so the choice is not offered then. */}
                   {p?.category === 'FOOD' && !booked && (
                     <div className="tl-setup-meal">

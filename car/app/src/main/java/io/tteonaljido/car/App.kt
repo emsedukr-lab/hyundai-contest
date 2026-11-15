@@ -55,7 +55,7 @@ class Container(private val app: Application) : TripStore {
     private val vehicle: PleosVehicleReader? = if (isAutomotive) PleosVehicleReader(app).also { it.start() } else null
     /** SOC/fuel/range for charge·refuel advice. */
     suspend fun readEnergy(): EnergyState? = vehicle?.readEnergy()
-    /** Warning lamps, fluids, doors, seats, gear, drive mode, odometer — for the departure check and rest advice (M57). */
+    /** Warning lamps, fluids, doors, seats, gear, drive mode, odometer — for the departure check and rest advice. */
     suspend fun readSnapshot(): VehicleSnapshot? = vehicle?.readSnapshot()
 
     /** Demo mode (emulator only) uses a separate store and an in-app driving switch. */
@@ -95,7 +95,7 @@ class Container(private val app: Application) : TripStore {
 
     val tracker = GuidanceTracker(this)
 
-    /** M63: on while the navigation measures legs, so the app is not frozen behind it ([io.tteonaljido.car.navi.MeasureService]). */
+    /** on while the navigation measures legs, so the app is not frozen behind it ([io.tteonaljido.car.navi.MeasureService]). */
     fun keepRunning(on: Boolean) { if (on) io.tteonaljido.car.navi.MeasureService.start(app) else io.tteonaljido.car.navi.MeasureService.stop(app) }
 
     /**
@@ -107,7 +107,7 @@ class Container(private val app: Application) : TripStore {
     }
 
     /**
-     * How long the car has been driven without a real break (M57). App-scoped so it keeps counting while the navigation
+     * How long the car has been driven without a real break. App-scoped so it keeps counting while the navigation
      * is in front; it follows the same driving state as the screens (demo switch in demo mode) and holds nothing but
      * two timestamps and the odometer at the start — in memory only.
      */

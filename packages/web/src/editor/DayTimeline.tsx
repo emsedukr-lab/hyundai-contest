@@ -31,12 +31,12 @@ interface Props {
   onRemoveStop: (visitId: string) => void;
   /** Phone-only recommended-route length by leg key (metres), from Kakao. */
   legMeters: Record<string, number>;
-  /** Pull-to-refresh during the trip (M43): this day recomputed as if leaving at this minute (screen only). */
+  /** Pull-to-refresh during the trip: this day recomputed as if leaving at this minute (screen only). */
   startAt?: number;
-  /** Leg keys Kakao can measure; the others are timed by the car's navigation (no typing since M43). */
+  /** Leg keys Kakao can measure; the others are timed by the car's navigation (no typing). */
   askable?: ReadonlySet<string>;
   /**
-   * Why this day's times are not known yet, said once at the top of the day (M66) with the action that would fix it —
+   * Why this day's times are not known yet, said once at the top of the day with the action that would fix it —
    * instead of the same '시각 확인 필요' on every card. No action = the car's navigation times it (a neutral state).
    */
   note?: { text: string; action?: string; busy?: boolean; onAction?: () => void } | null;
@@ -100,7 +100,7 @@ export function DayTimeline({ plan, home, dayIndex, onChange, onError, onOpenPla
 
   // 끝: a night's lodging, or home/the final place on the last day
   const lodgingMissing = !isLast && endName === null;
-  // 미정 (M41): the night needs no lodging yet — a quiet grey line instead of the red 'choose lodging' card.
+  // 미정: the night needs no lodging yet — a quiet grey line instead of the red 'choose lodging' card.
   const lodgingTbdHere = lodgingMissing && lodgingTbd.includes(day.dayIndex);
   const lodgingRequired = lodgingMissing && !lodgingTbdHere;
   const lastLodging = isLast && !!day.lodgingPlaceRef;
@@ -113,7 +113,7 @@ export function DayTimeline({ plan, home, dayIndex, onChange, onError, onOpenPla
     const km = l && m ? ` · ${kmLabel(m)}` : '';
     // Empty: Kakao hasn't answered yet (a warning), or the leg can't be asked at all — the car's navigation times it (neutral).
     const byCar = !l && !(keys[k] && askable?.has(keys[k]!));
-    // M54: into a fixed time, the latest time to leave the previous place to be there 15 minutes early.
+    // into a fixed time, the latest time to leave the previous place to be there 15 minutes early.
     const leave = leaveFor(plan, day.dayIndex, k, times, startAt);
     return (
       <div className="tl-row" key={`leg${k}`}>
@@ -121,10 +121,10 @@ export function DayTimeline({ plan, home, dayIndex, onChange, onError, onOpenPla
         <div className="tl-legrow">
           <button type="button" className={`tl-leg${l || byCar ? '' : ' is-missing'}`} aria-label={`${t('tl.legTitle')} · ${t('tl.legRoute', { from, to })}`} onClick={() => onOpenLeg(k)}>
             {l || byCar ? <span aria-hidden="true">↓</span> : <span className="tn-warn-dot" aria-hidden="true" />}
-            {/* M51: '↓ 11분 · 7.3km' — the word 이동 is implied by the arrow on the route line */}
+            {/* '↓ 11분 · 7.3km' — the word 이동 is implied by the arrow on the route line */}
             {l ? `${minutesLabel(l.minutes)}${km}` : byCar ? t('tl.legByCarShort') : t('tl.legPending')}
           </button>
-          {/* M54 (replaces M51's wait caption): leave by F − 15 − the drive; spare time to stay longer, or a missed margin */}
+          {/* (replaces wait caption): leave by F − 15 − the drive; spare time to stay longer, or a missed margin */}
           {leave && (
             <span className={`tn-tag tl-wait${leave.tone === 'spare' ? ' is-warn' : leave.tone === 'short' ? ' is-error' : ' is-ink'}`} title={t('tl.leaveHint')}>
               {leave.tone === 'spare'
@@ -157,13 +157,13 @@ export function DayTimeline({ plan, home, dayIndex, onChange, onError, onOpenPla
         <div className="tl-rail">
           <span className="tl-marker is-accent" aria-hidden="true" />
         </div>
-        {/* M51: a 1-line slim bar — [출발] name … 09:30 출발. Check-out times stay in the lodging sheet. */}
+        {/* a 1-line slim bar — [출발] name … 09:30 출발. Check-out times stay in the lodging sheet. */}
         <div className={`tl-card tl-bar${issues.start.length ? ' is-error' : ''}`}>
           <button type="button" className="tl-card-main" onClick={onOpenStart} aria-label={`${t('tl.start')} · ${shortDate(day.date)} · ${startName}`}>
             <span className="tl-bar-row">
               <Tag>{t('tl.start')}</Tag>
               <span className="tl-bar-name">{startName}</span>
-              {/* Departure is optional (M48): without one the bar says so quietly instead of asking for it. */}
+              {/* Departure is optional: without one the bar says so quietly instead of asking for it. */}
               <span className={`tl-bar-time${startTime ? '' : ' is-quiet'}`}>{startTime ?? t('tl.departFree')}</span>
             </span>
             {issues.start.map((x, n) => (
@@ -206,7 +206,7 @@ export function DayTimeline({ plan, home, dayIndex, onChange, onError, onOpenPla
             {isLast ? <FlagIcon /> : <BedIcon />}
           </span>
         </div>
-        {/* M51: a 1-line slim bar — [숙소]/[귀가] name … 17:45 도착. Check-in/out and memo live in the lodging sheet. */}
+        {/* a 1-line slim bar — [숙소]/[귀가] name … 17:45 도착. Check-in/out and memo live in the lodging sheet. */}
         <div className={`tl-card tl-bar${issues.end.length ? ' is-error' : lodgingRequired ? ' is-required' : endWarn ? ' is-warn' : ''}`}>
           <button type="button" className="tl-card-main" onClick={onOpenEnd}>
             <span className="tl-bar-row">
@@ -260,18 +260,18 @@ function StopCard({
   const v = visitOf(plan, id)!;
   const p = placeOf(plan, v.placeRef)!;
   const memo = notes[p.placeRef]?.memo;
-  // M67: the meal a restaurant was set to, said quietly ahead of its time ("점심 · 13:00 ~ 14:00 · 1시간").
+  // the meal a restaurant was set to, said quietly ahead of its time ("점심 · 13:00 ~ 14:00 · 1시간").
   const meal = p.category === 'FOOD' ? notes[p.placeRef]?.meal : undefined;
   const conflict = issues.length > 0;
-  // M51 — line 2: 'start ~ end · stay' (no 도착/머무는 시간 labels). A fixed time leads with a blue lock (the time it is
+  // line 2: 'start ~ end · stay' (no 도착/머무는 시간 labels). A fixed time leads with a blue lock (the time it is
   // held to); a stop whose date or time is only held, not set, a grey one. Desired time and memo trail and truncate.
-  // A time that is not known is not shown at all here (M66): the day says why, once, at its top.
+  // A time that is not known is not shown at all here: the day says why, once, at its top.
   const range = stopRangeText(time);
   const lock = v.fixed ? 'fixed' : !v.timeFlexible || !v.dateFlexible ? 'firm' : null;
   const lockLabel = [v.fixed ? t('common.fixedAt', { time: v.fixed.time }) : !v.timeFlexible ? t('days.timeFirm') : '', !v.dateFlexible ? t('days.dateFirm') : '']
     .filter(Boolean)
     .join(' · ');
-  // Unknown opening hours stay in the place's details (M45) — on every card they were noise, not information.
+  // Unknown opening hours stay in the place's details — on every card they were noise, not information.
   const rest = [minutesLabel(v.stayMinutes), !v.fixed && v.desiredTime ? t('days.desired', { time: v.desiredTime }) : '', memo ?? '']
     .filter(Boolean)
     .join(' · ');
@@ -294,7 +294,7 @@ function StopCard({
         ignore=".tl-handle"
         onRemove={onRemove}>
         <button type="button" className="tl-card-main" onClick={() => onOpen(p.placeRef)}>
-          {/* M51 — line 1: the name on one line (ellipsis) and only 꼭 beside it. */}
+          {/* line 1: the name on one line (ellipsis) and only 꼭 beside it. */}
           <span className="tl-name-row">
             <span className="tl-name">{p.name}</span>
             {v.importance === 'MUST' && <Tag tone="must">{t('common.mustAria')}</Tag>}

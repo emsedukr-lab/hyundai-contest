@@ -87,7 +87,7 @@ object TripValidator {
     private fun visit(trip: Trip, id: String) = trip.visits.first { it.visitId == id }
 
     /**
-     * Travel time of leg k: the navigation's own time where it has timed the leg (M63: in the car the Hyundai
+     * Travel time of leg k: the navigation's own time where it has timed the leg (in the car the Hyundai
      * navigation is the measure), else the value the phone planned with. After "여기서 출발" the plan's first-day leg
      * (from home) no longer applies, so only a time from the new origin counts.
      */
@@ -103,7 +103,7 @@ object TripValidator {
         val day = trip.days[dayIndex - 1]
         if (dayIndex > 1) return day.departTime?.let(::minutes)
         return when (val f = trip.firstDay) {
-            is FirstDay.DepartOrigin -> f.departTime?.let(::minutes) // optional (M48)
+            is FirstDay.DepartOrigin -> f.departTime?.let(::minutes) // optional
             is FirstDay.ArriveFirstStop -> {
                 // Arrival basis: leave `leg` minutes before the target arrival; getting ready (prepMinutes) comes before that.
                 val leg = leg(trip, overlay, 1, 0) ?: return null
@@ -115,7 +115,7 @@ object TripValidator {
     /**
      * Walks stops from `start`: arrival = clock + leg; a visit starts on arrival and not before its fixed time; a fixed
      * time restores the chain even after an unknown leg. Shared by the plan check and the live projection.
-     * Parking time (`Visit.prepMinutes`) is NOT counted (M42): the field stays in the transfer for compatibility, and real
+     * Parking time (`Visit.prepMinutes`) is NOT counted: the field stays in the transfer for compatibility, and real
      * parking time will later come from the car's own data (navigation ended → ignition off + belt released + doors
      * locked). Same rule as packages/shared/src/timeline.ts.
      */
@@ -183,7 +183,7 @@ object TripValidator {
         trip.days.forEach { d ->
             val n = d.dayIndex
             if (departure(trip, n, overlay) == null) {
-                // A first day with no departure time chosen reads like any other day without one (M48), as in timeline.ts.
+                // A first day with no departure time chosen reads like any other day without one, as in timeline.ts.
                 val first = trip.firstDay
                 val freeFirst = n == 1 && first is FirstDay.DepartOrigin && first.departTime == null
                 if (n == 1 && !freeFirst) add(Severity.UNCERTAIN, "FIRST_DEPARTURE_UNKNOWN", "첫날 출발 시각을 계산할 수 없어요 (첫 구간 이동시간 없음)", n)
@@ -202,7 +202,7 @@ object TripValidator {
                 val v = visit(trip, st.visitId)
                 val name = placeName(trip, v.placeRef)
                 val fixed = v.fixed?.let { minutes(it.time) }
-                // Late = arriving after the fixed time; no parking time is added (M42).
+                // Late = arriving after the fixed time; no parking time is added.
                 if (fixed != null && st.arrive != null && st.arrive > fixed) {
                     add(Severity.CONFLICT, "LATE_FOR_FIXED", "${n}일차 '$name' 고정 ${v.fixed!!.time}에 늦어요 (예상 ${hhmm(st.arrive)})", n, n, name, v.fixed!!.time, hhmm(st.arrive)); out[out.lastIndex] = out.last().copy(visitId = v.visitId)
                 }

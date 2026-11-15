@@ -25,7 +25,7 @@ test-results/
 generated-images/
 
 
-# AI 작업 도구 설정 (로컬 전용)
+# 로컬 작업 설정
 .claude/
 CLAUDE.md
 

@@ -41,7 +41,7 @@ class ArrivedTest {
     }
 }
 
-/** M57: a multi-stop route ('오늘 경로 전송') ends with its last stop — the remembered stops go with it. */
+/** a multi-stop route ('오늘 경로 전송') ends with its last stop — the remembered stops go with it. */
 class ArrivedRouteTest {
     private fun stop(visitId: String?) = GuidingTarget(1, visitId, visitId?.let { "p-$it" }, 0, 0, "목적지 $visitId", 0)
 

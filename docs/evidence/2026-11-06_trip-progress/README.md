@@ -1,4 +1,4 @@
-# M9 사전 확인: NaviHelper 3.0.5 미사용 기능 (2026-11-06)
+# 사전 확인: NaviHelper 3.0.5 미사용 기능 (2026-11-06)
 
 시험 환경은 Pleos Connect Emulator 2.1.0(`-gpu host` cold boot, 위치 성남 수정구 시흥동)과 debug 빌드 `NaviProbe`다.
 - NaviProbe는 `car/app/.../navi/NaviProbe.kt`에 있고 release에는 없다.

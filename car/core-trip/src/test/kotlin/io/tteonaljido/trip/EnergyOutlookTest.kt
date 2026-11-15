@@ -6,7 +6,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/** M57: the battery expected at the end of today's route (SOC + range + the navigation's estimate), and what it changes. */
+/** the battery expected at the end of today's route (SOC + range + the navigation's estimate), and what it changes. */
 class EnergyOutlookTest {
     @Test fun theNavigationsOwnConsumptionIsUsedFirst() {
         // 70% now, the navigation says 58% after a 60 km leg → 0.2 %/km. 100 km more (×1.2 = 120 km) costs 24% → 34%.

@@ -38,12 +38,12 @@ export interface TripDoc {
   /** Phone-only recommended-route length per leg ("from>to" → metres), from Kakao directions; never part of the transfer. */
   legMeters?: Record<string, number>;
   /**
-   * Phone-only (M41): nights whose lodging the user marked 미정 — no lodging needed yet, so no warning. Day indexes of
+   * Phone-only: nights whose lodging the user marked 미정 — no lodging needed yet, so no warning. Day indexes of
    * nights (1…days-1) that still have no lodging; outside the plan's hash, never sent (the car sees an empty night).
    */
   lodgingTbd?: number[];
   /**
-   * Phone-only (M43): where a new trip is in its step-by-step setup (1 일정·장소 · 3 숙소·예약 · 4 경로 추천 (저장 단계 ID 유지)). Until
+   * Phone-only: where a new trip is in its step-by-step setup (1 일정·장소 · 3 숙소·예약 · 4 경로 추천 (저장 단계 ID 유지)). Until
    * `done`, the editor shows the setup instead of the days. Missing on trips made before — those count as done.
    */
   setup?: TripSetupState;
@@ -88,7 +88,7 @@ export function emptyPlan(tripId: string = crypto.randomUUID()): Trip {
     startDate: start,
     endDate: addDays(start, 1),
     firstDay: defaults?.firstDay ?? { basis: 'DEPART_ORIGIN', departTime: '09:00' },
-    origin: defaults?.origin ?? { kind: 'CURRENT' }, // no start chosen yet: wherever the car is when it leaves (M59)
+    origin: defaults?.origin ?? { kind: 'CURRENT' }, // no start chosen yet: wherever the car is when it leaves
     finalDestination: defaults?.finalDestination ?? { kind: 'HOME' },
     home: null,
     places: defaults?.places ?? [],
@@ -280,7 +280,7 @@ export function assign(plan: Trip, visitId: string, dayIndex: number): Trip {
   return patchVisit(placed, visitId, { unassignedReason: null });
 }
 
-/** Puts a visit on a day from its place details (M40): to the end of that day; already there → unchanged. */
+/** Puts a visit on a day from its place details: to the end of that day; already there → unchanged. */
 export function moveToDay(plan: Trip, visitId: string, dayIndex: number): Trip {
   const current = plan.days.find((d) => d.visitOrder.includes(visitId))?.dayIndex;
   return current === dayIndex ? plan : assign(plan, visitId, dayIndex);
@@ -457,7 +457,7 @@ export const unassignedVisits = (plan: Trip) => plan.visits.filter((v) => v.unas
 export const lodgingPlaces = (plan: Trip) => plan.places.filter((p) => p.category === 'LODGING');
 export const collectedPlaces = (plan: Trip) => plan.places.filter((p) => !isEndpointOnly(plan, p.placeRef));
 
-/* ---------- 이어서 묵기 (M49): the same lodging over several nights ---------- */
+/* ---------- 이어서 묵기: the same lodging over several nights ---------- */
 
 /**
  * Lodgings to offer for night `dayIndex`: the nights before it first (the nearest night first — usually the hotel you are
@@ -478,7 +478,7 @@ export const laterEmptyNights = (plan: Trip, dayIndex: number, tbd: readonly num
   plan.days.slice(0, -1).filter((d) => d.dayIndex > dayIndex && !d.lodgingPlaceRef && !tbd.includes(d.dayIndex)).map((d) => d.dayIndex);
 
 /**
- * The time to suggest for a stop (M50): one hour after the nearest earlier stop on the same day that has a time of its
+ * The time to suggest for a stop: one hour after the nearest earlier stop on the same day that has a time of its
  * own (fixed, else desired), on the half-hour grid and no later than 23:30; '09:00' for the first stop, a stop with no
  * timed stop before it, or a place on no day yet.
  */
@@ -499,7 +499,7 @@ export function suggestVisitTime(plan: Trip, visitId: string, dayIndex?: number)
   return '09:00';
 }
 
-/* ---------- compact timeline cards (M51) ---------- */
+/* ---------- compact timeline cards ---------- */
 
 /** A stop's time on its card: "14:10 ~ 15:10" (start to end); null when it can't be known yet. */
 export function stopRangeText(st: { start: number | null; end: number | null } | undefined): string | null {
@@ -507,7 +507,7 @@ export function stopRangeText(st: { start: number | null; end: number | null } |
   return `${hhmm(st.start)} ~ ${hhmm(st.end)}`;
 }
 
-/** Minutes to arrive before a fixed time (a reservation or a fixed start) — M54. */
+/** Minutes to arrive before a fixed time (a reservation or a fixed start) —. */
 export const FIXED_BUFFER = 15;
 
 export interface LeaveFor {
@@ -520,7 +520,7 @@ export interface LeaveFor {
 }
 
 /**
- * The leg into a stop with a fixed time F (M54): leave by F − 15 − the drive, so the stop is reached 15 minutes early.
+ * The leg into a stop with a fixed time F: leave by F − 15 − the drive, so the stop is reached 15 minutes early.
  * Phone only — the shared timeline (and so the car) still starts the stop at F. null when the next node has no fixed
  * time or the drive is unknown.
  */
@@ -606,7 +606,7 @@ const DEFAULT_DEPART = '09:00';
 export const BOOKING_HEAD_START = 60;
 
 /**
- * 예약 (M43): a reservation pins a visit to a day and time — fixed (RESERVATION), not movable by date or time, and put
+ * 예약: a reservation pins a visit to a day and time — fixed (RESERVATION), not movable by date or time, and put
  * on that day. `day` null lifts it: the fixed time goes, the visit is free again and waits in 저장 목록.
  */
 export function setReservation(plan: Trip, visitId: string, day: number | null, time: string | null): Trip {
@@ -637,7 +637,7 @@ export function planWarnings(plan: Trip, home: Home | null, lodgingTbd: readonly
   const out: Warning[] = [];
   const last = plan.days.length - 1;
   plan.days.forEach((d, i) => {
-    // A night marked 미정 needs no lodging (M41).
+    // A night marked 미정 needs no lodging.
     if (i < last && !d.lodgingPlaceRef && !lodgingTbd.includes(d.dayIndex)) out.push({ level: 'warning', text: t('trip.warn.noLodging', { day: d.dayIndex }) });
     if (i === last && d.lodgingPlaceRef) out.push({ level: 'warning', text: t('trip.warn.lastLodging') });
   });

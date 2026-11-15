@@ -37,7 +37,7 @@ export const NaviPoi = z.strictObject({
 
 export const OpeningHours = z.discriminatedUnion('status', [
   z.strictObject({ status: z.literal('UNKNOWN') }),
-  // A place with no opening hours of its own — a lake, a beach, a street (M59). Nothing to check before a visit.
+  // A place with no opening hours of its own — a lake, a beach, a street. Nothing to check before a visit.
   z.strictObject({ status: z.literal('ALWAYS_OPEN') }),
   z.strictObject({
     status: z.literal('USER_ENTERED'),
@@ -88,7 +88,7 @@ export const Day = z.strictObject({
 });
 
 export const FirstDay = z.discriminatedUnion('basis', [
-  // departTime null = no departure time chosen (M48: departure is optional on every day, the first included)
+  // departTime null = no departure time chosen (departure is optional on every day, the first included)
   z.strictObject({ basis: z.literal('DEPART_ORIGIN'), departTime: TimeStr.nullable() }),
   z.strictObject({ basis: z.literal('ARRIVE_FIRST_STOP'), arriveTime: TimeStr, prepMinutes: z.int().min(0).max(240) }),
 ]);
@@ -97,7 +97,7 @@ const HomeEnd = z.strictObject({ kind: z.literal('HOME') });
 const PlaceEnd = z.strictObject({ kind: z.literal('PLACE'), placeRef: Ref });
 
 /**
- * Where the first day starts (M59): 집, a place of the trip (a saved 회사 · 즐겨찾기 joins the trip as a place), or
+ * Where the first day starts: 집, a place of the trip (a saved 회사 · 즐겨찾기 joins the trip as a place), or
  * CURRENT — wherever the car is when it leaves. CURRENT carries no coordinates: the car's navigation supplies them on
  * 「여기서 출발」. It is what a trip starts from when no place was chosen. Later days start from the lodging of the night before.
  */

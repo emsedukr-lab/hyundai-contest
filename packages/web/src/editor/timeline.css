@@ -235,7 +235,7 @@
   background: var(--tn-warning);
 }
 
-/* Editor title (M53): just the dates and n박 n일 on one line; tapping it goes to 여행 정보. No name, no pencil. */
+/* Editor title: just the dates and n박 n일 on one line; tapping it goes to 여행 정보. No name, no pencil. */
 .tl-title {
   display: block;
   max-width: 100%;
@@ -596,7 +596,7 @@
 }
 
 /*
- * A night without lodging (M41) — a field error: a 1.5px negative edge on the card (no tint), the bed marker on
+ * A night without lodging — a field error: a 1.5px negative edge on the card (no tint), the bed marker on
  * negative-weak in negative, and the helper line under the field in negative-text. A night marked 미정 drops all of it.
  */
 .tl-card.is-required {
@@ -644,7 +644,7 @@
   outline-offset: 2px;
 }
 
-/* Night lodging (M43): the search and the 미정 chip on one line; the 34 chip sits centred on the 48px search bar. */
+/* Night lodging: the search and the 미정 chip on one line; the 34 chip sits centred on the 48px search bar. */
 .tl-lodging-line {
   display: flex;
   align-items: flex-start;
@@ -659,7 +659,7 @@
   margin-top: 7px;
   white-space: nowrap;
 }
-/* The read-only travel time in its sheet (M43): the minutes as the main fact (h4, tabular). */
+/* The read-only travel time in its sheet: the minutes as the main fact (h4, tabular). */
 .tl-leg-value {
   font-size: 18px;
   line-height: 26px;
@@ -672,7 +672,7 @@
   color: var(--tn-text-secondary);
 }
 
-/* New-trip setup (M43): a step header with the four-step progress bar, one step at a time, buttons fixed at the bottom. */
+/* New-trip setup: a step header with the four-step progress bar, one step at a time, buttons fixed at the bottom. */
 .tl-setup-head {
   display: flex;
   flex-direction: column;
@@ -949,7 +949,7 @@
   }
 }
 
-/* 이어서 묵기 (M49): a quiet label and lodging chips (bed icon + name); the nearest earlier night's hotel first. */
+/* 이어서 묵기: a quiet label and lodging chips (bed icon + name); the nearest earlier night's hotel first. */
 .tl-lodging-suggest {
   display: flex;
   flex-wrap: wrap;
@@ -980,7 +980,7 @@
 }
 
 /*
- * M51 compact day timeline (scoped to .tl-day so the 여행 정보 rail keeps its own layout).
+ * compact day timeline (scoped to .tl-day so the 여행 정보 rail keeps its own layout).
  * Stops: 2 fixed lines (~70px) — name + 꼭 | lock · start ~ end · stay · desired · memo, both lines nowrap + ellipsis.
  * Start/lodging/home: a 1-line slim bar (~50px) — [tag] name … time. Legs: 28px rows, '↓ 11분 · 7.3km', with the time
  * to leave for a fixed start as a tag beside it (warning tag = time to spare, negative tag = too late).
@@ -1124,7 +1124,7 @@
 }
 
 /*
- * M53 여행 정보, collapsed: one two-line card under the chip bar (no heading row — the chip names the section).
+ * 여행 정보, collapsed: one two-line card under the chip bar (no heading row — the chip names the section).
  * Line 1 the trip name (+ the orange dot when a night has no lodging) and the chevron; line 2 route · lodging · version.
  */
 .tl-info:not(.is-open) #trip-info-body {
@@ -1175,13 +1175,13 @@
   font-size: inherit;
 }
 
-/* M54: the day's driving time leads its summary line at 600. */
+/* the day's driving time leads its summary line at 600. */
 .tl-sum-drive {
   font-weight: 600;
   color: var(--tn-text-primary);
 }
 
-/* M54 더 빠른 순서: one white container under the day heading — what it saves, the new order, then 닫기 / 바꾸기. */
+/* 더 빠른 순서: one white container under the day heading — what it saves, the new order, then 닫기 / 바꾸기. */
 .tl-faster {
   display: flex;
   flex-direction: column;
@@ -1220,7 +1220,7 @@
   margin-top: 8px;
 }
 
-/* ---------- M66: UX fixes ---------- */
+/* ---------- UX fixes ---------- */
 
 /* Save state in the editor's top bar, left of the menu: a caption on the canvas (secondary), nothing when there is nothing to say. */
 .tl-savestate {
@@ -1368,7 +1368,7 @@
 }
 
 /*
- * 식사 (M67): a restaurant's meal as four chips (자동 · 아침 · 점심 · 저녁) — the 34 pill of the other chips with a 44 tall
+ * 식사: a restaurant's meal as four chips (자동 · 아침 · 점심 · 저녁) — the 34 pill of the other chips with a 44 tall
  * hit area. In step 3 of a new trip the chips sit on one line beside their label, a little tighter so the line holds
  * at 320. On a day's card the chosen meal is words only, ahead of the time.
  */

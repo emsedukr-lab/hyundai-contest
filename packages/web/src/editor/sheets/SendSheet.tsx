@@ -22,7 +22,7 @@ const hasOpenConnection = () => {
 
 /**
  * The route on a map, per day. As 'send' (the trip's bottom button) it adds what to fix first, how a send goes, and
- * the action that starts it (M66): 카메라로 차량 QR 스캔 — a send always begins at the car's QR, and `onScan` opens the
+ * the action that starts it: 카메라로 차량 QR 스캔 — a send always begins at the car's QR, and `onScan` opens the
  * scanner with this trip remembered for the pairing page. One quiet line says what the handover does with the data.
  */
 export function SendSheet({

@@ -16,7 +16,7 @@ data class LocalTrip(
     val meta: ImportMeta,
 ) {
     /**
-     * The plan as the car follows it (M63): the phone's plan with the stop order chosen in the car laid over it
+     * The plan as the car follows it: the phone's plan with the stop order chosen in the car laid over it
      * ([CarOrder]). Screens and guidance read this; `plan` stays what the phone sent, for storage and re-imports.
      * Not stored: a delegated property is left out of the saved file.
      */
@@ -38,7 +38,7 @@ data class ImportMeta(
 fun Trip.zoneOrUtc(): java.time.ZoneId = runCatching { java.time.ZoneId.of(timezone) }.getOrDefault(java.time.ZoneOffset.UTC)
 
 /**
- * Where a day starts (M59). The first day starts from the trip's origin — a saved place (집, 회사, 즐겨찾기), a place of
+ * Where a day starts. The first day starts from the trip's origin — a saved place (집, 회사, 즐겨찾기), a place of
  * the trip, or the car's current location — and every later day from the lodging of the night before. "여기서 출발" can
  * re-set the start to where the car stands only where the plan leaves it open to that: on the first day, or on a later
  * day whose previous night has no lodging. On any other day it still asks the navigation for the time from here, and
@@ -51,9 +51,9 @@ object DayStart {
     const val FRESH_MS = 30 * 60_000L
 
     /**
-     * True while the trip's very first leg is the car's to time (M60): no stop of the first day is done yet, and either
+     * True while the trip's very first leg is the car's to time: no stop of the first day is done yet, and either
      * the plan carries no time for the leg (a home the phone had no address for) or the trip starts "from the current
-     * location". For the latter the phone may have sent a time measured from where the phone was (M61); in the car
+     * location". For the latter the phone may have sent a time measured from where the phone was; in the car
      * the current location is the car's, so it measures again. The navigation can only time a leg from the car's own
      * position, so that is where the leg is measured from.
      */
@@ -135,7 +135,7 @@ data class CarOverlay(
     val deferredTo: Map<String, Int> = emptyMap(),
     /**
      * Travel times and distances from the car's navigation, keyed by [LegKeys] ("from>to"). Where a leg has one it is
-     * the leg's time (M63); the phone's value stands only for legs the navigation has not timed.
+     * the leg's time; the phone's value stands only for legs the navigation has not timed.
      */
     val legEstimates: Map<String, LegEstimate> = emptyMap(),
     /**
@@ -151,7 +151,7 @@ data class CarOverlay(
      */
     val guidingStops: List<GuidingTarget> = emptyList(),
     /**
-     * Confirmed parking/stay measurements for this trip (local only; deleted with the trip). M42: kept for saved-trip
+     * Confirmed parking/stay measurements for this trip (local only; deleted with the trip). kept for saved-trip
      * compatibility and as groundwork for estimating real parking time later — not read by the current screens or timetable.
      */
     val visitRecords: List<VisitRecord> = emptyList(),

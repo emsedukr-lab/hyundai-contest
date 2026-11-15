@@ -86,9 +86,9 @@ const byName = clone(sampleTrip());
 byName.places.push({ placeRef: 'mukho', name: '묵호 논골담길', address: '동해시 묵호진동', latE7: null, lonE7: null, category: 'SIGHT', source: { provider: 'MANUAL', externalId: null }, naviPoi: null, hours: { status: 'UNKNOWN' } });
 byName.visits.push({ ...byName.visits[0], visitId: 'v12', placeRef: 'mukho', unassignedReason: 'NOT_SCHEDULED_YET', desiredTime: null });
 await valid('place-without-coordinates', byName);
-// M48: departure is optional on every day — the first day too (no time chosen = null).
+// departure is optional on every day — the first day too (no time chosen = null).
 await valid('departure-free', { ...sampleTrip(), firstDay: { basis: 'DEPART_ORIGIN', departTime: null } });
-// M59: the first day starts from the car's current location (no place chosen); the navigation supplies it on the day.
+// the first day starts from the car's current location (no place chosen); the navigation supplies it on the day.
 await valid('origin-current', { ...sampleTrip(), origin: { kind: 'CURRENT' } });
 
 await invalid('half-coordinates', 'SCHEMA', (t) => (t.places[0].lonE7 = null));
@@ -131,7 +131,7 @@ const timelineCases: Record<string, Trip> = {};
   const late = clone(base); // day 4 leaves at 09:55: with the 10-min leg it arrives 10:05, after the 10:00 fixed visit
   late.days[3].departTime = '09:55';
   timelineCases['late-for-fixed'] = late;
-  const free = clone(base); // M48: no departure time on day 1 and day 3 — times stay unknown, DEPARTURE_UNKNOWN on both
+  const free = clone(base); // no departure time on day 1 and day 3 — times stay unknown, DEPARTURE_UNKNOWN on both
   free.firstDay = { basis: 'DEPART_ORIGIN', departTime: null };
   free.days[2].departTime = null;
   timelineCases['departure-free'] = free;

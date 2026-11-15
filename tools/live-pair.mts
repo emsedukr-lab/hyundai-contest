@@ -5,7 +5,7 @@
  *   npx tsx tools/live-pair.mts [emulator-serial] [out-dir]
  *   LIVE_ORIGIN=CURRENT … sends the same trip starting from the car's current location (no start place chosen).
  *   LIVE_START=2026-11-13 … sends it moved to start on that day.
- *   LIVE_DAY1=v3,v1,v2 … sends it with day 1 in that order and its legs untimed (M63: a day the car's navigation can reorder).
+ *   LIVE_DAY1=v3,v1,v2 … sends it with day 1 in that order and its legs untimed (a day the car's navigation can reorder).
  *   LIVE_DEMO=1 … pairs into the emulator's demo store (설정 → 시연 모드), for the demo clock and driving switch.
  * Needs: the emulator running with apk/이충지_떠날지도(차량)_release.apk installed fresh (empty trip list).
  */
@@ -17,7 +17,7 @@ import { PNG } from 'pngjs';
 import { chromium, type Page } from 'playwright-core';
 
 const SERIAL = process.argv[2] ?? 'emulator-5580';
-const OUT = (process.argv[3] ?? 'docs/evidence/live-pair').replace(/\/?$/, '/');
+const OUT = (process.argv[3] ?? 'docs/evidence/2026-11-10_live-pair').replace(/\/?$/, '/');
 const BASE = 'https://tteonaljido.tteonaljido-worker.workers.dev';
 const ADB = process.env.ANDROID_ADB ?? `${homedir()}/Library/Android/sdk/platform-tools/adb`;
 const PKG = 'io.tteonaljido.car';
@@ -110,7 +110,7 @@ try {
   });
   await phone.goto(`${BASE}/?sample=1`, { waitUntil: 'networkidle' });
   await phone.getByText('강릉 3박 4일').first().waitFor();
-  // LIVE_ORIGIN=CURRENT: the same trip with no start place chosen (M59) — the first day starts from where the car is.
+  // LIVE_ORIGIN=CURRENT: the same trip with no start place chosen — the first day starts from where the car is.
   // LIVE_START=YYYY-MM-DD: the same trip moved to start on that day (so day 1 can be "today" on the car).
   if (process.env.LIVE_ORIGIN === 'CURRENT' || process.env.LIVE_START || process.env.LIVE_DAY1) {
     await phone.evaluate(async ({ current, start, day1 }) => {

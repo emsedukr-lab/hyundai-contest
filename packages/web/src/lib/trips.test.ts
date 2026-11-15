@@ -283,7 +283,7 @@ describe('start presets (설정 › 회사·즐겨찾기)', () => {
   });
 });
 
-describe('timeline nodes (M26)', () => {
+describe('timeline nodes', () => {
   const market = { name: '주문진 수산시장', address: '강릉시 주문진읍', latE7: 378_930_000, lonE7: 1_288_260_000, category: 'FOOD' as const, source: { provider: 'MANUAL' as const, externalId: null }, naviPoi: null, hours: { status: 'UNKNOWN' as const } };
 
   it('sorts conflicts onto the node that shows them', () => {
@@ -323,7 +323,7 @@ describe('timeline nodes (M26)', () => {
   });
 });
 
-describe('return destination presets (M27)', () => {
+describe('return destination presets', () => {
   const work = { name: '현대자동차 본사', address: '서울 서초구 헌릉로 12', latE7: 374_634_000, lonE7: 1_270_394_000 };
   const gym = { name: '양재 체육관', address: '서울 서초구 양재동', latE7: 374_700_000, lonE7: 1_270_300_000 };
 
@@ -350,7 +350,7 @@ describe('return destination presets (M27)', () => {
   });
 });
 
-describe('where a trip starts (M59)', () => {
+describe('where a trip starts', () => {
   const gym = { name: '양재 체육관', address: '서울 서초구 양재동', latE7: 374_700_000, lonE7: 1_270_300_000 };
 
   it('a new trip starts from the current location until a place is chosen, and still returns home', async () => {
@@ -399,7 +399,7 @@ describe('place limits (100 places / 100 visits)', () => {
   });
 });
 
-describe('a place gets its day only from its details (moveToDay, M40)', () => {
+describe('a place gets its day only from its details (moveToDay)', () => {
   it('puts a whole-trip place at the end of the chosen day', () => {
     const t0 = sampleTrip();
     const pooled = t0.visits.find((v) => v.unassignedReason !== null)!;
@@ -423,7 +423,7 @@ describe('a place gets its day only from its details (moveToDay, M40)', () => {
   });
 });
 
-describe('nights marked 미정 (M41, phone-only)', () => {
+describe('nights marked 미정 (phone-only)', () => {
   it('silence the missing-lodging warning for that night only', () => {
     const t0 = setLodging(setLodging(sampleTrip(), 1, null), 2, null);
     const texts = (tbd: number[]) => planWarnings(t0, null, tbd).map((w) => w.text);
@@ -438,7 +438,7 @@ describe('nights marked 미정 (M41, phone-only)', () => {
   });
 });
 
-describe('new-trip setup (M43)', () => {
+describe('new-trip setup', () => {
   it('collects places before asking for lodging and accepts an unnamed trip', () => {
     const t0 = { ...setLodging(sampleTrip(), 1, null), name: '' };
     expect(setupReady(t0, [], 1).ok).toBe(true);
@@ -497,7 +497,7 @@ describe('new-trip setup (M43)', () => {
   });
 });
 
-describe('이어서 묵기 (M49)', () => {
+describe('이어서 묵기', () => {
   // sample: night 1 skybay, night 2 shilla, night 3 topsten; clear nights 2 and 3 to plan them
   const base = setLodging(setLodging(sampleTrip(), 2, null), 3, null);
 
@@ -520,7 +520,7 @@ describe('이어서 묵기 (M49)', () => {
   });
 });
 
-describe('suggested stop time (M50)', () => {
+describe('suggested stop time', () => {
   const t0 = sampleTrip();
   const d2 = t0.days[1].visitOrder; // day 2: v4 v5(fixed 13:00) v6 v7
 
@@ -548,7 +548,7 @@ describe('suggested stop time (M50)', () => {
   });
 });
 
-describe('compact card times (M51)', () => {
+describe('compact card times', () => {
   it('writes a stop as start ~ end, the stay added on', () => {
     expect(stopRangeText({ start: 14 * 60 + 10, end: 15 * 60 + 10 })).toBe('14:10 ~ 15:10');
     expect(stopRangeText({ start: 23 * 60 + 30, end: 24 * 60 + 30 })).toBe('23:30 ~ 00:30(+1)'); // past midnight, as the car writes it
@@ -556,7 +556,7 @@ describe('compact card times (M51)', () => {
     expect(stopRangeText(undefined)).toBeNull();
   });
 
-  it('leaves the previous place in time to be 15 minutes early for a fixed time (M54)', () => {
+  it('leaves the previous place in time to be 15 minutes early for a fixed time', () => {
     const t = sampleTrip();
     const at = (p: Trip, d: number) => Object.fromEntries(timeline(p, d).map((x) => [x.visitId, x]));
     expect(FIXED_BUFFER).toBe(15);
@@ -569,7 +569,7 @@ describe('compact card times (M51)', () => {
     long.visits.find((v) => v.visitId === 'v4')!.stayMinutes = 240; // ends 13:35
     expect(leaveFor(long, 2, 1, at(long, 2))?.tone).toBe('short');
     expect(leaveFor(long, 2, 1, at(long, 2))?.spare).toBe(-60);
-    // no departure time on the day (M48): the leave-by time is the suggestion, nothing to compare with
+    // no departure time on the day: the leave-by time is the suggestion, nothing to compare with
     const free = structuredClone(t);
     free.days[3].departTime = null;
     expect(leaveFor(free, 4, 0, at(free, 4))).toEqual({ time: 9 * 60 + 35, spare: null, tone: 'ok' });
@@ -581,7 +581,7 @@ describe('compact card times (M51)', () => {
   });
 });
 
-describe('a stop\'s stay starts at its kind\'s usual length (M64)', () => {
+describe('a stop\'s stay starts at its kind\'s usual length', () => {
   const place = (category: 'SIGHT' | 'FOOD' | 'CAFE' | 'OTHER') => ({ name: 'x', address: '', latE7: 375_000_000, lonE7: 1_270_000_000, category, source: { provider: 'MANUAL' as const, externalId: null }, naviPoi: null, hours: { status: 'UNKNOWN' as const } });
   const stayOf = (category: 'SIGHT' | 'FOOD' | 'CAFE' | 'OTHER') => addPlace(emptyPlan(), place(category)).visits[0].stayMinutes;
 

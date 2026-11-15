@@ -3,7 +3,7 @@ import { isMealChoice, type MealChoice } from './meals';
 /**
  * Notes kept with a trip on this phone only — not part of what the car receives (the transfer schema is unchanged):
  * per place, a memo (a room number, a parking tip), for lodging check-in / check-out times, and for a restaurant the
- * meal it is for (M67: read by the route recommendation). Stored on the trip
+ * meal it is for (read by the route recommendation). Stored on the trip
  * document in IndexedDB, so they travel with backups but not with a send to the car or a friend's share file.
  */
 export interface PlaceNote {

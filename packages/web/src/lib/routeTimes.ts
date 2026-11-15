@@ -6,9 +6,9 @@ import { legKeys, setLeg } from './trips';
 /**
  * Travel times from Kakao directions, filled into legs that are empty after the route changed (a stop moved, added or
  * removed, lodging or the start/end changed). Only legs whose two ends have coordinates are asked for. Home counts as a
- * known point when 설정 has the home address (M39): its coordinates go through the relay to Kakao for this calculation
+ * known point when 설정 has the home address: its coordinates go through the relay to Kakao for this calculation
  * only, like any other place, and are never stored there. So does the phone's own position (rounded to ~100 m) for a
- * trip that starts from 현재 위치 (M61, lib/here.ts). The result is stored like a typed estimate (the transfer has
+ * trip that starts from 현재 위치 (lib/here.ts). The result is stored like a typed estimate (the transfer has
  * one leg source; the home coordinates themselves still reach the car only with consent); the user can still change it.
  */
 export interface Point {
@@ -34,7 +34,7 @@ function knownPoints(plan: Trip, dayIndex: number, home: Home | null): (Point | 
     return p && p.latE7 !== null && p.lonE7 !== null ? { latE7: p.latE7, lonE7: p.lonE7 } : null;
   };
   const homePoint: Point | null = home ? { latE7: home.latE7, lonE7: home.lonE7 } : null;
-  // Day 1 from 현재 위치 is timed from the phone's own position when it is known (M61); the car times it again from its own.
+  // Day 1 from 현재 위치 is timed from the phone's own position when it is known; the car times it again from its own.
   const start = dayIndex === 1 ? (plan.origin.kind === 'PLACE' ? at(plan.origin.placeRef) : plan.origin.kind === 'HOME' ? homePoint : getHere()) : at(plan.days[dayIndex - 2].lodgingPlaceRef);
   const end = dayIndex === plan.days.length ? (plan.finalDestination.kind === 'PLACE' ? at(plan.finalDestination.placeRef) : homePoint) : at(day.lodgingPlaceRef);
   const stops = day.visitOrder.map((id) => at(plan.visits.find((v) => v.visitId === id)?.placeRef));
@@ -127,7 +127,7 @@ export async function fetchRun(run: LegRun): Promise<RunResult | null> {
   }
 }
 
-/** A day at a glance (M45, the editor's day heading): driving total, distance, when the day ends, and what is unknown. */
+/** A day at a glance (the editor's day heading): driving total, distance, when the day ends, and what is unknown. */
 export interface DaySummary {
   /** Sum of the legs that have a time. */
   driveMinutes: number;

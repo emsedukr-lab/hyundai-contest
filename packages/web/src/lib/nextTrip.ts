@@ -25,7 +25,7 @@ export function pickNextTrip(docs: TripDoc[]): TripDoc | null {
 }
 
 /**
- * '다른 여행' order (M49): trips still ahead or under way by departure date (then end date, then name), then past trips
+ * '다른 여행' order: trips still ahead or under way by departure date (then end date, then name), then past trips
  * with the most recent first — so the list reads on in time below the next-trip card.
  */
 export function sortOtherTrips(docs: TripDoc[]): TripDoc[] {
@@ -37,7 +37,7 @@ export function sortOtherTrips(docs: TripDoc[]): TripDoc[] {
   return [...ahead, ...done];
 }
 
-/** For each trip, the other trips whose dates overlap it (a.start ≤ b.end and b.start ≤ a.end) — M49. */
+/** For each trip, the other trips whose dates overlap it (a.start ≤ b.end and b.start ≤ a.end) —. */
 export function dateOverlaps(docs: TripDoc[]): Map<string, TripDoc[]> {
   const out = new Map<string, TripDoc[]>();
   for (const a of docs) {

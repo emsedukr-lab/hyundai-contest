@@ -48,7 +48,7 @@ export function PlaceMemoField({ placeRef }: { placeRef: string }) {
 }
 
 /**
- * 식사 (M67): which meal a restaurant is for — 자동 (told from the time of day; nothing stored) · 아침 · 점심 · 저녁. One
+ * 식사: which meal a restaurant is for — 자동 (told from the time of day; nothing stored) · 아침 · 점심 · 저녁. One
  * choice as chips; the route recommendation reads it, the car never receives it.
  */
 export function MealChips({ placeRef, label }: { placeRef: string; label: string }) {

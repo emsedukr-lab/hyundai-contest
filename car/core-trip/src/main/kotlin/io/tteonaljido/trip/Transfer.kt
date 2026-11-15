@@ -40,7 +40,7 @@ data class Trip(
 @JsonClassDiscriminator("basis")
 sealed interface FirstDay {
     @Serializable @SerialName("DEPART_ORIGIN")
-    data class DepartOrigin(val departTime: String?) : FirstDay // null = no departure time chosen (M48)
+    data class DepartOrigin(val departTime: String?) : FirstDay // null = no departure time chosen
 
     @Serializable @SerialName("ARRIVE_FIRST_STOP")
     data class ArriveFirstStop(val arriveTime: String, val prepMinutes: Int) : FirstDay
@@ -56,7 +56,7 @@ sealed interface Endpoint {
     data class AtPlace(val placeRef: String) : Endpoint
 
     /**
-     * Wherever the car is when it leaves (M59): the first day's start when no saved place was chosen. The phone sends no
+     * Wherever the car is when it leaves: the first day's start when no saved place was chosen. The phone sends no
      * coordinates for it; the car's navigation supplies them on "여기서 출발". Valid as the origin only.
      */
     @Serializable @SerialName("CURRENT")
@@ -103,7 +103,7 @@ sealed interface OpeningHours {
     @Serializable @SerialName("UNKNOWN")
     data object Unknown : OpeningHours
 
-    /** A place with no opening hours of its own — a lake, a beach, a street (M59): nothing to check before a visit. */
+    /** A place with no opening hours of its own — a lake, a beach, a street: nothing to check before a visit. */
     @Serializable @SerialName("ALWAYS_OPEN")
     data object AlwaysOpen : OpeningHours
 
@@ -119,7 +119,7 @@ data class Visit(
     val visitId: String,
     val placeRef: String,
     val stayMinutes: Int,
-    /** Parking time from the phone (0..120). Kept for transfer schema v1; not used in any time math (M42). */
+    /** Parking time from the phone (0..120). Kept for transfer schema v1; not used in any time math. */
     val prepMinutes: Int,
     val importance: Importance,
     val desiredTime: String?,

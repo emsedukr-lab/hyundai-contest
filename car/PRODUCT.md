@@ -1,7 +1,5 @@
 # Product
 
-<!-- impeccable:product-schema 1 -->
-
 ## Platform
 
 android
@@ -38,7 +36,7 @@ The car's navigation, not a phone map service, is the authority for time, distan
 
 ## Evidence on Hand
 
-- Real measurements from the Pleos emulator's navigation (`docs/evidence/m63`, `m64`, `m65`), screenshots of both apps, a 15-check live pairing run, 548 automated tests.
+- Real measurements from the Pleos emulator's navigation (`docs/evidence/2026-11-13_navi-measure-order`, `2026-11-14_route-optimizer`, `2026-11-14_toss-design`), screenshots of both apps, a 15-check live pairing run, 548 automated tests.
 - No real-user research, usage metrics, testimonials or customers exist; business figures in the submission are targets, not results.
 
 ## Product Principles

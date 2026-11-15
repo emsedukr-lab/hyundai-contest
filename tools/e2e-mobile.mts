@@ -3,7 +3,7 @@
  * a Node "fake car" creates the session and decrypts the payload; real Chrome plays the phone.
  * Needs `npm run build -w @tteonaljido/web` and `wrangler dev` on :8787 (or pass a base URL).
  *   npx tsx tools/e2e-mobile.mts [http://localhost:8787]
- * Screenshots go to docs/evidence/m3/.
+ * Screenshots go to docs/evidence/2026-11-05_phone-connect-flow/.
  */
 import { mkdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -14,7 +14,7 @@ import {
 } from '../packages/shared/src/index';
 
 const base = (process.argv[2] ?? 'http://localhost:8787').replace(/\/$/, '');
-const shots = fileURLToPath(new URL('../docs/evidence/m3/', import.meta.url));
+const shots = fileURLToPath(new URL('../docs/evidence/2026-11-05_phone-connect-flow/', import.meta.url));
 mkdirSync(shots, { recursive: true });
 const CHROME = process.env.CHROME_PATH ?? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 
@@ -121,16 +121,16 @@ try {
   check(new URL(bare.url()).hash === '', 'without WebCrypto the secret is still removed from the address bar');
   await noCrypto.close();
 
-  // M11/M12 features (independent of the pairing flow): place-share intake and friend-share.
+  // Features (independent of the pairing flow): place-share intake and friend-share.
   const m = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, locale: 'ko-KR', isMobile: true, hasTouch: true });
   const mp = await m.newPage();
-  // The home screen has no sample button since M34; the demo trip is added by /?sample=1.
+  // The home screen has no sample button; the demo trip is added by /?sample=1.
   await mp.goto(`${base}/?sample=1`);
   await mp.getByText('강릉 3박 4일').first().waitFor();
   // Place-share intake: a map app shares a place to /add?title=…
   await mp.goto(`${base}/add?title=${encodeURIComponent('경포호')}`);
   await mp.getByText('장소 추가').waitFor();
-  // The place is added on its own (M15) a moment after the page opens; wait for that line.
+  // The place is added on its own a moment after the page opens; wait for that line.
   await until(async () => (await mp.getByText("'경포호'", { exact: false }).count()) > 0, 'shared place name shown on /add');
   await shot(mp, '09-add-shared');
   // Friend-share dialog: encrypted file, home excluded, 6-digit passcode.

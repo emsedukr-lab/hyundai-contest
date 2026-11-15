@@ -27,7 +27,7 @@ import io.tteonaljido.trip.RestPlan
 import java.util.Locale
 
 /*
- * M57 panels: what the car itself reported (Pleos Vehicle SDK) and what the navigation knows about the route
+ * Panels: what the car itself reported (Pleos Vehicle SDK) and what the navigation knows about the route
  * (NaviHelper), put next to the plan. Every line is words first — the dot only repeats the tone.
  */
 

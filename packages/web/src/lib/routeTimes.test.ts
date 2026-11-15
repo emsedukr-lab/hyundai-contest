@@ -70,7 +70,7 @@ describe('a travel time cleared on purpose', () => {
   });
 });
 
-describe('legs to and from home (M39)', () => {
+describe('legs to and from home', () => {
   const home = { address: '세종시 한누리대로 2130', latE7: 364_800_000, lonE7: 1_272_890_000 };
   it('are asked with the home coordinates from 설정 when the trip starts or ends at home', () => {
     const t = sampleTrip(); // starts and ends at home
@@ -91,7 +91,7 @@ describe('legs to and from home (M39)', () => {
   });
 });
 
-describe('daySummary (M45 day heading)', () => {
+describe('daySummary (day heading)', () => {
   it('adds up the timed legs, gives km only when every timed leg has a distance, and counts unknown legs', () => {
     const t = sampleTrip();
     const d = day(t, 2);

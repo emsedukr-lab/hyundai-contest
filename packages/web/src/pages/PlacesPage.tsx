@@ -141,7 +141,7 @@ export function PlacesPage() {
               endContent={<Button label={t('add.open')} variant="ghost" size="sm" onClick={() => navigate(`/trips/${done.tripId}`)} />}
             />
           )}
-          {/* Side by side where both labels fit; on a narrow phone (320) they stack at full width instead of clipping (M66). */}
+          {/* Side by side where both labels fit; on a narrow phone (320) they stack at full width instead of clipping. */}
           <div className="tn-btnrow">
             <Button label={t('place.paste.fromClipboard')} variant="secondary" size="lg" onClick={() => void readClipboard()} />
             <Button label={t('places.paste.action')} variant="primary" size="lg" isDisabled={!paste.trim()} isLoading={reading} onClick={() => void run(paste)} />

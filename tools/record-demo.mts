@@ -167,10 +167,10 @@ const readQr = () => {
   return url;
 };
 try {
-  // Phone part (M43–M54 screens). Setup kept out of the cut: the sample trip, with day 3 put in a slower order
+  // Phone part (screens). Setup kept out of the cut: the sample trip, with day 3 put in a slower order
   // (cafe first) so the 「더 빠른 순서」 card has something real to offer — Kakao's live driving times decide it.
   await waiting('phone setup', async () => {
-    await page.goto(`${HOME}?sample=1`, { waitUntil: 'networkidle' }); // the 여행 tab has no sample menu; this adds it once (M34)
+    await page.goto(`${HOME}?sample=1`, { waitUntil: 'networkidle' }); // the 여행 tab has no sample menu; this adds it once
     await page.getByText('강릉 3박 4일').first().waitFor();
     await page.evaluate(async () => {
       const db = await new Promise<IDBDatabase>((r) => { const q = indexedDB.open('tteonaljido'); q.onsuccess = () => r(q.result); });
@@ -242,7 +242,7 @@ try {
 
   caption('⑤ 13:00 예약 앞에 「12:35 출발」 · 15분 먼저 닿으려면 앞 장소에서 그때 떠나면 돼요');
   await page.getByText('강릉 3박 4일', { exact: true }).first().click();
-  const day2 = page.locator('#day-2'); // the editor is one page: 여행 정보, then each day (M30); top bar = dates only (M53)
+  const day2 = page.locator('#day-2'); // the editor is one page: 여행 정보, then each day; top bar = dates only
   await day2.waitFor();
   await sleep(1500);
   await day2.evaluate((el) => el.scrollIntoView({ behavior: 'smooth', block: 'start' }));
@@ -259,7 +259,7 @@ try {
   await sleep(3500);
   await page.locator('#day-3 .tl-faster').getByRole('button', { name: '바꾸기', exact: true }).click();
   await sleep(4000);
-  await click(page, '뒤로'); // leaving saves (M29)
+  await click(page, '뒤로'); // leaving saves
   await page.getByText('다음 여행').waitFor();
   await sleep(800);
 
@@ -334,7 +334,7 @@ try {
   await waitFor(byText('다음 목적지'), 'detail');
   await sleep(1500);
   // Emulator-only demo clock (Settings → demo card) to the trip's day 2, 09:00; trimmed from the video as a wait.
-  // [여기서 출발]·[도착 처리] are enabled on the trip's own day only (M9-1), so the clock comes first.
+  // [여기서 출발]·[도착 처리] are enabled on the trip's own day only, so the clock comes first.
   await waiting('demo clock', async () => {
     tap(await waitFor(byTag('목록'), 'to list'));
     tap(await waitFor(byTag('settings'), 'settings'));
