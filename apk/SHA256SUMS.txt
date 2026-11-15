@@ -1,2 +1,2 @@
 953b0db21fdaba93b40087e751e905f8d7b9075b6a7b2ce74bd640208de2d3a3  이충지_떠날지도(차량)_release.apk
-6210aa5c1b8a1f6f55598c4db5ad342ae256ca8f2f605123b80c8e985a697985  이충지_떠날지도(휴대폰)_release.apk
+803a233f8a310c79f80622717b198163da4346b9ddf0b991a6c778182d1a6690  이충지_떠날지도(휴대폰)_release.apk
