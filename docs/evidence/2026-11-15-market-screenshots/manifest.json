@@ -246,44 +246,44 @@
     "file": "mobile/03_day1-timeline.png",
     "title": "12월 10일 · 1일차 일정",
     "serial": "emulator-5554",
-    "appVersion": "0.3.2",
+    "appVersion": "0.3.4",
     "width": 1080,
     "height": 1920,
-    "bytes": 150634,
-    "sha256": "c4455f55a7e64e5eb3990bff9b8fc96ba75c5e34ed12dccea7ecd745ee4a5c27"
+    "bytes": 130227,
+    "sha256": "8737ed03e33ac28fc7a579296cd2deec6d3a4208f9f477885ec88206f116ca38"
   },
   {
     "number": 4,
     "file": "mobile/04_day2-timeline.png",
     "title": "12월 11일 · 2일차 일정",
     "serial": "emulator-5554",
-    "appVersion": "0.3.2",
+    "appVersion": "0.3.4",
     "width": 1080,
     "height": 1920,
-    "bytes": 151255,
-    "sha256": "3aa284f6ae1e5c12a1b527dd20637c70e6715abd2c052ac1d7f08ce26d24b2fa"
+    "bytes": 130936,
+    "sha256": "77d480c4ae65469456623a62eba1dd72fe57c5b19ad9f67e7b0fab9392f40fc3"
   },
   {
     "number": 5,
     "file": "mobile/05_day3-timeline.png",
     "title": "12월 12일 · 3일차 일정",
     "serial": "emulator-5554",
-    "appVersion": "0.3.2",
+    "appVersion": "0.3.4",
     "width": 1080,
     "height": 1920,
-    "bytes": 150891,
-    "sha256": "bcd25b17c351ac7301afec9831b52f22fe9499383da9ab4e638dbb892f589fb4"
+    "bytes": 129077,
+    "sha256": "148dd0cf7f72341a419381e846c07313465f30625b7f4d1841c6c350325f6c0f"
   },
   {
     "number": 6,
     "file": "mobile/06_day4-timeline.png",
     "title": "12월 13일 · 4일차 일정",
     "serial": "emulator-5554",
-    "appVersion": "0.3.2",
+    "appVersion": "0.3.4",
     "width": 1080,
     "height": 1920,
-    "bytes": 117671,
-    "sha256": "63cc4f46ba4b1e04b8d31a4d61f1c3266004a5641b69ddb0eed1f3cac4e21abe"
+    "bytes": 101989,
+    "sha256": "aed36b98fb72958882214181a37ea5fec196994992b7388c66dba9545697c5a0"
   },
   {
     "number": 7,

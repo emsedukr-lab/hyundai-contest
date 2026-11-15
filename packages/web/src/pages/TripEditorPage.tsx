@@ -234,7 +234,10 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
     const update = () => {
       frame = 0;
       let current = 0;
-      for (const el of document.querySelectorAll<HTMLElement>('section[data-day]')) if (el.getBoundingClientRect().top <= STUCK_AT) current = Number(el.dataset.day);
+      // The bars sit under the safe-area inset in the Android app, so measure where the chip bar really ends.
+      const bar = document.querySelector<HTMLElement>('.tl-daytabs');
+      const line = bar ? bar.getBoundingClientRect().bottom + 8 : STUCK_AT;
+      for (const el of document.querySelectorAll<HTMLElement>('section[data-day]')) if (el.getBoundingClientRect().top <= line) current = Number(el.dataset.day);
       setFocusDay(current);
     };
     const onScroll = () => {
