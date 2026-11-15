@@ -1,13 +1,12 @@
 import { useId, useState } from 'react';
 import { Banner } from '@astryxdesign/core/Banner';
-import { Button } from '@astryxdesign/core/Button';
 import { Calendar, type DateRange } from '@astryxdesign/core/Calendar';
 import type { Home, Trip } from '@tteonaljido/shared';
-import { BedIcon, CalendarIcon, CheckIcon, CloseIcon, FlagIcon, PinIcon } from '../components/shell/icons';
+import { BedIcon, CalendarIcon, CloseIcon, FlagIcon, PinIcon } from '../components/shell/icons';
 import { shortDate, tripPeriodLabel } from '../lib/format';
 import { t } from '../lib/i18n';
-import { defaultTripName, setEndBy, setEndpoint, setPeriod } from '../lib/trips';
-import { EndpointField, endpointValue } from './EndpointField';
+import { defaultTripName, setEndBy, setPeriod } from '../lib/trips';
+import { EndpointField } from './EndpointField';
 import { LodgingField } from './LodgingField';
 import { useNotes } from './NotesContext';
 import { Sheet } from './Sheet';
@@ -33,7 +32,6 @@ export function TripInfoPanel({ plan, home, onChange, onOpenSettings, showRequir
   const lastDay = plan.days[plan.days.length - 1];
   const first = plan.firstDay;
   const period = tripPeriodLabel(plan.startDate, plan.endDate);
-  const sameOrigin = endpointValue(plan.origin) === endpointValue(plan.finalDestination);
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       {error && <div className="tn-pad"><Banner status="error" title={error} isDismissable onDismiss={() => setError(null)} /></div>}
@@ -60,6 +58,13 @@ export function TripInfoPanel({ plan, home, onChange, onOpenSettings, showRequir
                 <span className="tl-kicker">{t('editor.startPlace')}</span>
                 <EndpointField which="origin" compact plan={plan} home={home} onChange={onChange} onOpenSettings={onOpenSettings} />
               </div>
+              <div className="ti-endpoint-field ti-endpoint-time">
+                <span className="tl-kicker">{first.basis === 'DEPART_ORIGIN' ? t('setup.departTimeShort') : t('editor.arriveTime')}</span>
+                <TimeSelect label={first.basis === 'DEPART_ORIGIN' ? t('setup.departTime') : t('editor.arriveTime')} value={first.basis === 'DEPART_ORIGIN' ? first.departTime : first.arriveTime} clearable={first.basis === 'DEPART_ORIGIN'} placeholder={t('time.none')} onChange={(time) => {
+                  if (first.basis === 'ARRIVE_FIRST_STOP') { if (time) onChange({ ...plan, firstDay: { ...first, arriveTime: time } }); }
+                  else onChange({ ...plan, firstDay: { ...first, departTime: time } });
+                }} />
+              </div>
             </div>
             <div className="ti-endpoint-row">
               <span className="ti-endpoint-icon" aria-hidden="true"><FlagIcon /></span>
@@ -67,19 +72,8 @@ export function TripInfoPanel({ plan, home, onChange, onOpenSettings, showRequir
                 <span className="tl-kicker">{t('tl.endPlace')}</span>
                 <EndpointField which="finalDestination" compact plan={plan} home={home} onChange={onChange} onOpenSettings={onOpenSettings} />
               </div>
-            </div>
-            <div className="ti-same-origin">
-              <Button label={t(sameOrigin ? 'setup.sameOriginApplied' : 'setup.sameOrigin')} icon={sameOrigin ? <CheckIcon /> : undefined} variant="secondary" isDisabled={plan.origin.kind === 'CURRENT'} onClick={() => onChange(setEndpoint(plan, 'finalDestination', plan.origin))} />
-              {plan.origin.kind === 'CURRENT' && <span className="tl-meta">{t('setup.sameOriginHint')}</span>}
-            </div>
-            <div className="ti-times">
-              <div><span className="tl-kicker">{first.basis === 'DEPART_ORIGIN' ? t('setup.departTime') : t('editor.arriveTime')}</span>
-                <TimeSelect label={first.basis === 'DEPART_ORIGIN' ? t('setup.departTime') : t('editor.arriveTime')} value={first.basis === 'DEPART_ORIGIN' ? first.departTime : first.arriveTime} clearable={first.basis === 'DEPART_ORIGIN'} placeholder={t('time.none')} onChange={(time) => {
-                  if (first.basis === 'ARRIVE_FIRST_STOP') { if (time) onChange({ ...plan, firstDay: { ...first, arriveTime: time } }); }
-                  else onChange({ ...plan, firstDay: { ...first, departTime: time } });
-                }} />
-              </div>
-              <div><span className="tl-kicker">{t('setup.returnTime')}</span>
+              <div className="ti-endpoint-field ti-endpoint-time">
+                <span className="tl-kicker">{t('setup.returnTimeShort')}</span>
                 <TimeSelect label={t('setup.returnTime')} value={lastDay.endBy} clearable clearLabel={t('time.undecided')} placeholder={t('time.undecided')} suggest="18:00" onChange={(time) => onChange(setEndBy(plan, lastDay.dayIndex, time))} />
               </div>
             </div>

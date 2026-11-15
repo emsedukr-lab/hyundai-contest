@@ -2,7 +2,8 @@
 
 모바일 웹(`packages/web`)의 화면을 그대로 담은 휴대폰 앱입니다. [Capacitor](https://capacitorjs.com) 8.6으로 포장하며, 화면 코드는 하나이고 모바일 웹도 그대로 유지합니다(앱이 없으면 차량 QR은 지금처럼 브라우저에서 열립니다).
 
-- 앱 ID `io.tteonaljido.mobile` (차량 앱은 `io.tteonaljido.car`), 버전 0.3.0
+- 앱 ID `io.tteonaljido.mobile` (차량 앱은 `io.tteonaljido.car`), 버전 0.3.1
+- 2026-11-15: release **0.3.1(4)**에서 출발지·최종 도착지 옆에 시간을 배치하고, '출발지와 동일'을 최종 도착지 선택창에 통합했습니다. 기본 출발지는 현위치를 유지하며, 동일 도착지는 출발지를 지정한 뒤 선택합니다.
 - 2026-11-15: release **0.3.0(3)**에 통합된 여행 추가 화면, 네이버 목록 전체·개별 선택, 담은 장소의 숙소 지정, 여행 파일 백업·휴지통, 설정·용어·핀 아이콘 개선을 반영했습니다. 배포된 웹도 같은 소스로 갱신했습니다. 기존 인증서로 서명했고 Android 휴대폰 에뮬레이터에서 0.2.0 위에 업데이트 설치했습니다.
 - 2026-11-15: 지금 웹 화면 그대로의 서명 release APK 0.2.0을 저장소 최상위 [`apk/mobile/`](../../apk/mobile/)에 두고, Android 휴대폰 에뮬레이터에서 실행해 확인했습니다(아래 '확인한 것'). **iOS 빌드와 실제 휴대폰 동작은 아직 확인하지 못했습니다.**
 
@@ -46,7 +47,7 @@ npm run run:ios -w @tteonaljido/mobile
 
 | 파일 | 내용 |
 |---|---|
-| [`../../apk/mobile/이충지_떠날지도_모바일용_release.apk`](../../apk/mobile/이충지_떠날지도_모바일용_release.apk) | 서명된 release, 버전 0.3.0(3), 6.9MB, 2026-11-15. sha256 `3719ed34…` |
+| [`../../apk/mobile/이충지_떠날지도_모바일용_release.apk`](../../apk/mobile/이충지_떠날지도_모바일용_release.apk) | 서명된 release, 버전 0.3.1(4), 6.9MB, 2026-11-15. sha256 `964b2bb0…` |
 | `apk/떠날지도_모바일_debug.apk` | 예전(0.1.0) debug 빌드(임시 debug 키). release와 서명이 달라 서로 덮어 설치되지 않음 |
 
 저장소 루트에서 `adb install -r apk/mobile/이충지_떠날지도_모바일용_release.apk`로 Android 7(API 24) 이상 휴대폰에 넣거나 파일을 옮겨 설치합니다.

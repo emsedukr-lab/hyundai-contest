@@ -3,7 +3,7 @@ import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { List, ListItem } from '@astryxdesign/core/List';
 import type { Endpoint, Home, Trip } from '@tteonaljido/shared';
-import { ChevronIcon } from '../components/shell/icons';
+import { CheckIcon, ChevronIcon } from '../components/shell/icons';
 import { t } from '../lib/i18n';
 import { presetSlots, presetLabel, presetPlace } from '../lib/settings';
 import { endpointFromPreset, setEndpoint, type EndpointSide } from '../lib/trips';
@@ -32,7 +32,9 @@ export function EndpointField({ which, plan, home, onChange, onOpenSettings, lab
   });
   const current = plan[which];
   const fieldLabel = label ?? (which === 'origin' ? t('editor.startPlace') : t('tl.endPlace'));
-  const chosen = current.kind === 'CURRENT' ? t('endpoint.current') : current.kind === 'HOME' ? t('common.home') : plan.places.find((p) => p.placeRef === current.placeRef)?.name ?? t('common.place');
+  const placeName = current.kind === 'CURRENT' ? t('endpoint.current') : current.kind === 'HOME' ? t('common.home') : plan.places.find((p) => p.placeRef === current.placeRef)?.name ?? t('common.place');
+  const sameOrigin = which === 'finalDestination' && endpointValue(plan.origin) === endpointValue(current);
+  const chosen = sameOrigin ? t('setup.sameOrigin') : placeName;
   const apply = (update: () => Trip) => {
     try { onChange(update()); setOpen(false); setError(null); }
     catch (e) { setError((e as Error).message); }
@@ -40,17 +42,19 @@ export function EndpointField({ which, plan, home, onChange, onOpenSettings, lab
   return (
     <div>
       {!compact && !isLabelHidden && <span className="tl-kicker">{fieldLabel}</span>}
-      <button type="button" className="ti-endpoint-button" aria-label={`${fieldLabel} · ${chosen}${current.kind === 'HOME' && home ? ` · ${home.address}` : ''}`} aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen(true)}>
+      <button type="button" className="ti-endpoint-button" title={placeName} aria-label={`${fieldLabel} · ${chosen}${current.kind === 'HOME' && home ? ` · ${home.address}` : ''}`} aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen(true)}>
         <span>{chosen}</span><ChevronIcon />
       </button>
       <Sheet isOpen={open} onClose={() => setOpen(false)} title={fieldLabel}>
         {error && <Banner status="error" title={error} />}
         <div className="tn-btnrow">
+          {which === 'finalDestination' && <Button label={t('setup.sameOrigin')} icon={sameOrigin ? <CheckIcon /> : undefined} aria-pressed={sameOrigin} variant="secondary" isDisabled={plan.origin.kind === 'CURRENT'} onClick={() => apply(() => setEndpoint(plan, which, plan.origin))} />}
           {which === 'origin' && <Button label={t('endpoint.current')} variant="secondary" onClick={() => apply(() => setEndpoint(plan, which, { kind: 'CURRENT' }))} />}
           <Button label={t('common.home')} variant="secondary" onClick={() => apply(() => setEndpoint(plan, which, { kind: 'HOME' }))} />
           {presets.map(({ slot, place }) => <Button key={slot} label={presetLabel(slot)} variant="secondary" onClick={() => apply(() => endpointFromPreset(plan, which, place))} />)}
         </div>
         {which === 'origin' && <p className="tl-meta">{t('endpoint.currentHint')}</p>}
+        {which === 'finalDestination' && plan.origin.kind === 'CURRENT' && <p className="tl-meta">{t('setup.sameOriginHint')}</p>}
         <PlaceSearch compact requireCoords hideFavorites label={t('endpoint.search')} placeholder={t('endpoint.search')} onPick={(place) => {
           const { latE7, lonE7 } = place;
           if (latE7 === null || lonE7 === null) return setError(t('endpoint.needLocation'));

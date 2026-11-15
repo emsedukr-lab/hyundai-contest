@@ -1422,17 +1422,18 @@
 .ti-period-button span { min-width: 0; line-height: 1.4; }
 .ti-period-button svg { width: 18px; height: 18px; flex: none; color: var(--tn-text-secondary); }
 .ti-endpoint-button { justify-content: space-between; }
-.ti-endpoint-button span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ti-endpoint-button span { min-width: 0; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 18px; word-break: keep-all; }
 .ti-endpoint-button svg { width: 16px; height: 16px; flex: none; color: var(--tn-text-secondary); }
 .ti-period-button:focus-visible, .ti-endpoint-button:focus-visible { outline: 2px solid var(--tn-accent); outline-offset: 2px; }
 .ti-endpoints { gap: 16px; }
-.ti-same-origin { display: grid; gap: 6px; }
-.ti-same-origin .astryx-button[aria-disabled='true'] { opacity: 1; background-color: var(--tn-fill-weak); color: var(--tn-text-secondary); }
-.ti-endpoint-row { display: flex; gap: 10px; align-items: center; }
-.ti-endpoint-icon { flex: none; width: 22px; color: var(--tn-text-secondary); }
+.ti-endpoint-row { display: grid; grid-template-columns: 22px minmax(0, 1fr) 112px; gap: 8px; align-items: end; }
+.ti-endpoint-row .ti-endpoint-button { height: 48px; padding: 6px 10px; }
+.ti-endpoint-icon { display: grid; place-items: center; width: 22px; height: 48px; color: var(--tn-text-secondary); }
 .ti-endpoint-icon svg { width: 22px; height: 22px; }
 .ti-endpoint-icon.is-start { color: var(--tn-accent); }
 .ti-endpoint-field { flex: 1; min-width: 0; display: grid; gap: 6px; }
-.ti-times { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; padding-top: 12px; border-top: 1px solid var(--tn-hairline); }
-.ti-times > div { display: grid; gap: 6px; align-content: start; }
-@media (max-width: 360px) { .ti-times { grid-template-columns: 1fr; } }
+@media (max-width: 420px) { .ti-endpoint-row .ti-endpoint-button { font-size: 14px; } }
+@media (max-width: 360px) {
+  .ti-endpoint-row { grid-template-columns: minmax(0, 1fr) 100px; }
+  .ti-endpoint-icon { display: none; }
+}

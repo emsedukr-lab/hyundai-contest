@@ -30,8 +30,11 @@ it('labels the period with weekdays and duration, and clears an editable trip na
 it('searches within the endpoint sheet and copies the chosen start into the destination', async () => {
   mocks.search.mockResolvedValue([{ name: '서울역', address: '서울 중구', latE7: 375550000, lonE7: 1269700000, category: 'OTHER', externalId: 'station' }]);
   render(createElement(Basics));
+  expect(screen.queryByRole('button', { name: '출발지와 동일' })).toBeNull();
+  fireEvent.click(screen.getByRole('button', { name: '최종 도착지 · 공항' }));
   expect(screen.getByRole('button', { name: '출발지와 동일' }).getAttribute('aria-disabled')).toBe('true');
   expect(screen.getByText('출발지를 지정하면 같은 장소로 설정할 수 있어요')).toBeTruthy();
+  fireEvent.click(screen.getByRole('button', { name: '닫기' }));
   fireEvent.click(screen.getByRole('button', { name: '출발지 · 출발 당일 현위치' }));
   expect(screen.getByRole('button', { name: '출발 당일 현위치' })).toBeTruthy();
   const input = screen.getByRole('textbox', { name: '주소·장소 검색' });
@@ -39,12 +42,18 @@ it('searches within the endpoint sheet and copies the chosen start into the dest
   fireEvent.keyDown(input, { key: 'Enter' });
   fireEvent.click(await screen.findByText('서울역', { exact: true }));
   await waitFor(() => expect(screen.getByRole('button', { name: '출발지 · 서울역' })).toBeTruthy());
+  fireEvent.click(screen.getByRole('button', { name: '최종 도착지 · 공항' }));
   fireEvent.click(screen.getByRole('button', { name: '출발지와 동일' }));
   const plan = mocks.changed.mock.lastCall![0];
   expect(plan.finalDestination).toEqual(plan.origin);
-  expect(screen.getByRole('button', { name: '출발지와 동일 · 적용됨' })).toBeTruthy();
+  expect(screen.getByRole('button', { name: '최종 도착지 · 출발지와 동일' })).toBeTruthy();
   expect(plan.places.map((p: { name: string }) => p.name)).toEqual(['서울역']);
   expect(plan.visits).toHaveLength(0);
+  fireEvent.click(screen.getByRole('button', { name: '최종 도착지 · 출발지와 동일' }));
+  expect(screen.getByRole('button', { name: '출발지와 동일' }).getAttribute('aria-pressed')).toBe('true');
+  fireEvent.click(screen.getByRole('button', { name: '집' }));
+  expect(mocks.changed.mock.lastCall![0].finalDestination).toEqual({ kind: 'HOME' });
+  expect(screen.getByRole('button', { name: '최종 도착지 · 집' })).toBeTruthy();
 });
 it('sets and clears last-day arrival using the undecided action', () => {
   render(createElement(Basics));

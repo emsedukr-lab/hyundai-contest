@@ -7,7 +7,7 @@
 | 앱 이름 | 떠날지도 (`io.tteonaljido.car`) |
 | 한 줄 소개 | 장소만 담으면 날짜별 동선을 짜 주고, 차에서 QR로 불러와 내비가 순서대로 안내하는 여행 앱 |
 | 차량 APK | [`apk/car/이충지_떠날지도_차량용_release.apk`](apk/car/이충지_떠날지도_차량용_release.apk) · release 0.9.0 (versionCode 9) · 서명 v2+v3 |
-| 모바일 APK | [`apk/mobile/이충지_떠날지도_모바일용_release.apk`](apk/mobile/이충지_떠날지도_모바일용_release.apk) · release 0.3.0 (versionCode 3) · 서명 v2+v3 |
+| 모바일 APK | [`apk/mobile/이충지_떠날지도_모바일용_release.apk`](apk/mobile/이충지_떠날지도_모바일용_release.apk) · release 0.3.1 (versionCode 4) · 서명 v2+v3 |
 | APK SHA-256 | [`apk/SHA256SUMS.txt`](apk/SHA256SUMS.txt) |
 | 개발 에뮬레이터 | Pleos Connect Emulator 2.1.0 (Android 14, API 34, arm64) |
 | 화면 규격 | 2560×1440, 160dpi (Connect-S-17 기본) |
