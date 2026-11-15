@@ -2,17 +2,23 @@
 
 가고 싶은 장소만 담으면 날짜별 동선을 자동으로 짜 주고, 그 여행을 차량 화면의 QR로 불러와 현대자동차그룹 내비게이션이 순서대로 안내하는 Pleos Connect 차량용 앱입니다.
 
+![차량 화면(왼쪽)과 휴대폰 화면(오른쪽)](docs/img/product.png)
+
+1. **담기** — 네이버 지도 저장 목록을 공유하거나 장소를 검색해 담습니다.
+2. **짜기** — 휴대폰이 예약·영업시간·숙소를 따져 날짜와 순서를 정합니다.
+3. **안내받기** — 차 화면의 QR 한 번으로 옮기면, 현대차 내비가 실제 시간·거리를 다시 재고 순서대로 안내합니다.
+
 | 항목 | 내용 |
 |---|---|
 | 앱 이름 | 떠날지도 (`io.tteonaljido.car`) |
 | 한 줄 소개 | 장소만 담으면 날짜별 동선을 짜 주고, 차에서 QR로 불러와 내비가 순서대로 안내하는 여행 앱 |
-| 차량 APK | [`apk/car/이충지_떠날지도_차량용_release.apk`](apk/car/이충지_떠날지도_차량용_release.apk) · release 0.9.0 (versionCode 9) · 서명 v2+v3 |
-| 모바일 APK | [`apk/mobile/이충지_떠날지도_모바일용_release.apk`](apk/mobile/이충지_떠날지도_모바일용_release.apk) · release 0.3.1 (versionCode 4) · 서명 v2+v3 |
+| APK (차량 · 출품작) | [`apk/이충지_떠날지도(차량)_release.apk`](<apk/이충지_떠날지도(차량)_release.apk>) · release 0.9.0 (versionCode 9) · 서명 v2+v3 |
+| APK (휴대폰 · 함께 쓰는 앱) | [`apk/이충지_떠날지도(휴대폰)_release.apk`](<apk/이충지_떠날지도(휴대폰)_release.apk>) · release 0.3.1 (versionCode 4) · 서명 v2+v3 |
 | APK SHA-256 | [`apk/SHA256SUMS.txt`](apk/SHA256SUMS.txt) |
 | 개발 에뮬레이터 | Pleos Connect Emulator 2.1.0 (Android 14, API 34, arm64) |
 | 화면 규격 | 2560×1440, 160dpi (Connect-S-17 기본) |
-| 휴대폰 웹 | https://tteonaljido.tteonaljido-worker.workers.dev (설치 없이 브라우저에서 사용) |
-| 시연 영상 | [`media/demo/떠날지도_시연.mp4`](media/demo/떠날지도_시연.mp4) (3분 42초) |
+| 휴대폰 웹 | https://tteonaljido.tteonaljido-worker.workers.dev (설치 없이 브라우저에서 사용, 휴대폰 APK와 같은 화면) |
+| 시연 영상 | [`media/demo/떠날지도_시연.mp4`](media/demo/떠날지도_시연.mp4) (3분 42초, 2026-11-10 녹화 — 휴대폰 화면은 그 뒤 새 여행 3단계 등으로 바뀌었습니다) |
 
 ## 실행 방법
 
@@ -23,10 +29,10 @@ release APK는 배포된 서버에 연결되어 있어 서버를 따로 띄울 �
 1. Pleos Connect Emulator 2.1.0 AVD를 cold boot로 켭니다 (RAM 4GB, `-gpu host` 권장).
 2. APK를 설치합니다.
    ```sh
-   adb install -r apk/car/이충지_떠날지도_차량용_release.apk
+   adb install -r "apk/이충지_떠날지도(차량)_release.apk"
    ```
 3. 차량(기어 P): 떠날지도 실행 → **모바일 여행 불러오기** → QR 표시
-4. 휴대폰: 위 휴대폰 웹 첫 화면 오른쪽 위의 **QR 아이콘(연결)**에서 차량 QR을 스캔 → 차량과 같은 6자리 확인 코드 확인 → **샘플 여행 추가** → **차량으로 보내기**
+4. 휴대폰: 위 휴대폰 웹(또는 휴대폰 APK) 첫 화면 오른쪽 위의 **QR 아이콘(연결)**에서 차량 QR을 스캔 → 차량과 같은 6자리 확인 코드 확인 → **샘플 여행 추가** → **차량으로 보내기**
 5. 차량: 요약 확인 → **불러오기** → **여행 보기** → **길안내 시작** (Pleos 내비가 안내 시작)
 
 ### 소스에서 빌드
@@ -63,10 +69,10 @@ adb shell am start --user 10 -n io.tteonaljido.car/.MainActivity
 
 ## 주요 기능
 
-**휴대폰 (웹)**
+**휴대폰 (웹 · Android 앱)**
 - 새 여행 3단계: 기본 정보·장소(여행명·기간·출발/도착지·시간·네이버 공유 URL) → 숙소·예약 → 경로 추천
 - 장소 담기: 카카오 검색, 지도에서 보고 담기, 네이버 지도 공유(장소 하나 또는 '저장 목록' 통째로). 카카오맵 공유 링크는 지원하지 않습니다
-- 여행 전체를 한 번에 놓고 날짜 배정과 방문 순서를 정하는 동선 최적화 (영업시간·예약·아침·점심·저녁 식사 시간·숙소 입실/퇴실 반영)
+- 여행 전체를 한 번에 놓고 날짜 배정과 방문 순서를 정하는 동선 최적화 (영업시간·예약·아침·점심·저녁 식사 시간·숙소 입실/퇴실 반영, 장소는 날짜별로 고르게 나누고 첫날·마지막 날에는 절반만)
 - 카카오모빌리티 길찾기로 이동시간·거리, 실제 도로 경로 지도
 - 출발을 늦춰도 되는 날은 늦게 출발하기 제안
 - 계정 없이 이 브라우저에만 저장, 서버를 거치는 내용은 종단간 암호화
@@ -93,15 +99,15 @@ adb shell am start --user 10 -n io.tteonaljido.car/.MainActivity
 | `packages/shared` | 전송 스키마, 암호화, 동선 최적화 엔진 |
 | `schema/` | TS·Kotlin 공통 JSON Schema와 시험 fixture |
 | `design/` | Pleos Connect 디자인 기준과 토큰 |
-| `docs/` | 설계 문서, 화면 기록, 조사 자료 |
+| `docs/` | 설계 문서, 화면 기록(`docs/evidence/`), 조사 자료 |
 | `tools/` | E2E·스모크 시험, 시연 녹화 도구 |
-| `apk/mobile/` · `apk/car/` | 모바일·차량용 서명된 release APK |
+| `apk/` | 서명된 release APK — `이충지_떠날지도(차량)_release.apk`(출품작), `이충지_떠날지도(휴대폰)_release.apk` |
 | `media/demo/` | 시연 영상 |
 
 ## 시험
 
 ```sh
-npm test                    # TypeScript 392개
+npm test                    # TypeScript 442개 (공용 119 · 휴대폰 웹 250 · 서버 73)
 npm run typecheck
 (cd car && ./gradlew test)  # Kotlin 221개
 npm run e2e                 # 휴대폰 + 가짜 차량

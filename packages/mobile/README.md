@@ -5,7 +5,7 @@
 - 앱 ID `io.tteonaljido.mobile` (차량 앱은 `io.tteonaljido.car`), 버전 0.3.1
 - 2026-11-15: release **0.3.1(4)**에서 출발지·최종 도착지 옆에 시간을 배치하고, '출발지와 동일'을 최종 도착지 선택창에 통합했습니다. 기본 출발지는 현위치를 유지하며, 동일 도착지는 출발지를 지정한 뒤 선택합니다. 경로 추천은 장소를 날짜별로 고르게 나눕니다(첫날·마지막 날은 가운데 날의 절반, 가까운 곳 묶기가 먼저).
 - 2026-11-15: release **0.3.0(3)**에 통합된 여행 추가 화면, 네이버 목록 전체·개별 선택, 담은 장소의 숙소 지정, 여행 파일 백업·휴지통, 설정·용어·핀 아이콘 개선을 반영했습니다. 배포된 웹도 같은 소스로 갱신했습니다. 기존 인증서로 서명했고 Android 휴대폰 에뮬레이터에서 0.2.0 위에 업데이트 설치했습니다.
-- 2026-11-15: 지금 웹 화면 그대로의 서명 release APK 0.2.0을 저장소 최상위 [`apk/mobile/`](../../apk/mobile/)에 두고, Android 휴대폰 에뮬레이터에서 실행해 확인했습니다(아래 '확인한 것'). **iOS 빌드와 실제 휴대폰 동작은 아직 확인하지 못했습니다.**
+- 2026-11-15: 지금 웹 화면 그대로의 서명 release APK 0.2.0을 저장소 최상위 [`apk/`](../../apk/)에 두고, Android 휴대폰 에뮬레이터에서 실행해 확인했습니다(아래 '확인한 것'). **iOS 빌드와 실제 휴대폰 동작은 아직 확인하지 못했습니다.**
 
 ## 구조
 
@@ -21,7 +21,7 @@ packages/web  ──(vite build --mode app)──▶  packages/mobile/www  ─�
 | `ios/` | Xcode 프로젝트 (iOS 15 이상, Swift Package Manager) |
 | `scripts/make-icons.py` | 앱 아이콘·시작 화면 그림 생성(차량 앱과 같은 표식). `rsvg-convert`·Pillow 필요 |
 | `apk/` | 빌드해 둔 시험용 APK (git 제외) |
-| [`../../apk/mobile/`](../../apk/mobile/) | 배포용 모바일 release APK (git 포함) |
+| [`../../apk/`](../../apk/) | 배포용 release APK — `이충지_떠날지도(휴대폰)_release.apk` (git 포함) |
 
 중계 서버 주소는 한 곳(`car/gradle.properties`의 `tteonaljido.prodOrigin`)에만 있습니다. 웹의 앱용 빌드(`packages/web/vite.config.ts`)와 Android App Link 호스트(`android/app/build.gradle`)가 모두 이 값을 읽습니다. 시험 서버로 빌드하려면 `TTEONALJIDO_ORIGIN=https://… npm run build:app` (https만).
 
@@ -47,10 +47,10 @@ npm run run:ios -w @tteonaljido/mobile
 
 | 파일 | 내용 |
 |---|---|
-| [`../../apk/mobile/이충지_떠날지도_모바일용_release.apk`](../../apk/mobile/이충지_떠날지도_모바일용_release.apk) | 서명된 release, 버전 0.3.1(4), 6.9MB, 2026-11-15. sha256 `964b2bb0…` |
+| [`../../apk/이충지_떠날지도(휴대폰)_release.apk`](<../../apk/이충지_떠날지도(휴대폰)_release.apk>) | 서명된 release, 버전 0.3.1(4), 6.9MB, 2026-11-15. sha256 `964b2bb0…` |
 | `apk/떠날지도_모바일_debug.apk` | 예전(0.1.0) debug 빌드(임시 debug 키). release와 서명이 달라 서로 덮어 설치되지 않음 |
 
-저장소 루트에서 `adb install -r apk/mobile/이충지_떠날지도_모바일용_release.apk`로 Android 7(API 24) 이상 휴대폰에 넣거나 파일을 옮겨 설치합니다.
+저장소 루트에서 `adb install -r "apk/이충지_떠날지도(휴대폰)_release.apk"`로 Android 7(API 24) 이상 휴대폰에 넣거나 파일을 옮겨 설치합니다.
 
 - **서명**: 차량 앱과 같은 키(`.secrets/tteonaljido.jks`, 별칭 `tteonaljido`), APK 서명 v2 + v3. 인증서 SHA-256 지문은 `8F:E7:CC:E9:A3:62:10:A5:48:54:0B:2D:03:48:DB:89:DF:88:51:1F:55:3F:39:23:58:B4:52:C6:5D:0D:ED:99`이고 차량 APK와 같은 것을 확인했습니다. 이 지문이 App Link 검증 파일(남은 일 2)에 들어갑니다.
 - **다시 만들기**: `.secrets/`가 있는 Mac에서 `npm run app:sync` 후 `cd android && ANDROID_HOME=~/Library/Android/sdk JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home" ./gradlew :app:assembleRelease` → `app/build/outputs/apk/release/app-release.apk`. `android/app/build.gradle`이 차량 앱과 같은 `.secrets/signing.properties`를 읽고, 키가 없으면 서명 없이 만듭니다. (2026-11-11의 파일은 서명 없는 release를 따로 빌드한 뒤, 키가 있는 Mac 안에서 `apksigner`로 서명했습니다. 키와 비밀번호는 Mac 밖으로 나가지 않았습니다.)
