@@ -1,6 +1,7 @@
 import type { SendLogEntry } from '../lib/db';
 import { periodLabel, sentLabel } from '../lib/format';
 import { t } from '../lib/i18n';
+import { EXAMPLE_TRIP_ID } from '../lib/exampleTrip';
 import { navigate } from '../lib/router';
 import { tripSketch, type TripSketch } from '../lib/routeSketch';
 import { tripWhen } from '../lib/nextTrip';
@@ -40,6 +41,7 @@ export function NextTrip({ doc, sent, overlaps = 0 }: { doc: TripDoc; sent?: Sen
       }}>
       <span className="tn-next-head">
         <span className="tn-next-when">
+          {doc.tripId === EXAMPLE_TRIP_ID && <Tag>{t('home.example')}</Tag>}
           {inSetup ? <Tag tone="accent">{t('setup.homeBadge', { step: setupStepNumber(doc.setup!.step) })}</Tag> : when.label}
           {overlaps > 0 && <Tag tone="warn">{t('home.overlap', { n: overlaps })}</Tag>}
         </span>

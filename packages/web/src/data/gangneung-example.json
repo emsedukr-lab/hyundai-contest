@@ -1,0 +1,517 @@
+{
+  "tripId": "2071798a-c1b2-4b04-85e8-83c50daf8380",
+  "revision": 2,
+  "updatedAt": "2026-11-15T08:44:45.456Z",
+  "planHash": "Ovr9CGr-hk6jaU1QgNTKGUbbxLxuUQwstJlRkOp_jxc",
+  "plan": {
+    "tripId": "2071798a-c1b2-4b04-85e8-83c50daf8380",
+    "revision": 2,
+    "updatedAt": "2026-11-15T08:44:45.456Z",
+    "name": "강릉 3박 4일",
+    "timezone": "Asia/Seoul",
+    "startDate": "2026-12-10",
+    "endDate": "2026-12-13",
+    "firstDay": {
+      "basis": "DEPART_ORIGIN",
+      "departTime": "09:00"
+    },
+    "origin": {
+      "kind": "CURRENT"
+    },
+    "finalDestination": {
+      "kind": "HOME"
+    },
+    "home": null,
+    "places": [
+      {
+        "name": "선미한과",
+        "address": "강원 강릉시 사천면 한과마을길 22-39 선미한과",
+        "latE7": 378146458,
+        "lonE7": 1288326605,
+        "category": "OTHER",
+        "source": {
+          "provider": "MANUAL",
+          "externalId": null
+        },
+        "naviPoi": null,
+        "hours": {
+          "status": "UNKNOWN"
+        },
+        "placeRef": "pnnifonox"
+      },
+      {
+        "name": "경포호수광장",
+        "address": "강원특별자치도 강릉시 초당동 459-28",
+        "latE7": 377980100,
+        "lonE7": 1289086500,
+        "category": "SIGHT",
+        "source": {
+          "provider": "MANUAL",
+          "externalId": null
+        },
+        "naviPoi": null,
+        "hours": {
+          "status": "UNKNOWN"
+        },
+        "placeRef": "p29vbm1e8"
+      },
+      {
+        "name": "강릉오죽한옥마을",
+        "address": "강원 강릉시 죽헌길 114",
+        "latE7": 377769100,
+        "lonE7": 1288783500,
+        "category": "LODGING",
+        "source": {
+          "provider": "MANUAL",
+          "externalId": null
+        },
+        "naviPoi": null,
+        "hours": {
+          "status": "UNKNOWN"
+        },
+        "placeRef": "ptxkm9g3e"
+      },
+      {
+        "name": "오죽헌",
+        "address": "강원 강릉시 율곡로3139번길 24",
+        "latE7": 377792200,
+        "lonE7": 1288775300,
+        "category": "SIGHT",
+        "source": {
+          "provider": "MANUAL",
+          "externalId": null
+        },
+        "naviPoi": null,
+        "hours": {
+          "status": "UNKNOWN"
+        },
+        "placeRef": "pmlbffa8u"
+      },
+      {
+        "name": "정동심곡바다부채길 심곡 매표소",
+        "address": "강원특별자치도 강릉시 강동면 심곡리 114-3 심곡 매표소",
+        "latE7": 376662200,
+        "lonE7": 1290542100,
+        "category": "SIGHT",
+        "source": {
+          "provider": "MANUAL",
+          "externalId": null
+        },
+        "naviPoi": null,
+        "hours": {
+          "status": "UNKNOWN"
+        },
+        "placeRef": "pkm0tf6fd"
+      },
+      {
+        "name": "테라로사 커피공장 강릉본점",
+        "address": "강원 강릉시 구정면 현천길 7",
+        "latE7": 376964803,
+        "lonE7": 1288925637,
+        "category": "CAFE",
+        "source": {
+          "provider": "MANUAL",
+          "externalId": null
+        },
+        "naviPoi": null,
+        "hours": {
+          "status": "UNKNOWN"
+        },
+        "placeRef": "pedjsb334"
+      },
+      {
+        "name": "권오복 분틀 메밀국수",
+        "address": "강원 강릉시 율곡로 2713",
+        "latE7": 377495400,
+        "lonE7": 1289072000,
+        "category": "FOOD",
+        "source": {
+          "provider": "MANUAL",
+          "externalId": null
+        },
+        "naviPoi": null,
+        "hours": {
+          "status": "UNKNOWN"
+        },
+        "placeRef": "pmikbvy6l"
+      },
+      {
+        "name": "만동제과 강릉점",
+        "address": "강원 강릉시 금성로 6",
+        "latE7": 377551227,
+        "lonE7": 1288995248,
+        "category": "CAFE",
+        "source": {
+          "provider": "MANUAL",
+          "externalId": null
+        },
+        "naviPoi": null,
+        "hours": {
+          "status": "UNKNOWN"
+        },
+        "placeRef": "p167iatzb"
+      },
+      {
+        "name": "강릉 바다내음 캠핑장",
+        "address": "강원 강릉시 강동면 율곡로 1616 강릉바다내음캠핑장",
+        "latE7": 377187268,
+        "lonE7": 1290043526,
+        "category": "LODGING",
+        "source": {
+          "provider": "MANUAL",
+          "externalId": null
+        },
+        "naviPoi": null,
+        "hours": {
+          "status": "UNKNOWN"
+        },
+        "placeRef": "pis7xsmcv"
+      },
+      {
+        "name": "원조강릉교동반점 본점",
+        "address": "강원도 강릉시 강릉대로 205",
+        "latE7": 377583000,
+        "lonE7": 1288929650,
+        "category": "FOOD",
+        "source": {
+          "provider": "MANUAL",
+          "externalId": null
+        },
+        "naviPoi": null,
+        "hours": {
+          "status": "UNKNOWN"
+        },
+        "placeRef": "p4m2qeswi"
+      },
+      {
+        "name": "강릉짬뽕순두부 동화가든 본점",
+        "address": "강원 강릉시 초당순두부길77번길 15",
+        "latE7": 377911797,
+        "lonE7": 1289146373,
+        "category": "FOOD",
+        "source": {
+          "provider": "MANUAL",
+          "externalId": null
+        },
+        "naviPoi": null,
+        "hours": {
+          "status": "UNKNOWN"
+        },
+        "placeRef": "p14adyki4"
+      },
+      {
+        "name": "보헤미안박이추커피본점",
+        "address": "강원 강릉시 연곡면 홍질목길 55-11",
+        "latE7": 378646240,
+        "lonE7": 1288424369,
+        "category": "CAFE",
+        "source": {
+          "provider": "MANUAL",
+          "externalId": null
+        },
+        "naviPoi": null,
+        "hours": {
+          "status": "UNKNOWN"
+        },
+        "placeRef": "ply4w1l50"
+      },
+      {
+        "name": "연곡해변솔향기캠핑장",
+        "address": "강원도 강릉시 연곡면 동덕리 산3",
+        "latE7": 378599090,
+        "lonE7": 1288520827,
+        "category": "LODGING",
+        "source": {
+          "provider": "MANUAL",
+          "externalId": null
+        },
+        "naviPoi": null,
+        "hours": {
+          "status": "UNKNOWN"
+        },
+        "placeRef": "pl2wb0v97"
+      },
+      {
+        "name": "철뚝소머리집",
+        "address": "강원도 강릉시 주문진읍 철둑길 42",
+        "latE7": 378920810,
+        "lonE7": 1288243847,
+        "category": "FOOD",
+        "source": {
+          "provider": "MANUAL",
+          "externalId": null
+        },
+        "naviPoi": null,
+        "hours": {
+          "status": "UNKNOWN"
+        },
+        "placeRef": "plth5vscb"
+      }
+    ],
+    "visits": [
+      {
+        "visitId": "vr5x116e9",
+        "placeRef": "pnnifonox",
+        "stayMinutes": 60,
+        "prepMinutes": 0,
+        "importance": "NORMAL",
+        "desiredTime": null,
+        "fixed": null,
+        "dateFlexible": true,
+        "timeFlexible": true,
+        "unassignedReason": null
+      },
+      {
+        "visitId": "v5t9wayzi",
+        "placeRef": "p29vbm1e8",
+        "stayMinutes": 90,
+        "prepMinutes": 0,
+        "importance": "NORMAL",
+        "desiredTime": null,
+        "fixed": null,
+        "dateFlexible": true,
+        "timeFlexible": true,
+        "unassignedReason": null
+      },
+      {
+        "visitId": "vbs7d0610",
+        "placeRef": "pmlbffa8u",
+        "stayMinutes": 90,
+        "prepMinutes": 0,
+        "importance": "NORMAL",
+        "desiredTime": null,
+        "fixed": null,
+        "dateFlexible": true,
+        "timeFlexible": true,
+        "unassignedReason": null
+      },
+      {
+        "visitId": "v1j8514e1",
+        "placeRef": "pkm0tf6fd",
+        "stayMinutes": 90,
+        "prepMinutes": 0,
+        "importance": "NORMAL",
+        "desiredTime": null,
+        "fixed": null,
+        "dateFlexible": true,
+        "timeFlexible": true,
+        "unassignedReason": null
+      },
+      {
+        "visitId": "v0ayav225",
+        "placeRef": "pedjsb334",
+        "stayMinutes": 45,
+        "prepMinutes": 0,
+        "importance": "NORMAL",
+        "desiredTime": null,
+        "fixed": null,
+        "dateFlexible": true,
+        "timeFlexible": true,
+        "unassignedReason": null
+      },
+      {
+        "visitId": "vuk5dvemd",
+        "placeRef": "pmikbvy6l",
+        "stayMinutes": 60,
+        "prepMinutes": 0,
+        "importance": "NORMAL",
+        "desiredTime": null,
+        "fixed": null,
+        "dateFlexible": true,
+        "timeFlexible": true,
+        "unassignedReason": null
+      },
+      {
+        "visitId": "vg0y1iql2",
+        "placeRef": "p167iatzb",
+        "stayMinutes": 45,
+        "prepMinutes": 0,
+        "importance": "NORMAL",
+        "desiredTime": null,
+        "fixed": null,
+        "dateFlexible": true,
+        "timeFlexible": true,
+        "unassignedReason": null
+      },
+      {
+        "visitId": "ve7ftx0jt",
+        "placeRef": "p4m2qeswi",
+        "stayMinutes": 60,
+        "prepMinutes": 0,
+        "importance": "NORMAL",
+        "desiredTime": null,
+        "fixed": null,
+        "dateFlexible": true,
+        "timeFlexible": true,
+        "unassignedReason": null
+      },
+      {
+        "visitId": "v1l1kfd6w",
+        "placeRef": "p14adyki4",
+        "stayMinutes": 60,
+        "prepMinutes": 0,
+        "importance": "NORMAL",
+        "desiredTime": null,
+        "fixed": null,
+        "dateFlexible": true,
+        "timeFlexible": true,
+        "unassignedReason": null
+      },
+      {
+        "visitId": "vs22kmlz1",
+        "placeRef": "ply4w1l50",
+        "stayMinutes": 45,
+        "prepMinutes": 0,
+        "importance": "NORMAL",
+        "desiredTime": null,
+        "fixed": null,
+        "dateFlexible": true,
+        "timeFlexible": true,
+        "unassignedReason": null
+      },
+      {
+        "visitId": "vmw1q7jot",
+        "placeRef": "plth5vscb",
+        "stayMinutes": 60,
+        "prepMinutes": 0,
+        "importance": "NORMAL",
+        "desiredTime": null,
+        "fixed": null,
+        "dateFlexible": true,
+        "timeFlexible": true,
+        "unassignedReason": null
+      }
+    ],
+    "days": [
+      {
+        "dayIndex": 1,
+        "date": "2026-12-10",
+        "departTime": null,
+        "endBy": null,
+        "visitOrder": [
+          "vr5x116e9",
+          "vs22kmlz1"
+        ],
+        "legs": [
+          null,
+          {
+            "minutes": 12,
+            "source": "USER_ESTIMATE"
+          },
+          {
+            "minutes": 8,
+            "source": "USER_ESTIMATE"
+          }
+        ],
+        "lodgingPlaceRef": "pl2wb0v97"
+      },
+      {
+        "dayIndex": 2,
+        "date": "2026-12-11",
+        "departTime": "09:00",
+        "endBy": null,
+        "visitOrder": [
+          "vmw1q7jot",
+          "v0ayav225",
+          "vuk5dvemd",
+          "vbs7d0610"
+        ],
+        "legs": [
+          {
+            "minutes": 10,
+            "source": "USER_ESTIMATE"
+          },
+          {
+            "minutes": 28,
+            "source": "USER_ESTIMATE"
+          },
+          {
+            "minutes": 16,
+            "source": "USER_ESTIMATE"
+          },
+          {
+            "minutes": 11,
+            "source": "USER_ESTIMATE"
+          },
+          {
+            "minutes": 3,
+            "source": "USER_ESTIMATE"
+          }
+        ],
+        "lodgingPlaceRef": "ptxkm9g3e"
+      },
+      {
+        "dayIndex": 3,
+        "date": "2026-12-12",
+        "departTime": "09:00",
+        "endBy": null,
+        "visitOrder": [
+          "v1l1kfd6w",
+          "v5t9wayzi",
+          "ve7ftx0jt",
+          "vg0y1iql2"
+        ],
+        "legs": [
+          {
+            "minutes": 11,
+            "source": "USER_ESTIMATE"
+          },
+          {
+            "minutes": 6,
+            "source": "USER_ESTIMATE"
+          },
+          {
+            "minutes": 18,
+            "source": "USER_ESTIMATE"
+          },
+          {
+            "minutes": 5,
+            "source": "USER_ESTIMATE"
+          },
+          {
+            "minutes": 20,
+            "source": "USER_ESTIMATE"
+          }
+        ],
+        "lodgingPlaceRef": "pis7xsmcv"
+      },
+      {
+        "dayIndex": 4,
+        "date": "2026-12-13",
+        "departTime": "09:00",
+        "endBy": null,
+        "visitOrder": [
+          "v1j8514e1"
+        ],
+        "legs": [
+          {
+            "minutes": 17,
+            "source": "USER_ESTIMATE"
+          },
+          null
+        ],
+        "lodgingPlaceRef": null
+      }
+    ]
+  },
+  "home": null,
+  "setup": {
+    "done": true,
+    "step": 4
+  },
+  "legMeters": {
+    "pnnifonox>ply4w1l50": 7050,
+    "ply4w1l50>pl2wb0v97": 2615,
+    "pl2wb0v97>plth5vscb": 6544,
+    "plth5vscb>pedjsb334": 30725,
+    "pedjsb334>pmikbvy6l": 8708,
+    "pmikbvy6l>pmlbffa8u": 7378,
+    "pmlbffa8u>ptxkm9g3e": 896,
+    "ptxkm9g3e>p14adyki4": 4355,
+    "p14adyki4>p29vbm1e8": 1678,
+    "p29vbm1e8>p4m2qeswi": 6668,
+    "p4m2qeswi>p167iatzb": 1060,
+    "p167iatzb>pis7xsmcv": 12059,
+    "pis7xsmcv>pkm0tf6fd": 9108
+  }
+}

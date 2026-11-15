@@ -64,6 +64,8 @@ const ko = {
 
   // pages/HomePage.tsx
   'home.title': '떠날지도',
+  'home.example': '예시',
+  'home.storage.failed': '여행을 불러오지 못했어요. 저장 공간을 확인한 뒤 새로고침해 주세요',
   'home.add.label': '추가',
   'home.add.trip': '여행 추가',
   'home.add.place': '장소 추가',
@@ -1004,6 +1006,8 @@ const en: Record<Key, string> = {
 
   // pages/HomePage.tsx
   'home.title': 'The Naljido',
+  'home.example': 'Example',
+  'home.storage.failed': 'Could not load trips. Check storage access and refresh the page',
   'home.add.label': 'Add',
   'home.add.trip': 'Add a trip',
   'home.add.place': 'Add a place',

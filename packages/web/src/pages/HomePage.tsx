@@ -17,6 +17,7 @@ import { periodLabel } from '../lib/format';
 import { t } from '../lib/i18n';
 import { navigate } from '../lib/router';
 import { defaultHome } from '../lib/settings';
+import { ensureExampleTrip, EXAMPLE_TRIP_ID } from '../lib/exampleTrip';
 import { newDoc, nightsLabel, setupStepNumber, nowIso, unassignedVisits, type TripDoc } from '../lib/trips';
 
 /**
@@ -52,7 +53,11 @@ export function HomePage() {
       history.replaceState(null, '', '/');
       void addSample();
     }
-    void reload();
+    void (async () => {
+      try { await ensureExampleTrip(); }
+      catch { setMessage(t('home.storage.failed')); }
+      await reload().catch(() => { setDocs([]); setMessage(t('home.storage.failed')); });
+    })();
     // The editor saves on its way out (browser back included); reload when that write lands after this list.
     const onChanged = () => void reload();
     window.addEventListener(TRIPS_CHANGED, onChanged);
@@ -82,10 +87,11 @@ export function HomePage() {
     await reload();
   };
 
-  const next = docs ? pickNextTrip(docs) : null;
+  const personal = (docs ?? []).filter((d) => d.tripId !== EXAMPLE_TRIP_ID);
+  const next = docs ? pickNextTrip(personal.length ? personal : docs) : null;
   // M49: a clear order below the next-trip card (by departure, past trips last) and a mark on trips whose dates overlap.
   const others = sortOtherTrips((docs ?? []).filter((d) => d !== next));
-  const overlaps = dateOverlaps(docs ?? []);
+  const overlaps = dateOverlaps(personal);
 
   return (
     <RootScreen
@@ -134,6 +140,7 @@ export function HomePage() {
                       // tags ride on the title line so the summary gets the full width on a 360pt screen
                       <span style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
                         <span>{d.plan.name}</span>
+                        {d.tripId === EXAMPLE_TRIP_ID && <Tag>{t('home.example')}</Tag>}
                         {d.setup && !d.setup.done ? (
                           // still in its step-by-step setup (M43)
                           <Tag tone="accent">{t('setup.homeBadge', { step: setupStepNumber(d.setup.step) })}</Tag>

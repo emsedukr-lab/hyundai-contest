@@ -37,6 +37,7 @@ export interface TrashedTrip {
 }
 
 interface Schema extends DBSchema {
+  meta: { key: string; value: boolean };
   trash: { key: string; value: TrashedTrip };
   trips: { key: string; value: TripDoc };
   pairing: { key: string; value: PairingRecord };
@@ -46,7 +47,7 @@ interface Schema extends DBSchema {
 
 let dbp: Promise<IDBPDatabase<Schema>> | null = null;
 const db = () =>
-  (dbp ??= openDB<Schema>('tteonaljido', 3, {
+  (dbp ??= openDB<Schema>('tteonaljido', 4, {
     blocking() { void dbp?.then((d) => d.close()); dbp = null; },
     terminated() { dbp = null; },
     // Keep existing stores and trips when adding favorites or trash.
@@ -60,6 +61,7 @@ const db = () =>
         d.createObjectStore('favorites', { keyPath: 'id' });
       }
       if (oldVersion < 3) d.createObjectStore('trash', { keyPath: 'tripId' });
+      if (oldVersion < 4) d.createObjectStore('meta');
     },
   }));
 
@@ -67,6 +69,24 @@ const db = () =>
 export const TRIPS_CHANGED = 'tteonaljido:trips-changed';
 
 export const trips = {
+  /** One transaction across tabs: preserve edits and remember deletion after trash expires. */
+  seedExample: async (doc: TripDoc) => {
+    const tx = (await db()).transaction(['trips', 'trash', 'meta'], 'readwrite');
+    try {
+      const key = `example:${doc.tripId}`;
+      if (!(await tx.objectStore('meta').get(key))) {
+        if (!(await tx.objectStore('trips').get(doc.tripId)) && !(await tx.objectStore('trash').get(doc.tripId))) {
+          await tx.objectStore('trips').put(doc);
+        }
+        await tx.objectStore('meta').put(true, key);
+      }
+      await tx.done;
+    } catch (error) {
+      try { tx.abort(); } catch { /* already aborted */ }
+      await tx.done.catch(() => undefined);
+      throw error;
+    }
+  },
   all: async () => (await (await db()).getAll('trips')).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)),
   get: async (id: string) => (await db()).get('trips', id),
   put: async (doc: TripDoc) => void (await (await db()).put('trips', doc)),
