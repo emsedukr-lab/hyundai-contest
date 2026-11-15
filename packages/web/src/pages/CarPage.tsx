@@ -56,9 +56,6 @@ export function CarPage() {
 
   return (
     <PushScreen title={t('nav.connect')} onBack={() => navigate('/')}>
-      <div className="tn-intro">
-        <p>{t('car.intro')}</p>
-      </div>
       {/* Scan in the app: one tap opens the camera (asking permission), and the car's QR opens the connection here. */}
       <div className="tn-pad" style={{ paddingTop: 8, paddingBottom: 8 }}>
         <Button label={t('car.scan')} variant="primary" size="lg" width="100%" onClick={() => {

@@ -138,15 +138,39 @@ describe('네이버 저장 목록 링크', () => {
     expect(up.seen.map((u) => new URL(u).hostname)).toEqual(['naver.me', 'pages.map.naver.com']);
   });
 
-  it('장소가 아닌 것·쓸 수 없는 곳·좌표 없는 곳은 빼고, 100곳까지만', async () => {
+  it('장소가 아닌 것·쓸 수 없는 곳·좌표 없는 곳만 제외하고 모두 반환', async () => {
     const many = Array.from({ length: 130 }, (_, i) => bm(`곳${i}`));
     const list = [bm('지운 곳', { available: false }), bm('경로', { type: 'route' }), bm('좌표 없음', { px: null, py: null }), bm('엉뚱한 좌표', { px: 500, py: 37 }), ...many];
     const up = upstream({ [API]: jsonRes(naverFolder(list)) });
     const body = (await (await resolveShare({ url: `https://map.naver.com/p/favorite/sharedPlace/folder/${SHARE}` }, up.fetcher)).json()) as { places: { name: string }[]; total: number };
-    expect(body.places).toHaveLength(100);
+    expect(body.places).toHaveLength(130);
     expect(body.places[0].name).toBe('곳0');
     expect(body.places.map((p) => p.name)).not.toContain('지운 곳');
     expect(body.total).toBe(134);
+  });
+
+  it('첫 페이지 이후의 장소도 읽고, 페이지 실패 시 일부만 돌려주지 않는다', async () => {
+    const url = `https://map.naver.com/p/favorite/sharedPlace/folder/${SHARE}`;
+    for (const fail of [false, true]) {
+      const starts: number[] = [];
+      const fetcher = (async (input: string | URL) => {
+        const start = Number(new URL(String(input)).searchParams.get('start'));
+        starts.push(start);
+        if (start && fail) return new Response('failed', { status: 500 });
+        const places = start === 0 ? Array.from({ length: 100 }, (_, i) => bm(`곳${i}`)) : [bm('마지막 숙소', { mcid: 'ACCOMMODATION' })];
+        const data = naverFolder(places);
+        data.folder.bookmarkCount = 101;
+        return jsonRes(data)();
+      }) as typeof fetch;
+      const response = await resolveShare({ url }, fetcher);
+      expect(starts).toEqual([0, 100]);
+      if (fail) expect(response.status).toBe(422);
+      else {
+        const body = await response.json() as { places: { name: string }[] };
+        expect(body.places).toHaveLength(101);
+        expect(body.places.at(-1)?.name).toBe('마지막 숙소');
+      }
+    }
   });
 
   it('종류: 코드 먼저, 없으면 이름 낱말', () => {

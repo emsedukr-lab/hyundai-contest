@@ -123,14 +123,13 @@ export interface ListPlace {
   category: ListCategory;
 }
 
-export const MAX_LIST = 100;
 
 const num = (v: unknown) => (typeof v === 'number' ? v : typeof v === 'string' && v.trim() !== '' ? Number(v) : NaN);
 
 /**
  * Turns Naver's folder JSON into the list the phone gets — a whitelist: the folder's name and count, and per place only
  * its name, address, coordinates and kind. The owner's profile, nickname, ids, memos and links are never copied.
- * Entries that are not places, are marked unavailable, or have no usable coordinates are skipped; at most 100.
+ * Entries that are not places, are marked unavailable, or have no usable coordinates are skipped.
  */
 export function parseNaverFolder(data: unknown): { kind: 'list'; source: 'naver'; title: string; total: number; places: ListPlace[] } | null {
   if (!data || typeof data !== 'object') return null;
@@ -140,7 +139,6 @@ export function parseNaverFolder(data: unknown): { kind: 'list'; source: 'naver'
   if (!list) return null;
   const places: ListPlace[] = [];
   for (const raw of list) {
-    if (places.length >= MAX_LIST) break;
     if (!raw || typeof raw !== 'object') continue;
     const b = raw as Record<string, unknown>;
     if (b.type !== 'place' || b.available === false) continue;
@@ -181,23 +179,38 @@ async function readCapped(res: Response, cap: number, truncate: boolean): Promis
   return text + dec.decode(); // flush a multi-byte character split across the last chunk
 }
 
-/** Fetches a Naver saved-list's JSON (fixed URL, no redirects, 1 MB cap) and maps it. */
+/** Reads every page with one deadline and a 1 MB total cap; a failed page never returns a partial list. */
 async function naverList(api: URL, fetcher: typeof fetch): Promise<Response> {
-  const res = await fetcher(api.toString(), { method: 'GET', redirect: 'manual', headers: { 'User-Agent': UA, Accept: 'application/json' }, signal: AbortSignal.timeout(5_000) });
-  if (!res.ok) {
-    await res.body?.cancel().catch(() => {});
-    return json({ error: 'RESOLVE_FAILED' }, 422);
+  const signal = AbortSignal.timeout(15_000);
+  let remaining = 1024 * 1024;
+  let start = 0;
+  let result: ReturnType<typeof parseNaverFolder> = null;
+  for (;;) {
+    api.searchParams.set('start', String(start));
+    const res = await fetcher(api.toString(), { method: 'GET', redirect: 'manual', headers: { 'User-Agent': UA, Accept: 'application/json' }, signal });
+    if (!res.ok) {
+      await res.body?.cancel().catch(() => {});
+      return json({ error: 'RESOLVE_FAILED' }, 422);
+    }
+    const text = await readCapped(res, remaining, false);
+    if (text === null) return json({ error: 'RESOLVE_FAILED' }, 422);
+    remaining -= new TextEncoder().encode(text).byteLength;
+    let data: unknown;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      return json({ error: 'RESOLVE_FAILED' }, 422);
+    }
+    const page = parseNaverFolder(data);
+    if (!page) return json({ error: 'RESOLVE_FAILED' }, 422);
+    const count = (data as { bookmarkList: unknown[] }).bookmarkList.length;
+    if (!result) result = page;
+    else result.places.push(...page.places);
+    start += count;
+    if (start >= result.total) break;
+    if (count === 0 || remaining <= 0) return json({ error: 'RESOLVE_FAILED' }, 422);
   }
-  const text = await readCapped(res, 1024 * 1024, false);
-  if (text === null) return json({ error: 'RESOLVE_FAILED' }, 422);
-  let data: unknown;
-  try {
-    data = JSON.parse(text);
-  } catch {
-    return json({ error: 'RESOLVE_FAILED' }, 422);
-  }
-  const list = parseNaverFolder(data);
-  return list && list.places.length > 0 ? json(list) : json({ error: 'RESOLVE_FAILED' }, 422);
+  return result.places.length > 0 ? json(result) : json({ error: 'RESOLVE_FAILED' }, 422);
 }
 
 /**

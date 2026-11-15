@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { parseTransfer, sampleTrip, timeline, type Trip } from '@tteonaljido/shared';
 import { emptyRuns } from './routeTimes';
-import { stopRangeText, leaveFor, FIXED_BUFFER, suggestVisitTime, updateVisit, fillNights, laterEmptyNights, lodgingSuggestions, addPlace, addToDay, cleanLodgingTbd, cleanSetup, moveToDay, placeRoom, setReservation, setupReady, assign, changeCategory, emptyPlan, isEndpointOnly, move, moveTo, endpointFromPreset, newDoc, nodeIssues, planWarnings, relinkLegs, rememberLegs, removePlace, savePlan, setDepart, setEndBy, setLeg, setEndpoint, setLodging, setOrigin, setPeriod, startFromPreset, toTransfer, unassign, legKeys, type LegBook } from './trips';
+import { defaultTripName, stopRangeText, leaveFor, FIXED_BUFFER, suggestVisitTime, updateVisit, fillNights, laterEmptyNights, lodgingSuggestions, addPlace, addToDay, cleanLodgingTbd, cleanSetup, moveToDay, placeRoom, setReservation, setupReady, assign, changeCategory, emptyPlan, isEndpointOnly, move, moveTo, endpointFromPreset, newDoc, nodeIssues, planWarnings, relinkLegs, rememberLegs, removePlace, savePlan, setDepart, setEndBy, setLeg, setEndpoint, setLodging, setOrigin, setPeriod, startFromPreset, toTransfer, unassign, legKeys, type LegBook } from './trips';
 
 // The warning assertions below check the Korean copy; jsdom reports navigator.language as en-US.
 vi.hoisted(() => Object.defineProperty(navigator, 'language', { value: 'ko-KR', configurable: true }));
@@ -58,8 +58,30 @@ describe('trip edits keep the transfer valid', () => {
     expect(day(t, 2).visitOrder).toEqual(day(sampleTrip(), 2).visitOrder);
   });
 
+  it('limits newly searched endpoints without blocking reuse of a saved place', () => {
+    let plan = emptyPlan();
+    for (let i = 0; i < 100; i++) plan = addPlace(plan, { name: `장소${i}`, address: '서울', latE7: 375000000 + i, lonE7: 1270000000, category: 'OTHER', source: { provider: 'MANUAL', externalId: null }, naviPoi: null, hours: { status: 'UNKNOWN' } });
+    expect(() => endpointFromPreset(plan, 'origin', { name: '새 출발지', address: '서울', latE7: 376000000, lonE7: 1270000000 })).toThrow();
+    const existing = plan.places[0];
+    const reused = endpointFromPreset(plan, 'origin', { name: existing.name, address: existing.address, latE7: existing.latE7!, lonE7: existing.lonE7! });
+    expect(reused.places).toHaveLength(100);
+    expect(reused.origin).toEqual({ kind: 'PLACE', placeRef: existing.placeRef });
+  });
+
   it('refuses more than 14 days', () => {
     expect(() => setPeriod(sampleTrip(), '2026-11-20', '2026-12-10')).toThrow();
+  });
+
+  it('selecting an imported place as lodging reuses it and removes its sightseeing visit', () => {
+    const base = sampleTrip();
+    const visit = base.visits.find((v) => v.placeRef === 'lake')!;
+    const next = setLodging(base, 1, 'lake');
+    expect(next.places).toHaveLength(base.places.length);
+    expect(next.places.find((p) => p.placeRef === 'lake')?.category).toBe('LODGING');
+    expect(next.days[0].lodgingPlaceRef).toBe('lake');
+    expect(next.visits.some((v) => v.visitId === visit.visitId)).toBe(false);
+    expect(next.days.every((d) => !d.visitOrder.includes(visit.visitId))).toBe(true);
+    expect(setLodging(base, 1, 'missing')).toBe(base);
   });
 
   it('lodging places get no visit; others start unassigned', () => {
@@ -417,14 +439,26 @@ describe('nights marked 미정 (M41, phone-only)', () => {
 });
 
 describe('new-trip setup (M43)', () => {
-  it('step 1 needs a name and every night settled (lodging or 미정); step 2 needs a place', () => {
+  it('collects places before asking for lodging and accepts an unnamed trip', () => {
     const t0 = { ...setLodging(sampleTrip(), 1, null), name: '' };
-    expect(setupReady(t0, [], 1).ok).toBe(false);
-    const named = { ...t0, name: '강릉' };
-    expect(setupReady(named, [], 1)).toMatchObject({ ok: false });
-    expect(setupReady(named, [1], 1).ok).toBe(true);
-    expect(setupReady({ ...emptyPlan(), visits: [] }, [], 2).ok).toBe(false);
-    expect(setupReady(sampleTrip(), [], 3).ok).toBe(true);
+    expect(setupReady(t0, [], 1).ok).toBe(true);
+    expect(setupReady(t0, [], 2).ok).toBe(true);
+    expect(setupReady(t0, [], 3).ok).toBe(false);
+    expect(setupReady(t0, [1], 3).ok).toBe(true);
+    expect(setupReady(emptyPlan(), [], 1).ok).toBe(false);
+    expect(setupReady(emptyPlan(), [], 2).ok).toBe(false);
+    const lodgingOnly = { ...emptyPlan(), places: [sampleTrip().places.find((p) => p.category === 'LODGING')!] };
+    expect(setupReady(lodgingOnly, [], 2).ok).toBe(true);
+  });
+  it('names blank trips from the dates, updates generated names and preserves custom names', async () => {
+    const plan = setPeriod({ ...emptyPlan(), name: '' }, '2026-11-14', '2026-11-17');
+    expect(plan.name).toBe('3박 4일 11/14-11/17');
+    expect(defaultTripName(plan)).toBe(plan.name);
+    expect(setPeriod(plan, '2026-12-31', '2027-01-02').name).toBe('2박 3일 12/31-01/02');
+    expect(setPeriod({ ...plan, name: '제주 가족 여행' }, '2026-12-01', '2026-12-01').name).toBe('제주 가족 여행');
+    expect((await newDoc({ ...plan, name: '  ' })).plan.name).toBe(plan.name);
+    const doc = await newDoc(plan);
+    expect((await savePlan(doc, { ...plan, name: '' }, null)).plan.name).toBe(plan.name);
   });
   it('a reservation pins the visit to its day and time; lifting it frees the visit again', () => {
     const t0 = sampleTrip();
@@ -439,8 +473,24 @@ describe('new-trip setup (M43)', () => {
     expect(f.fixed).toBeNull();
     expect(f.unassignedReason).not.toBeNull();
   });
+  it('a booking on a later day that the 09:00 start could not reach pulls that day\'s start an hour ahead of it', () => {
+    const t0 = sampleTrip();
+    const pooled = t0.visits.find((v) => v.unassignedReason !== null)!;
+    const late = setDepart(t0, 3, '09:00');
+    // 09:00 booking on day 3: the day now leaves at 08:00.
+    expect(day(setReservation(late, pooled.visitId, 3, '09:00'), 3).departTime).toBe('08:00');
+    // 09:30 → 08:30 (on the half-hour grid); a day with no start set counts as leaving at 09:00.
+    expect(day(setReservation(late, pooled.visitId, 3, '09:30'), 3).departTime).toBe('08:30');
+    expect(day(setReservation(setDepart(t0, 3, null), pooled.visitId, 3, '09:15'), 3).departTime).toBe('08:00');
+    // A booking the start already allows for changes nothing: 12:30 with a 09:00 start, 09:00 with a 07:30 start.
+    expect(day(setReservation(late, pooled.visitId, 3, '12:30'), 3).departTime).toBe('09:00');
+    expect(day(setReservation(setDepart(t0, 3, '07:30'), pooled.visitId, 3, '09:00'), 3).departTime).toBe('07:30');
+    // The first day starts from wherever the traveller is, which the steps do ask for: it is never touched.
+    expect(day(setReservation(t0, pooled.visitId, 1, '08:00'), 1).departTime).toBe(day(t0, 1).departTime);
+  });
   it('reads a stored setup state; anything else counts as done', () => {
     expect(cleanSetup({ done: false, step: 3 })).toEqual({ done: false, step: 3 });
+    expect(cleanSetup({ done: false, step: 2 })).toEqual({ done: false, step: 1 });
     expect(cleanSetup({ done: false, step: 9 })).toEqual({ done: false, step: 1 });
     expect(cleanSetup(undefined)).toBeNull();
     expect(cleanSetup({ done: true, step: 4 })).toBeNull();

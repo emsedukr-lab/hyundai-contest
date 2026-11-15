@@ -34,6 +34,17 @@ export function sharedUrl(p: SharedParams): string | null {
   return null;
 }
 
+/** The first HTTPS Naver Map share link in clipboard text; unrelated links never trigger an import offer. */
+export function naverShareUrl(text: string): string | null {
+  for (const token of text.match(/https?:\/\/[^\s<>"']+/gi) ?? []) {
+    try {
+      const url = new URL(token.replace(/[)\],.;!?]+$/, ''));
+      if (url.protocol === 'https:' && !url.username && !url.password && ['naver.me', 'map.naver.com', 'm.map.naver.com', 'pages.map.naver.com', 'm.place.naver.com'].includes(url.hostname)) return url.href;
+    } catch { /* not a usable URL */ }
+  }
+  return null;
+}
+
 /**
  * A Kakao Map share link (kko.to, place.map.kakao.com, map.kakao.com …). Places are not imported from Kakao Map shares
  * (decided 2026-11-15: map-app sharing is Naver Map only), so such a link is recognised here and never sent anywhere.

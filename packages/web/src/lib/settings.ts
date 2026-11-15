@@ -33,17 +33,16 @@ export function setDefaultHome(home: Home | null): void {
 }
 
 /**
- * Departure presets picked at the top of a new trip: 집 (the home above, sent as the transfer's HOME endpoint) and four
- * named places — 회사 and 즐겨찾기 1–3. Those four travel as an ordinary trip place once chosen as a start, since the
+ * Endpoint shortcuts: 집 (the home above, sent as the transfer's HOME endpoint), 회사 and named custom places. They travel as an ordinary trip place once chosen as a start, since the
  * transfer only knows HOME or a place of the trip (schema unchanged).
  */
 export const PRESET_SLOTS = ['home', 'work', 'fav1', 'fav2', 'fav3'] as const;
-export type PresetSlot = (typeof PRESET_SLOTS)[number];
+export type PresetSlot = (typeof PRESET_SLOTS)[number] | `place-${string}`;
 export type PlaceSlot = Exclude<PresetSlot, 'home'>;
 /** A saved start place: the searched place's name plus the home-shaped address and coordinates (always set). */
 export type PresetPlace = Home & { name: string };
 
-export const isPresetSlot = (s: string): s is PresetSlot => (PRESET_SLOTS as readonly string[]).includes(s);
+export const isPresetSlot = (s: string): s is PresetSlot => (PRESET_SLOTS as readonly string[]).includes(s) || /^place-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(s);
 
 const PRESETS_KEY = 'tteonaljido.originPresets';
 
@@ -53,9 +52,9 @@ function readPresets(): Partial<Record<PlaceSlot, PresetPlace>> {
     const data: unknown = raw ? JSON.parse(raw) : null;
     if (!data || typeof data !== 'object') return {};
     const out: Partial<Record<PlaceSlot, PresetPlace>> = {};
-    for (const slot of PRESET_SLOTS) {
-      if (slot === 'home') continue;
-      const v = (data as Record<string, unknown>)[slot] as Partial<PresetPlace> | undefined;
+    for (const [slot, rawPlace] of Object.entries(data)) {
+      if (!isPresetSlot(slot) || slot === 'home') continue;
+      const v = rawPlace as Partial<PresetPlace> | undefined;
       const home = Home.safeParse({ address: v?.address, latE7: v?.latE7, lonE7: v?.lonE7 });
       const name = typeof v?.name === 'string' ? v.name.trim().slice(0, 60) : '';
       if (home.success && name) out[slot] = { ...home.data, name };
@@ -89,6 +88,18 @@ export function setPresetPlace(slot: PresetSlot, place: PresetPlace | null): voi
   }
 }
 
-/** What a slot is called in 설정 and in the editor's start select. */
+/** Home and work are always available; custom and legacy slots appear only once registered. */
+export function presetSlots(): PresetSlot[] {
+  return ['home', 'work', ...Object.keys(readPresets()).filter((s): s is PlaceSlot => s !== 'work' && isPresetSlot(s))];
+}
+
+export function addPresetPlace(place: PresetPlace): PresetSlot {
+  const slot: PresetSlot = `place-${crypto.randomUUID()}`;
+  setPresetPlace(slot, place);
+  if (!presetPlace(slot)) throw new Error(t('settings.preset.failed'));
+  return slot;
+}
+
+/** Custom names also label the endpoint shortcuts; old fav1–3 addresses remain usable. */
 export const presetLabel = (slot: PresetSlot): string =>
-  slot === 'home' ? t('common.home') : slot === 'work' ? t('preset.work') : slot === 'fav1' ? t('preset.fav1') : slot === 'fav2' ? t('preset.fav2') : t('preset.fav3');
+  slot === 'home' ? t('common.home') : slot === 'work' ? t('preset.work') : presetPlace(slot)?.name ?? t('settings.preset.new');

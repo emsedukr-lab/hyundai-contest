@@ -1,5 +1,4 @@
 import { Suspense, lazy, useEffect, useState } from 'react';
-import { Button } from '@astryxdesign/core/Button';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { List, ListItem } from '@astryxdesign/core/List';
 import { SegmentedControl, SegmentedControlItem } from '@astryxdesign/core/SegmentedControl';
@@ -8,13 +7,18 @@ import { TRANSFER_LIMITS, type Trip } from '@tteonaljido/shared';
 import { Card } from '../../components/toss/Card';
 import { favorites } from '../../lib/db';
 import { asNewPlace, favoriteId, type FavoritePlace } from '../../lib/favorites';
+import { CloseIcon } from '../../components/shell/icons';
+import { placeRegion } from '../../lib/format';
 import { t } from '../../lib/i18n';
+import type { ResolvedList } from '../../lib/pairing';
+import { BulkAddDialog } from '../BulkAddDialog';
 import { JS_KEY } from '../../lib/kakaoSdk';
 import { lastMode, rememberMode, type CollectMode } from '../../lib/mapPick';
-import { REASON_LABEL, addPlace, placeOf, placeRoom, removePlace, unassignedVisits } from '../../lib/trips';
+import { REASON_LABEL, addPlace, collectedPlaces, placeRoom, removePlace } from '../../lib/trips';
 import { CATEGORY_LABEL, PlaceSearch, type NewPlace } from '../PlaceSearch';
 import { Sheet } from '../Sheet';
 
+const CollectedPlacesMap = lazy(() => import('../CollectedPlacesMap').then((m) => ({ default: m.CollectedPlacesMap })));
 const PlaceMapPicker = lazy(() => import('../PlaceMapPicker').then((m) => ({ default: m.PlaceMapPicker })));
 /** The map SDK failed to load in this tab (offline, blocked): the 지도 toggle stays hidden until a reload. */
 let mapBroken = false;
@@ -26,7 +30,7 @@ export type Notice = { tone: 'success' | 'error' | 'info'; text: string; undo?: 
  * Collecting places for a trip (M40/M43) — the body of the + sheet and of the new-trip setup's step 2. Every place goes
  * to the whole trip first ("저장 목록", on no day yet); a day is chosen only in the place's details or by 경로 추천.
  * Top to bottom: a search for new places (several can be collected in a row), the places saved for this trip (tap →
- * details; in setup each has 빼기), and favorites shared by every trip (tap → saved to this trip).
+ * details; in setup each has a remove icon), and favorites shared by every trip (tap → saved to this trip).
  */
 export function PlaceCollector({
   plan,
@@ -36,7 +40,11 @@ export function PlaceCollector({
   onBulkDone,
   onRecommend,
   onRemovePlace,
+  importReview,
+  onImportClose,
 }: {
+  importReview?: { terms?: string[]; list?: ResolvedList } | null;
+  onImportClose?: () => void;
   plan: Trip;
   onChange: (p: Trip) => void;
   onOpenPlace: (ref: string) => void;
@@ -45,7 +53,7 @@ export function PlaceCollector({
   onBulkDone?: () => void;
   /** Editor: the batch's notice offers 경로 추천으로 날짜 나누기 (setup recommends in its own step 4). */
   onRecommend?: () => void;
-  /** Setup: each saved place gets 빼기 to drop it from the trip. */
+  /** Setup: remove a collected place from the trip. */
   onRemovePlace?: (placeRef: string) => void;
 }) {
   const [added, setAdded] = useState<string | null>(null);
@@ -55,7 +63,7 @@ export function PlaceCollector({
     void favorites.all().then(setFavs);
   }, [favVersion]);
   // Newest first: what was just added sits right under the search.
-  const pool = [...unassignedVisits(plan)].reverse();
+  const pool = [...collectedPlaces(plan)].reverse();
   const inTrip = new Set(plan.places.map((p) => favoriteId(p)));
 
   const full = () => onNotice({ tone: 'error', text: t('trip.placeLimit', { n: TRANSFER_LIMITS.maxPlaces }) });
@@ -81,6 +89,7 @@ export function PlaceCollector({
   // 목록 | 지도 (지도에서 보고 담기): only offered where the Kakao map can load; the last choice holds for this tab.
   const [mode, setModeState] = useState<CollectMode>(() => (JS_KEY && !mapBroken ? lastMode() : 'list'));
   const canMap = !!JS_KEY && !mapBroken;
+  const [searchingMap, setSearchingMap] = useState(false);
   const setMode = (m: CollectMode) => {
     setModeState(m);
     rememberMode(m);
@@ -99,41 +108,20 @@ export function PlaceCollector({
       <SegmentedControlItem value="map" label={t('mapPick.map')} />
     </SegmentedControl>
   ) : null;
-  if (canMap && mode === 'map')
-    return (
-      <>
-        {toggle}
-        <Suspense fallback={<span className="tl-map-wait" />}>
-          <PlaceMapPicker
-            plan={plan}
-            onAdd={saveFromMap}
-            onUndo={(ref) => {
-              onChange(removePlace(plan, ref));
-              setAdded(null);
-            }}
-            onUnavailable={() => {
-              onNotice({ tone: 'info', text: t('mapPick.off') });
-              setMode('list');
-            }}
-            onMapFailed={() => {
-              mapBroken = true;
-              onNotice({ tone: 'info', text: t('mapPick.mapFailed') });
-              setModeState('list');
-            }}
-            // In new-trip setup the page's 다음 is already the blue button; the map's 담기 is then the grey one.
-            primary={!onRemovePlace}
-          />
-        </Suspense>
-        <div role="status" className="tl-added-line">
-          {added}
-        </div>
-      </>
-    );
 
   return (
     <>
-      {toggle}
-      <h3 className="tl-sheet-section">{t('tl.searchNew')}</h3>
+      {importReview && (
+        <BulkAddDialog
+          isOpen
+          {...importReview}
+          existing={plan.places}
+          room={placeRoom(plan)}
+          lodgingOnly={false}
+          onClose={() => onImportClose?.()}
+          onAdd={pickMany}
+        />
+      )}
       <PlaceSearch
         isLabelHidden
         placeholder={t('place.search')}
@@ -144,49 +132,66 @@ export function PlaceCollector({
         hideFavorites
         favoritesVersion={favVersion}
         onFavoritesChange={() => setFavVersion((v) => v + 1)}
+        onOpenMap={canMap ? () => setSearchingMap(true) : undefined}
       />
-      <div role="status" className="tl-added-line">
-        {added}
-      </div>
+      {added && <div role="status" className="tl-added-line">{added}</div>}
 
-      <h3 className="tl-sheet-section" style={{ marginTop: 8 }}>
-        {t('tl.savedList')}
-      </h3>
+      <div className="pc-saved-head">
+        <h3 className="tl-sheet-section">{t('tl.savedCount', { n: pool.length })}</h3>
+        {toggle}
+      </div>
       {pool.length === 0 ? (
-        <Text type="supporting" color="secondary">
-          {t('tl.poolEmpty')}
-        </Text>
+        <Text type="supporting" color="secondary">{t('tl.poolEmpty')}</Text>
+      ) : canMap && mode === 'map' ? (
+        <Suspense fallback={<span className="tl-map-wait" />}>
+          <CollectedPlacesMap places={pool} onPick={onOpenPlace} onMapFailed={() => {
+            mapBroken = true;
+            setModeState('list');
+            onNotice({ tone: 'info', text: t('mapPick.savedFailed') });
+          }} />
+        </Suspense>
       ) : (
         <Card pad={0}>
           <List hasDividers>
-            {pool.map((v) => {
-              const p = placeOf(plan, v.placeRef);
-              const bits = [p ? CATEGORY_LABEL[p.category] : '', REASON_LABEL[v.unassignedReason ?? 'NOT_SCHEDULED_YET'], v.fixed ? `${t('common.fixedAt', { time: v.fixed.time })} · ${t('tl.fixedPool')}` : ''].filter(Boolean);
-              // The day is set in the place's details.
-              return (
-                <ListItem
-                  key={v.visitId}
-                  label={p?.name ?? v.visitId}
-                  description={bits.join(' · ')}
-                  onClick={() => onOpenPlace(v.placeRef)}
-                  endContent={
-                    onRemovePlace ? (
-                      <Button
-                        label={t('tl.unassignShort')}
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onRemovePlace(v.placeRef);
-                        }}
-                      />
-                    ) : undefined
-                  }
-                />
-              );
+            {pool.map((p) => {
+              const visit = plan.visits.find((v) => v.placeRef === p.placeRef);
+              const reason = visit?.unassignedReason && visit.unassignedReason !== 'NOT_SCHEDULED_YET' ? REASON_LABEL[visit.unassignedReason] : '';
+              return <ListItem
+                key={p.placeRef}
+                label={p.name}
+                description={[CATEGORY_LABEL[p.category], placeRegion(p.address), reason, visit?.fixed ? t('common.fixedAt', { time: visit.fixed.time }) : ''].filter(Boolean).join(' · ')}
+                onClick={() => onOpenPlace(p.placeRef)}
+                endContent={onRemovePlace ? (
+                  <button type="button" className="tn-iconbtn pc-remove" aria-label={t('place.removeNamed', { name: p.name })} onClick={(e) => {
+                    e.stopPropagation();
+                    onRemovePlace(p.placeRef);
+                  }}><CloseIcon /></button>
+                ) : undefined}
+              />;
             })}
           </List>
         </Card>
+      )}
+      {searchingMap && (
+        <Sheet isOpen onClose={() => setSearchingMap(false)} title={t('mapPick.searchNew')} height="tall">
+          <Suspense fallback={<span className="tl-map-wait" />}>
+            <PlaceMapPicker
+              plan={plan}
+              onAdd={saveFromMap}
+              onUndo={(ref) => { onChange(removePlace(plan, ref)); setAdded(null); }}
+              onUnavailable={() => {
+                setSearchingMap(false);
+                onNotice({ tone: 'info', text: t('mapPick.off') });
+              }}
+              onMapFailed={() => {
+                mapBroken = true;
+                setSearchingMap(false);
+                onNotice({ tone: 'info', text: t('mapPick.mapFailed') });
+              }}
+              primary={false}
+            />
+          </Suspense>
+        </Sheet>
       )}
 
       <h3 className="tl-sheet-section" style={{ marginTop: 8 }}>

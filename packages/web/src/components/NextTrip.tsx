@@ -4,7 +4,7 @@ import { t } from '../lib/i18n';
 import { navigate } from '../lib/router';
 import { tripSketch, type TripSketch } from '../lib/routeSketch';
 import { tripWhen } from '../lib/nextTrip';
-import { nightsLabel, todayIn, unassignedVisits, type TripDoc } from '../lib/trips';
+import { nightsLabel, setupStepNumber, todayIn, unassignedVisits, type TripDoc } from '../lib/trips';
 import { ChevronIcon } from './shell/icons';
 import { Tag } from './shell/Tag';
 import './nextTrip.css';
@@ -26,7 +26,6 @@ export function NextTrip({ doc, sent, overlaps = 0 }: { doc: TripDoc; sent?: Sen
   const todo = [
     unassigned > 0 ? t('home.unassignedBadge', { n: unassigned }) : null,
     lodgingEmpty > 0 ? t('home.next.lodgingEmpty', { n: lodgingEmpty }) : null,
-    overlaps > 0 ? t('home.overlap', { n: overlaps }) : null, // M49: other trips on the same dates
   ].filter(Boolean);
   const href = `/trips/${doc.tripId}`;
 
@@ -40,7 +39,10 @@ export function NextTrip({ doc, sent, overlaps = 0 }: { doc: TripDoc; sent?: Sen
         navigate(href);
       }}>
       <span className="tn-next-head">
-        <span className="tn-next-when">{inSetup ? <Tag tone="accent">{t('setup.homeBadge', { step: doc.setup!.step })}</Tag> : when.label}</span>
+        <span className="tn-next-when">
+          {inSetup ? <Tag tone="accent">{t('setup.homeBadge', { step: setupStepNumber(doc.setup!.step) })}</Tag> : when.label}
+          {overlaps > 0 && <Tag tone="warn">{t('home.overlap', { n: overlaps })}</Tag>}
+        </span>
         <span className="tn-next-name">{plan.name}</span>
         <span className="tn-next-meta">
           {t('common.tripSummary', { period: periodLabel(plan.startDate, plan.endDate), nights: nightsLabel(plan).replace(/ /g, ' '), places: plan.places.length })}

@@ -3,6 +3,7 @@ import { CarPage } from './pages/CarPage';
 import { HomePage } from './pages/HomePage';
 import { PlacesPage } from './pages/PlacesPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { trash } from './lib/db';
 import { t } from './lib/i18n';
 import { stashQrHash } from './lib/qrArrival';
 import { usePath } from './lib/router';
@@ -17,12 +18,16 @@ const TripEditorPage = lazy(() => editor().then((m) => ({ default: m.TripEditorP
 const ConnectPage = lazy(() => import('./pages/ConnectPage').then((m) => ({ default: m.ConnectPage })));
 const AddSharedPlacePage = lazy(() => import('./pages/AddSharedPlacePage').then((m) => ({ default: m.AddSharedPlacePage })));
 const StartPlacePage = lazy(() => import('./pages/StartPlacePage').then((m) => ({ default: m.StartPlacePage })));
+const TrashPage = lazy(() => import('./pages/TrashPage').then((m) => ({ default: m.TrashPage })));
+const AboutPage = lazy(() => import('./pages/AboutPage').then((m) => ({ default: m.AboutPage })));
 const PrivacyPage = lazy(() => import('./pages/PrivacyPage').then((m) => ({ default: m.PrivacyPage })));
 
 /** The browser tab's name for each screen ("여행 · 떠날지도"), so history and the task switcher say where one is. */
 function titleFor(path: string): string {
   const name =
     path === '/c' ? t('connect.title')
+    : path === '/settings/trash' ? t('trash.title')
+    : path === '/about' ? t('more.about')
     : path === '/privacy' ? t('privacy.title')
     : path === '/add' ? t('add.title')
     : path === '/trips/new' ? t('editor.titleNew')
@@ -41,6 +46,14 @@ function titleFor(path: string): string {
 export default function App() {
   const path = usePath();
   useEffect(() => {
+    const prune = () => { void trash.prune().catch(() => undefined); };
+    prune();
+    window.addEventListener('focus', prune);
+    document.addEventListener('visibilitychange', prune);
+    const timer = window.setInterval(prune, 60_000);
+    return () => { window.removeEventListener('focus', prune); document.removeEventListener('visibilitychange', prune); window.clearInterval(timer); };
+  }, []);
+  useEffect(() => {
     document.title = titleFor(path);
   }, [path]);
   // The editor is where most visits go next: fetch its code once the first screen is up, so opening a trip does not wait.
@@ -57,9 +70,12 @@ function screen(path: string) {
   // The QR's secret leaves the address bar here, synchronously, before the pairing page's code is fetched.
   if (path === '/c') stashQrHash();
   if (path === '/c') return <ConnectPage />;
+  if (path === '/settings/trash') return <TrashPage />;
+  if (path === '/about') return <AboutPage />;
   if (path === '/privacy') return <PrivacyPage />;
   // 설정 › 출발 장소 › 집·회사·즐겨찾기 1–3 ('/settings/home' was the home address's first address; keep it working).
-  const slot = path === '/settings/home' ? 'home' : path.match(/^\/settings\/place\/([a-z0-9]+)$/)?.[1];
+  const slot = path === '/settings/home' ? 'home' : path.match(/^\/settings\/place\/([a-z0-9-]+)$/)?.[1];
+  if (slot === 'new') return <StartPlacePage key="new-place" slot="new" />;
   if (slot && isPresetSlot(slot)) return <StartPlacePage key={slot} slot={slot} />;
   if (path === '/add') return <AddSharedPlacePage />;
   // Keyed by trip so moving between trips (duplicate, save of a new trip) starts the editor fresh: no unsaved flag,

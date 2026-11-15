@@ -22,7 +22,7 @@ import { StartSheet } from '../editor/sheets/StartSheet';
 import { TripInfoPanel } from '../editor/TripInfoPanel';
 import { TripSetup } from '../editor/TripSetup';
 import { VisitDialog } from '../editor/VisitDialog';
-import { TRIPS_CHANGED, trips } from '../lib/db';
+import { TRIPS_CHANGED, trash, trips } from '../lib/db';
 import { dayTimeGap, type TimeGap } from '../lib/dayNote';
 import { minutesLabel, shortDate } from '../lib/format';
 import { t } from '../lib/i18n';
@@ -36,7 +36,7 @@ import { laterSig, laterStart, withDeparture } from '../lib/laterStart';
 import { cleanNotes, setNote, type TripNotes } from '../lib/notes';
 import { allRuns, applyRun, cleanLegMeters, daySummary, emptyRuns, fetchRun, kmLabel, runSignature } from '../lib/routeTimes';
 import { defaultHome } from '../lib/settings';
-import { cleanLodgingTbd, cleanSetup, emptyPlan, legKeys, newDoc, nightsLabel, nowIso, placeOf, relinkLegs, rememberLegs, savePlan, unassign, unassignedVisits, visitOf, type LegBook, type TripDoc, type TripSetupState } from '../lib/trips';
+import { cleanLodgingTbd, cleanSetup, emptyPlan, tripName, legKeys, newDoc, nightsLabel, nowIso, placeOf, relinkLegs, rememberLegs, savePlan, unassign, unassignedVisits, visitOf, type LegBook, type TripDoc, type TripSetupState } from '../lib/trips';
 import '../editor/timeline.css';
 
 // Opened from the ⋯ menu, rarely and never first: each loads when asked for (the route engine comes with 경로 추천).
@@ -66,7 +66,7 @@ const PULL_MAX = 96;
 const STUCK_AT = 56 + 56 + 8;
 
 /** The plan as stored and shared: a blank name becomes the default one (the transfer needs a name). */
-const named = (p: Trip): Trip => (p.name.trim() ? p : { ...p, name: t('trip.defaultName') });
+const named = (p: Trip): Trip => ({ ...p, name: tripName(p) });
 
 /**
  * Writes the trip to this phone and tells listening lists. The revision goes up only when the plan's content changed,
@@ -616,7 +616,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
   return (
     <NotesContext.Provider value={notesApi}>
     <PushScreen
-      title={title}
+      title={inSetup ? t('setup.pageTitle') : title}
       onBack={() => leave()}
       actions={
         <>
@@ -929,9 +929,16 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
         actionLabel={t('editor.delete.action')}
         actionVariant="destructive" // the confirm step of a destructive action: the negative fill (design/TOSS.md §5)
         onAction={async () => {
-          deleting.current = true; // deleting: nothing may save the trip back on the way out (a re-render resets `dirty`)
-          await trips.remove(doc.tripId);
-          navigate('/', true);
+          if (latest.current.dirty && !(await flush())) return;
+          deleting.current = true;
+          try {
+            await queue.current;
+            await trash.move(doc.tripId);
+            navigate('/', true);
+          } catch {
+            deleting.current = false;
+            fail(t('trash.failed'));
+          }
         }}
       />
     </PushScreen>

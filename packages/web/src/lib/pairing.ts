@@ -195,7 +195,7 @@ export interface ListPlace {
   category: PlaceHit['category'];
 }
 
-/** A Naver "저장 목록": the list's name, how many it holds, and its places (at most 100). No owner details. */
+/** A Naver "저장 목록": the list's name, how many it holds, and its places. No owner details. */
 export interface ResolvedList {
   kind: 'list';
   source: 'naver';

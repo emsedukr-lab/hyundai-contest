@@ -7,7 +7,7 @@
 | 앱 이름 | 떠날지도 (`io.tteonaljido.car`) |
 | 한 줄 소개 | 장소만 담으면 날짜별 동선을 짜 주고, 차에서 QR로 불러와 내비가 순서대로 안내하는 여행 앱 |
 | 차량 APK | [`apk/car/이충지_떠날지도_차량용_release.apk`](apk/car/이충지_떠날지도_차량용_release.apk) · release 0.9.0 (versionCode 9) · 서명 v2+v3 |
-| 모바일 APK | [`apk/mobile/이충지_떠날지도_모바일용_release.apk`](apk/mobile/이충지_떠날지도_모바일용_release.apk) · release 0.2.0 (versionCode 2) · 서명 v2+v3 |
+| 모바일 APK | [`apk/mobile/이충지_떠날지도_모바일용_release.apk`](apk/mobile/이충지_떠날지도_모바일용_release.apk) · release 0.3.0 (versionCode 3) · 서명 v2+v3 |
 | APK SHA-256 | [`apk/SHA256SUMS.txt`](apk/SHA256SUMS.txt) |
 | 개발 에뮬레이터 | Pleos Connect Emulator 2.1.0 (Android 14, API 34, arm64) |
 | 화면 규격 | 2560×1440, 160dpi (Connect-S-17 기본) |
@@ -64,12 +64,13 @@ adb shell am start --user 10 -n io.tteonaljido.car/.MainActivity
 ## 주요 기능
 
 **휴대폰 (웹)**
-- 새 여행 4단계: 여행 정보 → 장소 담기 → 예약·꼭 갈 곳 → 경로 추천
+- 새 여행 3단계: 기본 정보·장소(여행명·기간·출발/도착지·시간·네이버 공유 URL) → 숙소·예약 → 경로 추천
 - 장소 담기: 카카오 검색, 지도에서 보고 담기, 네이버 지도 공유(장소 하나 또는 '저장 목록' 통째로). 카카오맵 공유 링크는 지원하지 않습니다
 - 여행 전체를 한 번에 놓고 날짜 배정과 방문 순서를 정하는 동선 최적화 (영업시간·예약·아침·점심·저녁 식사 시간·숙소 입실/퇴실 반영)
 - 카카오모빌리티 길찾기로 이동시간·거리, 실제 도로 경로 지도
 - 출발을 늦춰도 되는 날은 늦게 출발하기 제안
 - 계정 없이 이 브라우저에만 저장, 서버를 거치는 내용은 종단간 암호화
+- 설정에서 이름을 붙인 자주 쓰는 장소·장소 불러오기/보관함·여행 파일 백업/불러오기·휴지통, 삭제한 여행은 30일 동안 복원 가능(앱 실행·복귀 시와 실행 중 만료 항목 정리)
 
 **차량 (Pleos Connect)**
 - 일회용 QR과 6자리 확인 코드로 여행 불러오기, 불러오기 전 재검증

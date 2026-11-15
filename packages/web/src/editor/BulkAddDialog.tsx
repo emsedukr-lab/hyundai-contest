@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
-import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { CheckboxList, CheckboxListItem } from '@astryxdesign/core/CheckboxList';
 import { Divider } from '@astryxdesign/core/Divider';
 import { List, ListItem } from '@astryxdesign/core/List';
@@ -16,6 +15,7 @@ import { JS_KEY, loadKakao, numberPin } from '../lib/kakaoSdk';
 import { t } from '../lib/i18n';
 import { ApiError, searchPlaces, type PlaceHit, type ResolvedList } from '../lib/pairing';
 import { fromListPlace, inTrip } from '../lib/pasteImport';
+import { Sheet } from './Sheet';
 import { byName, CATEGORY_LABEL, fromHit, type NewPlace } from './PlaceSearch';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -135,32 +135,8 @@ function ListAddDialog({ isOpen, list, existing, room, onClose, onAdd }: { isOpe
   const skipped = list.total - list.places.length;
 
   return (
-    <Dialog isOpen={isOpen} onOpenChange={(o) => !o && onClose()} width={640}>
-      <DialogHeader
-        title={t('bulk.list.title', { title: list.title || t('bulk.list.untitled'), n: list.places.length })}
-        subtitle={t('bulk.list.source')}
-        onOpenChange={(o) => !o && onClose()}
-      />
-      <VStack gap={4}>
-        {skipped > 0 && <Banner status="info" title={t('bulk.list.skipped', { n: skipped })} />}
-        {fresh.length === 0 && <Banner status="info" title={t('bulk.list.allIn')} />}
-        {fresh.length > room && <Banner status="warning" title={room > 0 ? t('bulk.list.room', { n: room }) : t('trip.placeLimit', { n: TRANSFER_LIMITS.maxPlaces })} />}
-        {showMap && <div ref={mapRef} style={{ width: '100%', height: 200 }} role="img" aria-label={t('map.bulkAria')} />}
-        <Card pad={0}>
-          <CheckboxList label={t('bulk.list.pick')} isLabelHidden value={checked} onChange={setChecked} hasDividers>
-            {rows.map((r, i) => (
-              <CheckboxListItem
-                key={r.key}
-                value={r.key}
-                label={`${i + 1}. ${r.place.name}`}
-                description={[CATEGORY_LABEL[r.place.category], r.place.address].filter(Boolean).join(' · ')}
-                isDisabled={r.already}
-                endContent={r.already ? <Tag>{t('tl.inTrip')}</Tag> : undefined}
-              />
-            ))}
-          </CheckboxList>
-        </Card>
-        <HStack gap={2} className="tn-dialog-foot">
+    <Sheet isOpen={isOpen} onClose={onClose} title={t('bulk.list.title', { title: list.title || t('bulk.list.untitled'), n: list.places.length })} height="tall" footer={
+        <HStack gap={2}>
           <Button label={t('common.cancel')} variant="secondary" onClick={onClose} />
           <StackItem size="fill">
             <Button
@@ -175,8 +151,34 @@ function ListAddDialog({ isOpen, list, existing, room, onClose, onAdd }: { isOpe
             />
           </StackItem>
         </HStack>
+    }>
+      <VStack gap={4}>
+        <Text color="secondary">{t('bulk.list.source')}</Text>
+        {skipped > 0 && <Banner status="info" title={t('bulk.list.skipped', { n: skipped })} />}
+        {fresh.length === 0 && <Banner status="info" title={t('bulk.list.allIn')} />}
+        {fresh.length > room && <Banner status="warning" title={room > 0 ? t('bulk.list.room', { n: room }) : t('trip.placeLimit', { n: TRANSFER_LIMITS.maxPlaces })} />}
+        {showMap && <div ref={mapRef} style={{ width: '100%', height: 200 }} role="img" aria-label={t('map.bulkAria')} />}
+        <HStack gap={2}>
+          <Button label={t('bulk.list.selectAll')} variant="secondary" size="sm" isDisabled={fresh.length === 0 || chosen.length === fresh.length} onClick={() => setChecked(fresh.map((r) => r.key))} />
+          <Button label={t('bulk.list.clear')} variant="ghost" size="sm" isDisabled={chosen.length === 0} onClick={() => setChecked([])} />
+          <Text color="secondary">{t('bulk.list.selected', { n: chosen.length, total: fresh.length })}</Text>
+        </HStack>
+        <Card pad={0}>
+          <CheckboxList label={t('bulk.list.pick')} isLabelHidden value={checked} onChange={setChecked} hasDividers>
+            {rows.map((r, i) => (
+              <CheckboxListItem
+                key={r.key}
+                value={r.key}
+                label={`${i + 1}. ${r.place.name}`}
+                description={[CATEGORY_LABEL[r.place.category], r.place.address].filter(Boolean).join(' · ')}
+                isDisabled={r.already}
+                endContent={r.already ? <Tag>{t('tl.inTrip')}</Tag> : undefined}
+              />
+            ))}
+          </CheckboxList>
+        </Card>
       </VStack>
-    </Dialog>
+    </Sheet>
   );
 }
 
@@ -239,8 +241,23 @@ function SearchAddDialog({ isOpen, terms, lodgingOnly, onClose, onAdd }: { isOpe
   const { mapRef, showMap } = useOverviewMap(isOpen, coords);
 
   return (
-    <Dialog isOpen={isOpen} onOpenChange={(o) => !o && onClose()} width={640}>
-      <DialogHeader title={t('bulk.title')} onOpenChange={(o) => !o && onClose()} />
+    <Sheet isOpen={isOpen} onClose={onClose} title={t('bulk.title')} height="tall" footer={
+        <HStack gap={2}>
+          <Button label={t('common.cancel')} variant="secondary" onClick={onClose} />
+          <StackItem size="fill">
+            <Button
+              label={t('bulk.addN', { n: selected.length })}
+              variant="primary"
+              width="100%"
+              isDisabled={selected.length === 0}
+              onClick={() => {
+                onAdd(selected);
+                onClose();
+              }}
+            />
+          </StackItem>
+        </HStack>
+    }>
       <VStack gap={4}>
         {!rows ? (
           <HStack gap={2} vAlign="center">
@@ -271,22 +288,7 @@ function SearchAddDialog({ isOpen, terms, lodgingOnly, onClose, onAdd }: { isOpe
             </Card>
           </>
         )}
-        <HStack gap={2}>
-          <Button label={t('common.cancel')} variant="secondary" onClick={onClose} />
-          <StackItem size="fill">
-            <Button
-              label={t('bulk.addN', { n: selected.length })}
-              variant="primary"
-              width="100%"
-              isDisabled={selected.length === 0}
-              onClick={() => {
-                onAdd(selected);
-                onClose();
-              }}
-            />
-          </StackItem>
-        </HStack>
       </VStack>
-    </Dialog>
+    </Sheet>
   );
 }

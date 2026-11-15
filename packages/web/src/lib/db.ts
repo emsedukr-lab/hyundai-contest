@@ -29,7 +29,15 @@ export interface SendLogEntry {
   outcome: string;
 }
 
+export const TRASH_RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
+export interface TrashedTrip {
+  tripId: string;
+  doc: TripDoc;
+  deletedAt: number;
+}
+
 interface Schema extends DBSchema {
+  trash: { key: string; value: TrashedTrip };
   trips: { key: string; value: TripDoc };
   pairing: { key: string; value: PairingRecord };
   sendLog: { key: number; value: SendLogEntry; indexes: { byTrip: string } };
@@ -38,8 +46,10 @@ interface Schema extends DBSchema {
 
 let dbp: Promise<IDBPDatabase<Schema>> | null = null;
 const db = () =>
-  (dbp ??= openDB<Schema>('tteonaljido', 2, {
-    // Version-aware so existing trips survive the v1 → v2 upgrade (createObjectStore throws if it already exists).
+  (dbp ??= openDB<Schema>('tteonaljido', 3, {
+    blocking() { void dbp?.then((d) => d.close()); dbp = null; },
+    terminated() { dbp = null; },
+    // Keep existing stores and trips when adding favorites or trash.
     upgrade(d, oldVersion) {
       if (oldVersion < 1) {
         d.createObjectStore('trips', { keyPath: 'tripId' });
@@ -49,6 +59,7 @@ const db = () =>
       if (oldVersion < 2) {
         d.createObjectStore('favorites', { keyPath: 'id' });
       }
+      if (oldVersion < 3) d.createObjectStore('trash', { keyPath: 'tripId' });
     },
   }));
 
@@ -60,6 +71,57 @@ export const trips = {
   get: async (id: string) => (await db()).get('trips', id),
   put: async (doc: TripDoc) => void (await (await db()).put('trips', doc)),
   remove: async (id: string) => void (await (await db()).delete('trips', id)),
+};
+
+/** Moves and restores use one transaction so a failed write never loses the original trip. */
+export const trash = {
+  move: async (id: string): Promise<boolean> => {
+    const tx = (await db()).transaction(['trips', 'trash'], 'readwrite');
+    try {
+      const doc = await tx.objectStore('trips').get(id);
+      if (doc) {
+        await tx.objectStore('trash').put({ tripId: id, doc, deletedAt: Date.now() });
+        await tx.objectStore('trips').delete(id);
+      }
+      await tx.done;
+      return !!doc;
+    } catch (error) {
+      try { tx.abort(); } catch { /* already aborted */ }
+      await tx.done.catch(() => undefined);
+      throw error;
+    }
+  },
+  restore: async (id: string): Promise<TripDoc | null> => {
+    const tx = (await db()).transaction(['trips', 'trash'], 'readwrite');
+    try {
+      const entry = await tx.objectStore('trash').get(id);
+      let restored: TripDoc | null = null;
+      if (entry && entry.deletedAt + TRASH_RETENTION_MS <= Date.now()) {
+        await tx.objectStore('trash').delete(id);
+      } else if (entry && !(await tx.objectStore('trips').get(id))) {
+        await tx.objectStore('trips').put(entry.doc);
+        await tx.objectStore('trash').delete(id);
+        restored = entry.doc;
+      }
+      await tx.done;
+      return restored;
+    } catch (error) {
+      try { tx.abort(); } catch { /* already aborted */ }
+      await tx.done.catch(() => undefined);
+      throw error;
+    }
+  },
+  prune: async () => {
+    const tx = (await db()).transaction('trash', 'readwrite');
+    for (const entry of await tx.store.getAll()) {
+      if (entry.deletedAt + TRASH_RETENTION_MS <= Date.now()) await tx.store.delete(entry.tripId);
+    }
+    await tx.done;
+  },
+  all: async (): Promise<TrashedTrip[]> => {
+    await trash.prune();
+    return (await (await db()).getAll('trash')).sort((a, b) => b.deletedAt - a.deletedAt);
+  },
 };
 
 export const favorites = {

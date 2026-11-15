@@ -1,103 +1,98 @@
-import { useEffect, useRef, useState } from 'react';
+import { useId, useState } from 'react';
 import { Banner } from '@astryxdesign/core/Banner';
-import { DateRangeInput } from '@astryxdesign/core/DateRangeInput';
+import { Button } from '@astryxdesign/core/Button';
+import { Calendar, type DateRange } from '@astryxdesign/core/Calendar';
 import type { Home, Trip } from '@tteonaljido/shared';
-import { BedIcon, FlagIcon } from '../components/shell/icons';
-import { shortDate } from '../lib/format';
+import { BedIcon, CalendarIcon, CheckIcon, CloseIcon, FlagIcon, PinIcon } from '../components/shell/icons';
+import { shortDate, tripPeriodLabel } from '../lib/format';
 import { t } from '../lib/i18n';
-import { setPeriod } from '../lib/trips';
-import { EndpointField } from './EndpointField';
+import { defaultTripName, setEndBy, setEndpoint, setPeriod } from '../lib/trips';
+import { EndpointField, endpointValue } from './EndpointField';
 import { LodgingField } from './LodgingField';
 import { useNotes } from './NotesContext';
+import { Sheet } from './Sheet';
+import { TimeSelect } from './TimeSelect';
 import './timeline.css';
 
-type Range = NonNullable<Parameters<typeof DateRangeInput>[0]['value']>;
-
-/**
- * 여행 정보 — the editor page's first section, styled like the day timelines below it. A header card holds the trip's
- * name (large, typed in place) and its dates; then the trip's frame on the same dashed rail: 출발 → each night's
- * lodging → 귀가, each a grey card with a small kicker. Everything is edited right here (no popup).
- *
- * `isNew` (the setup's first step, M66): the name field takes the focus on entry, and a night without lodging is not
- * an error yet — it shows a neutral hint until that night's field was left empty or 다음 was tried (`showRequired`).
- * In the editor of an existing trip a missing lodging is a real gap and shows as one from the start.
- */
-export function TripInfoPanel({
-  plan,
-  home,
-  onChange,
-  onOpenSettings,
-  isNew = false,
-  showRequired = true,
-}: {
+/** Basics and collected places share the first setup page; lodging is selected afterwards. */
+export function TripInfoPanel({ plan, home, onChange, onOpenSettings, showRequired = true, section = 'all' }: {
   plan: Trip;
   home: Home | null;
   onChange: (p: Trip) => void;
   onOpenSettings: () => void;
-  isNew?: boolean;
   showRequired?: boolean;
+  section?: 'all' | 'basics' | 'lodging';
 }) {
   const { lodgingTbd } = useNotes();
+  const nameId = useId();
+  const periodId = useId();
   const [error, setError] = useState<string | null>(null);
-  /** Nights whose lodging field was visited and left empty. */
+  const [periodOpen, setPeriodOpen] = useState(false);
   const [left, setLeft] = useState<number[]>([]);
   const nights = plan.days.slice(0, -1);
-  const nameRef = useRef<HTMLInputElement>(null);
-  useEffect(() => {
-    if (isNew && !plan.name) nameRef.current?.focus({ preventScroll: true });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const lastDay = plan.days[plan.days.length - 1];
+  const first = plan.firstDay;
+  const period = tripPeriodLabel(plan.startDate, plan.endDate);
+  const sameOrigin = endpointValue(plan.origin) === endpointValue(plan.finalDestination);
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      {error && (
+      {error && <div className="tn-pad"><Banner status="error" title={error} isDismissable onDismiss={() => setError(null)} /></div>}
+      {section !== 'lodging' && <>
         <div className="tn-pad">
-          <Banner status="error" title={error} isDismissable onDismiss={() => setError(null)} />
-        </div>
-      )}
-      <div className="tn-pad">
-        <div className="tl-infocard">
-          <input
-            ref={nameRef}
-            className="tl-name-input"
-            aria-label={t('editor.name')}
-            placeholder={t('editor.name')}
-            value={plan.name}
-            maxLength={60}
-            onChange={(e) => onChange({ ...plan, name: e.target.value.slice(0, 60) })}
-          />
-          {/* The whole 48px field opens the calendar (M66): the trigger's hit area is stretched over the field (timeline.css). */}
-          <DateRangeInput
-            label={t('editor.period')}
-            isLabelHidden
-            controlClassName="tl-datefield"
-            value={{ start: plan.startDate, end: plan.endDate } as Range}
-            maxRangeSpan={14}
-            hasClear={false}
-            onChange={(r) => {
-              if (!r) return;
-              try {
-                onChange(setPeriod(plan, r.start, r.end));
-                setError(null);
-              } catch (e) {
-                setError((e as Error).message);
-              }
-            }}
-          />
-        </div>
-      </div>
-
-      <div className="tl">
-        <div className="tl-row is-first">
-          <div className="tl-rail">
-            <span className="tl-marker is-accent" aria-hidden="true" />
+          <div className="tl-infocard">
+            <label htmlFor={nameId} className="tl-kicker">{t('editor.name')}</label>
+            <div className="ti-name-control">
+              <input id={nameId} className="tl-name-input" placeholder={defaultTripName(plan)} value={plan.name} maxLength={60} onChange={(e) => onChange({ ...plan, name: e.target.value.slice(0, 60) })} />
+              {plan.name && <button type="button" className="tn-iconbtn" aria-label={t('setup.clearName')} onClick={() => { onChange({ ...plan, name: '' }); document.getElementById(nameId)?.focus(); }}><CloseIcon /></button>}
+            </div>
+            <label htmlFor={periodId} className="tl-kicker">{t('editor.period')}</label>
+            <button id={periodId} type="button" className="ti-period-button" aria-haspopup="dialog" aria-expanded={periodOpen} aria-label={`${t('editor.period')} · ${plan.startDate}–${plan.endDate} · ${period}`} onClick={() => setPeriodOpen(true)}>
+              <CalendarIcon /><span>{period}</span>
+            </button>
           </div>
-          <div className="tl-card">
-            <div className="tl-card-body">
-              <span className="tl-kicker">{t('tl.start')}</span>
-              <EndpointField which="origin" compact plan={plan} home={home} onChange={onChange} onOpenSettings={onOpenSettings} />
+        </div>
+        <div className="tn-pad">
+          <div className="tl-infocard ti-endpoints">
+            <h3 className="tl-sheet-section">{t('setup.endpoints')}</h3>
+            <div className="ti-endpoint-row">
+              <span className="ti-endpoint-icon is-start" aria-hidden="true"><PinIcon /></span>
+              <div className="ti-endpoint-field">
+                <span className="tl-kicker">{t('editor.startPlace')}</span>
+                <EndpointField which="origin" compact plan={plan} home={home} onChange={onChange} onOpenSettings={onOpenSettings} />
+              </div>
+            </div>
+            <div className="ti-endpoint-row">
+              <span className="ti-endpoint-icon" aria-hidden="true"><FlagIcon /></span>
+              <div className="ti-endpoint-field">
+                <span className="tl-kicker">{t('tl.endPlace')}</span>
+                <EndpointField which="finalDestination" compact plan={plan} home={home} onChange={onChange} onOpenSettings={onOpenSettings} />
+              </div>
+            </div>
+            <div className="ti-same-origin">
+              <Button label={t(sameOrigin ? 'setup.sameOriginApplied' : 'setup.sameOrigin')} icon={sameOrigin ? <CheckIcon /> : undefined} variant="secondary" isDisabled={plan.origin.kind === 'CURRENT'} onClick={() => onChange(setEndpoint(plan, 'finalDestination', plan.origin))} />
+              {plan.origin.kind === 'CURRENT' && <span className="tl-meta">{t('setup.sameOriginHint')}</span>}
+            </div>
+            <div className="ti-times">
+              <div><span className="tl-kicker">{first.basis === 'DEPART_ORIGIN' ? t('setup.departTime') : t('editor.arriveTime')}</span>
+                <TimeSelect label={first.basis === 'DEPART_ORIGIN' ? t('setup.departTime') : t('editor.arriveTime')} value={first.basis === 'DEPART_ORIGIN' ? first.departTime : first.arriveTime} clearable={first.basis === 'DEPART_ORIGIN'} placeholder={t('time.none')} onChange={(time) => {
+                  if (first.basis === 'ARRIVE_FIRST_STOP') { if (time) onChange({ ...plan, firstDay: { ...first, arriveTime: time } }); }
+                  else onChange({ ...plan, firstDay: { ...first, departTime: time } });
+                }} />
+              </div>
+              <div><span className="tl-kicker">{t('setup.returnTime')}</span>
+                <TimeSelect label={t('setup.returnTime')} value={lastDay.endBy} clearable clearLabel={t('time.undecided')} placeholder={t('time.undecided')} suggest="18:00" onChange={(time) => onChange(setEndBy(plan, lastDay.dayIndex, time))} />
+              </div>
             </div>
           </div>
         </div>
+        <Sheet isOpen={periodOpen} onClose={() => setPeriodOpen(false)} title={t('editor.period')}>
+          <Calendar mode="range" value={{ start: plan.startDate, end: plan.endDate } as DateRange} maxRangeSpan={14} numberOfMonths={1} onChange={(range) => {
+            try { onChange(setPeriod(plan, range.start, range.end)); setError(null); setPeriodOpen(false); }
+            catch (e) { setError((e as Error).message); }
+          }} />
+        </Sheet>
+      </>}
+      {section !== 'basics' && <div className="tl">
         {nights.map((d, i) => {
           // No lodging yet, and not marked 미정: the toss input-error look (red 1.5px border, red helper line) — in a new
           // trip only once the field was left empty or 다음 was tried; before that the same line is a neutral hint.
@@ -127,20 +122,7 @@ export function TripInfoPanel({
           </div>
           );
         })}
-        <div className="tl-row is-last">
-          <div className="tl-rail">
-            <span className="tl-marker" aria-hidden="true">
-              <FlagIcon />
-            </span>
-          </div>
-          <div className="tl-card">
-            <div className="tl-card-body">
-              <span className="tl-kicker">{t('tl.home')}</span>
-              <EndpointField which="finalDestination" compact plan={plan} home={home} onChange={onChange} onOpenSettings={onOpenSettings} />
-            </div>
-          </div>
-        </div>
-      </div>
+      </div>}
     </div>
   );
 }

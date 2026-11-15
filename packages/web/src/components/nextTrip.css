@@ -32,6 +32,10 @@
 }
 /* When: '6일 뒤 출발' — the card's one blue line (accent-text, label-m). */
 .tn-next-when {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
   font-size: 15px;
   line-height: 19px;
   font-weight: 600;

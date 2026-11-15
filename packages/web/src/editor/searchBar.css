@@ -1,19 +1,13 @@
-/*
- * 장소 검색창 — the M38 behaviour (a filled field with the magnifier inside, no border at rest, a border on focus) as
- * the Toss field (design/TOSS.md §5): rest = the weak fill of its ground (shell.css) with no visible border, focus =
- * the surface with a 1.5px accent border, placeholder and icon in the secondary ink. 48px tall, radius 12, the value
- * in body-1 17 (no iOS zoom).
- * The doubled class outranks Astryx's single-class atomic styles on the same element.
- */
+/* The doubled class outranks Astryx's atomic styles on the same element. */
 .tn-searchbar.tn-searchbar {
   height: 48px;
   min-height: 48px;
   box-sizing: border-box;
   gap: 8px;
   padding: 0 8px 0 12px;
-  border: 1.5px solid transparent;
+  border: 1.5px solid var(--tn-hairline);
   border-radius: var(--radius-element);
-  background: var(--color-neutral);
+  background: var(--tn-surface);
   box-shadow: none;
   outline: none;
   transition:
@@ -21,8 +15,11 @@
     background-color 120ms var(--tn-ease);
 }
 .tn-searchbar.tn-searchbar:hover {
-  border-color: transparent;
+  border-color: var(--tn-text-secondary);
 }
+.ps-place-actions.ps-place-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.ps-place-actions > button { min-width: 0; min-height: 44px; width: 100%; }
+.ps-action-label { display: block; white-space: normal; word-break: keep-all; line-height: 20px; }
 .tn-searchbar.tn-searchbar:focus-within {
   border-color: var(--tn-accent);
   background: var(--color-background-surface);

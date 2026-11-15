@@ -19,6 +19,7 @@ export function TimeSelect({
   onChange,
   step = 30,
   clearable = false,
+  clearLabel = t('time.none'),
   placeholder,
   suggest,
 }: {
@@ -27,6 +28,7 @@ export function TimeSelect({
   onChange: (time: string | null) => void;
   step?: number;
   clearable?: boolean;
+  clearLabel?: string;
   placeholder?: string;
   suggest?: string | null;
 }) {
@@ -76,7 +78,7 @@ export function TimeSelect({
         isOpen={open}
         onClose={() => setOpen(false)}
         title={label}
-        footer={clearable ? <Button label={t('time.none')} variant="secondary" size="lg" width="100%" onClick={() => pick(null)} /> : undefined}>
+        footer={clearable ? <Button label={clearLabel} variant="secondary" size="lg" width="100%" onClick={() => pick(null)} /> : undefined}>
         <div className="tp">
           <SegmentedControl label={t('time.period')} value={period} onChange={(v) => setPeriod(v as DayPeriod)}>
             <SegmentedControlItem value="am" label={t('time.am')} />

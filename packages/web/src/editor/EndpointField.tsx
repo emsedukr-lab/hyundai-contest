@@ -1,105 +1,66 @@
 import { useState } from 'react';
-import { IconButton } from '@astryxdesign/core/IconButton';
-import { Selector } from '@astryxdesign/core/Selector';
-import { VStack } from '@astryxdesign/core/Stack';
-import { Text } from '@astryxdesign/core/Text';
+import { Banner } from '@astryxdesign/core/Banner';
+import { Button } from '@astryxdesign/core/Button';
+import { List, ListItem } from '@astryxdesign/core/List';
 import type { Endpoint, Home, Trip } from '@tteonaljido/shared';
-import { PencilIcon } from '../components/shell/icons';
-import { locate } from '../lib/here';
+import { ChevronIcon } from '../components/shell/icons';
 import { t } from '../lib/i18n';
-import { PRESET_SLOTS, presetLabel, presetPlace } from '../lib/settings';
-import { endpointFromPreset, presetInPlan, setEndpoint, type EndpointSide } from '../lib/trips';
+import { presetSlots, presetLabel, presetPlace } from '../lib/settings';
+import { endpointFromPreset, setEndpoint, type EndpointSide } from '../lib/trips';
+import { PlaceSearch } from './PlaceSearch';
+import { Sheet } from './Sheet';
 
 export const endpointValue = (e: Endpoint) => (e.kind === 'PLACE' ? e.placeRef : e.kind);
 export const toEndpoint = (v: string): Endpoint => (v === 'HOME' ? { kind: 'HOME' } : v === 'CURRENT' ? { kind: 'CURRENT' } : { kind: 'PLACE', placeRef: v });
 
-/**
- * One end of the trip — 출발 장소 or 귀가 시 도착 장소. The start lists 현재 위치 first (M59): the car's position when it
- * leaves, and what a trip starts from until a place is chosen. 집 and the saved places (설정 › 회사, 즐겨찾기 1–3) follow;
- * a saved place already in the trip answers to its place; then the trip's other places. A slot not set yet is listed
- * but disabled. The pencil beside the select opens 설정, where those places are kept.
- */
-export function EndpointField({
-  which,
-  plan,
-  home,
-  onChange,
-  onOpenSettings,
-  label,
-  isLabelHidden = false,
-  compact = false,
-}: {
+/** One control for each endpoint: saved choices and direct search share a sheet. */
+export function EndpointField({ which, plan, home, onChange, onOpenSettings, label, isLabelHidden = false, compact = false }: {
   which: EndpointSide;
   plan: Trip;
   home: Home | null;
   onChange: (p: Trip) => void;
   onOpenSettings: () => void;
   label?: string;
-  /** Hide the select's visible label when a section title above already says it (kept for screen readers). */
   isLabelHidden?: boolean;
-  /** The concise editor form: no visible label (the card or sheet around it says which end), no address or hint lines. */
   compact?: boolean;
 }) {
-  const [presets] = useState(() => PRESET_SLOTS.filter((s) => s !== 'home').map((slot) => ({ slot, place: presetPlace(slot) })));
-  const seen = new Set<string>(['HOME']);
-  const savedPlaces = [
-    ...(which === 'origin' ? [{ value: 'CURRENT', label: t('common.currentLocation'), description: t('editor.startPlace.currentHint') }] : []),
-    { value: 'HOME', label: t('common.home'), description: home ? home.address : t('editor.startPlace.homeUnset') },
-    ...presets.flatMap(({ slot, place }) => {
-      if (!place) return [{ value: `preset:${slot}`, label: presetLabel(slot), description: t('settings.home.unset'), disabled: true }];
-      const value = presetInPlan(plan, place)?.placeRef ?? `preset:${slot}`;
-      if (seen.has(value)) return []; // two slots saved as the same place: list it once
-      seen.add(value);
-      return [{ value, label: `${presetLabel(slot)} · ${place.name}`, description: place.address }];
-    }),
-  ];
-  const tripPlaces = plan.places.filter((p) => !seen.has(p.placeRef)).map((p) => ({ value: p.placeRef, label: p.name, description: p.address || undefined }));
-  const options = [
-    { type: 'section' as const, title: which === 'origin' ? t('editor.startPlace.saved') : t('tl.savedEndPlaces'), options: savedPlaces },
-    ...(tripPlaces.length ? [{ type: 'section' as const, title: t('editor.startPlace.tripPlaces'), options: tripPlaces }] : []),
-  ];
+  const [open, setOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const presets = presetSlots().filter((s) => s !== 'home').flatMap((slot) => {
+    const place = presetPlace(slot);
+    return place ? [{ slot, place }] : [];
+  });
   const current = plan[which];
-  const address =
-    current.kind === 'HOME' ? (home ? home.address : t('editor.startPlace.homeUnset'))
-    : current.kind === 'CURRENT' ? t('editor.startPlace.currentHint')
-    : plan.places.find((p) => p.placeRef === current.placeRef)?.address || undefined;
-  const pick = (v: string) => {
-    if (v === 'CURRENT') void locate(); // chosen on purpose: the phone's position times the first leg (M61, lib/here.ts)
-    if (v === 'HOME' || v === 'CURRENT') return onChange(setEndpoint(plan, which, toEndpoint(v)));
-    const preset = v.startsWith('preset:') ? presets.find((x) => `preset:${x.slot}` === v)?.place : undefined;
-    onChange(preset ? endpointFromPreset(plan, which, preset) : setEndpoint(plan, which, toEndpoint(v)));
-  };
   const fieldLabel = label ?? (which === 'origin' ? t('editor.startPlace') : t('tl.endPlace'));
-
+  const chosen = current.kind === 'CURRENT' ? t('endpoint.current') : current.kind === 'HOME' ? t('common.home') : plan.places.find((p) => p.placeRef === current.placeRef)?.name ?? t('common.place');
+  const apply = (update: () => Trip) => {
+    try { onChange(update()); setOpen(false); setError(null); }
+    catch (e) { setError((e as Error).message); }
+  };
   return (
-    <VStack gap={1}>
-      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8 }}>
-        <div style={{ flex: '1 1 auto', minWidth: 0 }}>
-          <Selector
-            label={fieldLabel}
-            isLabelHidden={isLabelHidden || compact}
-            placement="below"
-            options={options}
-            value={endpointValue(current)}
-            onChange={pick}
-          />
+    <div>
+      {!compact && !isLabelHidden && <span className="tl-kicker">{fieldLabel}</span>}
+      <button type="button" className="ti-endpoint-button" aria-label={`${fieldLabel} · ${chosen}${current.kind === 'HOME' && home ? ` · ${home.address}` : ''}`} aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen(true)}>
+        <span>{chosen}</span><ChevronIcon />
+      </button>
+      <Sheet isOpen={open} onClose={() => setOpen(false)} title={fieldLabel}>
+        {error && <Banner status="error" title={error} />}
+        <div className="tn-btnrow">
+          {which === 'origin' && <Button label={t('endpoint.current')} variant="secondary" onClick={() => apply(() => setEndpoint(plan, which, { kind: 'CURRENT' }))} />}
+          <Button label={t('common.home')} variant="secondary" onClick={() => apply(() => setEndpoint(plan, which, { kind: 'HOME' }))} />
+          {presets.map(({ slot, place }) => <Button key={slot} label={presetLabel(slot)} variant="secondary" onClick={() => apply(() => endpointFromPreset(plan, which, place))} />)}
         </div>
-        <div style={{ flex: 'none' }}>
-          <IconButton label={t('editor.home.openSettings')} icon={<PencilIcon />} variant={compact ? 'ghost' : 'secondary'} size="md" onClick={onOpenSettings} />
-        </div>
-      </div>
-      {!compact && address && (
-        <div style={{ wordBreak: 'keep-all' }}>
-          <Text type="supporting">{address}</Text>
-        </div>
-      )}
-      {!compact && presets.some((x) => !x.place) && (
-        <div style={{ wordBreak: 'keep-all' }}>
-          <Text type="supporting" color="secondary">
-            {t('editor.startPlace.hint')}
-          </Text>
-        </div>
-      )}
-    </VStack>
+        {which === 'origin' && <p className="tl-meta">{t('endpoint.currentHint')}</p>}
+        <PlaceSearch compact requireCoords hideFavorites label={t('endpoint.search')} placeholder={t('endpoint.search')} onPick={(place) => {
+          const { latE7, lonE7 } = place;
+          if (latE7 === null || lonE7 === null) return setError(t('endpoint.needLocation'));
+          apply(() => endpointFromPreset(plan, which, { name: place.name, address: place.address, latE7, lonE7 }));
+        }} />
+        {plan.places.length > 0 && <List hasDividers>
+          {plan.places.map((p) => <ListItem key={p.placeRef} label={p.name} description={p.address} onClick={() => apply(() => setEndpoint(plan, which, { kind: 'PLACE', placeRef: p.placeRef }))} />)}
+        </List>}
+        <Button label={t('editor.home.openSettings')} variant="secondary" onClick={() => { setOpen(false); onOpenSettings(); }} />
+      </Sheet>
+    </div>
   );
 }

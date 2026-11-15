@@ -1,3 +1,4 @@
+import { epochDay } from '@tteonaljido/shared';
 import { lang, t } from './i18n';
 
 const WEEKDAY = lang === 'en' ? ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] : ['일', '월', '화', '수', '목', '금', '토'];
@@ -89,3 +90,23 @@ export const chipLabel = (hhmm: string) => {
  */
 export const sentLabel = (sent: { revision: number; at: number }, currentRevision: number) =>
   t(sent.revision === currentRevision ? 'home.lastSend' : 'home.lastSendChanged', { date: dateLabel(dayOf(sent.at)) });
+
+/** A useful neighbourhood/town label without the street number or building name. */
+export function placeRegion(address: string): string {
+  const parts = address.trim().split(/\s+/).filter(Boolean);
+  const street = parts.findIndex((p) => /(?:대로|로|길)$/.test(p) || /^\d/.test(p));
+  const area = street < 0 ? parts : parts.slice(0, street);
+  return area.find((p) => /[읍면동리]$/.test(p))
+    ?? [...area].reverse().find((p) => /[시군구]$/.test(p))
+    ?? parts.slice(0, 2).join(' ');
+}
+
+/** Weekdays and duration belong with the editable period, not the page title. */
+export function tripPeriodLabel(start: string, end: string): string {
+  const stamp = (date: string) => {
+    const [y, m, d] = date.split('-').map(Number);
+    return t('date.tripDay', { month: lang === 'en' ? MONTH_EN[m - 1] : m, day: d, weekday: WEEKDAY[new Date(Date.UTC(y, m - 1, d)).getUTCDay()] });
+  };
+  const days = epochDay(end) - epochDay(start) + 1;
+  return t('date.tripPeriod', { start: stamp(start), end: stamp(end), nights: days - 1, days });
+}

@@ -42,7 +42,7 @@ export interface TripDoc {
    */
   lodgingTbd?: number[];
   /**
-   * Phone-only (M43): where a new trip is in its step-by-step setup (1 정보 · 2 장소 · 3 예약·꼭 · 4 경로 추천). Until
+   * Phone-only (M43): where a new trip is in its step-by-step setup (1 일정·장소 · 3 숙소·예약 · 4 경로 추천 (저장 단계 ID 유지)). Until
    * `done`, the editor shows the setup instead of the days. Missing on trips made before — those count as done.
    */
   setup?: TripSetupState;
@@ -67,13 +67,21 @@ export const planHash = (plan: Trip) => contentHash({ ...plan, revision: 0, upda
 
 const emptyDay = (dayIndex: number, date: string): Day => ({ dayIndex, date, departTime: dayIndex === 1 ? null : '09:00', endBy: null, visitOrder: [], legs: [null], lodgingPlaceRef: null });
 
+/** The date-based title used until the traveller supplies a name. */
+export function defaultTripName(plan: Pick<Trip, 'startDate' | 'endDate'>): string {
+  const days = dayCount(plan.startDate, plan.endDate);
+  return t('trip.autoName', { nights: days - 1, days, start: plan.startDate.slice(5).replace('-', '/'), end: plan.endDate.slice(5).replace('-', '/') });
+}
+
+export const tripName = (plan: Trip) => plan.name.trim() || defaultTripName(plan);
+
 export function emptyPlan(tripId: string = crypto.randomUUID()): Trip {
   const start = addDays(todayIn('Asia/Seoul'), 7);
   return {
     tripId,
     revision: 1,
     updatedAt: nowIso(),
-    name: t('trip.defaultName'),
+    name: defaultTripName({ startDate: start, endDate: addDays(start, 1) }),
     timezone: 'Asia/Seoul',
     startDate: start,
     endDate: addDays(start, 1),
@@ -88,7 +96,7 @@ export function emptyPlan(tripId: string = crypto.randomUUID()): Trip {
 }
 
 export async function newDoc(plan: Trip, home: Home | null = null): Promise<TripDoc> {
-  const clean = { ...plan, home: null };
+  const clean = { ...plan, name: tripName(plan), home: null };
   return { tripId: plan.tripId, revision: plan.revision, updatedAt: plan.updatedAt, planHash: await planHash(clean), plan: clean, home };
 }
 
@@ -101,7 +109,7 @@ export async function newDoc(plan: Trip, home: Home | null = null): Promise<Trip
  * left bumps it, the saves that follow in the same sitting keep it (new hash and time, same number).
  */
 export async function savePlan(doc: TripDoc, plan: Trip, home: Home | null, opts: { sameRevision?: boolean } = {}): Promise<TripDoc> {
-  const clean = { ...plan, tripId: doc.tripId, home: null };
+  const clean = { ...plan, name: tripName(plan), tripId: doc.tripId, home: null };
   const hash = await planHash(clean);
   if (hash === doc.planHash) return { ...doc, home, plan: { ...clean, revision: doc.revision, updatedAt: doc.updatedAt } };
   const revision = opts.sameRevision ? doc.revision : doc.revision + 1;
@@ -133,6 +141,7 @@ export function setPeriod(plan: Trip, start: string, end: string): Trip {
   const dropped = new Set(plan.days.slice(n).flatMap((d) => d.visitOrder));
   return {
     ...plan,
+    name: !plan.name.trim() || plan.name === defaultTripName(plan) ? defaultTripName({ startDate: start, endDate: end }) : plan.name,
     startDate: start,
     endDate: end,
     days,
@@ -212,6 +221,7 @@ export const presetInPlan = (plan: Trip, preset: StartPreset) =>
 export function endpointFromPreset(plan: Trip, which: EndpointSide, preset: StartPreset): Trip {
   const same = presetInPlan(plan, preset);
   if (same) return setEndpoint(plan, which, { kind: 'PLACE', placeRef: same.placeRef });
+  if (plan.places.length >= TRANSFER_LIMITS.maxPlaces) throw new Error(t('trip.placeLimit', { n: TRANSFER_LIMITS.maxPlaces }));
   const place: Place = {
     placeRef: newRef('p'),
     name: preset.name.slice(0, TRANSFER_LIMITS.nameMax),
@@ -335,7 +345,13 @@ export function addToDay(plan: Trip, p: Omit<Place, 'placeRef'>, dayIndex: numbe
 export const setLeg = (plan: Trip, dayIndex: number, k: number, minutes: number | null): Trip =>
   mapDay(plan, dayIndex, (d) => ({ ...d, legs: d.legs.map((l, i) => (i === k ? (minutes === null ? null : { minutes, source: 'USER_ESTIMATE' }) : l)) }));
 
-export const setLodging = (plan: Trip, dayIndex: number, placeRef: string | null): Trip => mapDay(plan, dayIndex, (d) => ({ ...d, lodgingPlaceRef: placeRef }));
+export const setLodging = (plan: Trip, dayIndex: number, placeRef: string | null): Trip => {
+  if (!plan.days.some((d) => d.dayIndex === dayIndex)) return plan;
+  const place = placeRef ? placeOf(plan, placeRef) : null;
+  if (placeRef && !place) return plan;
+  const next = place && place.category !== 'LODGING' ? changeCategory(plan, place.placeRef, 'LODGING') : plan;
+  return mapDay(next, dayIndex, (d) => ({ ...d, lodgingPlaceRef: placeRef }));
+};
 
 export const setDepart = (plan: Trip, dayIndex: number, time: string | null): Trip => mapDay(plan, dayIndex, (d) => ({ ...d, departTime: time }));
 
@@ -431,6 +447,7 @@ export const placeOf = (plan: Trip, ref: string) => plan.places.find((p) => p.pl
 export const visitOf = (plan: Trip, id: string) => plan.visits.find((v) => v.visitId === id);
 export const unassignedVisits = (plan: Trip) => plan.visits.filter((v) => v.unassignedReason !== null);
 export const lodgingPlaces = (plan: Trip) => plan.places.filter((p) => p.category === 'LODGING');
+export const collectedPlaces = (plan: Trip) => plan.places.filter((p) => !isEndpointOnly(plan, p.placeRef));
 
 /* ---------- 이어서 묵기 (M49): the same lodging over several nights ---------- */
 
@@ -549,7 +566,9 @@ export function issueText(i: DayIssue): string {
   }
 }
 
+// Keep stored IDs: the old places-only step (2) now resumes on the combined first page.
 export type SetupStep = 1 | 2 | 3 | 4;
+export const setupStepNumber = (step: SetupStep) => step < 3 ? 1 : step - 1;
 export interface TripSetupState {
   done: boolean;
   step: SetupStep;
@@ -560,19 +579,23 @@ export function cleanSetup(raw: unknown): TripSetupState | null {
   const r = raw as Partial<TripSetupState> | null | undefined;
   if (!r || typeof r !== 'object' || r.done !== false) return null;
   const step = [1, 2, 3, 4].includes(r.step as number) ? (r.step as SetupStep) : 1;
-  return { done: false, step };
+  return { done: false, step: step === 2 ? 1 : step };
 }
 
 /** Whether a setup step may move on, and if not, what is missing (shown under the step). */
 export function setupReady(plan: Trip, lodgingTbd: readonly number[], step: SetupStep): { ok: boolean; reason?: string } {
-  if (step === 1) {
-    if (!plan.name.trim()) return { ok: false, reason: t('setup.need.name') };
+  if (step === 3) {
     const open = plan.days.slice(0, -1).filter((d) => !d.lodgingPlaceRef && !lodgingTbd.includes(d.dayIndex)).length;
     if (open > 0) return { ok: false, reason: t('setup.need.lodging', { n: open }) };
   }
-  if (step === 2 && plan.visits.length === 0) return { ok: false, reason: t('setup.need.places') };
+  if ((step === 1 || step === 2) && collectedPlaces(plan).length === 0) return { ok: false, reason: t('setup.need.places') };
   return { ok: true };
 }
+
+/** When a day leaves its lodging if nothing says otherwise (the same default the route recommendation assumes). */
+const DEFAULT_DEPART = '09:00';
+/** How long before a booking its day starts at the latest: the drive from the lodging, parking, and arriving a little early. */
+export const BOOKING_HEAD_START = 60;
 
 /**
  * 예약 (M43): a reservation pins a visit to a day and time — fixed (RESERVATION), not movable by date or time, and put
@@ -584,7 +607,14 @@ export function setReservation(plan: Trip, visitId: string, day: number | null, 
     return freed.days.some((d) => d.visitOrder.includes(visitId)) ? unassign(freed, visitId) : freed;
   }
   const pinned = updateVisit(plan, visitId, { fixed: { time, kind: 'RESERVATION' }, timeFlexible: false, dateFlexible: false });
-  return moveToDay(pinned, visitId, day);
+  const moved = moveToDay(pinned, visitId, day);
+  // A later day leaves its lodging at 09:00 unless told otherwise, and the new-trip steps have no field for it. A
+  // booking that early could never be reached from there (경로 추천 would then move it to another day), so the day
+  // starts BOOKING_HEAD_START minutes before the booking instead. A day that already leaves early enough is left alone.
+  const d = moved.days.find((x) => x.dayIndex === day);
+  if (!d || day < 2) return moved;
+  const latest = Math.max(0, minutes(time) - BOOKING_HEAD_START);
+  return minutes(d.departTime ?? DEFAULT_DEPART) > latest ? setDepart(moved, day, hhmm(latest - (latest % 30))) : moved;
 }
 
 /** Keeps only nights that still exist and still have no lodging (a chosen lodging, or a shorter trip, ends 미정). */

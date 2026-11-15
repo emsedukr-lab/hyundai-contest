@@ -113,3 +113,13 @@ describe('공유 텍스트 정리 (자동 추가 이름·주소 줄)', () => {
     for (const u of ['https://naver.me/abc', 'https://map.naver.com/p/entry/place/1', 'https://kakao.com.evil.net/x', 'https://kko.kl/xyz', null, 'not a url']) expect(isKakaoLink(u)).toBe(false);
   });
 });
+
+
+describe('clipboard Naver Map share detection', () => {
+  it('finds a Naver Map link inside copied text without fetching unrelated links', async () => {
+    const { naverShareUrl } = await import('./placeShare');
+    expect(naverShareUrl('[네이버 지도] 강릉 (https://naver.me/example)')).toBe('https://naver.me/example');
+    expect(naverShareUrl('https://example.com https://map.naver.com/p/entry/place/123')).toBe('https://map.naver.com/p/entry/place/123');
+    for (const text of ['http://naver.me/x', 'https://naver.me.evil.test/x', 'https://naver.me@evil.test/x', 'https://user@naver.me/x', 'https://news.naver.com', 'https://kko.to/example', '장소 이름']) expect(naverShareUrl(text)).toBeNull();
+  });
+});

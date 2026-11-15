@@ -185,3 +185,11 @@ export const PushPinIcon = () => <Outline d="M8.5 3.5h7M10 3.5v5.2l-3 3.8h10l-3-
 export const CheckIcon = () => <Outline d="m5 12.5 4.5 4.5L19 7.5" />;
 /** Lock — a stop whose time (or date) stays put (M51). */
 export const LockIcon = () => <Outline d="M7.5 10.5V8a4.5 4.5 0 0 1 9 0v2.5M6.5 10.5h11a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1Z" />;
+
+/** Trips kept for recovery before their retention period ends. */
+export const TrashIcon = () => <Outline d="M4.5 6.5h15M9 6.5V4h6v2.5M6.5 6.5l1 14h9l1-14M10 10v7M14 10v7" />;
+
+export const CalendarIcon = () => <Outline d="M7 3v4M17 3v4M4 9h16M5 5h14a1 1 0 0 1 1 1v14H4V6a1 1 0 0 1 1-1Z" />;
+
+export const SaveIcon = () => <Outline d="M5 3.5h12l3.5 3.5v13H3.5V3.5H5ZM7 3.5v6h10v-6M7 20v-7h10v7M14 5.5v2" />;
+export const FolderOpenIcon = () => <Outline d="M3.5 9V5.5H10l2 2h8.5V11M3.5 10.5h18l-3 9h-16v-9Z" />;

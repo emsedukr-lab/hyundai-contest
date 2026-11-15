@@ -1,38 +1,39 @@
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { FileInput } from '@astryxdesign/core/FileInput';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { useInstallPrompt } from '../components/InstallHint';
-import { DownloadIcon, InfoIcon, PhoneIcon, PresetIcon, ShieldIcon, UploadIcon } from '../components/shell/icons';
+import { PlusIcon, SaveIcon, FolderOpenIcon, PinIcon, TrashIcon, InfoIcon, PhoneIcon, PresetIcon, ShieldIcon } from '../components/shell/icons';
 import { Row, Section } from '../components/shell/rows';
 import { PushScreen } from '../components/shell/Screens';
-import { trips } from '../lib/db';
+import { TRIPS_CHANGED, trips } from '../lib/db';
 import type { MealSlot } from '@tteonaljido/shared';
 import { checkBackupTrip } from '../lib/backup';
 import { saveFile } from '../lib/fileOut';
 import { t } from '../lib/i18n';
 import { MEAL_SLOTS, isDefaultMealTimes, mealLabel, mealRange, mealTimes, mealTimesError, setMealTimes, type MealTimes } from '../lib/meals';
 import { navigate } from '../lib/router';
-import { PRESET_SLOTS, presetLabel, presetPlace } from '../lib/settings';
+import { isNativeApp } from '../lib/platform';
+import { presetSlots, presetLabel, presetPlace } from '../lib/settings';
 import { docFromShare, importShare, isShareFile } from '../lib/share';
 import { nowIso, type TripDoc } from '../lib/trips';
 
 const MealTimeSheet = lazy(() => import('../editor/MealTimeSheet').then((m) => ({ default: m.MealTimeSheet })));
 
 /**
- * 설정 tab: start places for new trips (집, 회사, 즐겨찾기 1–3), meal times for the route recommendation (M67), trip data (backup out, backup or a friend's share file in) and
+ * 설정 tab: named endpoint shortcuts, meal times for the route recommendation (M67), trip data (backup out, backup or a friend's share file in) and
  * the app (install, privacy, about). The import logic is the one that used to sit on the trips screen, moved as-is.
  */
 export function SettingsPage() {
   const [docs, setDocs] = useState<TripDoc[]>([]);
   const [message, setMessage] = useState<string | null>(null);
-  const [showImport, setShowImport] = useState(false);
+  const importInput = useRef<HTMLInputElement>(null);
   // A friend's encrypted share needs a passcode; hold the file text until it is entered.
   const [shareText, setShareText] = useState<string | null>(null);
   const [sharePass, setSharePass] = useState('');
   const install = useInstallPrompt();
-  const [presets] = useState(() => PRESET_SLOTS.map((slot) => ({ slot, place: presetPlace(slot) })));
+  const presets = presetSlots().map((slot) => ({ slot, place: presetPlace(slot) }));
 
   // 식사 시간 (M67): one meal is edited in a sheet as a draft and kept on 저장, only while it stays in order with the others.
   const [meals, setMeals] = useState<MealTimes>(mealTimes);
@@ -59,11 +60,22 @@ export function SettingsPage() {
   };
 
   const reload = async () => setDocs(await trips.all());
-  useEffect(() => void reload(), []);
+  useEffect(() => {
+    const refresh = () => { void reload().catch(() => setMessage(t('settings.fileFailed'))); };
+    refresh();
+    window.addEventListener('focus', refresh);
+    window.addEventListener('storage', refresh);
+    window.addEventListener(TRIPS_CHANGED, refresh);
+    return () => { window.removeEventListener('focus', refresh); window.removeEventListener('storage', refresh); window.removeEventListener(TRIPS_CHANGED, refresh); };
+  }, []);
 
-  const exportAll = () => {
-    const blob = new Blob([JSON.stringify({ format: 'tteonaljido-backup', version: 1, trips: docs }, null, 2)], { type: 'application/json' });
-    void saveFile(new File([blob], t('home.backupFileName', { date: nowIso().slice(0, 10) }), { type: 'application/json' }));
+  const exportAll = async () => {
+    try {
+      const current = await trips.all();
+      if (!current.length) return setMessage(t('settings.noTrips'));
+      const blob = new Blob([JSON.stringify({ format: 'tteonaljido-backup', version: 1, trips: current }, null, 2)], { type: 'application/json' });
+      if (await saveFile(new File([blob], t('home.backupFileName', { date: nowIso().slice(0, 10) }), { type: 'application/json' }))) setMessage(t('settings.filePrepared'));
+    } catch { setMessage(t('settings.fileFailed')); }
   };
 
   const importFile = async (file: File) => {
@@ -72,7 +84,6 @@ export function SettingsPage() {
     if (isShareFile(text)) {
       setShareText(text);
       setSharePass('');
-      setShowImport(false);
       return;
     }
     try {
@@ -84,7 +95,7 @@ export function SettingsPage() {
       if (checked.some((d) => d === null)) throw new Error('not a backup');
       const ok = checked as TripDoc[];
       // A backup replaces trips with the same id; warn before overwriting any.
-      const existing = new Set(docs.map((d) => d.tripId));
+      const existing = new Set((await trips.all()).map((d) => d.tripId));
       const overwrites = ok.filter((d) => existing.has(d.tripId)).length;
       if (overwrites > 0 && !window.confirm(t('home.import.overwrite', { n: overwrites }))) return;
       for (const d of ok) await trips.put(d);
@@ -114,7 +125,7 @@ export function SettingsPage() {
         </div>
       )}
 
-      {/* Start places for new trips: 집 (the one home every trip shares), 회사, 즐겨찾기 1–3. */}
+      {/* Start places for new trips: 집, 회사, and registered custom places. */}
       <Section title={t('settings.origins')}>
         <ul className="tn-cards">
           {presets.map(({ slot, place }) => (
@@ -123,13 +134,14 @@ export function SettingsPage() {
                 href={`/settings/place/${slot}`}
                 onClick={() => navigate(`/settings/place/${slot}`)}
                 lead={<PresetIcon slot={slot} />}
-                title={slot === 'home' ? t('common.homeAddress') : presetLabel(slot)}
-                subtitle={!place ? t('settings.home.unset') : slot === 'home' ? place.address : place.name}
+                title={presetLabel(slot)}
+                subtitle={place?.address || t('settings.home.unset')}
                 chevron
               />
             </li>
           ))}
         </ul>
+        <div className="tn-pad" style={{ paddingTop: 12 }}><Button label={t('settings.preset.add')} icon={<PlusIcon />} variant="secondary" width="100%" onClick={() => navigate('/settings/place/new')} /></div>
         <p className="tn-note">
           {t('settings.origins.detail2')}
         </p>
@@ -178,30 +190,37 @@ export function SettingsPage() {
         </Suspense>
       )}
 
+      <Section title={t('settings.places')}>
+        <ul className="tn-cards"><li><Row lead={<PinIcon />} title={t('settings.placeLibrary')} subtitle={t('settings.placeLibrary.detail')} href="/places" onClick={() => navigate('/places')} chevron /></li></ul>
+      </Section>
       <Section title={t('more.data')}>
+        <div className="tn-pad" style={{ paddingBottom: 12 }}>
+          <Banner status="info" title={t('settings.backupHint')} description={t(isNativeApp ? 'settings.backupRisk.native' : 'settings.backupRisk')} />
+        </div>
         <ul className="tn-cards">
           <li>
-            <Row lead={<DownloadIcon />} title={t('home.exportBackup')} subtitle={t('more.export.detail')} onClick={docs.length ? exportAll : undefined} />
+            <Row lead={<SaveIcon />} title={t('home.exportBackup')} subtitle={t(docs.length ? isNativeApp ? 'settings.export.native' : 'more.export.detail' : 'settings.noTrips')} end={<span className="tn-row-value">{t(docs.length ? 'settings.fileSave' : 'settings.fileNone')}</span>} onClick={docs.length ? () => void exportAll() : undefined} />
           </li>
           <li>
-            <Row lead={<UploadIcon />} title={t('home.importBackup')} subtitle={t('more.import.detail')} onClick={() => setShowImport((v) => !v)} />
+            <Row lead={<FolderOpenIcon />} title={t('home.importBackup')} subtitle={t('more.import.detail')} end={<span className="tn-row-value">{t('settings.fileOpen')}</span>} onClick={() => importInput.current?.click()} />
+          </li>
+          <li>
+            <Row lead={<TrashIcon />} title={t('trash.title')} subtitle={t('trash.hint')} href="/settings/trash" onClick={() => navigate('/settings/trash')} chevron />
           </li>
         </ul>
-        {showImport && (
-          <div className="tn-panel" style={{ marginTop: 12 }}>
-            <FileInput
-              label={t('home.backupFile.label')}
-              mode="input"
-              accept="application/json"
-              value={null}
-              onChange={(f) => {
-                const file = Array.isArray(f) ? f[0] : f;
-                if (file) void importFile(file).then(() => setShowImport(false));
-              }}
-              description={t('home.backupFile.description')}
-            />
-          </div>
-        )}
+        <div hidden>
+          <FileInput
+            ref={importInput}
+            label={t('home.backupFile.label')}
+            mode="input"
+            accept="application/json"
+            value={null}
+            onChange={(f) => {
+              const file = Array.isArray(f) ? f[0] : f;
+              if (file) void importFile(file).catch(() => setMessage(t('home.notBackup'))).finally(() => { if (importInput.current) importInput.current.value = ''; });
+            }}
+          />
+        </div>
         {shareText && (
           <div className="tn-panel" style={{ marginTop: 12 }}>
             <Banner status="info" title={t('share.importTitle')} description={t('share.importHint')} />
@@ -232,13 +251,13 @@ export function SettingsPage() {
             <Row lead={<ShieldIcon />} title={t('privacy.title')} subtitle={t('more.privacy.detail')} href="/privacy" onClick={() => navigate('/privacy')} chevron />
           </li>
           <li>
-            <Row lead={<InfoIcon />} title={t('more.about')} subtitle={t('home.tagline')} />
+            <Row lead={<InfoIcon />} title={t('more.about')} href="/about" onClick={() => navigate('/about')} chevron />
           </li>
         </ul>
       </Section>
 
       <p className="tn-note" style={{ marginTop: 16 }}>
-        {t('home.storageNote')}
+        {t(isNativeApp ? 'settings.storage.native' : 'home.storageNote')}
       </p>
     </PushScreen>
   );

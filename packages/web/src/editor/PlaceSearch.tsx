@@ -17,7 +17,7 @@ import { Card } from '../components/toss/Card';
 import { favorites } from '../lib/db';
 import { asNewPlace, favoriteId, toFavorite } from '../lib/favorites';
 import type { FavoritePlace } from '../lib/favorites';
-import { ClipboardIcon, SearchIcon } from '../components/shell/icons';
+import { ClipboardIcon, MapIcon, PencilIcon, SearchIcon } from '../components/shell/icons';
 import { Row } from '../components/shell/rows';
 import { t } from '../lib/i18n';
 import { ApiError, searchPlaces, type PlaceHit, type ResolvedList } from '../lib/pairing';
@@ -78,6 +78,7 @@ export function PlaceSearch({
   onFavoritesChange,
   tripPlaces,
   room,
+  onOpenMap,
 }: {
   onPick: (p: NewPlace) => void;
   onPickMany?: (places: NewPlace[]) => void;
@@ -100,6 +101,7 @@ export function PlaceSearch({
   tripPlaces?: readonly Place[];
   /** How many more places the trip can take. */
   room?: number;
+  onOpenMap?: () => void;
 }) {
   const [q, setQ] = useState('');
   const [hits, setHits] = useState<PlaceHit[] | null>(null);
@@ -245,6 +247,7 @@ export function PlaceSearch({
   const shownFavs = requireCoords ? favs.filter((f) => f.latE7 !== null && f.lonE7 !== null) : favs;
   // Offer "add by name" when search failed or found nothing — never where a real location is required.
   const canAddByName = !requireCoords && !!q.trim() && (searchError || hits?.length === 0);
+  const manualLabel = onOpenMap ? t('place.manual.short') : unavailable ? t('place.manual.searchOff') : t('place.manual.open');
 
   return (
     <VStack gap={2}>
@@ -268,20 +271,7 @@ export function PlaceSearch({
           </HStack>
         </VStack>
       )}
-      {!compact && onPickMany && (
-        <Card pad={0}>
-          <Row
-            lead={<ClipboardIcon />}
-            title={t('place.paste.quick')}
-            subtitle={t('place.paste.quickHint')}
-            end={reading ? <Spinner size="sm" /> : undefined}
-            chevron={!reading}
-            onClick={reading ? undefined : () => void pasteFromClipboard()}
-          />
-        </Card>
-      )}
-      {/* The search bar (SOCAR Frame input-filled: grey field, blue border on focus): the magnifier sits inside, and the
-          keyboard's search/enter key runs it — no separate button, so even a narrow card keeps the full width to type. */}
+      {/* Enter runs the search; the full field stays available for typing. */}
       <div role="search">
         <TextInput
           label={label}
@@ -297,6 +287,18 @@ export function PlaceSearch({
           controlClassName="tn-searchbar"
         />
       </div>
+      {!compact && onPickMany && (
+        <Card pad={0}>
+          <Row
+            lead={<ClipboardIcon />}
+            title={t('place.paste.quick')}
+            subtitle={t('place.paste.quickHint')}
+            end={reading ? <Spinner size="sm" /> : undefined}
+            chevron={!reading}
+            onClick={reading ? undefined : () => void pasteFromClipboard()}
+          />
+        </Card>
+      )}
       {note && <Banner status="info" title={note} />}
       {hits && hits.length === 0 && <Banner status="info" title={t('place.search.noResults')} />}
       {canAddByName && <Button label={t('place.search.addByName', { query: q.trim().slice(0, 20) })} variant="primary" size="sm" onClick={addByName} />}
@@ -331,8 +333,9 @@ export function PlaceSearch({
         </Card>
       )}
       {!compact && (
-      <HStack gap={2} wrap="wrap">
-        {!requireCoords && <Button label={unavailable ? t('place.manual.searchOff') : t('place.manual.open')} variant="ghost" size="sm" onClick={() => setManual(true)} />}
+      <HStack gap={2} wrap="wrap" className={onOpenMap ? 'ps-place-actions' : undefined}>
+        {onOpenMap && <Button label={t('mapPick.searchNew')} icon={<MapIcon />} variant="secondary" size="lg" width="100%" onClick={onOpenMap}><span className="ps-action-label">{t('mapPick.searchNew')}</span></Button>}
+        {!requireCoords && <Button label={manualLabel} icon={onOpenMap ? <PencilIcon /> : undefined} variant="secondary" size={onOpenMap ? 'lg' : 'sm'} onClick={() => setManual(true)}>{onOpenMap ? <span className="ps-action-label">{manualLabel}</span> : undefined}</Button>}
         {/* With the paste row on top, the box opens from there (or by itself when the clipboard can't be read). */}
         {!onPickMany && <Button label={t('place.paste.open')} variant="ghost" size="sm" onClick={() => setShowPaste((v) => !v)} />}
       </HStack>

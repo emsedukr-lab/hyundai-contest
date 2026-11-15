@@ -3,7 +3,7 @@ import { Button } from '@astryxdesign/core/Button';
 import { Selector } from '@astryxdesign/core/Selector';
 import type { Home, Trip } from '@tteonaljido/shared';
 import { t } from '../../lib/i18n';
-import { addPlace, lodgingPlaces, setEndBy, setLodging } from '../../lib/trips';
+import { addPlace, setEndBy, setLodging } from '../../lib/trips';
 import { dayEnds } from '../dayInfo';
 import { PlaceSearch } from '../PlaceSearch';
 import { Sheet } from '../Sheet';
@@ -27,7 +27,7 @@ export function EndSheet({ isOpen, onClose, plan, home, dayIndex, onChange, onOp
     </FieldPrefix>
   );
   return (
-    <Sheet isOpen={isOpen} onClose={onClose} title={isLast ? t('tl.home') : t('days.lodging', { day: day.dayIndex })} footer={<Button label={t('tl.done')} variant="primary" size="lg" width="100%" onClick={onClose} />}>
+    <Sheet isOpen={isOpen} onClose={onClose} title={isLast ? t('tl.endPlace') : t('days.lodging', { day: day.dayIndex })} footer={<Button label={t('tl.done')} variant="primary" size="lg" width="100%" onClick={onClose} />}>
       {isLast ? (
         <>
           <EndpointField which="finalDestination" compact plan={plan} home={home} onChange={onChange} onOpenSettings={onOpenSettings} />
@@ -39,11 +39,10 @@ export function EndSheet({ isOpen, onClose, plan, home, dayIndex, onChange, onOp
       ) : (
         <>
           <Selector
-            label={t('common.lodging')}
-            isLabelHidden
+            label={t('tl.lodgingFromPlaces')}
             placement="below"
-            placeholder={lodgingPlaces(plan).length ? t('days.lodging.placeholder') : t('days.lodging.none')}
-            options={[{ value: '', label: t('days.lodging.unset') }, ...lodgingPlaces(plan).map((p) => ({ value: p.placeRef, label: p.name }))]}
+            placeholder={t('tl.lodgingFromPlaces')}
+            options={[{ value: '', label: t('days.lodging.unset') }, ...plan.places.map((p) => ({ value: p.placeRef, label: [p.name, p.address].filter(Boolean).join(' · ') }))]}
             value={day.lodgingPlaceRef ?? ''}
             onChange={(ref) => onChange(setLodging(plan, day.dayIndex, ref || null))}
           />

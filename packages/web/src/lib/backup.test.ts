@@ -7,9 +7,10 @@ const S = sampleTrip();
 
 describe('backup import check (checkBackupTrip)', () => {
   it('accepts a trip exported from this app and keeps its notes', async () => {
-    const doc = { ...(await newDoc(sampleTrip())), notes: { [S.places[0].placeRef]: { memo: '2층', meal: 'DINNER' as const } } };
+    const doc = { ...(await newDoc(sampleTrip())), setup: { done: false, step: 2 as const }, notes: { [S.places[0].placeRef]: { memo: '2층', meal: 'DINNER' as const } } };
     const back = await checkBackupTrip(JSON.parse(JSON.stringify(doc)));
     expect(back?.tripId).toBe(S.tripId);
+    expect(back?.setup).toEqual({ done: false, step: 1 });
     expect(back?.plan.places.length).toBe(S.places.length);
     expect(back?.notes?.[S.places[0].placeRef]?.memo).toBe('2층');
     expect(back?.notes?.[S.places[0].placeRef]?.meal).toBe('DINNER'); // M67: a restaurant's meal travels with the backup

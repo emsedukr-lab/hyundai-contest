@@ -3,6 +3,7 @@ import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { Selector } from '@astryxdesign/core/Selector';
 import { TextArea } from '@astryxdesign/core/TextArea';
+import { TextInput } from '@astryxdesign/core/TextInput';
 import { TRANSFER_LIMITS } from '@tteonaljido/shared';
 import { CloseIcon, PinIcon, ShareIcon } from '../components/shell/icons';
 import { Row, Section } from '../components/shell/rows';
@@ -24,7 +25,7 @@ const COLLECTION = '__collection__';
 /**
  * 장소 tab: put places from map apps into a trip, and manage saved places. A paste — a name, several lines, a share
  * link or a whole Naver 저장 목록 link — is handled here, into the trip picked above it (the most recent by default; with
- * no trip yet, a new "받은 장소"), through the same review dialog as the editor. The pasted text never goes in the URL.
+ * a new trip can also be named here), through the same review dialog as the editor. The pasted text never goes in the URL.
  */
 export function PlacesPage() {
   const [favs, setFavs] = useState<FavoritePlace[]>([]);
@@ -33,6 +34,7 @@ export function PlacesPage() {
   const [note, setNote] = useState<string | null>(null);
   const [docs, setDocs] = useState<TripDoc[] | null>(null);
   const [target, setTarget] = useState<string>(COLLECTION);
+  const [newTripName, setNewTripName] = useState('');
   const [reading, setReading] = useState(false);
   const [review, setReview] = useState<{ terms?: string[]; list?: ResolvedList } | null>(null);
   const [done, setDone] = useState<{ tripId: string; text: string } | null>(null);
@@ -55,7 +57,9 @@ export function PlacesPage() {
     setReading(true);
     try {
       const out = await readPaste(text);
-      if (out.kind === 'list') setReview({ list: out.list });
+      if (out.kind === 'list') {
+        setReview({ list: out.list });
+      }
       else if (out.kind === 'terms') setReview({ terms: out.terms });
       else setNote(t(out.kind === 'kakao' ? 'place.paste.kakao' : out.kind === 'failed' ? 'place.resolve.failed' : 'place.paste.noName'));
       if (out.kind === 'kakao') setPaste('');
@@ -72,15 +76,15 @@ export function PlacesPage() {
     if (text) void run(text);
   }, [docs]);
 
-  /** Saves the reviewed places into the picked trip (or a new "받은 장소"), up to the trip's room. */
+  /** Saves the reviewed places into the picked trip (or a new named trip), up to the trip's room. */
   const save = async (places: NewPlace[]) => {
     try {
       const fresh = target === COLLECTION ? null : await trips.get(target);
-      const doc = fresh ?? (await newDoc({ ...emptyPlan(), name: t('add.collectionName') }, defaultHome()));
+      const doc = fresh ?? (await newDoc({ ...emptyPlan(), name: newTripName.trim() }, defaultHome()));
       const fit = places.slice(0, placeRoom(doc.plan));
       if (!fit.length) return setNote(t('trip.placeLimit', { n: TRANSFER_LIMITS.maxPlaces }));
       const next = await savePlan(doc, fit.reduce((pl, p) => addPlace(pl, p), doc.plan), defaultHome());
-      await trips.put(next);
+      await trips.put(target === COLLECTION ? { ...next, setup: { done: false, step: 1 } } : next);
       const all = await trips.all();
       setDocs(all);
       setTarget(next.tripId);
@@ -94,7 +98,7 @@ export function PlacesPage() {
 
   const targetOptions = [
     ...(docs ?? []).map((d) => ({ value: d.tripId, label: d.plan.name })),
-    ...(docs && docs.length === 0 ? [{ value: COLLECTION, label: t('add.collectionName') }] : []),
+    { value: COLLECTION, label: t('places.newTrip') },
   ];
 
   const remove = async (id: string) => {
@@ -113,7 +117,7 @@ export function PlacesPage() {
   };
 
   return (
-    <PushScreen title={t('nav.places')} onBack={() => navigate('/')}>
+    <PushScreen title={t('nav.places')} onBack={() => navigate('/settings')}>
       <div className="tn-intro">
         <p>{t('places.intro')}</p>
       </div>
@@ -121,6 +125,9 @@ export function PlacesPage() {
       <Section title={t('places.paste.title')}>
         <div className="tn-panel">
           {docs && <Selector label={t('places.target')} options={targetOptions} value={target} onChange={setTarget} />}
+          {target === COLLECTION && (
+            <TextInput label={t('editor.name')} value={newTripName} onChange={(name) => setNewTripName(name.slice(0, 60))} placeholder={t('trip.defaultName')} />
+          )}
           <TextArea label={t('place.paste.label')} isLabelHidden value={paste} onChange={setPaste} placeholder={t('place.paste.placeholder')} description={t('places.paste.hint')} rows={3} />
           {note && <Banner status="info" title={note} isDismissable onDismiss={() => setNote(null)} />}
           {done && (

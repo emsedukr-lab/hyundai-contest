@@ -1,7 +1,7 @@
 import { buildTransfer, parseTransfer, type Trip } from '@tteonaljido/shared';
 import { cleanNotes } from './notes';
 import { cleanLegMeters } from './routeTimes';
-import { cleanLodgingTbd, newDoc, nowIso, type TripDoc } from './trips';
+import { cleanLodgingTbd, cleanSetup, newDoc, nowIso, type TripDoc } from './trips';
 
 /**
  * One trip from a backup file, checked the way the car checks a transfer (schema, limits, references) before it may be
@@ -17,7 +17,7 @@ export async function checkBackupTrip(entry: unknown): Promise<TripDoc | null> {
     if (!parsed.ok) return null;
     const trip = parsed.transfer.trip;
     const doc = await newDoc({ ...trip, home: null }, trip.home);
-    return { ...doc, notes: cleanNotes(d.notes), legMeters: cleanLegMeters(d.legMeters, trip), lodgingTbd: cleanLodgingTbd(d.lodgingTbd, trip) };
+    return { ...doc, setup: cleanSetup(d.setup) ?? undefined, notes: cleanNotes(d.notes), legMeters: cleanLegMeters(d.legMeters, trip), lodgingTbd: cleanLodgingTbd(d.lodgingTbd, trip) };
   } catch {
     return null;
   }

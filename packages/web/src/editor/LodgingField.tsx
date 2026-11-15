@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Selector } from '@astryxdesign/core/Selector';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import type { Trip } from '@tteonaljido/shared';
 import { CloseIcon } from '../components/shell/icons';
@@ -98,6 +99,16 @@ export function LodgingField({
           {t('tl.lodgingTbdChip')}
         </button>
       </div>
+      {plan.places.length > 0 && (
+        <Selector
+          label={t('tl.lodgingFromPlaces')}
+          placeholder={t('tl.lodgingFromPlaces')}
+          placement="below"
+          value=""
+          options={plan.places.map((p) => ({ value: p.placeRef, label: [p.name, p.address].filter(Boolean).join(' · ') }))}
+          onChange={(ref) => choose(setLodging(plan, dayIndex, ref))}
+        />
+      )}
       {/* 이어서 묵기 (M49): the trip's lodgings as chips, the previous night's first. */}
       <LodgingSuggest plan={plan} dayIndex={dayIndex} onChange={onChange} />
       {/* toss text-field helper under the field until a lodging or 미정 is chosen: red once it is an error, neutral before. */}
