@@ -15,6 +15,8 @@ import { minutes } from './timeline';
  *    second lunch or dinner in a day; a restaurant the traveller named as a meal (`meals`) is held to that meal's time;
  *  - at most `maxCafesPerDay` cafes a day, and a cafe is best right after lunch (less so after dinner);
  *  - a place left out costs by its importance; a day that runs past its end costs by the minute;
+ *  - the stops are shared out evenly over the days, the first and the last day taking half a day's share (the drive
+ *    there and the drive home) — weighed lightly, so that near places stay together first;
  *  - and what must never happen costs more than everything else together: a booking not reached
  *    `reservationLeadMinutes` early (parking included), a visit on a closed day or outside opening hours, a 꼭 place
  *    left out.
@@ -180,6 +182,19 @@ const OTHER_DAY = 150;
 const MEAL_UNTIMED = 100;
 /** Moving a stop from its own day to where its time would be unknown is not a recommendation anyone can check. */
 const INTO_THE_UNKNOWN = 5_000;
+/**
+ * How much of a day there is to fill, next to the other days: the first day begins with the drive there and the last
+ * ends with the drive home, so each of the two takes half of what a day in between does. (A two-day trip has only
+ * such days, which makes them equal; a one-day trip has nothing to share out.)
+ */
+const DAY_SHARE = { edge: 0.5, between: 1 };
+/**
+ * Each stop a day holds over or under its share costs this, squared — one stop off is about seven minutes of driving.
+ * Keeping near places together comes first: an even split wins only among arrangements that drive about the same.
+ * Squared, so that a pile does not stand (three stops too many on one day cost what an hour of driving does) and an
+ * empty day next to full ones does not either.
+ */
+const UNEVEN = 20;
 /** A different arrangement has to be this much cheaper than the plan as it stands (about five minutes of driving). */
 const MIN_GAIN = 15;
 const FALLBACK_DRIVE = 20;
@@ -453,8 +468,25 @@ export function optimizeTrip(input: OptimizerInput): Optimized {
   const unplacedCost = (ids: string[]) => ids.reduce((s, id) => s + (node(id).fixed !== null ? HARD : UNPLACED[node(id).importance]), 0);
   const unplacedHard = (ids: string[]) => ids.filter((id) => node(id).fixed !== null || node(id).importance === 'MUST').length;
 
+  /* ---------- how evenly the stops are shared out over the days ---------- */
+  const share = trip.days.map((_, i) => (i === 0 || i === nDays - 1 ? DAY_SHARE.edge : DAY_SHARE.between));
+  const shareSum = share.reduce((a, b) => a + b, 0);
+  /**
+   * What an arrangement costs for how far each day's number of stops is from its share of all that are placed.
+   * A stop the traveller put on a day (and so a booking, a fixed date) is counted on that day wherever the search
+   * tries it: it makes its day fuller for the others, but evening the days out is never a reason to move it. The
+   * stops that had no day yet are the ones shared out.
+   */
+  const uneven = (routes: string[][]): number => {
+    if (nDays < 2) return 0;
+    const load = routes.map(() => 0);
+    routes.forEach((r, i) => r.forEach((id) => (load[node(id).homeDay ?? i] += 1)));
+    const placed = load.reduce((a, b) => a + b, 0);
+    return load.reduce((sum, c, i) => sum + (c - (placed * share[i]) / shareSum) ** 2, 0) * UNEVEN;
+  };
+
   /* ---------- search state with per-day costs kept ---------- */
-  const total = (s: State, ev: DayEval[]) => ev.reduce((sum, e) => sum + e.cost, 0) + unplacedCost(s.unassigned);
+  const total = (s: State, ev: DayEval[]) => ev.reduce((sum, e) => sum + e.cost, 0) + unplacedCost(s.unassigned) + uneven(s.routes);
   const clone = (s: State): State => ({ routes: s.routes.map((r) => [...r]), unassigned: [...s.unassigned] });
   const evalAll = (s: State) => s.routes.map((r, i) => evalDay(i, r));
 
@@ -468,11 +500,14 @@ export function optimizeTrip(input: OptimizerInput): Optimized {
   /** The cheapest place for a stop among the days it may go on; null when no day has room. */
   function bestInsertion(s: State, ev: DayEval[], id: string): { day: number; at: number; delta: number } | null {
     let best: { day: number; at: number; delta: number } | null = null;
+    const even = uneven(s.routes);
     for (let i = 0; i < nDays; i++) {
       if (!mayGo(id, i) || s.routes[i].length >= cap) continue;
+      // One more stop on this day: what that does to the shares, whichever position it takes.
+      const tilt = uneven(s.routes.map((r, d) => (d === i ? [...r, id] : r))) - even;
       for (let at = 0; at <= s.routes[i].length; at++) {
         const route = [...s.routes[i].slice(0, at), id, ...s.routes[i].slice(at)];
-        const delta = evalDay(i, route).cost - ev[i].cost;
+        const delta = evalDay(i, route).cost - ev[i].cost + tilt;
         if (!best || delta < best.delta) best = { day: i, at, delta };
       }
     }

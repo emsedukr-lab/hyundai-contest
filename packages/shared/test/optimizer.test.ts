@@ -242,6 +242,67 @@ describe('optimizeTrip: placing what is not on a day yet', () => {
   });
 });
 
+describe('optimizeTrip: how many stops a day gets', () => {
+  // Places that all sit by the lodging: no day is nearer than another, so only the shares decide.
+  const basket = (n: number, at = 30) => {
+    const places = Array.from({ length: n }, (_, i) => P(`s${i}`, 'SIGHT', at));
+    return { places, visits: places.map((p, i) => V(`v${i}`, p.placeRef, { unassignedReason: 'NOT_SCHEDULED_YET' })) };
+  };
+  const counts = (out: ReturnType<typeof run>) => Object.values(out.order).map((r) => r.length);
+
+  it('shares a basket out evenly, the first and the last day taking half a day', () => {
+    const four = basket(12);
+    expect(counts(run(trip({ places: [...four.places, P('L', 'LODGING', 30)], visits: four.visits, days: [D(1, [], 'L'), D(2, [], 'L'), D(3, [], 'L'), D(4, [], null)] })))).toEqual([2, 4, 4, 2]);
+    const three = basket(9);
+    expect(counts(run(trip({ places: [...three.places, P('L', 'LODGING', 30)], visits: three.visits, days: [D(1, [], 'L'), D(2, [], 'L'), D(3, [], null)] })))).toEqual([2, 5, 2]);
+    // Two days are a first and a last day: equal.
+    const two = basket(6);
+    expect(counts(run(trip({ places: [...two.places, P('L', 'LODGING', 30)], visits: two.visits, days: [D(1, [], 'L'), D(2, [], null)] })))).toEqual([3, 3]);
+  });
+
+  it('keeps near places together before it evens the days out', () => {
+    // Home 0, the lodging at 100. Two places are on the way (50); four lie beyond the lodging (130): seeing those on
+    // one day is one detour of an hour, three a day would be two. The uneven four-and-two is the shorter trip.
+    const far = [0, 1, 2, 3].map((i) => P(`f${i}`, 'SIGHT', 130));
+    const near = [0, 1].map((i) => P(`n${i}`, 'SIGHT', 50));
+    const out = run(trip({
+      places: [...far, ...near, P('L', 'LODGING', 100)],
+      visits: [...far, ...near].map((p) => V(`v${p.placeRef}`, p.placeRef, { unassignedReason: 'NOT_SCHEDULED_YET' })),
+      days: [D(1, [], 'L'), D(2, [], null)],
+    }));
+    const dayOfFar = far.map((p) => Object.entries(out.order).find(([, r]) => r.includes(`v${p.placeRef}`))![0]);
+    expect(new Set(dayOfFar).size).toBe(1);
+    expect(counts(out).sort()).toEqual([2, 4]);
+  });
+
+  it('counts a booking on its day and sends the rest elsewhere', () => {
+    // Three bookings back to back (an hour each, ten minutes to park and be early): no gap between them to fill.
+    const booked = ['10:00', '11:20', '12:40'].map((time, i) => ({ place: P(`b${i}`, 'SIGHT', 30), time }));
+    const free = basket(5);
+    const out = run(trip({
+      places: [...booked.map((b) => b.place), ...free.places, P('L', 'LODGING', 30)],
+      visits: [...booked.map((b, i) => V(`vb${i}`, b.place.placeRef, { fixed: { time: b.time, kind: 'RESERVATION' }, dateFlexible: false, timeFlexible: false })), ...free.visits],
+      days: [D(1, ['vb0', 'vb1', 'vb2'], 'L'), D(2, [], 'L'), D(3, [], null)],
+    }));
+    // Eight stops over three days would be two, four and two: the first day already holds three, so it gets no more.
+    expect(out.order[1]).toEqual(['vb0', 'vb1', 'vb2']);
+    expect(out.order[2].length + out.order[3].length).toBe(5);
+    expect(out.hardViolations).toBe(0);
+  });
+
+  it('leaves the days the traveller filled as they are, however uneven', () => {
+    const own = basket(5);
+    const t = trip({
+      places: [...own.places, P('L', 'LODGING', 30)],
+      visits: own.visits.map((v) => ({ ...v, unassignedReason: null })),
+      days: [D(1, ['v0', 'v1', 'v2', 'v3'], 'L'), D(2, ['v4'], 'L'), D(3, [], null)],
+    });
+    const out = run(t);
+    expect(out.changed).toBe(false);
+    expect(counts(out)).toEqual([4, 1, 0]);
+  });
+});
+
 describe('optimizeTrip: a leg nobody can time', () => {
   // The trip starts from a home with no address: nothing is known about the drive to the first stop.
   const noHome: OptimizerInput['drive'] = (a, b) => (a === KEY_HOME || b === KEY_HOME ? null : drive(a, b));
