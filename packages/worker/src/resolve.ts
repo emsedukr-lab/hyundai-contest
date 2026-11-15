@@ -142,7 +142,8 @@ export function parseNaverFolder(data: unknown): { kind: 'list'; source: 'naver'
     if (!raw || typeof raw !== 'object') continue;
     const b = raw as Record<string, unknown>;
     if (b.type !== 'place' || b.available === false) continue;
-    const name = clean(str(b.displayName) || str(b.name)).slice(0, 60);
+    // displayName is the owner's saved nickname; name is the original place name.
+    const name = (clean(str(b.name)) || clean(str(b.displayName))).slice(0, 60);
     const lon = num(b.px);
     const lat = num(b.py);
     if (!name || !Number.isFinite(lat) || !Number.isFinite(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180 || (lat === 0 && lon === 0)) continue;

@@ -1,6 +1,6 @@
 import { SELF } from 'cloudflare:test';
 import { describe, expect, it } from 'vitest';
-import { allowedHost, naverCategory, naverFolderApi, naverPlacePage, parseOg, resolveShare } from '../src/resolve';
+import { allowedHost, naverCategory, naverFolderApi, naverPlacePage, parseNaverFolder, parseOg, resolveShare } from '../src/resolve';
 
 const page = (head: string) => `<!doctype html><html><head>${head}</head><body></body></html>`;
 
@@ -106,6 +106,17 @@ const redirect = (to: string) => () => new Response(null, { status: 307, headers
 const jsonRes = (body: unknown) => () => new Response(JSON.stringify(body), { headers: { 'content-type': 'application/json' } });
 const API = `https://pages.map.naver.com/save-pages/api/maps-bookmark/v3/shares/${SHARE}/bookmarks`;
 
+it('imports the original place name instead of the owner nickname and keeps its location', () => {
+  const result = parseNaverFolder(naverFolder([bm('  실제 숙소명  ', { displayName: 'A+', mcid: 'LODGING', mcidName: '숙박' })]));
+  expect(result?.places).toEqual([{ name: '실제 숙소명', address: '인천 제물포구 차이나타운로 48', latE7: 374752900, lonE7: 1266190800, category: 'LODGING' }]);
+  expect(JSON.stringify(result)).not.toContain('A+');
+});
+
+it('keeps a named saved point when the source has no original place name', () => {
+  const result = parseNaverFolder(naverFolder([bm('   ', { displayName: '저장한 장소' })]));
+  expect(result?.places[0].name).toBe('저장한 장소');
+});
+
 describe('네이버 저장 목록 링크', () => {
   it('공유 폴더 주소와 pages 주소는 같은 목록 JSON 주소로 바꾼다', () => {
     expect(naverFolderApi(new URL(`https://map.naver.com/p/favorite/sharedPlace/folder/${SHARE}`))?.toString()).toBe(`${API}?start=0&limit=100&sort=lastUseTime`);
@@ -129,7 +140,7 @@ describe('네이버 저장 목록 링크', () => {
       total: 2,
       places: [
         { name: '홍두병', address: '인천 제물포구 차이나타운로 48', latE7: 374752900, lonE7: 1266190800, category: 'CAFE' },
-        { name: '태림봉 차이나타운점', address: '인천 제물포구 차이나타운로 48', latE7: 374739500, lonE7: 1266194700, category: 'FOOD' },
+        { name: '태림봉', address: '인천 제물포구 차이나타운로 48', latE7: 374739500, lonE7: 1266194700, category: 'FOOD' },
       ],
     });
     const text = JSON.stringify(body);
