@@ -47,6 +47,17 @@
     <string name="drive_must">꼭 가야 하는 고정 일정</string>
     <string name="guide_when_parked">주차하면 안내를 요청할 수 있어요</string>
     <string name="next_fixed">고정 %1$s</string>
+    <string name="next_booked">예약 %1$s</string>
+    <string name="skip_this">이 장소 건너뛰기</string>
+    <string name="skip_confirm_title_booked">예약한 곳이에요</string>
+    <string name="skip_confirm_title_fixed">시각을 정한 곳이에요</string>
+    <string name="skip_confirm_body_booked">%1$s 예약 \'%2$s\'을 건너뛸까요? 건너뛴 뒤에도 되돌릴 수 있어요.</string>
+    <string name="skip_confirm_body_fixed">%1$s 고정 \'%2$s\'을 건너뛸까요? 건너뛴 뒤에도 되돌릴 수 있어요.</string>
+    <string name="day_end_title">%1$d일차 도착지</string>
+    <string name="day_end_lodging">숙소 · %1$s</string>
+    <string name="guide_lodging">숙소로 길안내</string>
+    <string name="guide_home">집으로 길안내</string>
+    <string name="guide_day_end">도착지로 길안내</string>
     <string name="next_no_lodging">%1$s일차 숙소가 정해지지 않았어요</string>
     <string name="next_lodging">오늘 묵을 곳</string>
     <string name="next_return">마지막 날 귀가</string>

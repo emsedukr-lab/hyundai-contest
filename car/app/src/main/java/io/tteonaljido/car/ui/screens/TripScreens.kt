@@ -301,9 +301,13 @@ fun TripDetailScreen(vm: TripsViewModel, localId: String, drive: DriveState, dem
                 val resetOrder = stringResource(R.string.order_reset_btn)
                 val deleteTrip = stringResource(R.string.delete_trip)
                 val hasCarOrder = remember(t, day) { CarOrder.of(t.plan, t.overlay, day) != null }
+                // A trip that starts or ends at home, sent without the address: the navigation's own 집 can stand in for it.
+                val loadHome = stringResource(R.string.load_navi_home)
+                val needsHome = t.view.home == null && t.overlay.home == null && (t.view.origin is Endpoint.Home || t.view.finalDestination is Endpoint.Home)
                 PleosOverflowMenu(stringResource(R.string.more), buildList {
                     if (t.overlay.originFor(t.view, day) != null) add(MenuItem(undoDepart, "undoDepart") { vm.undoDepartHere(t.localId, day) })
                     if (hasCarOrder) add(MenuItem(resetOrder, "resetOrder") { vm.resetOrder(t.localId, day) })
+                    if (needsHome) add(MenuItem(loadHome, "naviHome") { vm.loadNaviHome(t.localId) })
                     add(MenuItem(deleteTrip, deleteTrip, destructive = true) { confirmDelete = true })
                 })
                 // Keep clear of the window's right edge, so the day switch and the menu are never cut off there.
@@ -472,7 +476,11 @@ private fun NextPanel(vm: TripsViewModel, t: LocalTrip, day: Int, live: LiveView
         (step.target as? Target.Stop)?.let { stop ->
             issues.filter { it.visitId == stop.visitId }.forEach { Tag(badgeText(it), if (it.severity == Severity.CONFLICT) Tone.ERROR else Tone.CAUTION, maxLines = 2) }
         }
-        val note = noteText(step)
+        // A booking or a fixed time is what the day turns on: said under the name as a tag, not as a quiet note.
+        val nextStop = step.target as? Target.Stop
+        val nextFixed = nextStop?.let { s -> t.view.visits.first { it.visitId == s.visitId }.fixed }
+        nextFixed?.let { f -> Tag(stringResource(if (f.kind == Visit.Fixed.Kind.RESERVATION) R.string.next_booked else R.string.next_fixed, f.time), Tone.INFO, large = true) }
+        val note = if (nextFixed != null) "" else noteText(step)
         if (note.isNotBlank()) PleosText(note, Pleos.type.bodyMediumNormal, secondary, maxLines = 1)
         live?.let { v ->
             liveStatus(t, v)?.let { LiveLines(it, large = false) }
@@ -526,8 +534,9 @@ private fun NextPanel(vm: TripsViewModel, t: LocalTrip, day: Int, live: LiveView
         val carOrder = remember(t, day) { CarOrder.of(t.plan, t.overlay, day) }
         val faster = advice as? RouteOptimizer.Outcome.Faster
         val canOrder = advice.let { it != null && it !is RouteOptimizer.Outcome.NotApplicable }
-        val needsHome = t.view.home == null && t.overlay.home == null && (t.view.origin is Endpoint.Home || t.view.finalDestination is Endpoint.Home)
         ActionGrid {
+            // 이 장소 건너뛰기: the next stop only (it can be put back); a booking is asked about first.
+            nextStop?.let { s -> add { m -> PleosButton(stringResource(R.string.skip_this), { vm.requestSkip(t.localId, s.visitId) }, type = ButtonType.BASIC, modifier = m, tag = "skipNext") } }
             if (canBundle) add { m -> PleosButton(stringResource(R.string.guide_today), { vm.guideToday(t.localId, day) }, type = ButtonType.BASIC, modifier = m, tag = "guideToday") }
             if (isToday) (step.target as? Target.Stop)?.let { s -> add { m -> PleosButton(stringResource(R.string.mark_arrived), { vm.markVisited(t.localId, s.visitId) }, type = ButtonType.BASIC, modifier = m, tag = "visited") } }
             if (isToday) add { m -> PleosButton(stringResource(R.string.depart_here), { vm.departHere(t.localId, day) }, type = ButtonType.BASIC, modifier = m, tag = "departHere") }
@@ -537,14 +546,14 @@ private fun NextPanel(vm: TripsViewModel, t: LocalTrip, day: Int, live: LiveView
             if (faster != null) add { m -> PleosButton(stringResource(R.string.order_apply_saves, durationLabel(faster.savedMinutes)), { vm.applyOrder(t.localId, day, faster.order) }, type = ButtonType.WEAK, size = ButtonSize.SMALL, modifier = m, tag = "applyOrder") }
             if (cover.total > 0 && cover.measured < cover.total) add { m -> PleosButton(stringResource(R.string.navi_measure_all), { vm.measureTrip(t.localId) }, type = ButtonType.BASIC, size = ButtonSize.SMALL, modifier = m, tag = "naviMeasure") }
             else if (faster == null && carOrder == null && canOrder) add { m -> PleosButton(stringResource(R.string.navi_optimize_day, day), { vm.measureDay(t.localId, day) }, type = ButtonType.BASIC, size = ButtonSize.SMALL, modifier = m, tag = "naviOptimize") }
-            if (needsHome) add { m -> PleosButton(stringResource(R.string.load_navi_home), { vm.loadNaviHome(t.localId) }, type = ButtonType.BASIC, size = ButtonSize.SMALL, modifier = m, tag = "naviHome") }
         }
         // Guidance needs a stop to go to; say so in one quiet line when there is none.
         val why = if (step.target == null) stringResource(R.string.why_no_target) else null
         why?.let { PleosText(it, Pleos.type.bodySmall, secondary, maxLines = 2) }
         if (skip != null || defer != null || energy != null || rest != null || arrival?.visitId != null || skippedToday.isNotEmpty() || deferredToday.isNotEmpty() || deferredAway.isNotEmpty() || lowSoc) {
             ActionGrid {
-                skip?.let { s -> add { m -> PleosButton(stringResource(R.string.skip), { vm.skip(t.localId, s.visitId) }, size = ButtonSize.SMALL, modifier = m, tag = "skip") } }
+                // The suggested skip has its own button only when it is not the next stop (that one has 이 장소 건너뛰기 above).
+                skip?.takeIf { it.visitId != nextStop?.visitId }?.let { s -> add { m -> PleosButton(stringResource(R.string.skip), { vm.skip(t.localId, s.visitId) }, size = ButtonSize.SMALL, modifier = m, tag = "skip") } }
                 defer?.let { s -> add { m -> PleosButton(stringResource(R.string.defer_back), { vm.defer(t.localId, s.visitId) }, type = ButtonType.BASIC, size = ButtonSize.SMALL, modifier = m, tag = "defer") } }
                 if (defer != null && nextDay != null) add { m -> PleosButton(stringResource(R.string.defer_to_day, nextDay.toString()), { vm.deferToDay(t.localId, defer.visitId, nextDay) }, type = ButtonType.BASIC, size = ButtonSize.SMALL, modifier = m, tag = "deferDay") }
                 arrival?.visitId?.let { id -> add { m -> PleosButton(stringResource(R.string.undo_arrival), { vm.undoVisited(t.localId, id) }, type = ButtonType.BASIC, size = ButtonSize.SMALL, modifier = m, tag = "undoArrival") } }
@@ -558,6 +567,25 @@ private fun NextPanel(vm: TripsViewModel, t: LocalTrip, day: Int, live: LiveView
                 if (lowSoc && energy == null) add { m -> PleosButton(stringResource(R.string.nearby_chargers), vm::openChargers, type = ButtonType.BASIC, size = ButtonSize.SMALL, modifier = m, tag = "chargers") }
                 if (rest != null) add { m -> PleosButton(stringResource(R.string.find_rest_area), vm::openRestAreas, type = ButtonType.BASIC, size = ButtonSize.SMALL, modifier = m, tag = "restArea") }
             }
+        }
+        // Where the day ends, while stops are still ahead: named, with guidance straight there (the stops stay as they are).
+        val end = remember(t, day) { NextDestination.endOf(t.view, day) }
+        if (nextStop != null && end != null) {
+            RowDivider()
+            PleosText(stringResource(R.string.day_end_title, day), Pleos.type.bodyMedium, secondary, maxLines = 1)
+            val atHome = end is Target.Final && end.place == null
+            PleosText(
+                when (end) {
+                    is Target.Lodging -> stringResource(R.string.day_end_lodging, end.label)
+                    is Target.Final -> end.place?.name ?: home
+                    else -> end.label
+                },
+                Pleos.type.titleSmall, maxLines = 2,
+            )
+            PleosButton(
+                stringResource(if (end is Target.Lodging) R.string.guide_lodging else if (atHome) R.string.guide_home else R.string.guide_day_end),
+                { vm.guideDayEnd(t.localId, day) }, Modifier.fillMaxWidth(), type = ButtonType.BASIC, size = ButtonSize.SMALL, tag = "guideEnd",
+            )
         }
     }
 }
@@ -605,6 +633,11 @@ private fun GuideDialogs(vm: TripsViewModel, g: Guide) {
             stringResource(R.string.home_title),
             stringResource(R.string.home_body, g.home.address.ifBlank { g.home.name }.ifBlank { stringResource(R.string.home_bookmark) }),
             stringResource(R.string.use), vm::acceptHome, cancel = stringResource(R.string.cancel), onCancel = vm::dismissGuide,
+        )
+        is Guide.ConfirmSkip -> PleosSystemPopup(
+            stringResource(if (g.booked) R.string.skip_confirm_title_booked else R.string.skip_confirm_title_fixed),
+            stringResource(if (g.booked) R.string.skip_confirm_body_booked else R.string.skip_confirm_body_fixed, g.time, g.name),
+            stringResource(R.string.skip), vm::confirmSkip, cancel = stringResource(R.string.cancel), onCancel = vm::dismissGuide,
         )
         is Guide.Done -> PleosSystemPopup(stringResource(R.string.done_title), text(g.msg), stringResource(R.string.confirm), vm::dismissGuide)
         is Guide.Failed -> if (g.canSearch) PleosSystemPopup(

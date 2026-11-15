@@ -54,9 +54,21 @@ object NextDestination {
         return own + injected
     }
 
-    /** First stop of the given day neither visited nor skipped (deferred stops go to the tail); then that night's lodging, or the final destination on the last day. */
+    /**
+     * Where the given day ends: that night's lodging, or the trip's final destination on the last day. Null when the
+     * night's lodging is not decided. It does not depend on what has been visited or skipped — the day ends there
+     * whatever happens to the stops before it.
+     */
+    fun endOf(trip: Trip, dayIndex: Int): Target? {
+        val places = trip.places.associateBy { it.placeRef }
+        if (dayIndex < trip.days.size) return trip.days[dayIndex - 1].lodgingPlaceRef?.let(places::get)?.let { Target.Lodging(it, it.name) }
+        val end = trip.finalDestination
+        val place = (end as? Endpoint.AtPlace)?.let { places[it.placeRef] }
+        return Target.Final(end, place, place?.name ?: "집")
+    }
+
+    /** First stop of the given day neither visited nor skipped (deferred stops go to the tail); then where the day ends ([endOf]). */
     fun of(trip: Trip, overlay: CarOverlay, dayIndex: Int): NextStep {
-        val day = trip.days[dayIndex - 1]
         val places = trip.places.associateBy { it.placeRef }
         val stop = upcoming(trip, overlay, dayIndex).firstOrNull()
         if (stop != null) {
@@ -64,14 +76,10 @@ object NextDestination {
             val p = places.getValue(v.placeRef)
             return NextStep(dayIndex, Target.Stop(stop, p, p.name), v.fixed?.let { "고정 ${it.time}" } ?: "", if (v.fixed != null) "FIXED" else "", listOfNotNull(v.fixed?.time))
         }
-        val isLast = dayIndex == trip.days.size
-        if (!isLast) {
-            val lodging = day.lodgingPlaceRef?.let(places::get)
-                ?: return NextStep(dayIndex, null, "${dayIndex}일차 숙소가 정해지지 않았어요", "NO_LODGING", listOf("$dayIndex"))
-            return NextStep(dayIndex, Target.Lodging(lodging, lodging.name), "오늘 묵을 곳", "LODGING")
+        return when (val end = endOf(trip, dayIndex)) {
+            null -> NextStep(dayIndex, null, "${dayIndex}일차 숙소가 정해지지 않았어요", "NO_LODGING", listOf("$dayIndex"))
+            is Target.Final -> NextStep(dayIndex, end, "마지막 날 귀가", "RETURN")
+            else -> NextStep(dayIndex, end, "오늘 묵을 곳", "LODGING")
         }
-        val end = trip.finalDestination
-        val place = (end as? Endpoint.AtPlace)?.let { places[it.placeRef] }
-        return NextStep(dayIndex, Target.Final(end, place, place?.name ?: "집"), "마지막 날 귀가", "RETURN")
     }
 }

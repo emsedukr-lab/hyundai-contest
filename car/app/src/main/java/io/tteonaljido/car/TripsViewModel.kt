@@ -40,6 +40,7 @@ import io.tteonaljido.trip.Punctuality
 import io.tteonaljido.trip.RestAdvice
 import io.tteonaljido.trip.RestAdvisor
 import io.tteonaljido.trip.Target
+import io.tteonaljido.trip.Visit
 import io.tteonaljido.trip.TodayRoute
 import io.tteonaljido.trip.VehicleKind
 import io.tteonaljido.trip.VehicleSnapshot
@@ -66,6 +67,8 @@ sealed interface Guide {
     data class ConfirmReplace(val current: String, val target: String) : Guide
     data class ConfirmPlace(val found: NaviBinding, val wanted: String, val metres: Int) : Guide
     data class ConfirmHome(val home: NaviBinding) : Guide
+    /** Before a stop with a booking or a fixed time is skipped: it is named with its time, and nothing changes until the driver agrees. */
+    data class ConfirmSkip(val name: String, val time: String, val booked: Boolean) : Guide
     /**
      * Before a measurement (M63): the navigation comes to the front and shows `routes` routes one after another, and a
      * route it is guiding on (`current`) ends. Nothing is sent until the driver agrees.
@@ -243,6 +246,25 @@ class TripsViewModel(
 
     fun skip(id: String, visitId: String) = edit(id) { it.copy(overlay = it.overlay.copy(skipped = it.overlay.skipped + visitId, guiding = it.overlay.guiding?.takeIf { g -> g.visitId != visitId })) }
     fun unskip(id: String, visitId: String) = edit(id) { it.copy(overlay = it.overlay.copy(skipped = it.overlay.skipped - visitId)) }
+
+    /** The stop a skip is being asked about (trip, visit), while its popup is open. */
+    private var skipAsk: Pair<String, String>? = null
+
+    /** 이 장소 건너뛰기: straight away for an ordinary stop (it can be put back); a booking or a fixed time is asked about first. */
+    fun requestSkip(localId: String, visitId: String) {
+        val t = trip(localId) ?: return
+        val v = t.view.visits.firstOrNull { it.visitId == visitId } ?: return
+        val fixed = v.fixed ?: return skip(localId, visitId)
+        skipAsk = localId to visitId
+        _guide.value = Guide.ConfirmSkip(TripValidator.placeName(t.view, v.placeRef), fixed.time, fixed.kind == Visit.Fixed.Kind.RESERVATION)
+    }
+
+    fun confirmSkip() {
+        val (localId, visitId) = skipAsk ?: return
+        skipAsk = null
+        _guide.value = Guide.Idle
+        skip(localId, visitId)
+    }
     /** Move an optional stop to later today (tail of the day); the plan is unchanged. If the car was guiding to it, that binding is cleared. */
     fun defer(id: String, visitId: String) = edit(id) { it.copy(overlay = it.overlay.copy(deferred = it.overlay.deferred + visitId, guiding = it.overlay.guiding?.takeIf { g -> g.visitId != visitId })) }
     fun undefer(id: String, visitId: String) = edit(id) { it.copy(overlay = it.overlay.copy(deferred = it.overlay.deferred - visitId)) }
@@ -263,6 +285,7 @@ class TripsViewModel(
         _guide.value = Guide.Idle
         pending = null
         measureAsk = null
+        skipAsk = null
         // Closing the progress popup stops the measurement; the job itself clears its measuring route on the way out.
         measureJob?.takeIf { it.isActive }?.cancel()
     }
@@ -389,6 +412,23 @@ class TripsViewModel(
             else -> targetOf(t, step) ?: return run { _guide.value = Guide.Failed(Msg(R.string.guide_no_home), false) }
         }
         pending = Pending(localId, placeRef, target, Kind.ROUTE, dayIndex = dayIndex, visitId = (step.target as? Target.Stop)?.visitId)
+        handToNavi(target, placeRef)
+    }
+
+    /**
+     * 숙소로 길안내: straight to where the day ends (that night's lodging, or home on the last day), on an explicit tap
+     * while parked. The stops still ahead are left as they are — skipping them is a separate, one-by-one choice.
+     */
+    fun guideDayEnd(localId: String, dayIndex: Int) {
+        val t = trip(localId) ?: return
+        val end = NextDestination.endOf(t.view, dayIndex) ?: return run { _guide.value = Guide.Failed(Msg(R.string.next_no_lodging, dayIndex.toString()), false) }
+        val (target, placeRef) = targetOf(t, NextStep(dayIndex, end, "")) ?: return run { _guide.value = Guide.Failed(Msg(R.string.guide_no_home), false) }
+        pending = Pending(localId, placeRef, target, Kind.ROUTE, dayIndex = dayIndex, visitId = null)
+        handToNavi(target, placeRef)
+    }
+
+    /** The pending target goes to the navigation: by search when it has no coordinates, after asking when another route is running. */
+    private fun handToNavi(target: RouteTarget, placeRef: String?) {
         // Added by name only: no coordinates to route to, so go straight to the navigation's own search.
         if (target.latE7 == null && placeRef != null) return searchInNavi()
         viewModelScope.launch {

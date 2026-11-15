@@ -47,6 +47,17 @@
     <string name="drive_must">A must-keep fixed stop</string>
     <string name="guide_when_parked">You can request guidance once parked</string>
     <string name="next_fixed">Fixed %1$s</string>
+    <string name="next_booked">Booked %1$s</string>
+    <string name="skip_this">Skip this stop</string>
+    <string name="skip_confirm_title_booked">This stop is booked</string>
+    <string name="skip_confirm_title_fixed">This stop has a fixed time</string>
+    <string name="skip_confirm_body_booked">Skip \'%2$s\', booked for %1$s? You can put it back afterwards.</string>
+    <string name="skip_confirm_body_fixed">Skip \'%2$s\', fixed at %1$s? You can put it back afterwards.</string>
+    <string name="day_end_title">Day %1$d ends at</string>
+    <string name="day_end_lodging">Stay · %1$s</string>
+    <string name="guide_lodging">Guide to the stay</string>
+    <string name="guide_home">Guide home</string>
+    <string name="guide_day_end">Guide to the end</string>
     <string name="next_no_lodging">No lodging set for day %1$s</string>
     <string name="next_lodging">Tonight\'s stay</string>
     <string name="next_return">Last day · going home</string>
