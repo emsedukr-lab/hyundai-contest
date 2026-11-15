@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Banner } from '@astryxdesign/core/Banner';
+import { ToastNotice } from '../components/ToastNotice';
 import { Button } from '@astryxdesign/core/Button';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { sampleTrip, type Trip } from '@tteonaljido/shared';
@@ -103,7 +103,7 @@ export function HomePage() {
       }>
       <div className="tn-pad tn-home-notes">
         <InstallHint />
-        {message && <Banner status="info" title={message} isDismissable onDismiss={() => setMessage(null)} />}
+        {message && <ToastNotice status="info" title={message} isDismissable onDismiss={() => setMessage(null)} />}
       </div>
       {docs !== null && docs.length === 0 && (
         <div className="tn-panel" style={{ marginTop: 16 }}>

@@ -1,4 +1,4 @@
-import { Banner } from '@astryxdesign/core/Banner';
+import { ToastNotice } from '../components/ToastNotice';
 import { VStack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
 import { hhmm, timeline, type Home, type Trip } from '@tteonaljido/shared';
@@ -43,7 +43,7 @@ export function RecommendPreview({ display, home, diff, insights, showNew = true
   ];
   return (
     <VStack gap={4}>
-      {insights && insights.hardViolations > 0 && <Banner status="warning" title={t('recommend.hard', { n: insights.hardViolations })} />}
+      {insights && insights.hardViolations > 0 && <ToastNotice status="warning" title={t('recommend.hard', { n: insights.hardViolations })} />}
       {display.days.map((d) => {
         const times = timeline(display, d.dayIndex);
         const untimed = times.filter((st) => st.arrive === null).length;

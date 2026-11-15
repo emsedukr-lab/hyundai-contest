@@ -1,4 +1,4 @@
-import { Home } from '@tteonaljido/shared';
+import { Home, TimeStr, Trip as TripSchema, type Trip } from '@tteonaljido/shared';
 import { t } from './i18n';
 
 /**
@@ -11,6 +11,31 @@ import { t } from './i18n';
  * corrupted entry never reaches a trip.
  */
 const KEY = 'tteonaljido.defaultHome';
+
+const TRIP_DEFAULTS_KEY = 'tteonaljido.tripDefaults';
+const TripDefaultsSchema = TripSchema.pick({ origin: true, finalDestination: true, places: true, firstDay: true })
+  .extend({ endBy: TimeStr.nullable() })
+  .refine((value) => {
+    const refs = new Set([value.origin, value.finalDestination].flatMap((e) => e.kind === 'PLACE' ? [e.placeRef] : []));
+    return refs.size === value.places.length && [...refs].every((ref) => value.places.some((p) => p.placeRef === ref));
+  }, 'invalid endpoint places');
+
+/** Defaults are copied only when a new trip is created; existing trips keep their own choices. */
+export function tripDefaults() {
+  try {
+    const parsed = TripDefaultsSchema.safeParse(JSON.parse(localStorage.getItem(TRIP_DEFAULTS_KEY) ?? 'null'));
+    return parsed.success ? parsed.data : null;
+  } catch { return null; }
+}
+
+export function setTripDefaults(plan: Trip): void {
+  const refs = new Set([plan.origin, plan.finalDestination].flatMap((e) => e.kind === 'PLACE' ? [e.placeRef] : []));
+  const value = TripDefaultsSchema.parse({ origin: plan.origin, finalDestination: plan.finalDestination, firstDay: plan.firstDay,
+    places: plan.places.filter((p) => refs.has(p.placeRef)), endBy: plan.days[plan.days.length - 1].endBy });
+  const text = JSON.stringify(value);
+  localStorage.setItem(TRIP_DEFAULTS_KEY, text);
+  if (JSON.stringify(tripDefaults()) !== text) throw new Error(t('settings.tripDefaults.failed'));
+}
 
 export function defaultHome(): Home | null {
   try {

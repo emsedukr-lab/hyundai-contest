@@ -19,6 +19,7 @@ import {
   type Visit,
  DEFAULT_STAY } from '@tteonaljido/shared';
 import { t } from './i18n';
+import { tripDefaults } from './settings';
 import type { TripNotes } from './notes';
 
 /**
@@ -77,6 +78,7 @@ export const tripName = (plan: Trip) => plan.name.trim() || defaultTripName(plan
 
 export function emptyPlan(tripId: string = crypto.randomUUID()): Trip {
   const start = addDays(todayIn('Asia/Seoul'), 7);
+  const defaults = tripDefaults();
   return {
     tripId,
     revision: 1,
@@ -85,13 +87,13 @@ export function emptyPlan(tripId: string = crypto.randomUUID()): Trip {
     timezone: 'Asia/Seoul',
     startDate: start,
     endDate: addDays(start, 1),
-    firstDay: { basis: 'DEPART_ORIGIN', departTime: '09:00' },
-    origin: { kind: 'CURRENT' }, // no start chosen yet: wherever the car is when it leaves (M59)
-    finalDestination: { kind: 'HOME' },
+    firstDay: defaults?.firstDay ?? { basis: 'DEPART_ORIGIN', departTime: '09:00' },
+    origin: defaults?.origin ?? { kind: 'CURRENT' }, // no start chosen yet: wherever the car is when it leaves (M59)
+    finalDestination: defaults?.finalDestination ?? { kind: 'HOME' },
     home: null,
-    places: [],
+    places: defaults?.places ?? [],
     visits: [],
-    days: [emptyDay(1, start), emptyDay(2, addDays(start, 1))],
+    days: [emptyDay(1, start), { ...emptyDay(2, addDays(start, 1)), endBy: defaults?.endBy ?? null }],
   };
 }
 
@@ -138,6 +140,12 @@ export function setPeriod(plan: Trip, start: string, end: string): Trip {
     const old = plan.days[i];
     return old ? { ...old, dayIndex: i + 1, date: addDays(start, i) } : emptyDay(i + 1, addDays(start, i));
   });
+  // In an unscheduled draft, keep the final-arrival default on the last day as the period changes.
+  const last = plan.days[plan.days.length - 1];
+  if (n !== plan.days.length && last.endBy && plan.days.every((d) => !d.visitOrder.length && !d.lodgingPlaceRef)) {
+    if (n > plan.days.length) days[plan.days.length - 1] = { ...days[plan.days.length - 1], endBy: null };
+    days[n - 1] = { ...days[n - 1], endBy: last.endBy };
+  }
   const dropped = new Set(plan.days.slice(n).flatMap((d) => d.visitOrder));
   return {
     ...plan,

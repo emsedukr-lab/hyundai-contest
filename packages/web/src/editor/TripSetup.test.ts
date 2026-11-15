@@ -1,5 +1,5 @@
 import { createElement, useState } from 'react';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeAll, beforeEach, expect, it, vi } from 'vitest';
 import { TripSetup } from './TripSetup';
 import { emptyPlan, type SetupStep } from '../lib/trips';
@@ -34,9 +34,10 @@ function Setup() {
 }
 
 it('asks before resolving the clipboard URL and adds only the checked places after consent', async () => {
-  mocks.clipboard.mockResolvedValue('[네이버 지도]\n강릉\nhttps://naver.me/example');
+  mocks.clipboard.mockResolvedValue('https://naver.me/example');
   render(createElement(Setup));
   expect(screen.getByRole('heading', { name: '장소 담기' })).toBeTruthy();
+  expect(screen.queryByRole('button', { name: /^출발지 ·/ })).toBeNull();
   fireEvent.change(screen.getByRole('textbox', { name: '여행명' }), { target: { value: '제주 가족 여행' } });
   fireEvent.click(screen.getByRole('button', { name: '다음' }));
   await screen.findByRole('heading', { name: '복사한 네이버 지도 링크를 불러올까요?' });
@@ -49,7 +50,7 @@ it('asks before resolving the clipboard URL and adds only the checked places aft
   expect(mocks.changed.mock.lastCall?.[0].places.map((p: { name: string }) => p.name)).toEqual(['바다']);
   fireEvent.click(screen.getByRole('button', { name: '1곳 담기 완료 · 다음' }));
   await screen.findByRole('heading', { name: '숙소·예약' });
-  expect(screen.getByText('새 여행 · 2/3')).toBeTruthy();
+  expect(screen.queryByText('새 여행 · 2/3')).toBeNull();
   fireEvent.click(screen.getByRole('button', { name: '이전' }));
   expect((screen.getByRole('textbox', { name: '여행명' }) as HTMLInputElement).value).toBe('제주 가족 여행');
   expect(screen.getByRole('heading', { name: '장소 담기' })).toBeTruthy();
@@ -65,16 +66,18 @@ it('does not read the shared list when the offer is declined', async () => {
 it.each(['', '메모만 있는 클립보드', 'https://example.com', 'https://naver.me.evil.test/x'])('continues without an offer for unrelated clipboard text: %s', async (text) => {
   mocks.clipboard.mockResolvedValue(text);
   render(createElement(Setup));
-  fireEvent.click(screen.getByRole('button', { name: '다음' }));
-  await screen.findByRole('alert');
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: '다음' })); });
+  expect(screen.getByRole('heading', { name: '장소 담기' })).toBeTruthy();
+  expect(screen.queryByText('가고 싶은 장소를 1곳 이상 담아 주세요')).toBeNull();
   expect(screen.queryByRole('heading', { name: '복사한 네이버 지도 링크를 불러올까요?' })).toBeNull();
   expect(mocks.readPaste).not.toHaveBeenCalled();
 });
 it('keeps manual collection available when clipboard access is denied', async () => {
   mocks.clipboard.mockRejectedValue(new DOMException('Denied', 'NotAllowedError'));
   render(createElement(Setup));
-  fireEvent.click(screen.getByRole('button', { name: '다음' }));
-  await screen.findByRole('alert');
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: '다음' })); });
+  expect(screen.getByRole('heading', { name: '장소 담기' })).toBeTruthy();
+  expect(screen.queryByText('가고 싶은 장소를 1곳 이상 담아 주세요')).toBeNull();
   expect(screen.getByRole('heading', { name: '장소 담기' })).toBeTruthy();
   expect(mocks.readPaste).not.toHaveBeenCalled();
 });

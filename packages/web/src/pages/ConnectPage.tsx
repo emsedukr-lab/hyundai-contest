@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Banner } from '@astryxdesign/core/Banner';
+import { ToastNotice } from '../components/ToastNotice';
 import { Button } from '@astryxdesign/core/Button';
 import { Card } from '@astryxdesign/core/Card';
 import { List, ListItem } from '@astryxdesign/core/List';
@@ -310,10 +310,10 @@ export function ConnectPage() {
       case 'loading':
         return <Spinner />;
       case 'unsupported':
-        return <Banner status="error" title={t('connect.unsupported.title')} description={t('connect.unsupported.description')} />;
+        return <ToastNotice status="error" title={t('connect.unsupported.title')} description={t('connect.unsupported.description')} />;
       case 'invalid':
         return (
-          <Banner
+          <ToastNotice
             status="warning"
             title={t('connect.invalid.title')}
             description={t('connect.invalid.description')}
@@ -368,7 +368,7 @@ export function ConnectPage() {
                 {t('connect.pick.description')}
               </Text>
             </VStack>
-            {docs.length === 0 && <Banner status="info" title={t('common.noTrips')} description={t('connect.pick.empty')} />}
+            {docs.length === 0 && <ToastNotice status="info" title={t('common.noTrips')} description={t('connect.pick.empty')} />}
             <VStack gap={2}>
               {docs.map((d) => {
                 const warnings = planWarnings(d.plan, home, d.lodgingTbd).filter((w) => w.level === 'warning').length;
@@ -462,7 +462,7 @@ export function ConnectPage() {
                 <VStack gap={1}>
                   <Text type="label">{t('connect.approve.conflicts', { n: warnings.length })}</Text>
                   {warnings.map((w, n) => (
-                    <Banner key={n} status="warning" title={w.text} />
+                    <ToastNotice key={n} status="warning" title={w.text} />
                   ))}
                 </VStack>
               );
@@ -473,7 +473,7 @@ export function ConnectPage() {
         return (
           <VStack gap={4}>
             {st ? (
-              <Banner status={st.tone} title={st.title} description={st.detail} />
+              <ToastNotice status={st.tone} title={st.title} description={st.detail} />
             ) : dead ? null : (
               <HStack gap={2} vAlign="center">
                 <Spinner />
@@ -579,7 +579,8 @@ export function ConnectPage() {
         {step !== undefined && (
           <ProgressBar label={`${t('connect.stepper')}: ${STEPS[step]}`} value={step + 1} max={STEPS.length} hasValueLabel formatValueLabel={(v, m) => `${STEPS[step]} · ${v}/${m}`} />
         )}
-        {err && <Banner status="error" title={err} />}
+        {err && <ToastNotice status="error" title={err} onDismiss={() => setErr(null)} />}
+        {doc && (stage === 'intro' || stage === 'code') && <Card padding={3}><Text type="label">{t('car.sending', { name: doc.plan.name })}</Text></Card>}
         {content}
       </div>
     </PushScreen>

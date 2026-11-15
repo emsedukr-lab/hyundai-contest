@@ -1,4 +1,4 @@
-import { Banner } from '@astryxdesign/core/Banner';
+import { ToastNotice } from '../components/ToastNotice';
 import { Button } from '@astryxdesign/core/Button';
 import { HStack, StackItem, VStack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
@@ -89,12 +89,12 @@ export function RecommendDialog({
           {t('recommend.rules')}
         </Text>
         {lodgingStep ? (
-          <Banner status="info" title={t('recommend.lodging.title')} description={t('recommend.lodging.body', { days: gaps.map((d) => t('common.day', { day: d })).join(', ') })} />
+          <ToastNotice status="info" title={t('recommend.lodging.title')} description={t('recommend.lodging.body', { days: gaps.map((d) => t('common.day', { day: d })).join(', ') })} />
         ) : (
           <>
             {/* What changed, as one plain line: only something to act on (a full day) is a banner. */}
             <Text type="label">{diff.changed ? t('recommend.summary', { added: diff.addedCount, moved: diff.movedCount }) : t('recommend.noChanges')}</Text>
-            {diff.changed && diff.overflowCount > 0 && <Banner status="warning" title={t('recommend.overflow', { n: diff.overflowCount })} />}
+            {diff.changed && diff.overflowCount > 0 && <ToastNotice status="warning" title={t('recommend.overflow', { n: diff.overflowCount })} />}
             {diff.changed && diff.noCoordsCount > 0 && (
               <Text type="supporting" color="secondary">
                 {t('recommend.noCoords')}

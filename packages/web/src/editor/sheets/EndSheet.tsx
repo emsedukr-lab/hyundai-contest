@@ -1,4 +1,4 @@
-import { Banner } from '@astryxdesign/core/Banner';
+import { ToastNotice } from '../../components/ToastNotice';
 import { Button } from '@astryxdesign/core/Button';
 import { Selector } from '@astryxdesign/core/Selector';
 import type { Home, Trip } from '@tteonaljido/shared';
@@ -32,7 +32,7 @@ export function EndSheet({ isOpen, onClose, plan, home, dayIndex, onChange, onOp
         <>
           <EndpointField which="finalDestination" compact plan={plan} home={home} onChange={onChange} onOpenSettings={onOpenSettings} />
           {day.lodgingPlaceRef && (
-            <Banner status="warning" title={t('trip.warn.lastLodging')} endContent={<Button label={t('tl.clearLodging')} variant="secondary" size="sm" onClick={() => onChange(setLodging(plan, day.dayIndex, null))} />} />
+            <ToastNotice status="warning" title={t('trip.warn.lastLodging')} endContent={<Button label={t('tl.clearLodging')} variant="secondary" size="sm" onClick={() => onChange(setLodging(plan, day.dayIndex, null))} />} />
           )}
           {endBy}
         </>

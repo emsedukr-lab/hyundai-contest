@@ -34,15 +34,16 @@ export function sharedUrl(p: SharedParams): string | null {
   return null;
 }
 
-/** The first HTTPS Naver Map share link in clipboard text; unrelated links never trigger an import offer. */
+/** Clipboard imports accept only a bare Naver short link, never arbitrary copied text. */
 export function naverShareUrl(text: string): string | null {
-  for (const token of text.match(/https?:\/\/[^\s<>"']+/gi) ?? []) {
-    try {
-      const url = new URL(token.replace(/[)\],.;!?]+$/, ''));
-      if (url.protocol === 'https:' && !url.username && !url.password && ['naver.me', 'map.naver.com', 'm.map.naver.com', 'pages.map.naver.com', 'm.place.naver.com'].includes(url.hostname)) return url.href;
-    } catch { /* not a usable URL */ }
+  const value = text.trim();
+  if (!value.startsWith('https://naver.me/') || /\s/.test(value)) return null;
+  try {
+    const url = new URL(value);
+    return url.hostname === 'naver.me' && url.pathname.length > 1 && !url.username && !url.password ? url.href : null;
+  } catch {
+    return null;
   }
-  return null;
 }
 
 /**

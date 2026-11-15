@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { Button } from '@astryxdesign/core/Button';
-import { CarIcon, MapIcon } from '../components/shell/icons';
+import { CarIcon, MapIcon, QrIcon } from '../components/shell/icons';
 import { Row, Section } from '../components/shell/rows';
 import { PushScreen } from '../components/shell/Screens';
 import { sendLog, trips } from '../lib/db';
@@ -38,6 +38,7 @@ export function CarPage() {
   const [recent, setRecent] = useState<RecentSend[] | null>(null);
   const [resumable] = useState(hasOpenConnection);
   const [scanning, setScanning] = useState(false);
+  const [scanTrip, setScanTrip] = useState<string>();
 
   useEffect(() => {
     void (async () => {
@@ -54,25 +55,15 @@ export function CarPage() {
     })();
   }, []);
 
+  const startScan = (tripId?: string) => {
+    if (tripId) sendIntent.set(tripId);
+    else sendIntent.clear();
+    setScanTrip(recent?.find((r) => r.tripId === tripId)?.name);
+    setScanning(true);
+  };
+
   return (
-    <PushScreen title={t('nav.connect')} onBack={() => navigate('/')}>
-      {/* Scan in the app: one tap opens the camera (asking permission), and the car's QR opens the connection here. */}
-      <div className="tn-pad" style={{ paddingTop: 8, paddingBottom: 8 }}>
-        <Button label={t('car.scan')} variant="primary" size="lg" width="100%" onClick={() => {
-            sendIntent.clear(); // from this tab no trip is chosen ahead: the pairing page asks
-            setScanning(true);
-          }}
-        />
-      </div>
-
-      {resumable && (
-        <ul className="tn-cards">
-          <li>
-            <Row href="/c" onClick={() => navigate('/c')} lead={<CarIcon />} title={t('car.resume')} subtitle={t('car.resume.detail')} chevron />
-          </li>
-        </ul>
-      )}
-
+    <PushScreen title={t('car.title')} onBack={() => navigate('/')}>
       <Section title={t('car.howTo')}>
         {/* instructions, not buttons: numbered stops on the route line, no card or chevron */}
         <div className="tn-panel">
@@ -89,22 +80,38 @@ export function CarPage() {
         </div>
       </Section>
 
+      <div className="tn-pad" style={{ paddingTop: 16 }}>
+        <Button label={t('car.scan')} icon={<QrIcon />} variant="primary" size="lg" width="100%" onClick={() => startScan()} />
+        <details style={{ marginTop: 12 }}>
+          <summary className="tn-note" style={{ cursor: 'pointer', margin: 0 }}>{t('car.cameraHelp')}</summary>
+          <p className="tn-note">{t('car.cameraHelp.detail')}</p>
+        </details>
+      </div>
+
+      {resumable && (
+        <ul className="tn-cards">
+          <li>
+            <Row href="/c" onClick={() => navigate('/c')} lead={<CarIcon />} title={t('car.resume')} subtitle={t('car.resume.detail')} chevron />
+          </li>
+        </ul>
+      )}
+
       <Section title={t('car.recent')}>
         {recent && recent.length === 0 ? (
-          <p className="tn-note" style={{ marginTop: 0 }}>
-            {t('car.recent.empty')}
-          </p>
+          <div className="tn-panel" style={{ alignItems: 'center', padding: 24 }}>
+            <CarIcon />
+            <p className="tn-note" style={{ margin: 0 }}>{t('car.recent.empty')}</p>
+          </div>
         ) : (
           <ul className="tn-cards">
             {(recent ?? []).map((r) => (
               <li key={r.tripId}>
                 <Row
-                  href={`/trips/${r.tripId}`}
-                  onClick={() => navigate(`/trips/${r.tripId}`)}
+                  onClick={() => startScan(r.tripId)}
                   lead={<MapIcon />}
                   title={r.name}
                   subtitle={t('home.lastSend', { date: dateLabel(dayOf(r.at)) })}
-                  chevron
+                  end={<span>{t('car.resend')}</span>}
                 />
               </li>
             ))}
@@ -114,6 +121,7 @@ export function CarPage() {
       {scanning && (
         <Suspense fallback={null}>
         <QrScanner
+          tripName={scanTrip}
           onClose={() => setScanning(false)}
           onResult={(text) => {
             const target = carQrTarget(text, SERVER_ORIGIN);

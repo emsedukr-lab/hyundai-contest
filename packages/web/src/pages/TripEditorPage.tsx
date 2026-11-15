@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { AlertDialog } from '@astryxdesign/core/AlertDialog';
-import { Banner } from '@astryxdesign/core/Banner';
+import { ToastNotice } from '../components/ToastNotice';
 import { Button } from '@astryxdesign/core/Button';
 import { DropdownMenu } from '@astryxdesign/core/DropdownMenu';
 import { Spinner } from '@astryxdesign/core/Spinner';
@@ -653,8 +653,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
         </div>
       )}
       {notice && !notice.undo && (
-        <div className="tn-pad" style={{ paddingTop: 12 }}>
-          <Banner
+          <ToastNotice
             status={notice.tone}
             title={notice.text}
             isDismissable
@@ -673,7 +672,6 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
               ) : undefined
             }
           />
-        </div>
       )}
       {/* A notice with 되돌리기 floats above the bottom bar, so it is seen wherever the stop was swiped away. */}
       <div role="status">
@@ -903,6 +901,7 @@ export function TripEditorPage({ tripId }: { tripId: string | null }) {
       {scanning && (
         <Suspense fallback={null}>
           <QrScanner
+            tripName={plan.name}
             onClose={() => setScanning(false)}
             onResult={(text) => {
               const target = carQrTarget(text, SERVER_ORIGIN);

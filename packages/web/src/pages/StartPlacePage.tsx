@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Banner } from '@astryxdesign/core/Banner';
+import { ToastNotice } from '../components/ToastNotice';
 import { Button } from '@astryxdesign/core/Button';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { PushScreen } from '../components/shell/Screens';
@@ -45,7 +45,7 @@ export function StartPlacePage({ slot }: { slot: PresetSlot | 'new' }) {
     <PushScreen title={label} onBack={() => navigate('/settings')} cta={<Button label={t('settings.preset.save')} variant="primary" size="lg" width="100%" isDisabled={!place || (custom && !name.trim())} onClick={save} />}>
       <div className="tn-intro"><p>{t('settings.origins.detail2')}</p></div>
       <div className="tn-pad" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-        {error && <Banner status="error" title={error} isDismissable onDismiss={() => setError(null)} />}
+        {error && <ToastNotice status="error" title={error} isDismissable onDismiss={() => setError(null)} />}
         {custom && <TextInput label={t('settings.preset.name')} value={name} onChange={(v) => setName(v.slice(0, 60))} placeholder={t('settings.preset.nameHint')} />}
         {place && <Card>
           <strong>{slot === 'home' ? t('common.home') : custom ? name || place.name : place.name}</strong>

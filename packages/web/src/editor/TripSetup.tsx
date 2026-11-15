@@ -16,7 +16,7 @@ import { recommend, summarizeRecommendation, type RecommendInsights, type Recomm
 import { getHere, locate } from '../lib/here';
 import { allRuns, applyRun, fetchRun } from '../lib/routeTimes';
 import { mealTimes as storedMealTimes } from '../lib/meals';
-import { collectedPlaces, placeOf, relinkLegs, rememberLegs, removePlace, setReservation, setupReady, setupStepNumber, suggestVisitTime, updateVisit, type LegBook, type SetupStep } from '../lib/trips';
+import { collectedPlaces, placeOf, relinkLegs, rememberLegs, removePlace, setReservation, setupReady, suggestVisitTime, updateVisit, type LegBook, type SetupStep } from '../lib/trips';
 import { MealChips, useNotes } from './NotesContext';
 import { PlaceCollector } from './sheets/PlaceSheet';
 import type { Notice } from './sheets/PlaceSheet';
@@ -157,8 +157,7 @@ export function TripSetup({
   return (
     <div className="tl-setup">
       <div className="tn-pad tl-setup-head">
-        <span className="tl-kicker">{t('setup.kicker', { step: setupStepNumber(step) })}</span>
-        <h2 className="tl-setup-title">{t(TITLE[step])}</h2>
+        {step >= 3 && <h2 className="tl-setup-title">{t(TITLE[step])}</h2>}
         <div className="tl-setup-dots" aria-hidden="true">
           {STEPS.map((s) => (
             <span key={s} className={`tl-setup-dot${s <= step ? ' is-on' : ''}`} />
@@ -168,10 +167,9 @@ export function TripSetup({
 
       {(step === 1 || step === 2) && (
         <>
-          <TripInfoPanel plan={plan} home={home} onChange={onChange} onOpenSettings={onOpenSettings} section="basics" showRequired={tried} />
+          <TripInfoPanel plan={plan} home={home} onChange={onChange} onOpenSettings={onOpenSettings} section="basics" showRequired={tried} showEndpoints={false} />
           <div id="setup-places" className="tn-pad tl-setup-body tl-setup-places" style={{ scrollMarginTop: 72 }}>
             <h3 className="tl-sheet-section">{t('setup.step2')}</h3>
-            <p className="tl-setup-hint">{t('setup.step2.hint')}</p>
             <PlaceCollector importReview={importReview} onImportClose={() => setImportReview(null)} plan={plan} onChange={onChange} onOpenPlace={onOpenPlace} onNotice={onNotice} onRemovePlace={(ref) => onChange(removePlace(plan, ref))} />
           </div>
         </>
@@ -181,10 +179,11 @@ export function TripSetup({
         <div className="tn-pad tl-setup-body">
           <p className="tl-setup-hint">{t('setup.lodging.hint')}</p>
           <TripInfoPanel plan={plan} home={home} onChange={onChange} onOpenSettings={onOpenSettings} section="lodging" showRequired={tried} />
-          <h3 className="tl-sheet-section">{t('setup.bookings')}</h3>
+          <div className="tl-setup-bookings-head">
+            <h3 className="tl-sheet-section">{t('setup.bookings')}</h3>
+            <span className="tl-setup-count"><PushPinIcon />{t('setup.bookings.count', marked)}</span>
+          </div>
           <p className="tl-setup-hint">{t('setup.step3.hint')}</p>
-          {/* How many are marked so far, once any is: a booked place counts as a must-see too. */}
-          {marked.must > 0 && <p className="tl-setup-count">{t('setup.bookings.count', marked)}</p>}
           <div className="tl-setup-list">
             {visits.map((v) => {
               const p = placeOf(plan, v.placeRef);
@@ -216,6 +215,9 @@ export function TripSetup({
                       onClick={() => onChange(updateVisit(plan, v.visitId, { importance: must ? 'NORMAL' : 'MUST' }))}>
                       <PushPinIcon />
                     </button>
+                    <button type="button" className="tn-iconbtn pc-remove" aria-label={t('place.removeNamed', { name: p?.name ?? '' })} onClick={() => onChange(removePlace(plan, v.placeRef))}>
+                      <CloseIcon />
+                    </button>
                   </div>
                   {/* A restaurant's meal (M67), set before the first recommendation: 상관없음 unless chosen. A booked
                       time already says which meal it is, so the choice is not offered then. */}
@@ -228,6 +230,7 @@ export function TripSetup({
                   {/* Most places are not booked: a small text button, and the day and time only once it is pressed. */}
                   {booked ? (
                     <div className="tl-setup-reserve">
+                      <span className="tl-setup-reserve-label"><CheckIcon />{t('setup.reserve.saved')}</span>
                       <Selector
                         label={t('setup.reserveDay')}
                         isLabelHidden
@@ -302,7 +305,7 @@ export function TripSetup({
       {/* room so the last card clears the fixed buttons */}
       <div style={{ height: 112 }} />
       <div className="tn-cta">
-        {/* A dimmed 다음 still takes the tap (aria-disabled): that tap is the attempt that turns the hint below into an error. */}
+        {/* Tapping a disabled Next marks the lodging fields that still need a choice. */}
         <div className="tn-cta-inner" onClickCapture={() => !ready.ok && step === 3 && setTried(true)}>
           {step >= 3 && phase !== 'running' && <Button label={t('setup.prev')} variant="secondary" size="lg" onClick={() => go(step === 4 ? 3 : 1)} />}
           {step < 4 && <Button label={step < 3 && collectedPlaces(plan).length > 0 ? t('setup.nextPlaces', { n: collectedPlaces(plan).length }) : t('setup.next')} variant="primary" size="lg" isDisabled={!ready.ok && step === 3} isLoading={checkingClipboard} onClick={() => void next()} />}
@@ -310,9 +313,6 @@ export function TripSetup({
           {step === 4 && phase === 'running' && <Button label={t('setup.run')} variant="primary" size="lg" isLoading onClick={() => undefined} />}
           {step === 4 && phase === 'preview' && result && <Button label={t('setup.start')} variant="primary" size="lg" onClick={() => onFinish(result)} />}
         </div>
-        <p className={`tl-setup-need${tried ? ' is-error' : ''}`} role={tried ? 'alert' : undefined}>
-          {!ready.ok && step < 4 ? ready.reason : ''}
-        </p>
       </div>
     </div>
   );

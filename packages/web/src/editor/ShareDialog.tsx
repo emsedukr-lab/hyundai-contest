@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Banner } from '@astryxdesign/core/Banner';
+import { ToastNotice } from '../components/ToastNotice';
 import { Button } from '@astryxdesign/core/Button';
 import { Card } from '@astryxdesign/core/Card';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
@@ -86,8 +86,8 @@ export function ShareDialog({ isOpen, doc, onClose }: { isOpen: boolean; doc: Tr
             </Text>
           </VStack>
         </Card>
-        <Banner status="info" title={t('share.noHome')} />
-        {note && <Banner status="success" title={note} isDismissable onDismiss={() => setNote(null)} />}
+        <ToastNotice status="info" title={t('share.noHome')} />
+        {note && <ToastNotice status="success" title={note} isDismissable onDismiss={() => setNote(null)} />}
         <HStack gap={2} hAlign="between">
           <Button label={t('common.close')} variant="secondary" onClick={onClose} />
           <HStack gap={2}>

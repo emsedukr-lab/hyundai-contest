@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Banner } from '@astryxdesign/core/Banner';
+import { ToastNotice } from '../components/ToastNotice';
 import { Button } from '@astryxdesign/core/Button';
 import { CheckboxList, CheckboxListItem } from '@astryxdesign/core/CheckboxList';
 import { Divider } from '@astryxdesign/core/Divider';
@@ -154,14 +154,16 @@ function ListAddDialog({ isOpen, list, existing, room, onClose, onAdd }: { isOpe
     }>
       <VStack gap={4}>
         <Text color="secondary">{t('bulk.list.source')}</Text>
-        {skipped > 0 && <Banner status="info" title={t('bulk.list.skipped', { n: skipped })} />}
-        {fresh.length === 0 && <Banner status="info" title={t('bulk.list.allIn')} />}
-        {fresh.length > room && <Banner status="warning" title={room > 0 ? t('bulk.list.room', { n: room }) : t('trip.placeLimit', { n: TRANSFER_LIMITS.maxPlaces })} />}
+        {skipped > 0 && <ToastNotice status="info" title={t('bulk.list.skipped', { n: skipped })} />}
+        {fresh.length === 0 && <ToastNotice status="info" title={t('bulk.list.allIn')} />}
+        {fresh.length > room && <ToastNotice status="warning" title={room > 0 ? t('bulk.list.room', { n: room }) : t('trip.placeLimit', { n: TRANSFER_LIMITS.maxPlaces })} />}
         {showMap && <div ref={mapRef} style={{ width: '100%', height: 200 }} role="img" aria-label={t('map.bulkAria')} />}
-        <HStack gap={2}>
+        <HStack gap={2} vAlign="center" wrap="wrap">
           <Button label={t('bulk.list.selectAll')} variant="secondary" size="sm" isDisabled={fresh.length === 0 || chosen.length === fresh.length} onClick={() => setChecked(fresh.map((r) => r.key))} />
           <Button label={t('bulk.list.clear')} variant="ghost" size="sm" isDisabled={chosen.length === 0} onClick={() => setChecked([])} />
-          <Text color="secondary">{t('bulk.list.selected', { n: chosen.length, total: fresh.length })}</Text>
+          <span style={{ marginInlineStart: 'auto', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
+            <Text color="secondary" aria-label={t('bulk.list.selected', { n: chosen.length, total: rows.length })}>{chosen.length}/{rows.length}</Text>
+          </span>
         </HStack>
         <Card pad={0}>
           <CheckboxList label={t('bulk.list.pick')} isLabelHidden value={checked} onChange={setChecked} hasDividers>
@@ -266,8 +268,8 @@ function SearchAddDialog({ isOpen, terms, lodgingOnly, onClose, onAdd }: { isOpe
           </HStack>
         ) : (
           <>
-            {searchOff && <Banner status="info" title={t('bulk.searchOff')} />}
-            {!searchOff && failed > 0 && <Banner status="warning" title={t('bulk.someFailed')} />}
+            {searchOff && <ToastNotice status="info" title={t('bulk.searchOff')} />}
+            {!searchOff && failed > 0 && <ToastNotice status="warning" title={t('bulk.someFailed')} />}
             {showMap && <div ref={mapRef} style={{ width: '100%', height: 220 }} role="img" aria-label={t('map.bulkAria')} />}
             <Card>
               <VStack gap={3}>

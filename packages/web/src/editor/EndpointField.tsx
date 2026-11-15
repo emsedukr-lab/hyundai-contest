@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Banner } from '@astryxdesign/core/Banner';
+import { ToastNotice } from '../components/ToastNotice';
 import { Button } from '@astryxdesign/core/Button';
 import { List, ListItem } from '@astryxdesign/core/List';
 import type { Endpoint, Home, Trip } from '@tteonaljido/shared';
@@ -46,7 +46,7 @@ export function EndpointField({ which, plan, home, onChange, onOpenSettings, lab
         <span>{chosen}</span><ChevronIcon />
       </button>
       <Sheet isOpen={open} onClose={() => setOpen(false)} title={fieldLabel}>
-        {error && <Banner status="error" title={error} />}
+        {error && <ToastNotice status="error" title={error} onDismiss={() => setError(null)} />}
         <div className="tn-btnrow">
           {which === 'finalDestination' && <Button label={t('setup.sameOrigin')} icon={sameOrigin ? <CheckIcon /> : undefined} aria-pressed={sameOrigin} variant="secondary" isDisabled={plan.origin.kind === 'CURRENT'} onClick={() => apply(() => setEndpoint(plan, which, plan.origin))} />}
           {which === 'origin' && <Button label={t('endpoint.current')} variant="secondary" onClick={() => apply(() => setEndpoint(plan, which, { kind: 'CURRENT' }))} />}

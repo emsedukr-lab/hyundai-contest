@@ -1,5 +1,6 @@
+import { naverShareUrl } from '../lib/placeShare';
 import { useEffect, useRef, useState } from 'react';
-import { Banner } from '@astryxdesign/core/Banner';
+import { ToastNotice } from '../components/ToastNotice';
 import { Button } from '@astryxdesign/core/Button';
 import { Selector } from '@astryxdesign/core/Selector';
 import { TextArea } from '@astryxdesign/core/TextArea';
@@ -109,8 +110,9 @@ export function PlacesPage() {
   const readClipboard = async () => {
     try {
       const text = await navigator.clipboard.readText();
-      if (text.trim()) setPaste(text);
-      else setNote(t('place.paste.clipboardEmpty'));
+      const url = naverShareUrl(text);
+      if (url) setPaste(url);
+      else setNote(t(text.trim() ? 'place.paste.naverOnly' : 'place.paste.clipboardEmpty'));
     } catch {
       setNote(t('place.paste.clipboardFail'));
     }
@@ -129,9 +131,9 @@ export function PlacesPage() {
             <TextInput label={t('editor.name')} value={newTripName} onChange={(name) => setNewTripName(name.slice(0, 60))} placeholder={t('trip.defaultName')} />
           )}
           <TextArea label={t('place.paste.label')} isLabelHidden value={paste} onChange={setPaste} placeholder={t('place.paste.placeholder')} description={t('places.paste.hint')} rows={3} />
-          {note && <Banner status="info" title={note} isDismissable onDismiss={() => setNote(null)} />}
+          {note && <ToastNotice status="info" title={note} isDismissable onDismiss={() => setNote(null)} />}
           {done && (
-            <Banner
+            <ToastNotice
               status="success"
               title={done.text}
               isDismissable

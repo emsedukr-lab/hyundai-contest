@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Banner } from '@astryxdesign/core/Banner';
+import { ToastNotice } from './ToastNotice';
 import { Button } from '@astryxdesign/core/Button';
 import { t } from '../lib/i18n';
 import { isNativeApp } from '../lib/platform';
@@ -137,7 +137,7 @@ export function InstallHint() {
   };
 
   return (
-    <Banner
+    <ToastNotice
       status="info"
       title={t('install.title')}
       description={prompt ? t('install.benefit') : `${t('install.benefit')} · ${t('install.ios')}`}

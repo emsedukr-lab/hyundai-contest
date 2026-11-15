@@ -1,12 +1,11 @@
-import { useEffect, useState } from 'react';
-import { Banner } from '@astryxdesign/core/Banner';
+import { useEffect, useRef, useState } from 'react';
+import { ToastNotice } from '../components/ToastNotice';
 import { Button } from '@astryxdesign/core/Button';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
 import { List, ListItem } from '@astryxdesign/core/List';
 import { Selector } from '@astryxdesign/core/Selector';
-import { Spinner } from '@astryxdesign/core/Spinner';
 import { HStack, StackItem, VStack } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
 import { TextArea } from '@astryxdesign/core/TextArea';
@@ -17,11 +16,11 @@ import { Card } from '../components/toss/Card';
 import { favorites } from '../lib/db';
 import { asNewPlace, favoriteId, toFavorite } from '../lib/favorites';
 import type { FavoritePlace } from '../lib/favorites';
-import { ClipboardIcon, MapIcon, PencilIcon, SearchIcon } from '../components/shell/icons';
-import { Row } from '../components/shell/rows';
+import { SearchIcon } from '../components/shell/icons';
 import { t } from '../lib/i18n';
 import { ApiError, searchPlaces, type PlaceHit, type ResolvedList } from '../lib/pairing';
 import { readPaste } from '../lib/pasteImport';
+import { naverShareUrl } from '../lib/placeShare';
 import { BulkAddDialog } from './BulkAddDialog';
 import './searchBar.css';
 
@@ -78,7 +77,6 @@ export function PlaceSearch({
   onFavoritesChange,
   tripPlaces,
   room,
-  onOpenMap,
 }: {
   onPick: (p: NewPlace) => void;
   onPickMany?: (places: NewPlace[]) => void;
@@ -101,7 +99,6 @@ export function PlaceSearch({
   tripPlaces?: readonly Place[];
   /** How many more places the trip can take. */
   room?: number;
-  onOpenMap?: () => void;
 }) {
   const [q, setQ] = useState('');
   const [hits, setHits] = useState<PlaceHit[] | null>(null);
@@ -117,6 +114,18 @@ export function PlaceSearch({
   const [bulkTerms, setBulkTerms] = useState<string[] | null>(null);
   const [bulkList, setBulkList] = useState<ResolvedList | null>(null);
   const [reading, setReading] = useState(false);
+  const searchId = useRef(0);
+  useEffect(() => () => { searchId.current++; }, []);
+  const changeQuery = (value: string) => {
+    searchId.current++;
+    setQ(value);
+    setBusy(false);
+    if (!value.trim()) {
+      setHits(null);
+      setNote(null);
+      setSearchError(false);
+    }
+  };
 
   useEffect(() => {
     void favorites.all().then(setFavs);
@@ -138,22 +147,23 @@ export function PlaceSearch({
     if (!name) return;
     const p = byName(name);
     onPick(lodgingOnly ? { ...p, category: 'LODGING' } : p);
-    setQ('');
-    setNote(null);
-    setHits(null);
-    setSearchError(false);
+    changeQuery('');
   };
 
   const run = async (query?: string) => {
     const term = (query ?? q).trim();
     if (!term) return;
+    const id = ++searchId.current;
     setBusy(true);
     setNote(null);
     setSearchError(false);
     try {
-      setHits(await searchPlaces(term));
+      const results = await searchPlaces(term);
+      if (id !== searchId.current) return;
+      setHits(results);
       setUnavailable(false);
     } catch (e) {
+      if (id !== searchId.current) return;
       setHits(null);
       // Three different troubles, three answers (M66): search is switched off here (503), the request never left the
       // phone (no status: the network), or the server or Kakao could not answer just now. A search that worked and
@@ -164,7 +174,7 @@ export function PlaceSearch({
       setSearchError(true);
       setNote(off ? t('place.search.unavailable') : offline ? t('place.search.failed') : t('place.search.busy'));
     } finally {
-      setBusy(false);
+      if (id === searchId.current) setBusy(false);
     }
   };
 
@@ -172,15 +182,16 @@ export function PlaceSearch({
   const readClipboard = async () => {
     try {
       const txt = await navigator.clipboard.readText();
-      if (txt.trim()) setPaste(txt);
-      else setNote(t('place.paste.clipboardEmpty'));
+      const url = naverShareUrl(txt);
+      if (url) setPaste(url);
+      else setNote(t(txt.trim() ? 'place.paste.naverOnly' : 'place.paste.clipboardEmpty'));
     } catch {
       setNote(t('place.paste.clipboardFail'));
     }
   };
 
   /**
-   * The top row (복사한 링크·장소 붙여넣기): read the clipboard and run the paste at once. When the browser won't hand
+   * The saved-list button reads the clipboard and runs the paste at once. When the browser won't hand
    * the clipboard over (permission denied, or an empty clipboard), the paste box opens instead.
    */
   const pasteFromClipboard = async () => {
@@ -197,7 +208,9 @@ export function PlaceSearch({
       setNote(t('place.paste.clipboardEmpty'));
       return;
     }
-    await runPaste(txt);
+    const url = naverShareUrl(txt);
+    if (!url) return setNote(t('place.paste.naverOnly'));
+    await runPaste(url);
   };
 
   /**
@@ -237,7 +250,7 @@ export function PlaceSearch({
       return;
     }
     const term = terms[0];
-    setQ(term);
+    changeQuery(term);
     setShowPaste(false);
     setPaste('');
     await run(term);
@@ -247,7 +260,7 @@ export function PlaceSearch({
   const shownFavs = requireCoords ? favs.filter((f) => f.latE7 !== null && f.lonE7 !== null) : favs;
   // Offer "add by name" when search failed or found nothing — never where a real location is required.
   const canAddByName = !requireCoords && !!q.trim() && (searchError || hits?.length === 0);
-  const manualLabel = onOpenMap ? t('place.manual.short') : unavailable ? t('place.manual.searchOff') : t('place.manual.open');
+  const manualLabel = onPickMany ? t('place.manual.short') : unavailable ? t('place.manual.searchOff') : t('place.manual.open');
 
   return (
     <VStack gap={2}>
@@ -277,7 +290,7 @@ export function PlaceSearch({
           label={label}
           isLabelHidden={isLabelHidden}
           value={q}
-          onChange={setQ}
+          onChange={changeQuery}
           onEnter={() => run()}
           enterKeyHint="search"
           placeholder={placeholder ?? t('place.search.placeholder')}
@@ -287,20 +300,15 @@ export function PlaceSearch({
           controlClassName="tn-searchbar"
         />
       </div>
-      {!compact && onPickMany && (
-        <Card pad={0}>
-          <Row
-            lead={<ClipboardIcon />}
-            title={t('place.paste.quick')}
-            subtitle={t('place.paste.quickHint')}
-            end={reading ? <Spinner size="sm" /> : undefined}
-            chevron={!reading}
-            onClick={reading ? undefined : () => void pasteFromClipboard()}
-          />
-        </Card>
+      {!compact && (
+        <HStack gap={2} wrap="wrap" className={onPickMany ? 'ps-place-actions' : undefined}>
+          {onPickMany && <Button label={t('place.paste.quick')} variant="primary" width="100%" isLoading={reading} onClick={() => void pasteFromClipboard()}><span className="ps-action-label">{t('place.paste.quick')}</span></Button>}
+          {!requireCoords && <Button label={manualLabel} variant="secondary" size={onPickMany ? 'md' : 'sm'} onClick={() => setManual(true)}>{onPickMany ? <span className="ps-action-label">{manualLabel}</span> : undefined}</Button>}
+          {!onPickMany && <Button label={t('place.paste.open')} variant="ghost" size="sm" onClick={() => setShowPaste((v) => !v)} />}
+        </HStack>
       )}
-      {note && <Banner status="info" title={note} />}
-      {hits && hits.length === 0 && <Banner status="info" title={t('place.search.noResults')} />}
+      {note && <ToastNotice status="info" title={note} onDismiss={() => setNote(null)} />}
+      {hits && hits.length === 0 && !busy && <ToastNotice status="info" title={t('place.search.noResults')} />}
       {canAddByName && <Button label={t('place.search.addByName', { query: q.trim().slice(0, 20) })} variant="primary" size="sm" onClick={addByName} />}
       {hits && hits.length > 0 && (
         <Card pad={0}>
@@ -324,21 +332,12 @@ export function PlaceSearch({
               }
               onClick={() => {
                 onPick({ ...fromHit(h), category: lodgingOnly ? 'LODGING' : h.category });
-                setHits(null);
-                setQ('');
+                changeQuery('');
               }}
             />
           ))}
         </List>
         </Card>
-      )}
-      {!compact && (
-      <HStack gap={2} wrap="wrap" className={onOpenMap ? 'ps-place-actions' : undefined}>
-        {onOpenMap && <Button label={t('mapPick.searchNew')} icon={<MapIcon />} variant="secondary" size="lg" width="100%" onClick={onOpenMap}><span className="ps-action-label">{t('mapPick.searchNew')}</span></Button>}
-        {!requireCoords && <Button label={manualLabel} icon={onOpenMap ? <PencilIcon /> : undefined} variant="secondary" size={onOpenMap ? 'lg' : 'sm'} onClick={() => setManual(true)}>{onOpenMap ? <span className="ps-action-label">{manualLabel}</span> : undefined}</Button>}
-        {/* With the paste row on top, the box opens from there (or by itself when the clipboard can't be read). */}
-        {!onPickMany && <Button label={t('place.paste.open')} variant="ghost" size="sm" onClick={() => setShowPaste((v) => !v)} />}
-      </HStack>
       )}
       {!compact && showPaste && (
         <VStack gap={2}>

@@ -3,6 +3,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import { afterEach, beforeAll, expect, it, vi } from 'vitest';
 import { BulkAddDialog } from './BulkAddDialog';
 import type { ResolvedList } from '../lib/pairing';
+import { fromListPlace } from '../lib/pasteImport';
 
 vi.hoisted(() => Object.defineProperty(navigator, 'language', { value: 'ko-KR', configurable: true }));
 vi.mock('../lib/kakaoSdk', () => ({ JS_KEY: null }));
@@ -38,4 +39,11 @@ it('prevents adding more than the available room after selecting all', async () 
   expect(add.getAttribute('aria-disabled')).toBe('true');
   fireEvent.click(add);
   expect(onAdd).not.toHaveBeenCalled();
+});
+
+it('counts the whole list even when every place is already in the trip', async () => {
+  const existing = list.places.map((p, i) => ({ ...fromListPlace(p), placeRef: `saved${i}` }));
+  render(createElement(BulkAddDialog, { isOpen: true, list, existing, lodgingOnly: false, onClose: vi.fn(), onAdd: vi.fn() }));
+  expect(await screen.findByText('0/3')).toBeTruthy();
+  expect(screen.getByRole('button', { name: '전체 선택' }).getAttribute('aria-disabled')).toBe('true');
 });

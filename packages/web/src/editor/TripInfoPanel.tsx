@@ -1,26 +1,26 @@
 import { useId, useState } from 'react';
-import { Banner } from '@astryxdesign/core/Banner';
+import { ToastNotice } from '../components/ToastNotice';
 import { Calendar, type DateRange } from '@astryxdesign/core/Calendar';
 import type { Home, Trip } from '@tteonaljido/shared';
-import { BedIcon, CalendarIcon, CloseIcon, FlagIcon, PinIcon } from '../components/shell/icons';
+import { BedIcon, CalendarIcon, CloseIcon } from '../components/shell/icons';
 import { shortDate, tripPeriodLabel } from '../lib/format';
 import { t } from '../lib/i18n';
-import { defaultTripName, setEndBy, setPeriod } from '../lib/trips';
-import { EndpointField } from './EndpointField';
+import { defaultTripName, setPeriod } from '../lib/trips';
+import { TripEndpoints } from './TripEndpoints';
 import { LodgingField } from './LodgingField';
 import { useNotes } from './NotesContext';
 import { Sheet } from './Sheet';
-import { TimeSelect } from './TimeSelect';
 import './timeline.css';
 
 /** Basics and collected places share the first setup page; lodging is selected afterwards. */
-export function TripInfoPanel({ plan, home, onChange, onOpenSettings, showRequired = true, section = 'all' }: {
+export function TripInfoPanel({ plan, home, onChange, onOpenSettings, showRequired = true, section = 'all', showEndpoints = true }: {
   plan: Trip;
   home: Home | null;
   onChange: (p: Trip) => void;
   onOpenSettings: () => void;
   showRequired?: boolean;
   section?: 'all' | 'basics' | 'lodging';
+  showEndpoints?: boolean;
 }) {
   const { lodgingTbd } = useNotes();
   const nameId = useId();
@@ -29,12 +29,10 @@ export function TripInfoPanel({ plan, home, onChange, onOpenSettings, showRequir
   const [periodOpen, setPeriodOpen] = useState(false);
   const [left, setLeft] = useState<number[]>([]);
   const nights = plan.days.slice(0, -1);
-  const lastDay = plan.days[plan.days.length - 1];
-  const first = plan.firstDay;
   const period = tripPeriodLabel(plan.startDate, plan.endDate);
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      {error && <div className="tn-pad"><Banner status="error" title={error} isDismissable onDismiss={() => setError(null)} /></div>}
+      {error && <ToastNotice status="error" title={error} onDismiss={() => setError(null)} />}
       {section !== 'lodging' && <>
         <div className="tn-pad">
           <div className="tl-infocard">
@@ -49,36 +47,12 @@ export function TripInfoPanel({ plan, home, onChange, onOpenSettings, showRequir
             </button>
           </div>
         </div>
-        <div className="tn-pad">
-          <div className="tl-infocard ti-endpoints">
+        {showEndpoints && <div className="tn-pad">
+          <div className="tl-infocard">
             <h3 className="tl-sheet-section">{t('setup.endpoints')}</h3>
-            <div className="ti-endpoint-row">
-              <span className="ti-endpoint-icon is-start" aria-hidden="true"><PinIcon /></span>
-              <div className="ti-endpoint-field">
-                <span className="tl-kicker">{t('editor.startPlace')}</span>
-                <EndpointField which="origin" compact plan={plan} home={home} onChange={onChange} onOpenSettings={onOpenSettings} />
-              </div>
-              <div className="ti-endpoint-field ti-endpoint-time">
-                <span className="tl-kicker">{first.basis === 'DEPART_ORIGIN' ? t('setup.departTimeShort') : t('editor.arriveTime')}</span>
-                <TimeSelect label={first.basis === 'DEPART_ORIGIN' ? t('setup.departTime') : t('editor.arriveTime')} value={first.basis === 'DEPART_ORIGIN' ? first.departTime : first.arriveTime} clearable={first.basis === 'DEPART_ORIGIN'} placeholder={t('time.none')} onChange={(time) => {
-                  if (first.basis === 'ARRIVE_FIRST_STOP') { if (time) onChange({ ...plan, firstDay: { ...first, arriveTime: time } }); }
-                  else onChange({ ...plan, firstDay: { ...first, departTime: time } });
-                }} />
-              </div>
-            </div>
-            <div className="ti-endpoint-row">
-              <span className="ti-endpoint-icon" aria-hidden="true"><FlagIcon /></span>
-              <div className="ti-endpoint-field">
-                <span className="tl-kicker">{t('tl.endPlace')}</span>
-                <EndpointField which="finalDestination" compact plan={plan} home={home} onChange={onChange} onOpenSettings={onOpenSettings} />
-              </div>
-              <div className="ti-endpoint-field ti-endpoint-time">
-                <span className="tl-kicker">{t('setup.returnTimeShort')}</span>
-                <TimeSelect label={t('setup.returnTime')} value={lastDay.endBy} clearable clearLabel={t('time.undecided')} placeholder={t('time.undecided')} suggest="18:00" onChange={(time) => onChange(setEndBy(plan, lastDay.dayIndex, time))} />
-              </div>
-            </div>
+            <TripEndpoints plan={plan} home={home} onChange={onChange} onOpenSettings={onOpenSettings} />
           </div>
-        </div>
+        </div>}
         <Sheet isOpen={periodOpen} onClose={() => setPeriodOpen(false)} title={t('editor.period')}>
           <Calendar mode="range" value={{ start: plan.startDate, end: plan.endDate } as DateRange} maxRangeSpan={14} numberOfMonths={1} onChange={(range) => {
             try { onChange(setPeriod(plan, range.start, range.end)); setError(null); setPeriodOpen(false); }
@@ -93,7 +67,7 @@ export function TripInfoPanel({ plan, home, onChange, onOpenSettings, showRequir
           const open = !d.lodgingPlaceRef && !lodgingTbd.includes(d.dayIndex);
           const required = open && (showRequired || left.includes(d.dayIndex));
           return (
-          <div className="tl-row" key={d.dayIndex}>
+          <div className={`tl-row${i === 0 ? ' is-first' : ''}${i === nights.length - 1 ? ' is-last' : ''}`} key={d.dayIndex}>
             <div className="tl-rail">
               <span className={`tl-marker${required ? ' is-required' : ''}`} aria-hidden="true">
                 <BedIcon />

@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { DndContext, KeyboardSensor, PointerSensor, closestCenter, useSensor, useSensors, type Announcements, type DragEndEvent, type UniqueIdentifier } from '@dnd-kit/core';
 import { SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Banner } from '@astryxdesign/core/Banner';
+import { ToastNotice } from '../components/ToastNotice';
 import { Button } from '@astryxdesign/core/Button';
 import { dayEnd, hhmm, timeline, type DayIssue, type Home, type Trip } from '@tteonaljido/shared';
 import { BedIcon, FlagIcon, GripIcon, LockIcon } from '../components/shell/icons';
@@ -143,7 +143,7 @@ export function DayTimeline({ plan, home, dayIndex, onChange, onError, onOpenPla
     <div className="tl tl-day">
       {issues.other.map((x, n) => (
         <div key={`${x.code}${n}`} style={{ marginBottom: 8 }}>
-          <Banner status="error" title={issueText(x)} />
+          <ToastNotice status="error" title={issueText(x)} />
         </div>
       ))}
       {note && (

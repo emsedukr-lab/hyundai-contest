@@ -41,6 +41,7 @@
   bottom: auto;
   height: 28px;
 }
+.tl-row.is-first.is-last .tl-rail::before { display: none; }
 .tl-marker {
   position: relative;
   z-index: 1;
@@ -728,7 +729,14 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
+  margin-inline-end: 8px;
 }
+.tl-setup-row-text .tl-name { overflow-wrap: anywhere; }
+.tl-setup-bookings-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
+.tl-setup-bookings-head .tl-sheet-section { margin: 0; }
+.tl-setup-bookings-head .tl-setup-count { display: inline-flex; align-items: center; gap: 4px; margin: 0; }
+.tl-setup-count svg, .tl-setup-reserve-label svg { width: 16px; height: 16px; flex: none; }
+.tl-setup-reserve-label { grid-column: 1 / -1; display: inline-flex; align-items: center; gap: 4px; color: var(--tn-accent-text); font-size: 13px; font-weight: 600; }
 .tl-setup-reserve {
   display: grid;
   /* The day needs the room ("2일차 · 12/11(금)"); the time is five characters and the clear button an icon. */
@@ -741,9 +749,11 @@
   width: 36px;
   color: var(--tn-text-secondary);
 }
-/* "+ 예약 시각 넣기": the weak text button, with room around it for a finger. */
+/* Booking entry stays a text action with a full touch target. */
 .tl-setup-reserve-add .tl-textbtn {
-  padding: 10px 0 6px;
+  min-height: 44px;
+  padding: 10px 8px;
+  margin-inline-start: -8px;
 }
 .tl-setup-count {
   margin: -4px 0 0;
@@ -1425,7 +1435,7 @@
 .ti-endpoint-button span { min-width: 0; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 18px; word-break: keep-all; }
 .ti-endpoint-button svg { width: 16px; height: 16px; flex: none; color: var(--tn-text-secondary); }
 .ti-period-button:focus-visible, .ti-endpoint-button:focus-visible { outline: 2px solid var(--tn-accent); outline-offset: 2px; }
-.ti-endpoints { gap: 16px; }
+.ti-endpoints { display: flex; flex-direction: column; gap: 16px; }
 .ti-endpoint-row { display: grid; grid-template-columns: 22px minmax(0, 1fr) 112px; gap: 8px; align-items: end; }
 .ti-endpoint-row .ti-endpoint-button { height: 48px; padding: 6px 10px; }
 .ti-endpoint-icon { display: grid; place-items: center; width: 22px; height: 48px; color: var(--tn-text-secondary); }

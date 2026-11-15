@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Banner } from '@astryxdesign/core/Banner';
+import { ToastNotice } from '../components/ToastNotice';
 import { Button } from '@astryxdesign/core/Button';
 import { Row } from '../components/shell/rows';
 import { PushScreen } from '../components/shell/Screens';
@@ -33,7 +33,7 @@ export function TrashPage() {
     <PushScreen title={t('trash.title')} onBack={() => navigate('/settings')}>
       <div className="tn-intro"><p>{t('trash.hint')}</p></div>
       <div className="tn-pad">
-        {message && <Banner status="info" title={message} isDismissable onDismiss={() => setMessage(null)} />}
+        {message && <ToastNotice status="info" title={message} isDismissable onDismiss={() => setMessage(null)} />}
         {entries.length === 0 ? <p className="tn-note">{t('trash.empty')}</p> : (
           <ul className="tn-cards">
             {entries.map((entry) => (

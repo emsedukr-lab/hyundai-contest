@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
-import { Banner } from '@astryxdesign/core/Banner';
+import { ToastNotice } from '../components/ToastNotice';
 import { Button } from '@astryxdesign/core/Button';
 import { FileInput } from '@astryxdesign/core/FileInput';
 import { TextInput } from '@astryxdesign/core/TextInput';
@@ -20,6 +20,7 @@ import { docFromShare, importShare, isShareFile } from '../lib/share';
 import { nowIso, type TripDoc } from '../lib/trips';
 
 const MealTimeSheet = lazy(() => import('../editor/MealTimeSheet').then((m) => ({ default: m.MealTimeSheet })));
+const TripDefaultsSheet = lazy(() => import('../editor/TripDefaultsSheet').then((m) => ({ default: m.TripDefaultsSheet })));
 
 /**
  * 설정 tab: named endpoint shortcuts, meal times for the route recommendation (M67), trip data (backup out, backup or a friend's share file in) and
@@ -34,6 +35,7 @@ export function SettingsPage() {
   const [sharePass, setSharePass] = useState('');
   const install = useInstallPrompt();
   const presets = presetSlots().map((slot) => ({ slot, place: presetPlace(slot) }));
+  const [tripDefaultsOpen, setTripDefaultsOpen] = useState(false);
 
   // 식사 시간 (M67): one meal is edited in a sheet as a draft and kept on 저장, only while it stays in order with the others.
   const [meals, setMeals] = useState<MealTimes>(mealTimes);
@@ -119,11 +121,7 @@ export function SettingsPage() {
 
   return (
     <PushScreen title={t('nav.settings')} onBack={() => navigate('/')}>
-      {message && (
-        <div className="tn-pad" style={{ paddingTop: 8 }}>
-          <Banner status="info" title={message} isDismissable onDismiss={() => setMessage(null)} />
-        </div>
-      )}
+      {message && <ToastNotice status="info" title={message} onDismiss={() => setMessage(null)} />}
 
       {/* Start places for new trips: 집, 회사, and registered custom places. */}
       <Section title={t('settings.origins')}>
@@ -140,12 +138,16 @@ export function SettingsPage() {
               />
             </li>
           ))}
+          <li><Row lead={<PinIcon />} title={t('setup.endpoints')} subtitle={t('settings.tripDefaults.detail')} chevron onClick={() => setTripDefaultsOpen(true)} /></li>
         </ul>
         <div className="tn-pad" style={{ paddingTop: 12 }}><Button label={t('settings.preset.add')} icon={<PlusIcon />} variant="secondary" width="100%" onClick={() => navigate('/settings/place/new')} /></div>
         <p className="tn-note">
           {t('settings.origins.detail2')}
         </p>
       </Section>
+      {tripDefaultsOpen && <Suspense fallback={null}>
+        <TripDefaultsSheet onClose={() => setTripDefaultsOpen(false)} onSaved={() => { setTripDefaultsOpen(false); setMessage(t('settings.tripDefaults.saved')); }} />
+      </Suspense>}
 
       {/* 식사 시간 (M67): when each meal is eaten — what the route recommendation places restaurants by. Phone only. */}
       <Section
@@ -195,7 +197,7 @@ export function SettingsPage() {
       </Section>
       <Section title={t('more.data')}>
         <div className="tn-pad" style={{ paddingBottom: 12 }}>
-          <Banner status="info" title={t('settings.backupHint')} description={t(isNativeApp ? 'settings.backupRisk.native' : 'settings.backupRisk')} />
+          <ToastNotice status="info" title={t('settings.backupHint')} description={t(isNativeApp ? 'settings.backupRisk.native' : 'settings.backupRisk')} />
         </div>
         <ul className="tn-cards">
           <li>
@@ -223,7 +225,7 @@ export function SettingsPage() {
         </div>
         {shareText && (
           <div className="tn-panel" style={{ marginTop: 12 }}>
-            <Banner status="info" title={t('share.importTitle')} description={t('share.importHint')} />
+            <ToastNotice status="info" title={t('share.importTitle')} description={t('share.importHint')} />
             <TextInput label={t('share.passcode')} value={sharePass} inputMode="numeric" onChange={setSharePass} />
             <div style={{ display: 'flex', gap: 8 }}>
               <Button label={t('common.cancel')} variant="secondary" size="lg" onClick={() => setShareText(null)} />

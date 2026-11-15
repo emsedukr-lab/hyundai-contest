@@ -54,6 +54,7 @@ export function SendSheet({
       onClose={onClose}
       title={mode === 'send' ? t('tl.sendTitle') : t('tl.mapTitle')}
       footer={mode === 'send' && onScan ? <Button label={t('car.scan')} variant="primary" size="lg" width="100%" onClick={onScan} /> : undefined}>
+      {mode === 'send' && <p className="tl-sheet-hint">{t('car.sending', { name: plan.name })}</p>}
       {plan.days.length > 1 && (
         // A day picker, not a tab strip: no sideways scroll button to cover a day's name on long trips.
         <Selector

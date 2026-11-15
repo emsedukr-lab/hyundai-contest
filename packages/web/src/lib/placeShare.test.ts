@@ -116,10 +116,10 @@ describe('공유 텍스트 정리 (자동 추가 이름·주소 줄)', () => {
 
 
 describe('clipboard Naver Map share detection', () => {
-  it('finds a Naver Map link inside copied text without fetching unrelated links', async () => {
+  it('accepts only clipboard content starting with the Naver short-link prefix', async () => {
     const { naverShareUrl } = await import('./placeShare');
-    expect(naverShareUrl('[네이버 지도] 강릉 (https://naver.me/example)')).toBe('https://naver.me/example');
-    expect(naverShareUrl('https://example.com https://map.naver.com/p/entry/place/123')).toBe('https://map.naver.com/p/entry/place/123');
-    for (const text of ['http://naver.me/x', 'https://naver.me.evil.test/x', 'https://naver.me@evil.test/x', 'https://user@naver.me/x', 'https://news.naver.com', 'https://kko.to/example', '장소 이름']) expect(naverShareUrl(text)).toBeNull();
+    expect(naverShareUrl('  https://naver.me/example\n')).toBe('https://naver.me/example');
+    expect(naverShareUrl('https://map.naver.com/p/entry/place/123')).toBeNull();
+    for (const text of ['https://naver.me/', '[네이버 지도] https://naver.me/x', 'https://example.com https://naver.me/x', 'https://naver.me/x 다른 내용', 'http://naver.me/x', 'https://naver.me.evil.test/x', 'https://naver.me@evil.test/x', 'https://user@naver.me/x', 'https://news.naver.com', 'https://kko.to/example', '장소 이름']) expect(naverShareUrl(text)).toBeNull();
   });
 });

@@ -1,0 +1,6 @@
+.nt-content { display: flex; align-items: center; gap: 8px; width: 100%; }
+.nt-message { flex: 1; min-width: 0; overflow-wrap: anywhere; font-size: 14px; line-height: 21px; }
+.nt-description { margin-top: 4px; font-size: 13px; }
+.nt-content .tn-iconbtn { flex: none; color: inherit; }
+.nt-content .astryx-button[data-variant="ghost"] { color: inherit; }
+[popover="manual"]:has(.nt-content) { padding-inline: max(16px, calc((100vw - 480px) / 2 + 16px)); }

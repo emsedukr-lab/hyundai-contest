@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Banner } from '@astryxdesign/core/Banner';
+import { ToastNotice } from '../components/ToastNotice';
 import { Button } from '@astryxdesign/core/Button';
 import { Collapsible, CollapsibleGroup } from '@astryxdesign/core/Collapsible';
 import { List, ListItem } from '@astryxdesign/core/List';
@@ -303,7 +303,7 @@ export function AddSharedPlacePage() {
     <PushScreen title={t('add.title')} onBack={() => navigate('/')} cta={cta}>
       <div className="tn-pad" style={{ display: 'flex', flexDirection: 'column', gap: 16, paddingTop: 8 }}>
         <InstallHint />
-        {status === 'noTerm' && <Banner status="info" title={t('add.noTerm')} />}
+        {status === 'noTerm' && <ToastNotice status="info" title={t('add.noTerm')} />}
 
         {status === 'resolving' && (
           <HStack gap={2} vAlign="center">
@@ -312,20 +312,20 @@ export function AddSharedPlacePage() {
           </HStack>
         )}
 
-        {status === 'failed' && <Banner status="error" title={t('add.failed')} />}
-        {status === 'exists' && exists && <Banner status="info" title={t('add.already', { trip: exists.tripName })} />}
-        {status === 'kakaoLink' && <Banner status="info" title={t('place.paste.kakao')} />}
-        {status === 'undone' && <Banner status="info" title={t('add.undone')} />}
-        {status === 'restored' && restored && <Banner status="success" title={t('add.added', { name: restored.placeName, trip: restored.tripName })} />}
+        {status === 'failed' && <ToastNotice status="error" title={t('add.failed')} />}
+        {status === 'exists' && exists && <ToastNotice status="info" title={t('add.already', { trip: exists.tripName })} />}
+        {status === 'kakaoLink' && <ToastNotice status="info" title={t('place.paste.kakao')} />}
+        {status === 'undone' && <ToastNotice status="info" title={t('add.undone')} />}
+        {status === 'restored' && restored && <ToastNotice status="success" title={t('add.added', { name: restored.placeName, trip: restored.tripName })} />}
 
         {status === 'added' && add && (
           <>
-            <Banner
+            <ToastNotice
               status="success"
               title={t('add.added', { name: add.place.name, trip: add.doc.plan.name })}
               description={add.place.latE7 === null ? t('add.added.nameOnly') : undefined}
             />
-            {note && <Banner status="warning" title={note} />}
+            {note && <ToastNotice status="warning" title={note} onDismiss={() => setNote(null)} />}
 
             <Card>
               <CollapsibleGroup type="multiple" hasDividers density="balanced">

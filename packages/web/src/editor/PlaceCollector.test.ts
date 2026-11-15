@@ -20,10 +20,12 @@ function Collector() {
   });
   return createElement(PlaceCollector, { plan, onChange: setPlan, onOpenPlace: open, onNotice: vi.fn(), onRemovePlace: (ref) => setPlan(removePlace(plan, ref)) });
 }
-it('puts search before import, shows regions and counts, and removes with a quiet accessible icon', () => {
+it('puts search before import, shows regions and counts, and removes with a quiet accessible icon', async () => {
   render(createElement(Collector));
+  await screen.findByRole('region', { name: '담은 장소 지도' });
   const search = screen.getByRole('search');
-  const paste = screen.getByText('네이버 지도 저장 목록 불러오기');
+  const paste = screen.getByRole('button', { name: '네이버 지도 저장목록' });
+  expect(screen.queryByRole('button', { name: '지도 선택' })).toBeNull();
   expect(search.compareDocumentPosition(paste) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   expect(screen.getByRole('heading', { name: '담은 장소 (2곳)' })).toBeTruthy();
   expect(screen.getByText('카페·디저트 · 강화읍')).toBeTruthy();
@@ -33,14 +35,16 @@ it('puts search before import, shows regions and counts, and removes with a quie
   expect(open).not.toHaveBeenCalled();
   expect(screen.getByRole('heading', { name: '담은 장소 (1곳)' })).toBeTruthy();
 });
-it('switches only the saved view while preserving the search input', async () => {
+it('shows the map above the saved list without view tabs and keeps search available', async () => {
   render(createElement(Collector));
+  const map = await screen.findByRole('region', { name: '담은 장소 지도' });
+  const place = screen.getByText('조양방직');
+  expect(map.compareDocumentPosition(place) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(screen.queryByRole('radio', { name: '지도' })).toBeNull();
+  expect(screen.queryByRole('radio', { name: '목록' })).toBeNull();
   const search = screen.getByRole('textbox', { name: '장소 검색' });
   fireEvent.change(search, { target: { value: '다음 맛집' } });
-  fireEvent.click(screen.getByText('지도', { exact: true }));
-  await screen.findByRole('region', { name: '담은 장소 지도' });
   expect((screen.getByRole('textbox', { name: '장소 검색' }) as HTMLInputElement).value).toBe('다음 맛집');
-  expect(screen.getByText('네이버 지도 저장 목록 불러오기')).toBeTruthy();
-  fireEvent.click(screen.getByText('목록', { exact: true }));
+  expect(screen.getByRole('button', { name: '네이버 지도 저장목록' })).toBeTruthy();
   expect(screen.getByText('조양방직')).toBeTruthy();
 });

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import jsQR from 'jsqr';
 import { t } from '../lib/i18n';
 import { CloseIcon } from './shell/icons';
+import { ToastNotice } from './ToastNotice';
 
 type Status = 'starting' | 'scanning' | 'denied' | 'nodevice' | 'unsupported' | 'error';
 
@@ -11,7 +12,7 @@ type Status = 'starting' | 'scanning' | 'denied' | 'nodevice' | 'unsupported' | 
  * or sent. `onResult` says whether a read QR was the right one: true closes the flow, false shows a hint and keeps
  * scanning. Closing or leaving always stops every camera track.
  */
-export function QrScanner({ onResult, onClose }: { onResult: (text: string) => boolean; onClose: () => void }) {
+export function QrScanner({ onResult, onClose, tripName }: { onResult: (text: string) => boolean; onClose: () => void; tripName?: string }) {
   const video = useRef<HTMLVideoElement>(null);
   const closeBtn = useRef<HTMLButtonElement>(null);
   const resultRef = useRef(onResult);
@@ -106,9 +107,12 @@ export function QrScanner({ onResult, onClose }: { onResult: (text: string) => b
       </div>
       {!failed && <div className="tn-scan-frame" aria-hidden="true" />}
       <div className="tn-scan-bottom">
-        <p className={`tn-scan-msg${hint && status === 'scanning' ? ' is-warn' : ''}`} role="status" aria-live="polite">
-          {message}
-        </p>
+        {tripName && <p className="tn-scan-msg">{t('car.sending', { name: tripName })}</p>}
+        {failed && <p className="tn-scan-msg">{t('car.cameraHelp.detail')}</p>}
+        {(failed || hint) && <ToastNotice status={failed ? 'error' : 'warning'} title={message} onDismiss={() => { if (!failed) setHint(null); }} />}
+        {!failed && <p className="tn-scan-msg" role="status" aria-live="polite">
+          {status === 'starting' ? t('scan.starting') : t('scan.aim')}
+        </p>}
         {failed && status !== 'unsupported' && (
           <button type="button" className="tn-scan-retry" onClick={() => setAttempt((a) => a + 1)}>
             {t('scan.retry')}

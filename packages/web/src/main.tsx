@@ -7,6 +7,7 @@ import './components/shell/shell.css'; // app shell: top bar, floating tab bar, 
 import { InternationalizationProvider } from '@astryxdesign/core/i18n';
 import koKR from '@astryxdesign/core/locales/ko-KR.generated.js';
 import { Theme } from '@astryxdesign/core/theme';
+import { ToastViewport } from '@astryxdesign/core/Toast';
 import { tossTheme } from './toss';
 import App from './App';
 import { requestPersistence } from './lib/db';
@@ -22,7 +23,7 @@ const astryxLocale = lang === 'ko' ? 'ko-KR' : 'en';
 createRoot(document.getElementById('root')!).render(
   <InternationalizationProvider locale={astryxLocale} messages={lang === 'ko' ? { 'ko-KR': koKR } : undefined}>
     <Theme theme={tossTheme} mode={dark ? 'dark' : 'light'}>
-      <App />
+      <ToastViewport position="bottomEnd" maxVisible={3} inset={{ bottom: 96 }}><App /></ToastViewport>
     </Theme>
   </InternationalizationProvider>,
 );
