@@ -1,0 +1,25 @@
+{
+  "shareUrl": "https://naver.me/xLNVH41z",
+  "dateRange": [
+    "2026-12-10",
+    "2026-12-13"
+  ],
+  "placeCount": 14,
+  "lodgings": [
+    {
+      "night": 1,
+      "date": "2026-12-10",
+      "name": "연곡해변솔향기캠핑장"
+    },
+    {
+      "night": 2,
+      "date": "2026-12-11",
+      "name": "강릉오죽한옥마을"
+    },
+    {
+      "night": 3,
+      "date": "2026-12-12",
+      "name": "강릉 바다내음 캠핑장"
+    }
+  ]
+}

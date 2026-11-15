@@ -1,0 +1,122 @@
+[
+  {
+    "number": 1,
+    "file": "mobile/01_home.png",
+    "title": "네이버 목록으로 만든 12월 10~13일 강릉 여행",
+    "serial": "emulator-5554"
+  },
+  {
+    "number": 2,
+    "file": "mobile/02_timeline-all.png",
+    "title": "12월 10~13일 전체 일정",
+    "serial": "emulator-5554"
+  },
+  {
+    "number": 3,
+    "file": "mobile/03_day1-timeline.png",
+    "title": "12월 10일 · 1일차 일정",
+    "serial": "emulator-5554"
+  },
+  {
+    "number": 4,
+    "file": "mobile/04_day2-timeline.png",
+    "title": "12월 11일 · 2일차 일정",
+    "serial": "emulator-5554"
+  },
+  {
+    "number": 5,
+    "file": "mobile/05_day3-timeline.png",
+    "title": "12월 12일 · 3일차 일정",
+    "serial": "emulator-5554"
+  },
+  {
+    "number": 6,
+    "file": "mobile/06_day4-timeline.png",
+    "title": "12월 13일 · 4일차 일정",
+    "serial": "emulator-5554"
+  },
+  {
+    "number": 7,
+    "file": "mobile/07_trip-info.png",
+    "title": "예시 여행의 기간·출발지와 숙소 설정",
+    "serial": "emulator-5554"
+  },
+  {
+    "number": 8,
+    "file": "mobile/08_place-detail.png",
+    "title": "장소의 체류 시간과 일정 변경 허용 설정",
+    "serial": "emulator-5554"
+  },
+  {
+    "number": 9,
+    "file": "mobile/09_place-info.png",
+    "title": "중요도·메모·영업시간 설정",
+    "serial": "emulator-5554"
+  },
+  {
+    "number": 10,
+    "file": "mobile/10_new-trip.png",
+    "title": "12월 10~13일 · 3박 4일 새 여행",
+    "serial": "emulator-5554"
+  },
+  {
+    "number": 11,
+    "file": "mobile/11_travel-dates.png",
+    "title": "12월 여행 기간 선택",
+    "serial": "emulator-5554"
+  },
+  {
+    "number": 12,
+    "file": "mobile/12_naver-saved-list.png",
+    "title": "네이버 저장목록 14곳 전체·개별 선택",
+    "serial": "emulator-5554"
+  },
+  {
+    "number": 13,
+    "file": "mobile/13_settings.png",
+    "title": "자주 쓰는 장소와 식사 시간 설정",
+    "serial": "emulator-5554"
+  },
+  {
+    "number": 14,
+    "file": "mobile/14_trip-defaults.png",
+    "title": "새 여행에 적용할 출발·도착 기본값",
+    "serial": "emulator-5554"
+  },
+  {
+    "number": 15,
+    "file": "mobile/15_departure-time.png",
+    "title": "첫날 출발 시간 선택",
+    "serial": "emulator-5554"
+  },
+  {
+    "number": 16,
+    "file": "mobile/16_meal-times.png",
+    "title": "여행 추천에 사용할 점심 시간대",
+    "serial": "emulator-5554"
+  },
+  {
+    "number": 17,
+    "file": "mobile/17_car-connection.png",
+    "title": "차량 연결 방법과 최근 전송한 일정",
+    "serial": "emulator-5554"
+  },
+  {
+    "number": 18,
+    "file": "mobile/18_pair-code.png",
+    "title": "차량과 휴대폰의 인증번호 확인",
+    "serial": "emulator-5554"
+  },
+  {
+    "number": 19,
+    "file": "mobile/19_select-trip.png",
+    "title": "12월 10~13일 강릉 여행 선택",
+    "serial": "emulator-5554"
+  },
+  {
+    "number": 20,
+    "file": "mobile/20_send-consent.png",
+    "title": "12월 10~13일 일정 전송 확인",
+    "serial": "emulator-5554"
+  }
+]

@@ -1,0 +1,122 @@
+[
+  {
+    "number": 1,
+    "file": "car/01_qr-connect.png",
+    "title": "휴대폰 일정 불러오기 · 일회용 QR",
+    "serial": "emulator-5580"
+  },
+  {
+    "number": 2,
+    "file": "car/02_pair-code.png",
+    "title": "휴대폰과 동일한 인증번호 확인",
+    "serial": "emulator-5580"
+  },
+  {
+    "number": 3,
+    "file": "car/03_review-import.png",
+    "title": "네이버 목록 예시 여행 갱신 확인",
+    "serial": "emulator-5580"
+  },
+  {
+    "number": 4,
+    "file": "car/04_import-complete.png",
+    "title": "12월 10~13일 예시 여행 갱신 완료",
+    "serial": "emulator-5580"
+  },
+  {
+    "number": 5,
+    "file": "car/05_day1-overview.png",
+    "title": "주간 · 12월 10일 일정과 다음 목적지",
+    "serial": "emulator-5580"
+  },
+  {
+    "number": 6,
+    "file": "car/06_day2-overview.png",
+    "title": "주간 · 12월 11일 일정과 다음 목적지",
+    "serial": "emulator-5580"
+  },
+  {
+    "number": 7,
+    "file": "car/07_day3-overview.png",
+    "title": "주간 · 12월 12일 일정과 다음 목적지",
+    "serial": "emulator-5580"
+  },
+  {
+    "number": 8,
+    "file": "car/08_day4-overview.png",
+    "title": "주간 · 12월 13일 일정과 다음 목적지",
+    "serial": "emulator-5580"
+  },
+  {
+    "number": 9,
+    "file": "car/09_navigation-measure.png",
+    "title": "내비 기준 이동시간 측정 전 확인",
+    "serial": "emulator-5580"
+  },
+  {
+    "number": 10,
+    "file": "car/10_skip-and-undo.png",
+    "title": "장소 건너뛰기와 되돌리기",
+    "serial": "emulator-5580"
+  },
+  {
+    "number": 11,
+    "file": "car/11_settings.png",
+    "title": "주간 · 차량 앱 설정",
+    "serial": "emulator-5580"
+  },
+  {
+    "number": 12,
+    "file": "car/12_trip-management.png",
+    "title": "주간 · 예시 여행 관리 메뉴",
+    "serial": "emulator-5580"
+  },
+  {
+    "number": 13,
+    "file": "car/13_day1-night.png",
+    "title": "야간 · 12월 10일 일정과 다음 목적지",
+    "serial": "emulator-5580"
+  },
+  {
+    "number": 14,
+    "file": "car/14_day2-night.png",
+    "title": "야간 · 12월 11일 일정과 다음 목적지",
+    "serial": "emulator-5580"
+  },
+  {
+    "number": 15,
+    "file": "car/15_day3-night.png",
+    "title": "야간 · 12월 12일 일정과 다음 목적지",
+    "serial": "emulator-5580"
+  },
+  {
+    "number": 16,
+    "file": "car/16_day4-night.png",
+    "title": "야간 · 12월 13일 일정과 다음 목적지",
+    "serial": "emulator-5580"
+  },
+  {
+    "number": 17,
+    "file": "car/17_navigation-measure-night.png",
+    "title": "야간 · 내비 이동시간 측정 확인",
+    "serial": "emulator-5580"
+  },
+  {
+    "number": 18,
+    "file": "car/18_settings-night.png",
+    "title": "야간 · 차량 앱 설정",
+    "serial": "emulator-5580"
+  },
+  {
+    "number": 19,
+    "file": "car/19_trip-management-night.png",
+    "title": "야간 · 예시 여행 관리 메뉴",
+    "serial": "emulator-5580"
+  },
+  {
+    "number": 20,
+    "file": "car/20_qr-connect-night.png",
+    "title": "야간 · 휴대폰 일정 QR 불러오기",
+    "serial": "emulator-5580"
+  }
+]
