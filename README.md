@@ -13,7 +13,7 @@
 | 앱 이름 | 떠날지도 (`io.tteonaljido.car`) |
 | 한 줄 소개 | 장소만 담으면 날짜별 동선을 짜 주고, 차에서 QR로 불러와 내비가 순서대로 안내하는 여행 앱 |
 | APK (차량 · 출품작) | [`apk/이충지_떠날지도(차량)_release.apk`](<apk/이충지_떠날지도(차량)_release.apk>) · release 0.9.1 (versionCode 10) · 서명 v2+v3 |
-| APK (휴대폰 · 함께 쓰는 앱) | [`apk/이충지_떠날지도(휴대폰)_release.apk`](<apk/이충지_떠날지도(휴대폰)_release.apk>) · release 0.3.1 (versionCode 4) · 서명 v2+v3 |
+| APK (휴대폰 · 함께 쓰는 앱) | [`apk/이충지_떠날지도(휴대폰)_release.apk`](<apk/이충지_떠날지도(휴대폰)_release.apk>) · release 0.3.2 (versionCode 5) · 서명 v2+v3 |
 | APK SHA-256 | [`apk/SHA256SUMS.txt`](apk/SHA256SUMS.txt) |
 | 개발 에뮬레이터 | Pleos Connect Emulator 2.1.0 (Android 14, API 34, arm64) |
 | 화면 규격 | 2560×1440, 160dpi (Connect-S-17 기본) |
@@ -107,7 +107,7 @@ adb shell am start --user 10 -n io.tteonaljido.car/.MainActivity
 ## 시험
 
 ```sh
-npm test                    # TypeScript 442개 (공용 119 · 휴대폰 웹 250 · 서버 73)
+npm test                    # TypeScript 467개 (공용 119 · 휴대폰 웹 273 · 서버 75)
 npm run typecheck
 (cd car && ./gradlew test)  # Kotlin 225개
 npm run e2e                 # 휴대폰 + 가짜 차량
