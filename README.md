@@ -109,7 +109,7 @@ adb shell am start --user 10 -n io.tteonaljido.car/.MainActivity
 ## 시험
 
 ```sh
-npm test                    # TypeScript 475개 (공용 119 · 휴대폰 웹 281 · 서버 75)
+npm test                    # TypeScript 484개 (공용 119 · 휴대폰 웹 289 · 서버 76)
 npm run typecheck
 (cd car && ./gradlew test)  # Kotlin 225개
 npm run e2e                 # 휴대폰 + 가짜 차량
