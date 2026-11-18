@@ -1,4 +1,4 @@
-import { naverShareUrl } from '../lib/placeShare';
+import { naverShareText } from '../lib/placeShare';
 import { useEffect, useRef, useState } from 'react';
 import { ToastNotice } from '../components/ToastNotice';
 import { Button } from '@astryxdesign/core/Button';
@@ -110,8 +110,8 @@ export function PlacesPage() {
   const readClipboard = async () => {
     try {
       const text = await navigator.clipboard.readText();
-      const url = naverShareUrl(text);
-      if (url) setPaste(url);
+      const share = naverShareText(text);
+      if (share) setPaste(share);
       else setNote(t(text.trim() ? 'place.paste.naverOnly' : 'place.paste.clipboardEmpty'));
     } catch {
       setNote(t('place.paste.clipboardFail'));

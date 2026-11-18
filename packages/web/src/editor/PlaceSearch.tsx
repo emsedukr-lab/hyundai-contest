@@ -20,7 +20,7 @@ import { SearchIcon } from '../components/shell/icons';
 import { t } from '../lib/i18n';
 import { ApiError, searchPlaces, type PlaceHit, type ResolvedList } from '../lib/pairing';
 import { readPaste } from '../lib/pasteImport';
-import { naverShareUrl } from '../lib/placeShare';
+import { naverShareText } from '../lib/placeShare';
 import { BulkAddDialog } from './BulkAddDialog';
 import './searchBar.css';
 
@@ -182,8 +182,8 @@ export function PlaceSearch({
   const readClipboard = async () => {
     try {
       const txt = await navigator.clipboard.readText();
-      const url = naverShareUrl(txt);
-      if (url) setPaste(url);
+      const share = naverShareText(txt);
+      if (share) setPaste(share);
       else setNote(t(txt.trim() ? 'place.paste.naverOnly' : 'place.paste.clipboardEmpty'));
     } catch {
       setNote(t('place.paste.clipboardFail'));
@@ -208,9 +208,9 @@ export function PlaceSearch({
       setNote(t('place.paste.clipboardEmpty'));
       return;
     }
-    const url = naverShareUrl(txt);
-    if (!url) return setNote(t('place.paste.naverOnly'));
-    await runPaste(url);
+    const share = naverShareText(txt);
+    if (!share) return setNote(t('place.paste.naverOnly'));
+    await runPaste(share);
   };
 
   /**

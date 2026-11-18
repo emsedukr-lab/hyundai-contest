@@ -1,11 +1,12 @@
 import type { Place } from '@tteonaljido/shared';
 import { resolvePlace, resolvedName, type ListPlace, type ResolvedList } from './pairing';
-import { isKakaoLink, parsePastedPlace, parsePastedPlaces } from './placeShare';
+import { isKakaoLink, isNaverLink, parsePastedPlaces, pastedLinks } from './placeShare';
 
 /**
- * What a paste (or the clipboard) turns into. A Naver Map link is asked to the server first, because the same short
- * link can be a single place or a whole 저장 목록; a Kakao Map link is not imported (map-app sharing is Naver Map only)
- * and is never sent; plain names (one per line) go to the search as before.
+ * What a paste (or the clipboard) turns into. The whole copied text is read: every link in it and the names beside
+ * them. A Naver Map link is asked to the server first, because the same short link can be a single place or a whole
+ * 저장 목록; several shares pasted together are each asked, and their lists come back as one; a Kakao Map link is not
+ * imported (map-app sharing is Naver Map only) and is never sent; plain names (one per line) go to the search as before.
  */
 export type PasteOutcome =
   | { kind: 'list'; list: ResolvedList }
@@ -16,12 +17,46 @@ export type PasteOutcome =
 
 type Resolver = typeof resolvePlace;
 
+/** How many links of one paste are asked to the server (the rest are left unread). */
+const MAX_LINKS = 5;
+
+/** Several saved lists as one: titles joined, a place that is in two of them kept once. */
+export function mergeLists(lists: ResolvedList[]): ResolvedList {
+  if (lists.length === 1) return lists[0];
+  const seen = new Set<string>();
+  const all = lists.flatMap((l) => l.places);
+  const places = all.filter((p) => {
+    const key = `${p.name}|${p.latE7}|${p.lonE7}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+  // `total - places.length` is what the dialog reports as not read, so a dropped duplicate leaves the total too.
+  const total = lists.reduce((n, l) => n + l.total, 0) - (all.length - places.length);
+  const title = lists.map((l) => l.title).filter(Boolean).join(' · ').slice(0, 60);
+  return { kind: 'list', source: 'naver', title, total, places };
+}
+
 export async function readPaste(text: string, resolve: Resolver = resolvePlace): Promise<PasteOutcome> {
   const terms = parsePastedPlaces(text);
-  const url = parsePastedPlace(text).url;
+  const links = pastedLinks(text);
+  if (links.some(isKakaoLink) || /https?:\/\/(?:kko\.to|[^\s/]*kakao\.com)\b/i.test(text)) return { kind: 'kakao' };
+  const naver = links.filter(isNaverLink);
+  // Several Naver links: several shares pasted together. Each is asked; the saved lists among them come back as one
+  // list (the names beside the links are then the lists' own names, not places). With no list among them the copied
+  // names are searched, as when a single place is pasted.
+  if (naver.length > 1) {
+    const read = await Promise.allSettled(naver.slice(0, MAX_LINKS).map((u) => resolve(u)));
+    const got = read.flatMap((r) => (r.status === 'fulfilled' ? [r.value] : []));
+    const lists = got.flatMap((r) => (r.kind === 'list' && r.places.length ? [r] : []));
+    if (lists.length) return { kind: 'list', list: mergeLists(lists) };
+    if (terms.length) return { kind: 'terms', terms };
+    const names = got.flatMap((r) => resolvedName(r)?.slice(0, 60) ?? []);
+    return names.length ? { kind: 'terms', terms: names } : { kind: 'failed' };
+  }
+  const url = naver[0] ?? links[0] ?? null;
   // Several names: a list typed or copied by hand; the link (if any) is one of many lines and is not followed. Up to
   // two lines beside a link can still be a share's header ("[네이버 지도]", the list's name, a count), so it is read.
-  if (isKakaoLink(url) || /https?:\/\/(?:kko\.to|[^\s/]*kakao\.com)\b/i.test(text)) return { kind: 'kakao' };
   if (!url || terms.length > 2) return terms.length ? { kind: 'terms', terms } : { kind: 'empty' };
   try {
     const r = await resolve(url);

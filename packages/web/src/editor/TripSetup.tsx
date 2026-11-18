@@ -7,7 +7,7 @@ import type { Home, Trip } from '@tteonaljido/shared';
 import { CheckIcon, CloseIcon, PushPinIcon } from '../components/shell/icons';
 import { shortDate } from '../lib/format';
 import { t } from '../lib/i18n';
-import { naverShareUrl } from '../lib/placeShare';
+import { naverShareText } from '../lib/placeShare';
 import { readPaste } from '../lib/pasteImport';
 import type { ResolvedList } from '../lib/pairing';
 import { Sheet } from './Sheet';
@@ -64,7 +64,7 @@ export function TripSetup({
   const [result, setResult] = useState<{ plan: Trip; meters: Record<string, number>; insights: RecommendInsights; diff: RecommendationDiff } | null>(null);
   const ready = setupReady(plan, lodgingTbd, step);
   // What a step still needs reads as a hint until 다음 was tried: only then is it an error (red, and announced).
-  const [clipboardUrl, setClipboardUrl] = useState<string | null>(null);
+  const [clipboardShare, setClipboardShare] = useState<string | null>(null);
   const [checkingClipboard, setCheckingClipboard] = useState(false);
   const [importingClipboard, setImportingClipboard] = useState(false);
   const [importReview, setImportReview] = useState<{ terms?: string[]; list?: ResolvedList } | null>(null);
@@ -121,28 +121,29 @@ export function TripSetup({
     if (ready.ok) return go(step < 3 ? 3 : 4);
     if (step >= 3) return setTried(true);
     setCheckingClipboard(true);
-    let url: string | null = null;
-    try { url = naverShareUrl(await navigator.clipboard.readText()); }
+    // The whole copied share (header, name, link), or just the link — whichever Naver Map put on the clipboard.
+    let share: string | null = null;
+    try { share = naverShareText(await navigator.clipboard.readText()); }
     catch { /* Clipboard access is optional; manual paste stays available on this page. */ }
-    setClipboardUrl(url);
+    setClipboardShare(share);
     setCheckingClipboard(false);
-    if (!url) {
+    if (!share) {
       setTried(true);
       document.getElementById('setup-places')?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
     }
   };
   const importClipboard = async () => {
-    if (!clipboardUrl || importingClipboard) return;
+    if (!clipboardShare || importingClipboard) return;
     setImportingClipboard(true);
     try {
-      const out = await readPaste(clipboardUrl);
+      const out = await readPaste(clipboardShare);
       if (out.kind === 'list') setImportReview({ list: out.list });
       else if (out.kind === 'terms') setImportReview({ terms: out.terms });
       else onNotice({ tone: 'error', text: t('place.resolve.failed') });
     } catch {
       onNotice({ tone: 'error', text: t('place.resolve.failed') });
     } finally {
-      setClipboardUrl(null);
+      setClipboardShare(null);
       setImportingClipboard(false);
     }
   };
@@ -289,16 +290,16 @@ export function TripSetup({
         </div>
       )}
 
-      {clipboardUrl && (
+      {clipboardShare && (
         <Sheet
           isOpen
-          onClose={() => !importingClipboard && setClipboardUrl(null)}
+          onClose={() => !importingClipboard && setClipboardShare(null)}
           title={t('setup.clipboard.title')}
           footer={<div className="tn-btnrow">
-            <Button label={t('setup.clipboard.later')} variant="secondary" isDisabled={importingClipboard} onClick={() => setClipboardUrl(null)} />
+            <Button label={t('setup.clipboard.later')} variant="secondary" isDisabled={importingClipboard} onClick={() => setClipboardShare(null)} />
             <Button label={t('setup.clipboard.import')} variant="primary" isLoading={importingClipboard} onClick={() => void importClipboard()} />
           </div>}>
-          <p className="tl-meta" style={{ overflowWrap: 'anywhere' }}>{clipboardUrl}</p>
+          <p className="tl-meta" style={{ overflowWrap: 'anywhere', whiteSpace: 'pre-line' }}>{clipboardShare}</p>
         </Sheet>
       )}
 

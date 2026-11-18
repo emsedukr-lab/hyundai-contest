@@ -60,7 +60,7 @@ it.each(['장소 이름', 'https://map.naver.com/p/entry/place/1', 'https://nave
   await act(async () => fireEvent.click(screen.getByRole('button', { name: '네이버 지도 저장목록' })));
   expect(mocks.readPaste).not.toHaveBeenCalled();
   expect(mocks.search).not.toHaveBeenCalled();
-  expect(mocks.notice).toHaveBeenCalledWith(expect.objectContaining({ title: 'https://naver.me/로 시작하는 네이버 지도 링크를 복사해 주세요' }));
+  expect(mocks.notice).toHaveBeenCalledWith(expect.objectContaining({ title: "네이버 지도에서 '공유 → 복사'한 내용이 아니에요 · https://naver.me/ 링크가 들어 있어야 해요" }));
 });
 
 it('imports a copied Naver short link', async () => {
@@ -69,4 +69,12 @@ it('imports a copied Naver short link', async () => {
   render(createElement(PlaceSearch, { onPickMany: vi.fn(), onPick: vi.fn() }));
   await act(async () => fireEvent.click(screen.getByRole('button', { name: '네이버 지도 저장목록' })));
   expect(mocks.readPaste).toHaveBeenCalledExactlyOnceWith('https://naver.me/example');
+});
+
+it('imports the whole text the phone app copies (header, list name, link)', async () => {
+  Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { readText: async () => '[네이버지도]\n대구\nhttps://naver.me/example\n' } });
+  mocks.readPaste.mockResolvedValue({ kind: 'empty' });
+  render(createElement(PlaceSearch, { onPickMany: vi.fn(), onPick: vi.fn() }));
+  await act(async () => fireEvent.click(screen.getByRole('button', { name: '네이버 지도 저장목록' })));
+  expect(mocks.readPaste).toHaveBeenCalledExactlyOnceWith('[네이버지도]\n대구\nhttps://naver.me/example');
 });

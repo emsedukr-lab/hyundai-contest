@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isAddressLine, isKakaoLink, parsePastedPlace, parsePastedPlaces, sharedParamsFromSearch, sharedPlaceTerm, sharedUrl } from './placeShare';
+import { isAddressLine, isKakaoLink, isNaverLink, naverShareText, parsePastedPlace, parsePastedPlaces, pastedLinks, sharedParamsFromSearch, sharedPlaceTerm, sharedUrl } from './placeShare';
 
 describe('지도앱 공유 수집 파싱', () => {
   it('제목이 있으면 제목을 검색어로', () => {
@@ -116,10 +116,29 @@ describe('공유 텍스트 정리 (자동 추가 이름·주소 줄)', () => {
 
 
 describe('clipboard Naver Map share detection', () => {
-  it('accepts only clipboard content starting with the Naver short-link prefix', async () => {
-    const { naverShareUrl } = await import('./placeShare');
-    expect(naverShareUrl('  https://naver.me/example\n')).toBe('https://naver.me/example');
-    expect(naverShareUrl('https://map.naver.com/p/entry/place/123')).toBeNull();
-    for (const text of ['https://naver.me/', '[네이버 지도] https://naver.me/x', 'https://example.com https://naver.me/x', 'https://naver.me/x 다른 내용', 'http://naver.me/x', 'https://naver.me.evil.test/x', 'https://naver.me@evil.test/x', 'https://user@naver.me/x', 'https://news.naver.com', 'https://kko.to/example', '장소 이름']) expect(naverShareUrl(text)).toBeNull();
+  it('링크만 복사한 것도, 휴대폰 앱이 복사한 전문(머리말·이름·링크)도 받는다', () => {
+    expect(naverShareText('  https://naver.me/example\n')).toBe('https://naver.me/example');
+    expect(naverShareText('[네이버지도]\n대구\nhttps://naver.me/example')).toBe('[네이버지도]\n대구\nhttps://naver.me/example');
+    expect(naverShareText('[네이버 지도]\r\n 철뚝소머리집 \r\n강원 강릉시 옥천로 1\r\nhttps://naver.me/example\r\n')).toBe('[네이버 지도]\n철뚝소머리집\n강원 강릉시 옥천로 1\nhttps://naver.me/example');
+    expect(naverShareText('[네이버 지도] 경포호 https://naver.me/example,')).toBe('[네이버 지도] 경포호\nhttps://naver.me/example');
+  });
+
+  it('네이버 지도 공유가 아닌 복사 내용은 받지 않는다 (다른 링크·링크 여러 개·긴 글)', () => {
+    const long = `${'긴 글 '.repeat(50)}https://naver.me/x`;
+    for (const text of ['https://naver.me/', 'https://map.naver.com/p/entry/place/123', 'https://example.com https://naver.me/x', '[네이버지도]\n대구\nhttps://naver.me/x\n[네이버지도]\n경남\nhttps://naver.me/y', 'http://naver.me/x', 'https://naver.me.evil.test/x', 'https://naver.me@evil.test/x', 'https://user@naver.me/x', 'https://news.naver.com', 'https://kko.to/example', '장소 이름', long, '하나\n둘\n셋\n넷\n다섯\nhttps://naver.me/x'])
+      expect(naverShareText(text)).toBeNull();
+  });
+
+  it('공유 여러 개를 쉼표로 이어 붙여도 링크와 이름을 따로 읽는다', () => {
+    const text = '[네이버지도]\n대구\nhttps://naver.me/aaa, [네이버지도]\n경남\nhttps://naver.me/bbb , [네이버지도]\n강릉\nhttps://naver.me/ccc';
+    expect(pastedLinks(text)).toEqual(['https://naver.me/aaa', 'https://naver.me/bbb', 'https://naver.me/ccc']);
+    expect(pastedLinks('https://naver.me/aaa https://naver.me/aaa')).toEqual(['https://naver.me/aaa']);
+    expect(parsePastedPlaces(text)).toEqual(['대구', '경남', '강릉']);
+    expect(parsePastedPlace('경포호 https://naver.me/aaa.').url).toBe('https://naver.me/aaa');
+  });
+
+  it('서버에 물어볼 수 있는 링크는 https 네이버 주소뿐', () => {
+    for (const u of ['https://naver.me/aaa', 'https://map.naver.com/p/entry/place/1', 'https://m.place.naver.com/place/1/home']) expect(isNaverLink(u)).toBe(true);
+    for (const u of ['http://naver.me/aaa', 'https://naver.me.evil.test/x', 'https://user@naver.me/x', 'https://notnaver.com/x', 'https://kko.to/x', 'not a url']) expect(isNaverLink(u)).toBe(false);
   });
 });

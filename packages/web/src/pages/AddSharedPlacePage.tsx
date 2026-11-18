@@ -15,7 +15,7 @@ import { trips } from '../lib/db';
 import { t } from '../lib/i18n';
 import { ApiError, resolvePlace, searchPlaces, type PlaceHit } from '../lib/pairing';
 import { handOffPaste, sameAsShared } from '../lib/pasteImport';
-import { isKakaoLink, sharedParamsFromSearch, sharedPlaceTerm, sharedUrl } from '../lib/placeShare';
+import { isKakaoLink, isNaverLink, sharedParamsFromSearch, sharedPlaceTerm, sharedUrl } from '../lib/placeShare';
 import { navigate } from '../lib/router';
 import { defaultHome } from '../lib/settings';
 import { addPlace, emptyPlan, newDoc, removePlace, savePlan, type TripDoc } from '../lib/trips';
@@ -142,25 +142,25 @@ export function AddSharedPlacePage() {
           setStatus('kakaoLink');
           return;
         }
-        // Prefer the shared title; if there's only a link, ask the server to read the place name from it.
+        // Prefer the shared title. A Naver Map link is still asked first: a saved list is shared as the same text a
+        // place is ("[네이버지도]", a name, the link), with the list's name where the place's would be, and only the
+        // link tells them apart. Any other link is asked only when there is no name beside it.
         let name = term;
-        if (!name) {
-          const u = sharedUrl(params);
-          if (u) {
-            try {
-              const r = await resolvePlace(u);
-              if (r.kind === 'list') {
-                // A whole saved list: the 장소 tab shows it to pick from (handed over in memory, never in the URL).
-                if (alive.current) {
-                  handOffPaste(u);
-                  navigate('/places', true);
-                }
-                return;
+        const u = sharedUrl(params);
+        if (u && (!name || isNaverLink(u))) {
+          try {
+            const r = await resolvePlace(u);
+            if (r.kind === 'list') {
+              // A whole saved list: the 장소 tab shows it to pick from (handed over in memory, never in the URL).
+              if (alive.current) {
+                handOffPaste(u);
+                navigate('/places', true);
               }
-              name = r.name;
-            } catch {
-              /* resolve failed → fall through to noTerm */
+              return;
             }
+            name = name || r.name;
+          } catch {
+            /* resolve failed → the shared name if there is one, else noTerm */
           }
         }
         if (!name) {

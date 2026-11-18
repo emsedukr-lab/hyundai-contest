@@ -34,16 +34,57 @@ export function sharedUrl(p: SharedParams): string | null {
   return null;
 }
 
-/** Clipboard imports accept only a bare Naver short link, never arbitrary copied text. */
-export function naverShareUrl(text: string): string | null {
-  const value = text.trim();
-  if (!value.startsWith('https://naver.me/') || /\s/.test(value)) return null;
+/**
+ * Every link in a text, in order, once each. Punctuation that only follows a link ("…/abc, " when several shares are
+ * typed in a row) is not part of it.
+ */
+export function pastedLinks(text: string): string[] {
+  const found = (text.match(/https?:\/\/\S+/gi) ?? []).map((u) => u.replace(/[,.;:!?)\]}'"]+$/, ''));
+  return [...new Set(found)];
+}
+
+/** A Naver Map short link (`https://naver.me/…`) exactly, or null. */
+function naverShortLink(value: string): string | null {
+  if (!value.startsWith('https://naver.me/')) return null;
   try {
     const url = new URL(value);
     return url.hostname === 'naver.me' && url.pathname.length > 1 && !url.username && !url.password ? url.href : null;
   } catch {
     return null;
   }
+}
+
+/** A link the server may be asked about: https on naver.me or a naver.com host. */
+export function isNaverLink(url: string): boolean {
+  try {
+    const u = new URL(url);
+    const host = u.hostname.toLowerCase();
+    return u.protocol === 'https:' && !u.username && !u.password && (host === 'naver.me' || host === 'naver.com' || host.endsWith('.naver.com'));
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * What the clipboard holds when it is a Naver Map share, ready for the paste reader — or null. Two shapes are taken:
+ * the bare short link (what the PC site copies) and the whole text the phone app copies, e.g.
+ * "[네이버지도]\n대구\nhttps://naver.me/…" — a header, a place or saved-list name, perhaps an address, and the link.
+ * The whole of it is kept (each line trimmed, the link last) so the name beside the link is read too. Anything else on
+ * the clipboard — another site's link, several links, long text that merely mentions a link — is left alone, so
+ * unrelated copied text is never read into the app.
+ */
+export function naverShareText(text: string): string | null {
+  const links = text.match(/https?:\/\/\S+/gi) ?? [];
+  if (links.length !== 1) return null;
+  const url = naverShortLink(pastedLinks(links[0])[0] ?? '');
+  if (!url) return null;
+  const lines = text
+    .replace(links[0], '\n')
+    .split(/\r?\n/)
+    .map((l) => l.replace(/\s+/g, ' ').trim())
+    .filter(Boolean);
+  if (lines.length > 4 || lines.some((l) => l.length > 120)) return null;
+  return [...lines, url].join('\n');
 }
 
 /**
@@ -72,10 +113,11 @@ const MAP_APP_LABEL = /^(카카오\s*맵|네이버\s*지도|구글\s*지도|티�
 /** Strips a pasted line down to a bare place name: drop URLs, a leading number/bullet, a leading "[카카오맵]", extra spaces. */
 function cleanLine(line: string): string {
   return line
-    .replace(/https?:\/\/\S+/g, '') // drop URLs
-    .replace(/^\s*(?:\d+[.)]|[-•*·])\s*/, '') // drop a leading "1." / "2)" / "- " / "• " list marker
-    .replace(/^\[[^\]]*\]\s*/, '') // drop a leading "[카카오맵]" etc.
+    .replace(/https?:\/\/\S+/g, ' ') // drop URLs
     .replace(/\s+/g, ' ')
+    .trim() // before the markers below, so what follows a dropped URL ("https://… [네이버지도]") still starts the line
+    .replace(/^(?:\d+[.)]|[-•*·,])\s*/, '') // drop a leading "1." / "2)" / "- " / "• " list marker (or a stray comma)
+    .replace(/^\[[^\]]*\]\s*/, '') // drop a leading "[카카오맵]" / "[네이버지도]" etc.
     .trim();
 }
 
@@ -105,8 +147,7 @@ function placeName(line: string): string {
  * existing Kakao keyword search (no provider URL is fetched — that would need an external call and break the CSP).
  */
 export function parsePastedPlace(text: string): { term: string | null; url: string | null } {
-  const urlMatch = text.match(/https?:\/\/\S+/);
-  const url = urlMatch ? urlMatch[0].trim() : null;
+  const url = pastedLinks(text)[0] ?? null;
   for (const line of text.split(/\r?\n/)) {
     const name = placeName(line);
     if (name) return { term: name.slice(0, 60), url };
