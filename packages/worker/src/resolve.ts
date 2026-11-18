@@ -70,15 +70,17 @@ export function naverPlacePage(u: URL): URL | null {
 const UA = 'Mozilla/5.0 (compatible; TteonaljidoBot/1.0; +https://tteonaljido.tteonaljido-worker.workers.dev)';
 
 /**
- * A Naver "저장 목록" (saved-places folder) share: `naver.me/…` lands on `map.naver.com/p/favorite/sharedPlace/folder/{id}`,
- * a script page; the folder's places come from Naver's own (unofficial, may change) JSON for that page, built here from
- * the 32-hex share id only — nothing else from the shared URL reaches the request.
+ * A Naver "저장 목록" (saved-places folder) share: `naver.me/…` lands on a script page whose address depends on where the
+ * link was made — `map.naver.com/p/favorite/sharedPlace/folder/{id}` or, copied from the phone app's own list,
+ * `map.naver.com/v5/favorite/myPlace/folder/{id}` (the same id either way). So any `/favorite/…/folder/{id}` path is
+ * read. The folder's places come from Naver's own (unofficial, may change) JSON for that page, built here from the
+ * 32-hex share id only — nothing else from the shared URL reaches the request.
  */
 const SHARE_ID = /^[0-9a-f]{32}$/i;
 export function naverFolderApi(u: URL): URL | null {
   const host = u.hostname.toLowerCase();
   let id: string | undefined;
-  if (host === 'map.naver.com' || host === 'm.map.naver.com') id = u.pathname.match(/\/favorite\/sharedPlace\/folder\/([0-9a-f]{32})(?:\/|$)/i)?.[1];
+  if (host === 'map.naver.com' || host === 'm.map.naver.com') id = u.pathname.match(/\/favorite\/(?:[^/]+\/)?folder\/([0-9a-f]{32})(?:\/|$)/i)?.[1];
   else if (host === 'pages.map.naver.com') id = u.pathname.match(/\/shares\/([0-9a-f]{32})(?:\/|$)/i)?.[1] ?? u.searchParams.get('shareId') ?? undefined;
   if (!id || !SHARE_ID.test(id)) return null;
   return new URL(`https://pages.map.naver.com/save-pages/api/maps-bookmark/v3/shares/${id.toLowerCase()}/bookmarks?start=0&limit=100&sort=lastUseTime`);

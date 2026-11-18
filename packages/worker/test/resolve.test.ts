@@ -127,6 +127,20 @@ describe('네이버 저장 목록 링크', () => {
     expect(naverFolderApi(new URL('https://map.naver.com/p/entry/place/10968214'))).toBeNull();
   });
 
+  it('휴대폰 앱에서 복사한 내 목록 주소(v5 · myPlace)도 같은 목록으로 읽는다', async () => {
+    const same = `${API}?start=0&limit=100&sort=lastUseTime`;
+    for (const path of [`/v5/favorite/myPlace/folder/${SHARE}`, `/p/favorite/myPlace/folder/${SHARE}`, `/v5/favorite/myPlace/folder/${SHARE.toUpperCase()}/place/1`, `/p/favorite/folder/${SHARE}`])
+      expect(naverFolderApi(new URL(`https://map.naver.com${path}`))?.toString()).toBe(same);
+    expect(naverFolderApi(new URL(`https://m.map.naver.com/v5/favorite/myPlace/folder/${SHARE}`))?.toString()).toBe(same);
+    for (const path of ['/v5/favorite/myPlace/folder/abc', `/v5/favorite/myPlace/${SHARE}`, `/v5/entry/folder/${SHARE}`, `/v5/favorite/a/b/folder/${SHARE}`]) expect(naverFolderApi(new URL(`https://map.naver.com${path}`))).toBeNull();
+
+    const up = upstream({ 'https://naver.me/': redirect(`https://map.naver.com/v5/favorite/myPlace/folder/${SHARE}`), [API]: jsonRes(naverFolder([bm('홍두병'), bm('태림봉')])) });
+    const res = await resolveShare({ url: 'https://naver.me/example' }, up.fetcher);
+    expect(res.status).toBe(200);
+    expect(((await res.json()) as { kind: string; places: unknown[] }).places).toHaveLength(2);
+    expect(up.seen.map((u) => new URL(u).hostname)).toEqual(['naver.me', 'pages.map.naver.com']);
+  });
+
   it('naver.me → 폴더 → 목록: 이름·주소·좌표·종류만 돌려주고 주인 정보는 버린다', async () => {
     const list = [bm('홍두병'), bm('태림봉', { mcid: 'DINING', mcidName: '음식점', px: 126.61947, py: 37.47395, displayName: '태림봉 차이나타운점' })];
     const up = upstream({ 'https://naver.me/': redirect(`https://map.naver.com/p/favorite/sharedPlace/folder/${SHARE}`), [API]: jsonRes(naverFolder(list)) });
